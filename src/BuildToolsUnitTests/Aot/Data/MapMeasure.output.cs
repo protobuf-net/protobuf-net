@@ -230,60 +230,70 @@ partial class MapMeasureModel
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long before = 0;
             var rawDepth = state.SyncRawDepth(depth);
-            var tmp1 = value.ByNumber;
-            if (tmp1 != null)
+            global::System.Collections.Generic.Dictionary<int, string> tmp_System_Collections_Generic_Dictionary_int__string_;
+            global::System.Collections.Generic.Dictionary<string, int> tmp_System_Collections_Generic_Dictionary_string__int_;
+            global::System.Collections.Generic.Dictionary<int, int> tmp_System_Collections_Generic_Dictionary_int__int_;
+            global::System.Collections.Generic.Dictionary<string, string> tmp_System_Collections_Generic_Dictionary_string__string_;
+            int tmp_int;
+            global::System.Collections.Generic.Dictionary<int, int?> tmp_System_Collections_Generic_Dictionary_int__int__;
+            global::System.Collections.Generic.Dictionary<int, global::AotFixtures.MapMeasure.Hue> tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_MapMeasure_Hue_;
+            global::System.Collections.Generic.Dictionary<global::AotFixtures.MapMeasure.Hue, int> tmp_System_Collections_Generic_Dictionary_global__AotFixtures_MapMeasure_Hue__int_;
+            global::System.Collections.Generic.Dictionary<int, global::AotFixtures.MapMeasure.Note> tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_MapMeasure_Note_;
+            global::AotFixtures.MapMeasure.Note tmp_AotFixtures_MapMeasure_Note;
+            tmp_System_Collections_Generic_Dictionary_int__string_ = value.ByNumber;
+            if (tmp_System_Collections_Generic_Dictionary_int__string_ != null)
             {
-                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, string>().WriteMap(ref state, 1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, string>().WriteMap(ref state, 1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp_System_Collections_Generic_Dictionary_int__string_, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
             }
-            var tmp2 = value.ByName;
-            if (tmp2 != null)
+            tmp_System_Collections_Generic_Dictionary_string__int_ = value.ByName;
+            if (tmp_System_Collections_Generic_Dictionary_string__int_ != null)
             {
-                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<string, int>().WriteMap(ref state, 2, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp2, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<string, int>().WriteMap(ref state, 2, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp_System_Collections_Generic_Dictionary_string__int_, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
             }
-            var tmp3 = value.Counts;
-            if (tmp3 != null)
+            tmp_System_Collections_Generic_Dictionary_int__int_ = value.Counts;
+            if (tmp_System_Collections_Generic_Dictionary_int__int_ != null)
             {
-                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, int>().WriteMap(ref state, 3, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp3, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, int>().WriteMap(ref state, 3, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp_System_Collections_Generic_Dictionary_int__int_, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
             }
-            var tmp4 = value.Labels;
-            if (tmp4 != null)
+            tmp_System_Collections_Generic_Dictionary_string__string_ = value.Labels;
+            if (tmp_System_Collections_Generic_Dictionary_string__string_ != null)
             {
-                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<string, string>().WriteMap(ref state, 4, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp4, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<string, string>().WriteMap(ref state, 4, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp_System_Collections_Generic_Dictionary_string__string_, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
             }
-            var tmp5 = value.Trailer;
-            if (tmp5 != 0)
+            tmp_int = value.Trailer;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((5 << 3) | 0);  // Trailer
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp5));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
-            var tmp6 = value.Maybe;
-            if (tmp6 != null)
+            tmp_System_Collections_Generic_Dictionary_int__int__ = value.Maybe;
+            if (tmp_System_Collections_Generic_Dictionary_int__int__ != null)
             {
-                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, int?>().WriteMap(ref state, 6, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp6, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, int?>().WriteMap(ref state, 6, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp_System_Collections_Generic_Dictionary_int__int__, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
             }
-            var tmp7 = value.Shades;
-            if (tmp7 != null)
+            tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_MapMeasure_Hue_ = value.Shades;
+            if (tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_MapMeasure_Hue_ != null)
             {
-                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::AotFixtures.MapMeasure.Hue>().WriteMap(ref state, 7, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp7, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::AotFixtures.MapMeasure.Hue>().WriteMap(ref state, 7, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_MapMeasure_Hue_, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
             }
-            var tmp8 = value.ByShade;
-            if (tmp8 != null)
+            tmp_System_Collections_Generic_Dictionary_global__AotFixtures_MapMeasure_Hue__int_ = value.ByShade;
+            if (tmp_System_Collections_Generic_Dictionary_global__AotFixtures_MapMeasure_Hue__int_ != null)
             {
-                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<global::AotFixtures.MapMeasure.Hue, int>().WriteMap(ref state, 8, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp8, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<global::AotFixtures.MapMeasure.Hue, int>().WriteMap(ref state, 8, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp_System_Collections_Generic_Dictionary_global__AotFixtures_MapMeasure_Hue__int_, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
             }
-            var tmp9 = value.Notes;
-            if (tmp9 != null)
+            tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_MapMeasure_Note_ = value.Notes;
+            if (tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_MapMeasure_Note_ != null)
             {
-                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::AotFixtures.MapMeasure.Note>().WriteMap(ref state, 9, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp9, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, null, Self);
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::AotFixtures.MapMeasure.Note>().WriteMap(ref state, 9, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_MapMeasure_Note_, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, null, Self);
             }
-            var tmp10 = value.Tail;
-            if (tmp10 != null)
+            tmp_AotFixtures_MapMeasure_Note = value.Tail;
+            if (tmp_AotFixtures_MapMeasure_Note != null)
             {
                 state.WriteRawTag((10 << 3) | 2);  // Tail
                 var len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWrite_AotFixtures_MapMeasure_Note(ref state, tmp10, depth);
+                RawWrite_AotFixtures_MapMeasure_Note(ref state, tmp_AotFixtures_MapMeasure_Note, depth);
                 DebugAssertPosition(ref state, before + len, "Tail");
             }
             state.SyncRawDepth(rawDepth);
@@ -294,10 +304,20 @@ partial class MapMeasureModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             long sub;
-            var tmp1 = value.ByNumber;
-            if (tmp1 != null)
+            global::System.Collections.Generic.Dictionary<int, string> tmp_System_Collections_Generic_Dictionary_int__string_;
+            global::System.Collections.Generic.Dictionary<string, int> tmp_System_Collections_Generic_Dictionary_string__int_;
+            global::System.Collections.Generic.Dictionary<int, int> tmp_System_Collections_Generic_Dictionary_int__int_;
+            global::System.Collections.Generic.Dictionary<string, string> tmp_System_Collections_Generic_Dictionary_string__string_;
+            int tmp_int;
+            global::System.Collections.Generic.Dictionary<int, int?> tmp_System_Collections_Generic_Dictionary_int__int__;
+            global::System.Collections.Generic.Dictionary<int, global::AotFixtures.MapMeasure.Hue> tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_MapMeasure_Hue_;
+            global::System.Collections.Generic.Dictionary<global::AotFixtures.MapMeasure.Hue, int> tmp_System_Collections_Generic_Dictionary_global__AotFixtures_MapMeasure_Hue__int_;
+            global::System.Collections.Generic.Dictionary<int, global::AotFixtures.MapMeasure.Note> tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_MapMeasure_Note_;
+            global::AotFixtures.MapMeasure.Note tmp_AotFixtures_MapMeasure_Note;
+            tmp_System_Collections_Generic_Dictionary_int__string_ = value.ByNumber;
+            if (tmp_System_Collections_Generic_Dictionary_int__string_ != null)
             {
-                foreach (var pair1 in tmp1)
+                foreach (var pair1 in tmp_System_Collections_Generic_Dictionary_int__string_)
                 {
                     long entry1 = 0;
                     if (pair1.Key != 0) entry1 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair1.Key));
@@ -305,10 +325,10 @@ partial class MapMeasureModel
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)entry1) + entry1;  // ByNumber
                 }
             }
-            var tmp2 = value.ByName;
-            if (tmp2 != null)
+            tmp_System_Collections_Generic_Dictionary_string__int_ = value.ByName;
+            if (tmp_System_Collections_Generic_Dictionary_string__int_ != null)
             {
-                foreach (var pair2 in tmp2)
+                foreach (var pair2 in tmp_System_Collections_Generic_Dictionary_string__int_)
                 {
                     long entry2 = 0;
                     if (pair2.Key != null) entry2 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(pair2.Key);
@@ -316,10 +336,10 @@ partial class MapMeasureModel
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)entry2) + entry2;  // ByName
                 }
             }
-            var tmp3 = value.Counts;
-            if (tmp3 != null)
+            tmp_System_Collections_Generic_Dictionary_int__int_ = value.Counts;
+            if (tmp_System_Collections_Generic_Dictionary_int__int_ != null)
             {
-                foreach (var pair3 in tmp3)
+                foreach (var pair3 in tmp_System_Collections_Generic_Dictionary_int__int_)
                 {
                     long entry3 = 0;
                     if (pair3.Key != 0) entry3 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair3.Key));
@@ -327,10 +347,10 @@ partial class MapMeasureModel
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)entry3) + entry3;  // Counts
                 }
             }
-            var tmp4 = value.Labels;
-            if (tmp4 != null)
+            tmp_System_Collections_Generic_Dictionary_string__string_ = value.Labels;
+            if (tmp_System_Collections_Generic_Dictionary_string__string_ != null)
             {
-                foreach (var pair4 in tmp4)
+                foreach (var pair4 in tmp_System_Collections_Generic_Dictionary_string__string_)
                 {
                     long entry4 = 0;
                     if (pair4.Key != null) entry4 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(pair4.Key);
@@ -338,12 +358,12 @@ partial class MapMeasureModel
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)entry4) + entry4;  // Labels
                 }
             }
-            var tmp5 = value.Trailer;
-            if (tmp5 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp5));  // Trailer
-            var tmp6 = value.Maybe;
-            if (tmp6 != null)
+            tmp_int = value.Trailer;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Trailer
+            tmp_System_Collections_Generic_Dictionary_int__int__ = value.Maybe;
+            if (tmp_System_Collections_Generic_Dictionary_int__int__ != null)
             {
-                foreach (var pair6 in tmp6)
+                foreach (var pair6 in tmp_System_Collections_Generic_Dictionary_int__int__)
                 {
                     long entry6 = 0;
                     if (pair6.Key != 0) entry6 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair6.Key));
@@ -351,10 +371,10 @@ partial class MapMeasureModel
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)entry6) + entry6;  // Maybe
                 }
             }
-            var tmp7 = value.Shades;
-            if (tmp7 != null)
+            tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_MapMeasure_Hue_ = value.Shades;
+            if (tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_MapMeasure_Hue_ != null)
             {
-                foreach (var pair7 in tmp7)
+                foreach (var pair7 in tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_MapMeasure_Hue_)
                 {
                     long entry7 = 0;
                     if (pair7.Key != 0) entry7 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair7.Key));
@@ -362,10 +382,10 @@ partial class MapMeasureModel
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)entry7) + entry7;  // Shades
                 }
             }
-            var tmp8 = value.ByShade;
-            if (tmp8 != null)
+            tmp_System_Collections_Generic_Dictionary_global__AotFixtures_MapMeasure_Hue__int_ = value.ByShade;
+            if (tmp_System_Collections_Generic_Dictionary_global__AotFixtures_MapMeasure_Hue__int_ != null)
             {
-                foreach (var pair8 in tmp8)
+                foreach (var pair8 in tmp_System_Collections_Generic_Dictionary_global__AotFixtures_MapMeasure_Hue__int_)
                 {
                     long entry8 = 0;
                     entry8 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)pair8.Key));
@@ -373,10 +393,10 @@ partial class MapMeasureModel
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)entry8) + entry8;  // ByShade
                 }
             }
-            var tmp9 = value.Notes;
-            if (tmp9 != null)
+            tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_MapMeasure_Note_ = value.Notes;
+            if (tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_MapMeasure_Note_ != null)
             {
-                foreach (var pair9 in tmp9)
+                foreach (var pair9 in tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_MapMeasure_Note_)
                 {
                     long entry9 = 0;
                     if (pair9.Key != 0) entry9 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair9.Key));
@@ -388,11 +408,11 @@ partial class MapMeasureModel
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)entry9) + entry9;  // Notes
                 }
             }
-            var tmp10 = value.Tail;
-            if (tmp10 != null)
+            tmp_AotFixtures_MapMeasure_Note = value.Tail;
+            if (tmp_AotFixtures_MapMeasure_Note != null)
             {
                 var slot10 = slots.Reserve();
-                sub = Measure_AotFixtures_MapMeasure_Note(tmp10, depth, slots, context);
+                sub = Measure_AotFixtures_MapMeasure_Note(tmp_AotFixtures_MapMeasure_Note, depth, slots, context);
                 slots.Set(slot10, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Tail
             }
@@ -814,22 +834,25 @@ partial class MapMeasureModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long before = 0;
-            var tmp1 = value.Text;
-            if (tmp1 != null)
+            string tmp_string;
+            int tmp_int;
+            global::System.Collections.Generic.List<global::AotFixtures.MapMeasure.Tag> tmp_System_Collections_Generic_List_global__AotFixtures_MapMeasure_Tag_;
+            tmp_string = value.Text;
+            if (tmp_string != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Text
-                state.WriteRawString(tmp1);
+                state.WriteRawString(tmp_string);
             }
-            var tmp2 = value.Rank;
-            if (tmp2 != 0)
+            tmp_int = value.Rank;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((2 << 3) | 0);  // Rank
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
-            var tmp3 = value.Tags;
-            if (tmp3 != null)
+            tmp_System_Collections_Generic_List_global__AotFixtures_MapMeasure_Tag_ = value.Tags;
+            if (tmp_System_Collections_Generic_List_global__AotFixtures_MapMeasure_Tag_ != null)
             {
-                foreach (var item3 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp3))
+                foreach (var item3 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_global__AotFixtures_MapMeasure_Tag_))
                 {
                     if (item3 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.MapMeasure.Tag>();
                     state.WriteRawTag((3 << 3) | 2);  // Tags
@@ -846,17 +869,20 @@ partial class MapMeasureModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Text;
-            if (tmp1 != null)
+            string tmp_string;
+            int tmp_int;
+            global::System.Collections.Generic.List<global::AotFixtures.MapMeasure.Tag> tmp_System_Collections_Generic_List_global__AotFixtures_MapMeasure_Tag_;
+            tmp_string = value.Text;
+            if (tmp_string != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // Text
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Text
             }
-            var tmp2 = value.Rank;
-            if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // Rank
-            var tmp3 = value.Tags;
-            if (tmp3 != null)
+            tmp_int = value.Rank;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Rank
+            tmp_System_Collections_Generic_List_global__AotFixtures_MapMeasure_Tag_ = value.Tags;
+            if (tmp_System_Collections_Generic_List_global__AotFixtures_MapMeasure_Tag_ != null)
             {
-                foreach (var item3 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp3))
+                foreach (var item3 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_global__AotFixtures_MapMeasure_Tag_))
                 {
                     if (item3 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.MapMeasure.Tag>();
                     var slot3 = slots.Reserve();
@@ -952,11 +978,12 @@ partial class MapMeasureModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Name;
-            if (tmp1 != null)
+            string tmp_string;
+            tmp_string = value.Name;
+            if (tmp_string != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Name
-                state.WriteRawString(tmp1);
+                state.WriteRawString(tmp_string);
             }
         }
 
@@ -964,10 +991,11 @@ partial class MapMeasureModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Name;
-            if (tmp1 != null)
+            string tmp_string;
+            tmp_string = value.Name;
+            if (tmp_string != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // Name
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Name
             }
             return len;
         }

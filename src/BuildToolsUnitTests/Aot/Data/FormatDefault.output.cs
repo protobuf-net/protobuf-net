@@ -141,45 +141,51 @@ partial class FormatDefaultModel
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.FormatDefault.Payment>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.FormatDefault.Payment value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Id;
-            if (tmp1 != global::System.Guid.Empty)
+            global::System.Guid tmp_System_Guid;
+            global::System.Guid? tmp_System_Guid_;
+            global::System.Collections.Generic.List<global::System.Guid> tmp_System_Collections_Generic_List_global__System_Guid_;
+            int tmp_int;
+            global::System.Collections.Generic.Dictionary<int, global::System.Guid> tmp_System_Collections_Generic_Dictionary_int__global__System_Guid_;
+            global::System.Collections.Generic.List<global::System.Guid?> tmp_System_Collections_Generic_List_global__System_Guid__;
+            tmp_System_Guid = value.Id;
+            if (tmp_System_Guid != global::System.Guid.Empty)
             {
                 state.WriteFieldHeader(1, global::ProtoBuf.WireType.String);
-                global::ProtoBuf.BclHelpers.WriteGuidBytes(ref state, tmp1);
+                global::ProtoBuf.BclHelpers.WriteGuidBytes(ref state, tmp_System_Guid);
             }
-            var tmp2 = value.Correlation;
-            if (tmp2.HasValue)
+            tmp_System_Guid_ = value.Correlation;
+            if (tmp_System_Guid_.HasValue)
             {
-                var val2 = tmp2.GetValueOrDefault();
+                var val2 = tmp_System_Guid_.GetValueOrDefault();
                 state.WriteFieldHeader(2, global::ProtoBuf.WireType.String);
                 global::ProtoBuf.BclHelpers.WriteGuidBytes(ref state, val2);
             }
-            var tmp3 = value.Batch;
-            if (tmp3 != null)
+            tmp_System_Collections_Generic_List_global__System_Guid_ = value.Batch;
+            if (tmp_System_Collections_Generic_List_global__System_Guid_ != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::System.Guid>().WriteRepeated(ref state, 3, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp3, global::ProtoBuf.Meta.TypeModel.GetInbuiltSerializer<global::System.Guid>(global::ProtoBuf.CompatibilityLevel.Level300, global::ProtoBuf.DataFormat.FixedSize));
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::System.Guid>().WriteRepeated(ref state, 3, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp_System_Collections_Generic_List_global__System_Guid_, global::ProtoBuf.Meta.TypeModel.GetInbuiltSerializer<global::System.Guid>(global::ProtoBuf.CompatibilityLevel.Level300, global::ProtoBuf.DataFormat.FixedSize));
             }
-            var tmp4 = value.Amount;
-            if (tmp4 != 0)
+            tmp_int = value.Amount;
+            if (tmp_int != 0)
             {
                 state.WriteFieldHeader(4, global::ProtoBuf.WireType.SignedVarint);
-                state.WriteInt32(tmp4);
+                state.WriteInt32(tmp_int);
             }
-            var tmp5 = value.Stated;
-            if (tmp5 != 0)
+            tmp_int = value.Stated;
+            if (tmp_int != 0)
             {
                 state.WriteFieldHeader(5, global::ProtoBuf.WireType.Fixed32);
-                state.WriteInt32(tmp5);
+                state.WriteInt32(tmp_int);
             }
-            var tmp6 = value.ById;
-            if (tmp6 != null)
+            tmp_System_Collections_Generic_Dictionary_int__global__System_Guid_ = value.ById;
+            if (tmp_System_Collections_Generic_Dictionary_int__global__System_Guid_ != null)
             {
-                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::System.Guid>().WriteMap(ref state, 6, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp6, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, null, global::ProtoBuf.Meta.TypeModel.GetInbuiltSerializer<global::System.Guid>(global::ProtoBuf.CompatibilityLevel.Level300, global::ProtoBuf.DataFormat.Default));
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::System.Guid>().WriteMap(ref state, 6, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp_System_Collections_Generic_Dictionary_int__global__System_Guid_, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, null, global::ProtoBuf.Meta.TypeModel.GetInbuiltSerializer<global::System.Guid>(global::ProtoBuf.CompatibilityLevel.Level300, global::ProtoBuf.DataFormat.Default));
             }
-            var tmp7 = value.Certs;
-            if (tmp7 != null)
+            tmp_System_Collections_Generic_List_global__System_Guid__ = value.Certs;
+            if (tmp_System_Collections_Generic_List_global__System_Guid__ != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::System.Guid?>().WriteRepeated(ref state, 7, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp7, global::ProtoBuf.Meta.TypeModel.GetInbuiltSerializer<global::System.Guid?>(global::ProtoBuf.CompatibilityLevel.Level300, global::ProtoBuf.DataFormat.FixedSize));
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::System.Guid?>().WriteRepeated(ref state, 7, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp_System_Collections_Generic_List_global__System_Guid__, global::ProtoBuf.Meta.TypeModel.GetInbuiltSerializer<global::System.Guid?>(global::ProtoBuf.CompatibilityLevel.Level300, global::ProtoBuf.DataFormat.FixedSize));
             }
         }
 
@@ -292,9 +298,10 @@ partial class FormatDefaultModel
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.FormatDefault.TimestampPromotion>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.FormatDefault.TimestampPromotion value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.When;
+            global::System.DateTime tmp_System_DateTime;
+            tmp_System_DateTime = value.When;
             state.WriteFieldHeader(1, global::ProtoBuf.WireType.String);
-            global::ProtoBuf.BclHelpers.WriteTimestamp(ref state, tmp1);
+            global::ProtoBuf.BclHelpers.WriteTimestamp(ref state, tmp_System_DateTime);
         }
 
         private static global::AotFixtures.FormatDefault.TimestampPromotion RawRead_AotFixtures_FormatDefault_TimestampPromotion(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.FormatDefault.TimestampPromotion value)

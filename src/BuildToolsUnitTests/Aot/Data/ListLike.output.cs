@@ -177,21 +177,23 @@ partial class ListLikeModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long before = 0;
-            var tmp1 = value.NotAList;
-            if (tmp1 != null)
+            global::AotFixtures.ListLike.NotAList tmp_AotFixtures_ListLike_NotAList;
+            int tmp_int;
+            tmp_AotFixtures_ListLike_NotAList = value.NotAList;
+            if (tmp_AotFixtures_ListLike_NotAList != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // NotAList
                 var len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWrite_AotFixtures_ListLike_NotAList(ref state, tmp1, depth);
+                RawWrite_AotFixtures_ListLike_NotAList(ref state, tmp_AotFixtures_ListLike_NotAList, depth);
                 DebugAssertPosition(ref state, before + len, "NotAList");
             }
-            var tmp2 = value.Other;
-            if (tmp2 != 0)
+            tmp_int = value.Other;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((2 << 3) | 0);  // Other
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -199,16 +201,18 @@ partial class ListLikeModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.NotAList;
-            if (tmp1 != null)
+            global::AotFixtures.ListLike.NotAList tmp_AotFixtures_ListLike_NotAList;
+            int tmp_int;
+            tmp_AotFixtures_ListLike_NotAList = value.NotAList;
+            if (tmp_AotFixtures_ListLike_NotAList != null)
             {
                 var slot1 = slots.Reserve();
-                var sub = Measure_AotFixtures_ListLike_NotAList(tmp1, depth, slots, context);
+                var sub = Measure_AotFixtures_ListLike_NotAList(tmp_AotFixtures_ListLike_NotAList, depth, slots, context);
                 slots.Set(slot1, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // NotAList
             }
-            var tmp2 = value.Other;
-            if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // Other
+            tmp_int = value.Other;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Other
             return len;
         }
 
@@ -272,17 +276,19 @@ partial class ListLikeModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Label;
-            if (tmp1 != null)
+            string tmp_string;
+            int tmp_int;
+            tmp_string = value.Label;
+            if (tmp_string != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Label
-                state.WriteRawString(tmp1);
+                state.WriteRawString(tmp_string);
             }
-            var tmp2 = value.Count2;
-            if (tmp2 != 0)
+            tmp_int = value.Count2;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((2 << 3) | 0);  // Count2
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -290,13 +296,15 @@ partial class ListLikeModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Label;
-            if (tmp1 != null)
+            string tmp_string;
+            int tmp_int;
+            tmp_string = value.Label;
+            if (tmp_string != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // Label
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Label
             }
-            var tmp2 = value.Count2;
-            if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // Count2
+            tmp_int = value.Count2;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Count2
             return len;
         }
 

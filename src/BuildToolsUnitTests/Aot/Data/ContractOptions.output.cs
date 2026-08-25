@@ -370,17 +370,18 @@ partial class ContractOptionsModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Ordered;
-            if (tmp1 != 0)
+            int tmp_int;
+            tmp_int = value.Ordered;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Ordered
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
-            var tmp3 = value.Tagged;
-            if (tmp3 != 0)
+            tmp_int = value.Tagged;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((3 << 3) | 0);  // Tagged
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp3));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -388,10 +389,11 @@ partial class ContractOptionsModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Ordered;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Ordered
-            var tmp3 = value.Tagged;
-            if (tmp3 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp3));  // Tagged
+            int tmp_int;
+            tmp_int = value.Ordered;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Ordered
+            tmp_int = value.Tagged;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Tagged
             return len;
         }
 
@@ -480,17 +482,19 @@ partial class ContractOptionsModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Id;
-            if (tmp1 != 0)
+            int tmp_int;
+            string tmp_string;
+            tmp_int = value.Id;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Id
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
-            var tmp2 = value.Name;
-            if (tmp2 != null)
+            tmp_string = value.Name;
+            if (tmp_string != null)
             {
                 state.WriteRawTag((2 << 3) | 2);  // Name
-                state.WriteRawString(tmp2);
+                state.WriteRawString(tmp_string);
             }
         }
 
@@ -498,12 +502,14 @@ partial class ContractOptionsModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Id;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Id
-            var tmp2 = value.Name;
-            if (tmp2 != null)
+            int tmp_int;
+            string tmp_string;
+            tmp_int = value.Id;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Id
+            tmp_string = value.Name;
+            if (tmp_string != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // Name
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Name
             }
             return len;
         }
@@ -531,11 +537,12 @@ partial class ContractOptionsModel
         public static void RawWrite_AotFixtures_ContractOptions_Lenient(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ContractOptions.Lenient value, int depth)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            var tmp1 = value.Id;
-            if (tmp1 != 0)
+            int tmp_int;
+            tmp_int = value.Id;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Id
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -543,8 +550,9 @@ partial class ContractOptionsModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Id;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Id
+            int tmp_int;
+            tmp_int = value.Id;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Id
             return len;
         }
 
@@ -629,11 +637,12 @@ partial class ContractOptionsModel
                     DebugAssertPosition(ref state, before + len, "global::AotFixtures.ContractOptions.LenientDerived");
                 }
             }
-            var tmp1 = value.Id;
-            if (tmp1 != 0)
+            int tmp_int;
+            tmp_int = value.Id;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Id
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -654,8 +663,9 @@ partial class ContractOptionsModel
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.ContractOptions.LenientDerived
                 }
             }
-            var tmp1 = value.Id;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Id
+            int tmp_int;
+            tmp_int = value.Id;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Id
             return len;
         }
 
@@ -721,11 +731,12 @@ partial class ContractOptionsModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp2 = value.Extra;
-            if (tmp2 != null)
+            string tmp_string;
+            tmp_string = value.Extra;
+            if (tmp_string != null)
             {
                 state.WriteRawTag((2 << 3) | 2);  // Extra
-                state.WriteRawString(tmp2);
+                state.WriteRawString(tmp_string);
             }
         }
 
@@ -737,10 +748,11 @@ partial class ContractOptionsModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp2 = value.Extra;
-            if (tmp2 != null)
+            string tmp_string;
+            tmp_string = value.Extra;
+            if (tmp_string != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // Extra
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Extra
             }
             return len;
         }
@@ -794,11 +806,12 @@ partial class ContractOptionsModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp3 = value.Tagged;
-            if (tmp3 != 0)
+            int tmp_int;
+            tmp_int = value.Tagged;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((3 << 3) | 0);  // Tagged
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp3));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -806,8 +819,9 @@ partial class ContractOptionsModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp3 = value.Tagged;
-            if (tmp3 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp3));  // Tagged
+            int tmp_int;
+            tmp_int = value.Tagged;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Tagged
             return len;
         }
 

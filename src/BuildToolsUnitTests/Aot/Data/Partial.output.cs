@@ -263,17 +263,18 @@ partial class PartialModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Pinned;
-            if (tmp1 != 0)
+            int tmp_int;
+            tmp_int = value.Pinned;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Pinned
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
-            var tmp2 = value.FromPartial;
-            if (tmp2 != 0)
+            tmp_int = value.FromPartial;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((2 << 3) | 0);  // FromPartial
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -281,10 +282,11 @@ partial class PartialModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Pinned;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Pinned
-            var tmp2 = value.FromPartial;
-            if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // FromPartial
+            int tmp_int;
+            tmp_int = value.Pinned;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Pinned
+            tmp_int = value.FromPartial;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // FromPartial
             return len;
         }
 
@@ -349,36 +351,39 @@ partial class PartialModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Id;
-            if (tmp1 != 0)
+            int tmp_int;
+            string tmp_string;
+            int[] tmp_int__;
+            tmp_int = value.Id;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Id
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
-            var tmp2 = value.Name;
-            if (tmp2 != null)
+            tmp_string = value.Name;
+            if (tmp_string != null)
             {
                 state.WriteRawTag((2 << 3) | 2);  // Name
-                state.WriteRawString(tmp2);
+                state.WriteRawString(tmp_string);
             }
-            var tmp3 = value.Fixed;
-            if (tmp3 != 0)
+            tmp_int = value.Fixed;
+            if (tmp_int != 0)
             {
                 state.WriteFieldHeader(3, global::ProtoBuf.WireType.Fixed32);
-                state.WriteInt32(tmp3);
+                state.WriteInt32(tmp_int);
             }
-            var tmp4 = value.Always;
+            tmp_int = value.Always;
             state.WriteRawTag((4 << 3) | 0);  // Always
-            state.WriteRawVarint64(unchecked((ulong)(long)tmp4));
-            var tmp5 = value.Values;
-            if (tmp5 != null)
+            state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
+            tmp_int__ = value.Values;
+            if (tmp_int__ != null)
             {
-                state.WriteRawPackedVarint(5, tmp5);  // Values
+                state.WriteRawPackedVarint(5, tmp_int__);  // Values
             }
-            var tmp6 = value.Replaced;
-            if (tmp6 != null)
+            tmp_int__ = value.Replaced;
+            if (tmp_int__ != null)
             {
-                foreach (var item6 in tmp6)
+                foreach (var item6 in tmp_int__)
                 {
                     state.WriteRawTag((6 << 3) | 0);  // Replaced
                     state.WriteRawVarint64(unchecked((ulong)(long)item6));
@@ -390,26 +395,29 @@ partial class PartialModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Id;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Id
-            var tmp2 = value.Name;
-            if (tmp2 != null)
+            int tmp_int;
+            string tmp_string;
+            int[] tmp_int__;
+            tmp_int = value.Id;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Id
+            tmp_string = value.Name;
+            if (tmp_string != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // Name
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Name
             }
-            var tmp3 = value.Fixed;
-            if (tmp3 != 0) len += 5;  // Fixed
-            var tmp4 = value.Always;
-            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp4));  // Always
-            var tmp5 = value.Values;
-            if (tmp5 != null)
+            tmp_int = value.Fixed;
+            if (tmp_int != 0) len += 5;  // Fixed
+            tmp_int = value.Always;
+            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Always
+            tmp_int__ = value.Values;
+            if (tmp_int__ != null)
             {
-                len += global::ProtoBuf.ProtoWriter.State.MeasureRawPackedVarint(5, tmp5);  // Values
+                len += global::ProtoBuf.ProtoWriter.State.MeasureRawPackedVarint(5, tmp_int__);  // Values
             }
-            var tmp6 = value.Replaced;
-            if (tmp6 != null)
+            tmp_int__ = value.Replaced;
+            if (tmp_int__ != null)
             {
-                foreach (var item6 in tmp6)
+                foreach (var item6 in tmp_int__)
                 {
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)item6));
                 }
@@ -529,11 +537,12 @@ partial class PartialModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Kept;
-            if (tmp1 != 0)
+            int tmp_int;
+            tmp_int = value.Kept;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Kept
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -541,8 +550,9 @@ partial class PartialModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Kept;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Kept
+            int tmp_int;
+            tmp_int = value.Kept;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Kept
             return len;
         }
 
@@ -598,17 +608,18 @@ partial class PartialModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp2 = value.OrderOnly;
-            if (tmp2 != 0)
+            int tmp_int;
+            tmp_int = value.OrderOnly;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((2 << 3) | 0);  // OrderOnly
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
-            var tmp7 = value.Both;
-            if (tmp7 != 0)
+            tmp_int = value.Both;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((7 << 3) | 0);  // Both
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp7));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -616,10 +627,11 @@ partial class PartialModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp2 = value.OrderOnly;
-            if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // OrderOnly
-            var tmp7 = value.Both;
-            if (tmp7 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp7));  // Both
+            int tmp_int;
+            tmp_int = value.OrderOnly;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // OrderOnly
+            tmp_int = value.Both;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Both
             return len;
         }
 

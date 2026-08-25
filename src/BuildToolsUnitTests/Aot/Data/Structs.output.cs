@@ -178,23 +178,26 @@ partial class StructsModel
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long before = 0;
             var rawDepth = state.SyncRawDepth(depth);
-            var tmp1 = value.Location;
+            global::AotFixtures.Structs.Point tmp_AotFixtures_Structs_Point;
+            global::AotFixtures.Structs.Point? tmp_AotFixtures_Structs_Point_;
+            int tmp_int;
+            tmp_AotFixtures_Structs_Point = value.Location;
             state.WriteRawTag((1 << 3) | 2);  // Location
             var len = state.RawSlots.Next();
             state.WriteRawVarint64((ulong)len);
             DebugCapturePosition(ref state, ref before);
-            RawWrite_AotFixtures_Structs_Point(ref state, tmp1, depth);
+            RawWrite_AotFixtures_Structs_Point(ref state, tmp_AotFixtures_Structs_Point, depth);
             DebugAssertPosition(ref state, before + len, "Location");
-            var tmp2 = value.MaybeLocation;
-            if (tmp2.HasValue)
+            tmp_AotFixtures_Structs_Point_ = value.MaybeLocation;
+            if (tmp_AotFixtures_Structs_Point_.HasValue)
             {
-                state.WriteMessage<global::AotFixtures.Structs.Point>(2, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp2.GetValueOrDefault(), Self);
+                state.WriteMessage<global::AotFixtures.Structs.Point>(2, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp_AotFixtures_Structs_Point_.GetValueOrDefault(), Self);
             }
-            var tmp3 = value.Other;
-            if (tmp3 != 0)
+            tmp_int = value.Other;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((3 << 3) | 0);  // Other
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp3));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
             state.SyncRawDepth(rawDepth);
         }
@@ -204,20 +207,23 @@ partial class StructsModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             long sub;
-            var tmp1 = value.Location;
+            global::AotFixtures.Structs.Point tmp_AotFixtures_Structs_Point;
+            global::AotFixtures.Structs.Point? tmp_AotFixtures_Structs_Point_;
+            int tmp_int;
+            tmp_AotFixtures_Structs_Point = value.Location;
             var slot1 = slots.Reserve();
-            sub = Measure_AotFixtures_Structs_Point(tmp1, depth, slots, context);
+            sub = Measure_AotFixtures_Structs_Point(tmp_AotFixtures_Structs_Point, depth, slots, context);
             slots.Set(slot1, sub);
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Location
-            var tmp2 = value.MaybeLocation;
-            if (tmp2.HasValue)
+            tmp_AotFixtures_Structs_Point_ = value.MaybeLocation;
+            if (tmp_AotFixtures_Structs_Point_.HasValue)
             {
-                var val2 = tmp2.GetValueOrDefault();
+                var val2 = tmp_AotFixtures_Structs_Point_.GetValueOrDefault();
                 sub = Measure_AotFixtures_Structs_Point(val2, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // MaybeLocation
             }
-            var tmp3 = value.Other;
-            if (tmp3 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp3));  // Other
+            tmp_int = value.Other;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Other
             return len;
         }
 
@@ -319,17 +325,19 @@ partial class StructsModel
         public static void RawWrite_AotFixtures_Structs_Point(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Structs.Point value, int depth)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            var tmp1 = value.X;
-            if (tmp1 != 0)
+            int tmp_int;
+            string tmp_string;
+            tmp_int = value.X;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // X
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
-            var tmp2 = value.Label;
-            if (tmp2 != null)
+            tmp_string = value.Label;
+            if (tmp_string != null)
             {
                 state.WriteRawTag((2 << 3) | 2);  // Label
-                state.WriteRawString(tmp2);
+                state.WriteRawString(tmp_string);
             }
         }
 
@@ -337,12 +345,14 @@ partial class StructsModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.X;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // X
-            var tmp2 = value.Label;
-            if (tmp2 != null)
+            int tmp_int;
+            string tmp_string;
+            tmp_int = value.X;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // X
+            tmp_string = value.Label;
+            if (tmp_string != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // Label
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Label
             }
             return len;
         }

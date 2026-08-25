@@ -145,23 +145,27 @@ partial class GroupedRepeatedModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long before = 0;
-            var tmp1 = value.Value;
-            if (tmp1 != 0)
+            int tmp_int;
+            global::AotFixtures.GroupedRepeated.Node tmp_AotFixtures_GroupedRepeated_Node;
+            global::System.Collections.Generic.List<global::AotFixtures.GroupedRepeated.Node> tmp_System_Collections_Generic_List_global__AotFixtures_GroupedRepeated_Node_;
+            global::AotFixtures.GroupedRepeated.Node[] tmp_AotFixtures_GroupedRepeated_Node__;
+            tmp_int = value.Value;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Value
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
-            var tmp2 = value.Child;
-            if (tmp2 != null)
+            tmp_AotFixtures_GroupedRepeated_Node = value.Child;
+            if (tmp_AotFixtures_GroupedRepeated_Node != null)
             {
                 state.WriteRawTag((2 << 3) | 3);  // Child (start group)
-                RawWrite_AotFixtures_GroupedRepeated_Node(ref state, tmp2, depth);
+                RawWrite_AotFixtures_GroupedRepeated_Node(ref state, tmp_AotFixtures_GroupedRepeated_Node, depth);
                 state.WriteRawTag((2 << 3) | 4);  // Child (end group)
             }
-            var tmp3 = value.Children;
-            if (tmp3 != null)
+            tmp_System_Collections_Generic_List_global__AotFixtures_GroupedRepeated_Node_ = value.Children;
+            if (tmp_System_Collections_Generic_List_global__AotFixtures_GroupedRepeated_Node_ != null)
             {
-                foreach (var item3 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp3))
+                foreach (var item3 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_global__AotFixtures_GroupedRepeated_Node_))
                 {
                     if (item3 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.GroupedRepeated.Node>();
                     state.WriteRawTag((3 << 3) | 3);  // Children
@@ -169,10 +173,10 @@ partial class GroupedRepeatedModel
                     state.WriteRawTag((3 << 3) | 4);  // Children (end group)
                 }
             }
-            var tmp4 = value.More;
-            if (tmp4 != null)
+            tmp_AotFixtures_GroupedRepeated_Node__ = value.More;
+            if (tmp_AotFixtures_GroupedRepeated_Node__ != null)
             {
-                foreach (var item4 in tmp4)
+                foreach (var item4 in tmp_AotFixtures_GroupedRepeated_Node__)
                 {
                     if (item4 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.GroupedRepeated.Node>();
                     state.WriteRawTag((4 << 3) | 3);  // More
@@ -180,10 +184,10 @@ partial class GroupedRepeatedModel
                     state.WriteRawTag((4 << 3) | 4);  // More (end group)
                 }
             }
-            var tmp5 = value.Prefixed;
-            if (tmp5 != null)
+            tmp_System_Collections_Generic_List_global__AotFixtures_GroupedRepeated_Node_ = value.Prefixed;
+            if (tmp_System_Collections_Generic_List_global__AotFixtures_GroupedRepeated_Node_ != null)
             {
-                foreach (var item5 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp5))
+                foreach (var item5 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_global__AotFixtures_GroupedRepeated_Node_))
                 {
                     if (item5 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.GroupedRepeated.Node>();
                     state.WriteRawTag((5 << 3) | 2);  // Prefixed
@@ -201,38 +205,42 @@ partial class GroupedRepeatedModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             long sub;
-            var tmp1 = value.Value;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
-            var tmp2 = value.Child;
-            if (tmp2 != null)
+            int tmp_int;
+            global::AotFixtures.GroupedRepeated.Node tmp_AotFixtures_GroupedRepeated_Node;
+            global::System.Collections.Generic.List<global::AotFixtures.GroupedRepeated.Node> tmp_System_Collections_Generic_List_global__AotFixtures_GroupedRepeated_Node_;
+            global::AotFixtures.GroupedRepeated.Node[] tmp_AotFixtures_GroupedRepeated_Node__;
+            tmp_int = value.Value;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Value
+            tmp_AotFixtures_GroupedRepeated_Node = value.Child;
+            if (tmp_AotFixtures_GroupedRepeated_Node != null)
             {
-                sub = Measure_AotFixtures_GroupedRepeated_Node(tmp2, depth, slots, context);
+                sub = Measure_AotFixtures_GroupedRepeated_Node(tmp_AotFixtures_GroupedRepeated_Node, depth, slots, context);
                 len += 2 + sub;  // Child (group: no length prefix)
             }
-            var tmp3 = value.Children;
-            if (tmp3 != null)
+            tmp_System_Collections_Generic_List_global__AotFixtures_GroupedRepeated_Node_ = value.Children;
+            if (tmp_System_Collections_Generic_List_global__AotFixtures_GroupedRepeated_Node_ != null)
             {
-                foreach (var item3 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp3))
+                foreach (var item3 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_global__AotFixtures_GroupedRepeated_Node_))
                 {
                     if (item3 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.GroupedRepeated.Node>();
                     sub = Measure_AotFixtures_GroupedRepeated_Node(item3, depth, slots, context);
                     len += 2 + sub;
                 }
             }
-            var tmp4 = value.More;
-            if (tmp4 != null)
+            tmp_AotFixtures_GroupedRepeated_Node__ = value.More;
+            if (tmp_AotFixtures_GroupedRepeated_Node__ != null)
             {
-                foreach (var item4 in tmp4)
+                foreach (var item4 in tmp_AotFixtures_GroupedRepeated_Node__)
                 {
                     if (item4 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.GroupedRepeated.Node>();
                     sub = Measure_AotFixtures_GroupedRepeated_Node(item4, depth, slots, context);
                     len += 2 + sub;
                 }
             }
-            var tmp5 = value.Prefixed;
-            if (tmp5 != null)
+            tmp_System_Collections_Generic_List_global__AotFixtures_GroupedRepeated_Node_ = value.Prefixed;
+            if (tmp_System_Collections_Generic_List_global__AotFixtures_GroupedRepeated_Node_ != null)
             {
-                foreach (var item5 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp5))
+                foreach (var item5 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_global__AotFixtures_GroupedRepeated_Node_))
                 {
                     if (item5 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.GroupedRepeated.Node>();
                     var slot5 = slots.Reserve();

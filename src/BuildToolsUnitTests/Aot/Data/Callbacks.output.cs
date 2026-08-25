@@ -570,11 +570,12 @@ partial class CallbacksModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Value;
-            if (tmp1 != 0)
+            int tmp_int;
+            tmp_int = value.Value;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Value
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -582,8 +583,9 @@ partial class CallbacksModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Value;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
+            int tmp_int;
+            tmp_int = value.Value;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Value
             return len;
         }
 
@@ -652,21 +654,23 @@ partial class CallbacksModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long before = 0;
-            var tmp1 = value.Inner;
-            if (tmp1 != null)
+            global::AotFixtures.Callbacks.Hooked tmp_AotFixtures_Callbacks_Hooked;
+            int tmp_int;
+            tmp_AotFixtures_Callbacks_Hooked = value.Inner;
+            if (tmp_AotFixtures_Callbacks_Hooked != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Inner
                 var len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWrite_AotFixtures_Callbacks_Hooked(ref state, tmp1, depth);
+                RawWrite_AotFixtures_Callbacks_Hooked(ref state, tmp_AotFixtures_Callbacks_Hooked, depth);
                 DebugAssertPosition(ref state, before + len, "Inner");
             }
-            var tmp2 = value.Tag;
-            if (tmp2 != 0)
+            tmp_int = value.Tag;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((2 << 3) | 0);  // Tag
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -674,16 +678,18 @@ partial class CallbacksModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Inner;
-            if (tmp1 != null)
+            global::AotFixtures.Callbacks.Hooked tmp_AotFixtures_Callbacks_Hooked;
+            int tmp_int;
+            tmp_AotFixtures_Callbacks_Hooked = value.Inner;
+            if (tmp_AotFixtures_Callbacks_Hooked != null)
             {
                 var slot1 = slots.Reserve();
-                var sub = Measure_AotFixtures_Callbacks_Hooked(tmp1, depth, slots, context);
+                var sub = Measure_AotFixtures_Callbacks_Hooked(tmp_AotFixtures_Callbacks_Hooked, depth, slots, context);
                 slots.Set(slot1, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Inner
             }
-            var tmp2 = value.Tag;
-            if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // Tag
+            tmp_int = value.Tag;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Tag
             return len;
         }
 
@@ -748,11 +754,12 @@ partial class CallbacksModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             value.BeforeSer();
-            var tmp1 = value.Value;
-            if (tmp1 != 0)
+            int tmp_int;
+            tmp_int = value.Value;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Value
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
             value.AfterSer();
         }
@@ -762,8 +769,9 @@ partial class CallbacksModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             value.BeforeSer();
             long len = 0;
-            var tmp1 = value.Value;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
+            int tmp_int;
+            tmp_int = value.Value;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Value
             value.AfterSer();
             return len;
         }
@@ -857,11 +865,12 @@ partial class CallbacksModel
                     global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
                 }
             }
-            var tmp1 = value.Value;
-            if (tmp1 != 0)
+            int tmp_int;
+            tmp_int = value.Value;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Value
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
             value.AfterSer();
         }
@@ -888,8 +897,9 @@ partial class CallbacksModel
                     global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
                 }
             }
-            var tmp1 = value.Value;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
+            int tmp_int;
+            tmp_int = value.Value;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Value
             value.AfterSer();
             return len;
         }
@@ -948,11 +958,12 @@ partial class CallbacksModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp2 = value.Extra;
-            if (tmp2 != 0)
+            int tmp_int;
+            tmp_int = value.Extra;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((2 << 3) | 0);  // Extra
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -964,8 +975,9 @@ partial class CallbacksModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp2 = value.Extra;
-            if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // Extra
+            int tmp_int;
+            tmp_int = value.Extra;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Extra
             return len;
         }
 
@@ -1023,14 +1035,15 @@ partial class CallbacksModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long before = 0;
-            var tmp1 = value.Inner;
-            if (tmp1 != null)
+            global::AotFixtures.Callbacks.HookedBase tmp_AotFixtures_Callbacks_HookedBase;
+            tmp_AotFixtures_Callbacks_HookedBase = value.Inner;
+            if (tmp_AotFixtures_Callbacks_HookedBase != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Inner
                 var len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWriteSub_AotFixtures_Callbacks_HookedBase(ref state, tmp1, depth);
+                RawWriteSub_AotFixtures_Callbacks_HookedBase(ref state, tmp_AotFixtures_Callbacks_HookedBase, depth);
                 DebugAssertPosition(ref state, before + len, "Inner");
             }
         }
@@ -1039,11 +1052,12 @@ partial class CallbacksModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Inner;
-            if (tmp1 != null)
+            global::AotFixtures.Callbacks.HookedBase tmp_AotFixtures_Callbacks_HookedBase;
+            tmp_AotFixtures_Callbacks_HookedBase = value.Inner;
+            if (tmp_AotFixtures_Callbacks_HookedBase != null)
             {
                 var slot1 = slots.Reserve();
-                var sub = Measure_AotFixtures_Callbacks_HookedBase(tmp1, depth, slots, context);
+                var sub = Measure_AotFixtures_Callbacks_HookedBase(tmp_AotFixtures_Callbacks_HookedBase, depth, slots, context);
                 slots.Set(slot1, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Inner
             }
@@ -1107,11 +1121,12 @@ partial class CallbacksModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             value.BeforeSer(state.Context);
-            var tmp1 = value.Value;
-            if (tmp1 != 0)
+            int tmp_int;
+            tmp_int = value.Value;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Value
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
             value.AfterSer(global::ProtoBuf.SerializationContext.AsStreamingContext(state.Context));
         }
@@ -1121,8 +1136,9 @@ partial class CallbacksModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             value.BeforeSer(context);
             long len = 0;
-            var tmp1 = value.Value;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
+            int tmp_int;
+            tmp_int = value.Value;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Value
             value.AfterSer(global::ProtoBuf.SerializationContext.AsStreamingContext(context));
             return len;
         }
@@ -1183,11 +1199,12 @@ partial class CallbacksModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             value.OnSer(global::ProtoBuf.SerializationContext.AsStreamingContext(state.Context));
-            var tmp1 = value.Value;
-            if (tmp1 != 0)
+            int tmp_int;
+            tmp_int = value.Value;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Value
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
             value.OnSerd(global::ProtoBuf.SerializationContext.AsStreamingContext(state.Context));
         }
@@ -1197,8 +1214,9 @@ partial class CallbacksModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             value.OnSer(global::ProtoBuf.SerializationContext.AsStreamingContext(context));
             long len = 0;
-            var tmp1 = value.Value;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
+            int tmp_int;
+            tmp_int = value.Value;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Value
             value.OnSerd(global::ProtoBuf.SerializationContext.AsStreamingContext(context));
             return len;
         }
@@ -1259,11 +1277,12 @@ partial class CallbacksModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             value.BeforeSer(state.Context);
-            var tmp1 = value.Value;
-            if (tmp1 != 0)
+            int tmp_int;
+            tmp_int = value.Value;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Value
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
             value.AfterSer();
         }
@@ -1273,8 +1292,9 @@ partial class CallbacksModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             value.BeforeSer(context);
             long len = 0;
-            var tmp1 = value.Value;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
+            int tmp_int;
+            tmp_int = value.Value;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Value
             value.AfterSer();
             return len;
         }
@@ -1342,14 +1362,15 @@ partial class CallbacksModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long before = 0;
-            var tmp1 = value.Inner;
-            if (tmp1 != null)
+            global::AotFixtures.Callbacks.Watched tmp_AotFixtures_Callbacks_Watched;
+            tmp_AotFixtures_Callbacks_Watched = value.Inner;
+            if (tmp_AotFixtures_Callbacks_Watched != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Inner
                 var len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWrite_AotFixtures_Callbacks_Watched(ref state, tmp1, depth);
+                RawWrite_AotFixtures_Callbacks_Watched(ref state, tmp_AotFixtures_Callbacks_Watched, depth);
                 DebugAssertPosition(ref state, before + len, "Inner");
             }
         }
@@ -1358,11 +1379,12 @@ partial class CallbacksModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Inner;
-            if (tmp1 != null)
+            global::AotFixtures.Callbacks.Watched tmp_AotFixtures_Callbacks_Watched;
+            tmp_AotFixtures_Callbacks_Watched = value.Inner;
+            if (tmp_AotFixtures_Callbacks_Watched != null)
             {
                 var slot1 = slots.Reserve();
-                var sub = Measure_AotFixtures_Callbacks_Watched(tmp1, depth, slots, context);
+                var sub = Measure_AotFixtures_Callbacks_Watched(tmp_AotFixtures_Callbacks_Watched, depth, slots, context);
                 slots.Set(slot1, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Inner
             }

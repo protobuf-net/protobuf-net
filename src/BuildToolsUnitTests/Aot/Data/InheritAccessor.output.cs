@@ -251,28 +251,31 @@ partial class InheritAccessorModel
                     global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
                 }
             }
-            var tmp1 = Field_AotFixtures_InheritAccessor_Base__count(value);
-            if (tmp1 != 0)
+            int tmp_int;
+            string tmp_string;
+            global::System.Collections.Generic.List<int> tmp_System_Collections_Generic_List_int_;
+            tmp_int = Field_AotFixtures_InheritAccessor_Base__count(value);
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // _count
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
-            var tmp2 = value.Label;
-            if (tmp2 != null)
+            tmp_string = value.Label;
+            if (tmp_string != null)
             {
                 state.WriteRawTag((2 << 3) | 2);  // Label
-                state.WriteRawString(tmp2);
+                state.WriteRawString(tmp_string);
             }
-            var tmp3 = value.Ordinal;
-            if (tmp3 != 0)
+            tmp_int = value.Ordinal;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((3 << 3) | 0);  // Ordinal
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp3));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
-            var tmp4 = Field_AotFixtures_InheritAccessor_Base__values(value);
-            if (tmp4 != null)
+            tmp_System_Collections_Generic_List_int_ = Field_AotFixtures_InheritAccessor_Base__values(value);
+            if (tmp_System_Collections_Generic_List_int_ != null)
             {
-                foreach (var item4 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp4))
+                foreach (var item4 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_int_))
                 {
                     state.WriteRawTag((4 << 3) | 0);  // _values
                     state.WriteRawVarint64(unchecked((ulong)(long)item4));
@@ -301,19 +304,22 @@ partial class InheritAccessorModel
                     global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
                 }
             }
-            var tmp1 = Field_AotFixtures_InheritAccessor_Base__count(value);
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // _count
-            var tmp2 = value.Label;
-            if (tmp2 != null)
+            int tmp_int;
+            string tmp_string;
+            global::System.Collections.Generic.List<int> tmp_System_Collections_Generic_List_int_;
+            tmp_int = Field_AotFixtures_InheritAccessor_Base__count(value);
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // _count
+            tmp_string = value.Label;
+            if (tmp_string != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // Label
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Label
             }
-            var tmp3 = value.Ordinal;
-            if (tmp3 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp3));  // Ordinal
-            var tmp4 = Field_AotFixtures_InheritAccessor_Base__values(value);
-            if (tmp4 != null)
+            tmp_int = value.Ordinal;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Ordinal
+            tmp_System_Collections_Generic_List_int_ = Field_AotFixtures_InheritAccessor_Base__values(value);
+            if (tmp_System_Collections_Generic_List_int_ != null)
             {
-                foreach (var item4 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp4))
+                foreach (var item4 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_int_))
                 {
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)item4));
                 }
@@ -421,11 +427,12 @@ partial class InheritAccessorModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp5 = Field_AotFixtures_InheritAccessor_Derived__extra(value);
-            if (tmp5 != null)
+            string tmp_string;
+            tmp_string = Field_AotFixtures_InheritAccessor_Derived__extra(value);
+            if (tmp_string != null)
             {
                 state.WriteRawTag((5 << 3) | 2);  // _extra
-                state.WriteRawString(tmp5);
+                state.WriteRawString(tmp_string);
             }
         }
 
@@ -437,10 +444,11 @@ partial class InheritAccessorModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp5 = Field_AotFixtures_InheritAccessor_Derived__extra(value);
-            if (tmp5 != null)
+            string tmp_string;
+            tmp_string = Field_AotFixtures_InheritAccessor_Derived__extra(value);
+            if (tmp_string != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp5);  // _extra
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // _extra
             }
             return len;
         }
@@ -516,11 +524,12 @@ partial class InheritAccessorModel
         public static void RawWrite_AotFixtures_InheritAccessor_Holder(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.InheritAccessor.Holder value, int depth)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            var tmp1 = Field_AotFixtures_InheritAccessor_Holder__n(ref value);
-            if (tmp1 != 0)
+            int tmp_int;
+            tmp_int = Field_AotFixtures_InheritAccessor_Holder__n(ref value);
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // _n
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -528,8 +537,9 @@ partial class InheritAccessorModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = Field_AotFixtures_InheritAccessor_Holder__n(ref value);
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // _n
+            int tmp_int;
+            tmp_int = Field_AotFixtures_InheritAccessor_Holder__n(ref value);
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // _n
             return len;
         }
 

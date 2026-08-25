@@ -260,16 +260,18 @@ partial class IncludeGroupModel
                     global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
                 }
             }
-            var tmp1 = value.Success;
-            if (tmp1)
+            bool tmp_bool;
+            string tmp_string;
+            tmp_bool = value.Success;
+            if (tmp_bool)
             {
-                state.WriteRawTagBool((1 << 3) | 0, tmp1);  // Success
+                state.WriteRawTagBool((1 << 3) | 0, tmp_bool);  // Success
             }
-            var tmp2 = value.Error;
-            if (tmp2 != null)
+            tmp_string = value.Error;
+            if (tmp_string != null)
             {
                 state.WriteRawTag((2 << 3) | 2);  // Error
-                state.WriteRawString(tmp2);
+                state.WriteRawString(tmp_string);
             }
         }
 
@@ -300,12 +302,14 @@ partial class IncludeGroupModel
                     global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
                 }
             }
-            var tmp1 = value.Success;
-            if (tmp1) len += 2;  // Success
-            var tmp2 = value.Error;
-            if (tmp2 != null)
+            bool tmp_bool;
+            string tmp_string;
+            tmp_bool = value.Success;
+            if (tmp_bool) len += 2;  // Success
+            tmp_string = value.Error;
+            if (tmp_string != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // Error
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Error
             }
             return len;
         }
@@ -383,11 +387,12 @@ partial class IncludeGroupModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Extra;
-            if (tmp1 != 0)
+            int tmp_int;
+            tmp_int = value.Extra;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Extra
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -399,8 +404,9 @@ partial class IncludeGroupModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Extra;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Extra
+            int tmp_int;
+            tmp_int = value.Extra;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Extra
             return len;
         }
 
@@ -461,11 +467,12 @@ partial class IncludeGroupModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Extra;
-            if (tmp1 != 0)
+            int tmp_int;
+            tmp_int = value.Extra;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Extra
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -477,8 +484,9 @@ partial class IncludeGroupModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Extra;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Extra
+            int tmp_int;
+            tmp_int = value.Extra;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Extra
             return len;
         }
 

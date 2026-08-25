@@ -95,87 +95,95 @@ partial class BclLevel300Model
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.AsString;
-            if (tmp1 != global::System.Guid.Empty)
+            global::System.Guid tmp_System_Guid;
+            decimal tmp_decimal;
+            global::System.Guid? tmp_System_Guid_;
+            decimal? tmp_decimal_;
+            tmp_System_Guid = value.AsString;
+            if (tmp_System_Guid != global::System.Guid.Empty)
             {
                 state.WriteFieldHeader(1, global::ProtoBuf.WireType.String);
-                global::ProtoBuf.BclHelpers.WriteGuidString(ref state, tmp1);
+                global::ProtoBuf.BclHelpers.WriteGuidString(ref state, tmp_System_Guid);
             }
-            var tmp2 = value.AsBytes;
-            if (tmp2 != global::System.Guid.Empty)
+            tmp_System_Guid = value.AsBytes;
+            if (tmp_System_Guid != global::System.Guid.Empty)
             {
                 state.WriteFieldHeader(2, global::ProtoBuf.WireType.String);
-                global::ProtoBuf.BclHelpers.WriteGuidBytes(ref state, tmp2);
+                global::ProtoBuf.BclHelpers.WriteGuidBytes(ref state, tmp_System_Guid);
             }
-            var tmp3 = value.Amount;
-            if (tmp3 != 0m)
+            tmp_decimal = value.Amount;
+            if (tmp_decimal != 0m)
             {
                 state.WriteFieldHeader(3, global::ProtoBuf.WireType.String);
-                global::ProtoBuf.BclHelpers.WriteDecimalString(ref state, tmp3);
+                global::ProtoBuf.BclHelpers.WriteDecimalString(ref state, tmp_decimal);
             }
-            var tmp4 = value.MaybeGuid;
-            if (tmp4.HasValue)
+            tmp_System_Guid_ = value.MaybeGuid;
+            if (tmp_System_Guid_.HasValue)
             {
-                var val4 = tmp4.GetValueOrDefault();
+                var val4 = tmp_System_Guid_.GetValueOrDefault();
                 state.WriteFieldHeader(4, global::ProtoBuf.WireType.String);
                 global::ProtoBuf.BclHelpers.WriteGuidString(ref state, val4);
             }
-            var tmp5 = value.MaybeAmount;
-            if (tmp5.HasValue)
+            tmp_decimal_ = value.MaybeAmount;
+            if (tmp_decimal_.HasValue)
             {
-                var val5 = tmp5.GetValueOrDefault();
+                var val5 = tmp_decimal_.GetValueOrDefault();
                 state.WriteFieldHeader(5, global::ProtoBuf.WireType.String);
                 global::ProtoBuf.BclHelpers.WriteDecimalString(ref state, val5);
             }
-            var tmp6 = value.AlwaysGuid;
+            tmp_System_Guid = value.AlwaysGuid;
             state.WriteFieldHeader(6, global::ProtoBuf.WireType.String);
-            global::ProtoBuf.BclHelpers.WriteGuidString(ref state, tmp6);
-            var tmp7 = value.AlwaysAmount;
+            global::ProtoBuf.BclHelpers.WriteGuidString(ref state, tmp_System_Guid);
+            tmp_decimal = value.AlwaysAmount;
             state.WriteFieldHeader(7, global::ProtoBuf.WireType.String);
-            global::ProtoBuf.BclHelpers.WriteDecimalString(ref state, tmp7);
+            global::ProtoBuf.BclHelpers.WriteDecimalString(ref state, tmp_decimal);
         }
 
         private static long Measure_AotFixtures_BclLevel300_Level300(global::AotFixtures.BclLevel300.Level300 value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.AsString;
-            if (tmp1 != global::System.Guid.Empty)
+            global::System.Guid tmp_System_Guid;
+            decimal tmp_decimal;
+            global::System.Guid? tmp_System_Guid_;
+            decimal? tmp_decimal_;
+            tmp_System_Guid = value.AsString;
+            if (tmp_System_Guid != global::System.Guid.Empty)
             {
-                var bcl1 = global::ProtoBuf.BclHelpers.MeasureGuidString(tmp1);
+                var bcl1 = global::ProtoBuf.BclHelpers.MeasureGuidString(tmp_System_Guid);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bcl1) + bcl1;  // AsString
             }
-            var tmp2 = value.AsBytes;
-            if (tmp2 != global::System.Guid.Empty)
+            tmp_System_Guid = value.AsBytes;
+            if (tmp_System_Guid != global::System.Guid.Empty)
             {
-                var bcl2 = global::ProtoBuf.BclHelpers.MeasureGuidBytes(tmp2);
+                var bcl2 = global::ProtoBuf.BclHelpers.MeasureGuidBytes(tmp_System_Guid);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bcl2) + bcl2;  // AsBytes
             }
-            var tmp3 = value.Amount;
-            if (tmp3 != 0m)
+            tmp_decimal = value.Amount;
+            if (tmp_decimal != 0m)
             {
-                var bcl3 = global::ProtoBuf.BclHelpers.MeasureDecimalString(tmp3);
+                var bcl3 = global::ProtoBuf.BclHelpers.MeasureDecimalString(tmp_decimal);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bcl3) + bcl3;  // Amount
             }
-            var tmp4 = value.MaybeGuid;
-            if (tmp4.HasValue)
+            tmp_System_Guid_ = value.MaybeGuid;
+            if (tmp_System_Guid_.HasValue)
             {
-                var val4 = tmp4.GetValueOrDefault();
+                var val4 = tmp_System_Guid_.GetValueOrDefault();
                 var bcl4 = global::ProtoBuf.BclHelpers.MeasureGuidString(val4);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bcl4) + bcl4;  // MaybeGuid
             }
-            var tmp5 = value.MaybeAmount;
-            if (tmp5.HasValue)
+            tmp_decimal_ = value.MaybeAmount;
+            if (tmp_decimal_.HasValue)
             {
-                var val5 = tmp5.GetValueOrDefault();
+                var val5 = tmp_decimal_.GetValueOrDefault();
                 var bcl5 = global::ProtoBuf.BclHelpers.MeasureDecimalString(val5);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bcl5) + bcl5;  // MaybeAmount
             }
-            var tmp6 = value.AlwaysGuid;
-            var bcl6 = global::ProtoBuf.BclHelpers.MeasureGuidString(tmp6);
+            tmp_System_Guid = value.AlwaysGuid;
+            var bcl6 = global::ProtoBuf.BclHelpers.MeasureGuidString(tmp_System_Guid);
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bcl6) + bcl6;  // AlwaysGuid
-            var tmp7 = value.AlwaysAmount;
-            var bcl7 = global::ProtoBuf.BclHelpers.MeasureDecimalString(tmp7);
+            tmp_decimal = value.AlwaysAmount;
+            var bcl7 = global::ProtoBuf.BclHelpers.MeasureDecimalString(tmp_decimal);
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bcl7) + bcl7;  // AlwaysAmount
             return len;
         }

@@ -115,82 +115,94 @@ partial class PackedAllModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.U32Array;
-            if (tmp1 != null)
+            uint[] tmp_uint__;
+            global::System.Collections.Generic.List<uint> tmp_System_Collections_Generic_List_uint_;
+            global::System.Collections.Immutable.ImmutableArray<uint> tmp_System_Collections_Immutable_ImmutableArray_uint_;
+            int[] tmp_int__;
+            ulong[] tmp_ulong__;
+            long[] tmp_long__;
+            float[] tmp_float__;
+            double[] tmp_double__;
+            bool[] tmp_bool__;
+            global::System.Collections.Generic.List<bool> tmp_System_Collections_Generic_List_bool_;
+            global::AotFixtures.PackedAll.Level[] tmp_AotFixtures_PackedAll_Level__;
+            global::System.Collections.Generic.List<global::AotFixtures.PackedAll.Level> tmp_System_Collections_Generic_List_global__AotFixtures_PackedAll_Level_;
+            tmp_uint__ = value.U32Array;
+            if (tmp_uint__ != null)
             {
-                state.WriteRawPackedVarint(1, tmp1);  // U32Array
+                state.WriteRawPackedVarint(1, tmp_uint__);  // U32Array
             }
-            var tmp2 = value.U32List;
-            if (tmp2 != null)
+            tmp_System_Collections_Generic_List_uint_ = value.U32List;
+            if (tmp_System_Collections_Generic_List_uint_ != null)
             {
-                state.WriteRawPackedVarint(2, global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp2));  // U32List
+                state.WriteRawPackedVarint(2, global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_uint_));  // U32List
             }
-            var tmp3 = value.U32Immutable;
-            state.WriteRawPackedVarint(3, tmp3.AsSpan());  // U32Immutable
-            var tmp4 = value.I32Array;
-            if (tmp4 != null)
+            tmp_System_Collections_Immutable_ImmutableArray_uint_ = value.U32Immutable;
+            state.WriteRawPackedVarint(3, tmp_System_Collections_Immutable_ImmutableArray_uint_.AsSpan());  // U32Immutable
+            tmp_int__ = value.I32Array;
+            if (tmp_int__ != null)
             {
-                state.WriteRawPackedVarint(4, tmp4);  // I32Array
+                state.WriteRawPackedVarint(4, tmp_int__);  // I32Array
             }
-            var tmp5 = value.U64Array;
-            if (tmp5 != null)
+            tmp_ulong__ = value.U64Array;
+            if (tmp_ulong__ != null)
             {
-                state.WriteRawPackedVarint(5, tmp5);  // U64Array
+                state.WriteRawPackedVarint(5, tmp_ulong__);  // U64Array
             }
-            var tmp6 = value.I64Array;
-            if (tmp6 != null)
+            tmp_long__ = value.I64Array;
+            if (tmp_long__ != null)
             {
-                state.WriteRawPackedVarint(6, global::System.Runtime.InteropServices.MemoryMarshal.Cast<long, ulong>(tmp6));  // I64Array
+                state.WriteRawPackedVarint(6, global::System.Runtime.InteropServices.MemoryMarshal.Cast<long, ulong>(tmp_long__));  // I64Array
             }
-            var tmp7 = value.S32Array;
-            if (tmp7 != null)
+            tmp_int__ = value.S32Array;
+            if (tmp_int__ != null)
             {
-                state.WriteRawPackedZigZag(7, tmp7);  // S32Array
+                state.WriteRawPackedZigZag(7, tmp_int__);  // S32Array
             }
-            var tmp8 = value.S64Array;
-            if (tmp8 != null)
+            tmp_long__ = value.S64Array;
+            if (tmp_long__ != null)
             {
-                state.WriteRawPackedZigZag(8, tmp8);  // S64Array
+                state.WriteRawPackedZigZag(8, tmp_long__);  // S64Array
             }
-            var tmp9 = value.F32Array;
-            if (tmp9 != null)
+            tmp_int__ = value.F32Array;
+            if (tmp_int__ != null)
             {
-                state.WriteRawPackedFixed32(9, global::System.Runtime.InteropServices.MemoryMarshal.Cast<int, uint>(tmp9));  // F32Array
+                state.WriteRawPackedFixed32(9, global::System.Runtime.InteropServices.MemoryMarshal.Cast<int, uint>(tmp_int__));  // F32Array
             }
-            var tmp10 = value.F64Array;
-            if (tmp10 != null)
+            tmp_long__ = value.F64Array;
+            if (tmp_long__ != null)
             {
-                state.WriteRawPackedFixed64(10, global::System.Runtime.InteropServices.MemoryMarshal.Cast<long, ulong>(tmp10));  // F64Array
+                state.WriteRawPackedFixed64(10, global::System.Runtime.InteropServices.MemoryMarshal.Cast<long, ulong>(tmp_long__));  // F64Array
             }
-            var tmp11 = value.Singles;
-            if (tmp11 != null)
+            tmp_float__ = value.Singles;
+            if (tmp_float__ != null)
             {
-                state.WriteRawPackedFixed32(11, global::System.Runtime.InteropServices.MemoryMarshal.Cast<float, uint>(tmp11));  // Singles
+                state.WriteRawPackedFixed32(11, global::System.Runtime.InteropServices.MemoryMarshal.Cast<float, uint>(tmp_float__));  // Singles
             }
-            var tmp12 = value.Doubles;
-            if (tmp12 != null)
+            tmp_double__ = value.Doubles;
+            if (tmp_double__ != null)
             {
-                state.WriteRawPackedFixed64(12, global::System.Runtime.InteropServices.MemoryMarshal.Cast<double, ulong>(tmp12));  // Doubles
+                state.WriteRawPackedFixed64(12, global::System.Runtime.InteropServices.MemoryMarshal.Cast<double, ulong>(tmp_double__));  // Doubles
             }
-            var tmp13 = value.Flags;
-            if (tmp13 != null)
+            tmp_bool__ = value.Flags;
+            if (tmp_bool__ != null)
             {
-                state.WriteRawPackedBool(13, tmp13);  // Flags
+                state.WriteRawPackedBool(13, tmp_bool__);  // Flags
             }
-            var tmp14 = value.FlagList;
-            if (tmp14 != null)
+            tmp_System_Collections_Generic_List_bool_ = value.FlagList;
+            if (tmp_System_Collections_Generic_List_bool_ != null)
             {
-                state.WriteRawPackedBool(14, global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp14));  // FlagList
+                state.WriteRawPackedBool(14, global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_bool_));  // FlagList
             }
-            var tmp15 = value.Levels;
-            if (tmp15 != null)
+            tmp_AotFixtures_PackedAll_Level__ = value.Levels;
+            if (tmp_AotFixtures_PackedAll_Level__ != null)
             {
-                state.WriteRawPackedVarint(15, global::System.Runtime.InteropServices.MemoryMarshal.Cast<global::AotFixtures.PackedAll.Level, int>(tmp15));  // Levels
+                state.WriteRawPackedVarint(15, global::System.Runtime.InteropServices.MemoryMarshal.Cast<global::AotFixtures.PackedAll.Level, int>(tmp_AotFixtures_PackedAll_Level__));  // Levels
             }
-            var tmp16 = value.LevelList;
-            if (tmp16 != null)
+            tmp_System_Collections_Generic_List_global__AotFixtures_PackedAll_Level_ = value.LevelList;
+            if (tmp_System_Collections_Generic_List_global__AotFixtures_PackedAll_Level_ != null)
             {
-                state.WriteRawPackedVarint(16, global::System.Runtime.InteropServices.MemoryMarshal.Cast<global::AotFixtures.PackedAll.Level, int>(global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp16)));  // LevelList
+                state.WriteRawPackedVarint(16, global::System.Runtime.InteropServices.MemoryMarshal.Cast<global::AotFixtures.PackedAll.Level, int>(global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_global__AotFixtures_PackedAll_Level_)));  // LevelList
             }
         }
 
@@ -198,82 +210,94 @@ partial class PackedAllModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.U32Array;
-            if (tmp1 != null)
+            uint[] tmp_uint__;
+            global::System.Collections.Generic.List<uint> tmp_System_Collections_Generic_List_uint_;
+            global::System.Collections.Immutable.ImmutableArray<uint> tmp_System_Collections_Immutable_ImmutableArray_uint_;
+            int[] tmp_int__;
+            ulong[] tmp_ulong__;
+            long[] tmp_long__;
+            float[] tmp_float__;
+            double[] tmp_double__;
+            bool[] tmp_bool__;
+            global::System.Collections.Generic.List<bool> tmp_System_Collections_Generic_List_bool_;
+            global::AotFixtures.PackedAll.Level[] tmp_AotFixtures_PackedAll_Level__;
+            global::System.Collections.Generic.List<global::AotFixtures.PackedAll.Level> tmp_System_Collections_Generic_List_global__AotFixtures_PackedAll_Level_;
+            tmp_uint__ = value.U32Array;
+            if (tmp_uint__ != null)
             {
-                len += global::ProtoBuf.ProtoWriter.State.MeasureRawPackedVarint(1, tmp1);  // U32Array
+                len += global::ProtoBuf.ProtoWriter.State.MeasureRawPackedVarint(1, tmp_uint__);  // U32Array
             }
-            var tmp2 = value.U32List;
-            if (tmp2 != null)
+            tmp_System_Collections_Generic_List_uint_ = value.U32List;
+            if (tmp_System_Collections_Generic_List_uint_ != null)
             {
-                len += global::ProtoBuf.ProtoWriter.State.MeasureRawPackedVarint(2, global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp2));  // U32List
+                len += global::ProtoBuf.ProtoWriter.State.MeasureRawPackedVarint(2, global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_uint_));  // U32List
             }
-            var tmp3 = value.U32Immutable;
-            len += global::ProtoBuf.ProtoWriter.State.MeasureRawPackedVarint(3, tmp3.AsSpan());  // U32Immutable
-            var tmp4 = value.I32Array;
-            if (tmp4 != null)
+            tmp_System_Collections_Immutable_ImmutableArray_uint_ = value.U32Immutable;
+            len += global::ProtoBuf.ProtoWriter.State.MeasureRawPackedVarint(3, tmp_System_Collections_Immutable_ImmutableArray_uint_.AsSpan());  // U32Immutable
+            tmp_int__ = value.I32Array;
+            if (tmp_int__ != null)
             {
-                len += global::ProtoBuf.ProtoWriter.State.MeasureRawPackedVarint(4, tmp4);  // I32Array
+                len += global::ProtoBuf.ProtoWriter.State.MeasureRawPackedVarint(4, tmp_int__);  // I32Array
             }
-            var tmp5 = value.U64Array;
-            if (tmp5 != null)
+            tmp_ulong__ = value.U64Array;
+            if (tmp_ulong__ != null)
             {
-                len += global::ProtoBuf.ProtoWriter.State.MeasureRawPackedVarint(5, tmp5);  // U64Array
+                len += global::ProtoBuf.ProtoWriter.State.MeasureRawPackedVarint(5, tmp_ulong__);  // U64Array
             }
-            var tmp6 = value.I64Array;
-            if (tmp6 != null)
+            tmp_long__ = value.I64Array;
+            if (tmp_long__ != null)
             {
-                len += global::ProtoBuf.ProtoWriter.State.MeasureRawPackedVarint(6, global::System.Runtime.InteropServices.MemoryMarshal.Cast<long, ulong>(tmp6));  // I64Array
+                len += global::ProtoBuf.ProtoWriter.State.MeasureRawPackedVarint(6, global::System.Runtime.InteropServices.MemoryMarshal.Cast<long, ulong>(tmp_long__));  // I64Array
             }
-            var tmp7 = value.S32Array;
-            if (tmp7 != null)
+            tmp_int__ = value.S32Array;
+            if (tmp_int__ != null)
             {
-                len += global::ProtoBuf.ProtoWriter.State.MeasureRawPackedZigZag(7, tmp7);  // S32Array
+                len += global::ProtoBuf.ProtoWriter.State.MeasureRawPackedZigZag(7, tmp_int__);  // S32Array
             }
-            var tmp8 = value.S64Array;
-            if (tmp8 != null)
+            tmp_long__ = value.S64Array;
+            if (tmp_long__ != null)
             {
-                len += global::ProtoBuf.ProtoWriter.State.MeasureRawPackedZigZag(8, tmp8);  // S64Array
+                len += global::ProtoBuf.ProtoWriter.State.MeasureRawPackedZigZag(8, tmp_long__);  // S64Array
             }
-            var tmp9 = value.F32Array;
-            if (tmp9 != null)
+            tmp_int__ = value.F32Array;
+            if (tmp_int__ != null)
             {
-                len += global::ProtoBuf.ProtoWriter.State.MeasureRawPackedFixed32(9, tmp9.Length);  // F32Array
+                len += global::ProtoBuf.ProtoWriter.State.MeasureRawPackedFixed32(9, tmp_int__.Length);  // F32Array
             }
-            var tmp10 = value.F64Array;
-            if (tmp10 != null)
+            tmp_long__ = value.F64Array;
+            if (tmp_long__ != null)
             {
-                len += global::ProtoBuf.ProtoWriter.State.MeasureRawPackedFixed64(10, tmp10.Length);  // F64Array
+                len += global::ProtoBuf.ProtoWriter.State.MeasureRawPackedFixed64(10, tmp_long__.Length);  // F64Array
             }
-            var tmp11 = value.Singles;
-            if (tmp11 != null)
+            tmp_float__ = value.Singles;
+            if (tmp_float__ != null)
             {
-                len += global::ProtoBuf.ProtoWriter.State.MeasureRawPackedFixed32(11, tmp11.Length);  // Singles
+                len += global::ProtoBuf.ProtoWriter.State.MeasureRawPackedFixed32(11, tmp_float__.Length);  // Singles
             }
-            var tmp12 = value.Doubles;
-            if (tmp12 != null)
+            tmp_double__ = value.Doubles;
+            if (tmp_double__ != null)
             {
-                len += global::ProtoBuf.ProtoWriter.State.MeasureRawPackedFixed64(12, tmp12.Length);  // Doubles
+                len += global::ProtoBuf.ProtoWriter.State.MeasureRawPackedFixed64(12, tmp_double__.Length);  // Doubles
             }
-            var tmp13 = value.Flags;
-            if (tmp13 != null)
+            tmp_bool__ = value.Flags;
+            if (tmp_bool__ != null)
             {
-                len += global::ProtoBuf.ProtoWriter.State.MeasureRawPackedBool(13, tmp13.Length);  // Flags
+                len += global::ProtoBuf.ProtoWriter.State.MeasureRawPackedBool(13, tmp_bool__.Length);  // Flags
             }
-            var tmp14 = value.FlagList;
-            if (tmp14 != null)
+            tmp_System_Collections_Generic_List_bool_ = value.FlagList;
+            if (tmp_System_Collections_Generic_List_bool_ != null)
             {
-                len += global::ProtoBuf.ProtoWriter.State.MeasureRawPackedBool(14, tmp14.Count);  // FlagList
+                len += global::ProtoBuf.ProtoWriter.State.MeasureRawPackedBool(14, tmp_System_Collections_Generic_List_bool_.Count);  // FlagList
             }
-            var tmp15 = value.Levels;
-            if (tmp15 != null)
+            tmp_AotFixtures_PackedAll_Level__ = value.Levels;
+            if (tmp_AotFixtures_PackedAll_Level__ != null)
             {
-                len += global::ProtoBuf.ProtoWriter.State.MeasureRawPackedVarint(15, global::System.Runtime.InteropServices.MemoryMarshal.Cast<global::AotFixtures.PackedAll.Level, int>(tmp15));  // Levels
+                len += global::ProtoBuf.ProtoWriter.State.MeasureRawPackedVarint(15, global::System.Runtime.InteropServices.MemoryMarshal.Cast<global::AotFixtures.PackedAll.Level, int>(tmp_AotFixtures_PackedAll_Level__));  // Levels
             }
-            var tmp16 = value.LevelList;
-            if (tmp16 != null)
+            tmp_System_Collections_Generic_List_global__AotFixtures_PackedAll_Level_ = value.LevelList;
+            if (tmp_System_Collections_Generic_List_global__AotFixtures_PackedAll_Level_ != null)
             {
-                len += global::ProtoBuf.ProtoWriter.State.MeasureRawPackedVarint(16, global::System.Runtime.InteropServices.MemoryMarshal.Cast<global::AotFixtures.PackedAll.Level, int>(global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp16)));  // LevelList
+                len += global::ProtoBuf.ProtoWriter.State.MeasureRawPackedVarint(16, global::System.Runtime.InteropServices.MemoryMarshal.Cast<global::AotFixtures.PackedAll.Level, int>(global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_global__AotFixtures_PackedAll_Level_)));  // LevelList
             }
             return len;
         }

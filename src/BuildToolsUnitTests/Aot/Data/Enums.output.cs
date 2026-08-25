@@ -95,93 +95,106 @@ partial class EnumsModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.SByteEnum;
-            if (tmp1 != default(global::AotFixtures.Enums.AsSByte))
+            global::AotFixtures.Enums.AsSByte tmp_AotFixtures_Enums_AsSByte;
+            global::AotFixtures.Enums.AsByte tmp_AotFixtures_Enums_AsByte;
+            global::AotFixtures.Enums.AsInt16 tmp_AotFixtures_Enums_AsInt16;
+            global::AotFixtures.Enums.AsUInt16 tmp_AotFixtures_Enums_AsUInt16;
+            global::AotFixtures.Enums.AsInt32 tmp_AotFixtures_Enums_AsInt32;
+            global::AotFixtures.Enums.AsUInt32 tmp_AotFixtures_Enums_AsUInt32;
+            global::AotFixtures.Enums.AsInt64 tmp_AotFixtures_Enums_AsInt64;
+            global::AotFixtures.Enums.AsUInt64 tmp_AotFixtures_Enums_AsUInt64;
+            global::AotFixtures.Enums.Flagged tmp_AotFixtures_Enums_Flagged;
+            global::AotFixtures.Enums.AsInt32? tmp_AotFixtures_Enums_AsInt32_;
+            global::AotFixtures.Enums.Flagged? tmp_AotFixtures_Enums_Flagged_;
+            char tmp_char;
+            char? tmp_char_;
+            tmp_AotFixtures_Enums_AsSByte = value.SByteEnum;
+            if (tmp_AotFixtures_Enums_AsSByte != default(global::AotFixtures.Enums.AsSByte))
             {
                 state.WriteRawTag((1 << 3) | 0);  // SByteEnum
-                state.WriteRawVarint64(unchecked((ulong)(long)(sbyte)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)(sbyte)tmp_AotFixtures_Enums_AsSByte));
             }
-            var tmp2 = value.ByteEnum;
-            if (tmp2 != default(global::AotFixtures.Enums.AsByte))
+            tmp_AotFixtures_Enums_AsByte = value.ByteEnum;
+            if (tmp_AotFixtures_Enums_AsByte != default(global::AotFixtures.Enums.AsByte))
             {
                 state.WriteRawTag((2 << 3) | 0);  // ByteEnum
-                state.WriteRawVarint32((byte)tmp2);
+                state.WriteRawVarint32((byte)tmp_AotFixtures_Enums_AsByte);
             }
-            var tmp3 = value.Int16Enum;
-            if (tmp3 != default(global::AotFixtures.Enums.AsInt16))
+            tmp_AotFixtures_Enums_AsInt16 = value.Int16Enum;
+            if (tmp_AotFixtures_Enums_AsInt16 != default(global::AotFixtures.Enums.AsInt16))
             {
                 state.WriteRawTag((3 << 3) | 0);  // Int16Enum
-                state.WriteRawVarint64(unchecked((ulong)(long)(short)tmp3));
+                state.WriteRawVarint64(unchecked((ulong)(long)(short)tmp_AotFixtures_Enums_AsInt16));
             }
-            var tmp4 = value.UInt16Enum;
-            if (tmp4 != default(global::AotFixtures.Enums.AsUInt16))
+            tmp_AotFixtures_Enums_AsUInt16 = value.UInt16Enum;
+            if (tmp_AotFixtures_Enums_AsUInt16 != default(global::AotFixtures.Enums.AsUInt16))
             {
                 state.WriteRawTag((4 << 3) | 0);  // UInt16Enum
-                state.WriteRawVarint32((ushort)tmp4);
+                state.WriteRawVarint32((ushort)tmp_AotFixtures_Enums_AsUInt16);
             }
-            var tmp5 = value.Int32Enum;
-            if (tmp5 != default(global::AotFixtures.Enums.AsInt32))
+            tmp_AotFixtures_Enums_AsInt32 = value.Int32Enum;
+            if (tmp_AotFixtures_Enums_AsInt32 != default(global::AotFixtures.Enums.AsInt32))
             {
                 state.WriteRawTag((5 << 3) | 0);  // Int32Enum
-                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp5));
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp_AotFixtures_Enums_AsInt32));
             }
-            var tmp6 = value.UInt32Enum;
-            if (tmp6 != default(global::AotFixtures.Enums.AsUInt32))
+            tmp_AotFixtures_Enums_AsUInt32 = value.UInt32Enum;
+            if (tmp_AotFixtures_Enums_AsUInt32 != default(global::AotFixtures.Enums.AsUInt32))
             {
                 state.WriteRawTag((6 << 3) | 0);  // UInt32Enum
-                state.WriteRawVarint32((uint)tmp6);
+                state.WriteRawVarint32((uint)tmp_AotFixtures_Enums_AsUInt32);
             }
-            var tmp7 = value.Int64Enum;
-            if (tmp7 != default(global::AotFixtures.Enums.AsInt64))
+            tmp_AotFixtures_Enums_AsInt64 = value.Int64Enum;
+            if (tmp_AotFixtures_Enums_AsInt64 != default(global::AotFixtures.Enums.AsInt64))
             {
                 state.WriteRawTag((7 << 3) | 0);  // Int64Enum
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp7));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_AotFixtures_Enums_AsInt64));
             }
-            var tmp8 = value.UInt64Enum;
-            if (tmp8 != default(global::AotFixtures.Enums.AsUInt64))
+            tmp_AotFixtures_Enums_AsUInt64 = value.UInt64Enum;
+            if (tmp_AotFixtures_Enums_AsUInt64 != default(global::AotFixtures.Enums.AsUInt64))
             {
                 state.WriteRawTag((8 << 3) | 0);  // UInt64Enum
-                state.WriteRawVarint64((ulong)tmp8);
+                state.WriteRawVarint64((ulong)tmp_AotFixtures_Enums_AsUInt64);
             }
-            var tmp9 = value.Flags;
-            if (tmp9 != default(global::AotFixtures.Enums.Flagged))
+            tmp_AotFixtures_Enums_Flagged = value.Flags;
+            if (tmp_AotFixtures_Enums_Flagged != default(global::AotFixtures.Enums.Flagged))
             {
                 state.WriteRawTag((9 << 3) | 0);  // Flags
-                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp9));
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp_AotFixtures_Enums_Flagged));
             }
-            var tmp10 = value.MaybeEnum;
-            if (tmp10.HasValue)
+            tmp_AotFixtures_Enums_AsInt32_ = value.MaybeEnum;
+            if (tmp_AotFixtures_Enums_AsInt32_.HasValue)
             {
-                var val10 = tmp10.GetValueOrDefault();
+                var val10 = tmp_AotFixtures_Enums_AsInt32_.GetValueOrDefault();
                 state.WriteRawTag((10 << 3) | 0);  // MaybeEnum
                 state.WriteRawVarint64(unchecked((ulong)(long)(int)val10));
             }
-            var tmp11 = value.EnumWithDefault;
-            if (tmp11 != (global::AotFixtures.Enums.AsInt32)(-70000))
+            tmp_AotFixtures_Enums_AsInt32 = value.EnumWithDefault;
+            if (tmp_AotFixtures_Enums_AsInt32 != (global::AotFixtures.Enums.AsInt32)(-70000))
             {
                 state.WriteRawTag((11 << 3) | 0);  // EnumWithDefault
-                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp11));
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp_AotFixtures_Enums_AsInt32));
             }
-            var tmp12 = value.MaybeFlagsWithDefault;
-            if (tmp12.HasValue)
+            tmp_AotFixtures_Enums_Flagged_ = value.MaybeFlagsWithDefault;
+            if (tmp_AotFixtures_Enums_Flagged_.HasValue)
             {
-                var val12 = tmp12.GetValueOrDefault();
+                var val12 = tmp_AotFixtures_Enums_Flagged_.GetValueOrDefault();
                 if (val12 != (global::AotFixtures.Enums.Flagged)(3))
                 {
                     state.WriteRawTag((12 << 3) | 0);  // MaybeFlagsWithDefault
                     state.WriteRawVarint64(unchecked((ulong)(long)(int)val12));
                 }
             }
-            var tmp13 = value.Character;
-            if (tmp13 != 0)
+            tmp_char = value.Character;
+            if (tmp_char != 0)
             {
                 state.WriteRawTag((13 << 3) | 0);  // Character
-                state.WriteRawVarint32(tmp13);
+                state.WriteRawVarint32(tmp_char);
             }
-            var tmp14 = value.MaybeCharacter;
-            if (tmp14.HasValue)
+            tmp_char_ = value.MaybeCharacter;
+            if (tmp_char_.HasValue)
             {
-                var val14 = tmp14.GetValueOrDefault();
+                var val14 = tmp_char_.GetValueOrDefault();
                 state.WriteRawTag((14 << 3) | 0);  // MaybeCharacter
                 state.WriteRawVarint32(val14);
             }
@@ -191,47 +204,60 @@ partial class EnumsModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.SByteEnum;
-            if (tmp1 != default(global::AotFixtures.Enums.AsSByte)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(sbyte)tmp1));  // SByteEnum
-            var tmp2 = value.ByteEnum;
-            if (tmp2 != default(global::AotFixtures.Enums.AsByte)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((byte)tmp2);  // ByteEnum
-            var tmp3 = value.Int16Enum;
-            if (tmp3 != default(global::AotFixtures.Enums.AsInt16)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(short)tmp3));  // Int16Enum
-            var tmp4 = value.UInt16Enum;
-            if (tmp4 != default(global::AotFixtures.Enums.AsUInt16)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((ushort)tmp4);  // UInt16Enum
-            var tmp5 = value.Int32Enum;
-            if (tmp5 != default(global::AotFixtures.Enums.AsInt32)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp5));  // Int32Enum
-            var tmp6 = value.UInt32Enum;
-            if (tmp6 != default(global::AotFixtures.Enums.AsUInt32)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)tmp6);  // UInt32Enum
-            var tmp7 = value.Int64Enum;
-            if (tmp7 != default(global::AotFixtures.Enums.AsInt64)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp7));  // Int64Enum
-            var tmp8 = value.UInt64Enum;
-            if (tmp8 != default(global::AotFixtures.Enums.AsUInt64)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)tmp8);  // UInt64Enum
-            var tmp9 = value.Flags;
-            if (tmp9 != default(global::AotFixtures.Enums.Flagged)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp9));  // Flags
-            var tmp10 = value.MaybeEnum;
-            if (tmp10.HasValue)
+            global::AotFixtures.Enums.AsSByte tmp_AotFixtures_Enums_AsSByte;
+            global::AotFixtures.Enums.AsByte tmp_AotFixtures_Enums_AsByte;
+            global::AotFixtures.Enums.AsInt16 tmp_AotFixtures_Enums_AsInt16;
+            global::AotFixtures.Enums.AsUInt16 tmp_AotFixtures_Enums_AsUInt16;
+            global::AotFixtures.Enums.AsInt32 tmp_AotFixtures_Enums_AsInt32;
+            global::AotFixtures.Enums.AsUInt32 tmp_AotFixtures_Enums_AsUInt32;
+            global::AotFixtures.Enums.AsInt64 tmp_AotFixtures_Enums_AsInt64;
+            global::AotFixtures.Enums.AsUInt64 tmp_AotFixtures_Enums_AsUInt64;
+            global::AotFixtures.Enums.Flagged tmp_AotFixtures_Enums_Flagged;
+            global::AotFixtures.Enums.AsInt32? tmp_AotFixtures_Enums_AsInt32_;
+            global::AotFixtures.Enums.Flagged? tmp_AotFixtures_Enums_Flagged_;
+            char tmp_char;
+            char? tmp_char_;
+            tmp_AotFixtures_Enums_AsSByte = value.SByteEnum;
+            if (tmp_AotFixtures_Enums_AsSByte != default(global::AotFixtures.Enums.AsSByte)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(sbyte)tmp_AotFixtures_Enums_AsSByte));  // SByteEnum
+            tmp_AotFixtures_Enums_AsByte = value.ByteEnum;
+            if (tmp_AotFixtures_Enums_AsByte != default(global::AotFixtures.Enums.AsByte)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((byte)tmp_AotFixtures_Enums_AsByte);  // ByteEnum
+            tmp_AotFixtures_Enums_AsInt16 = value.Int16Enum;
+            if (tmp_AotFixtures_Enums_AsInt16 != default(global::AotFixtures.Enums.AsInt16)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(short)tmp_AotFixtures_Enums_AsInt16));  // Int16Enum
+            tmp_AotFixtures_Enums_AsUInt16 = value.UInt16Enum;
+            if (tmp_AotFixtures_Enums_AsUInt16 != default(global::AotFixtures.Enums.AsUInt16)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((ushort)tmp_AotFixtures_Enums_AsUInt16);  // UInt16Enum
+            tmp_AotFixtures_Enums_AsInt32 = value.Int32Enum;
+            if (tmp_AotFixtures_Enums_AsInt32 != default(global::AotFixtures.Enums.AsInt32)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp_AotFixtures_Enums_AsInt32));  // Int32Enum
+            tmp_AotFixtures_Enums_AsUInt32 = value.UInt32Enum;
+            if (tmp_AotFixtures_Enums_AsUInt32 != default(global::AotFixtures.Enums.AsUInt32)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)tmp_AotFixtures_Enums_AsUInt32);  // UInt32Enum
+            tmp_AotFixtures_Enums_AsInt64 = value.Int64Enum;
+            if (tmp_AotFixtures_Enums_AsInt64 != default(global::AotFixtures.Enums.AsInt64)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_AotFixtures_Enums_AsInt64));  // Int64Enum
+            tmp_AotFixtures_Enums_AsUInt64 = value.UInt64Enum;
+            if (tmp_AotFixtures_Enums_AsUInt64 != default(global::AotFixtures.Enums.AsUInt64)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)tmp_AotFixtures_Enums_AsUInt64);  // UInt64Enum
+            tmp_AotFixtures_Enums_Flagged = value.Flags;
+            if (tmp_AotFixtures_Enums_Flagged != default(global::AotFixtures.Enums.Flagged)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp_AotFixtures_Enums_Flagged));  // Flags
+            tmp_AotFixtures_Enums_AsInt32_ = value.MaybeEnum;
+            if (tmp_AotFixtures_Enums_AsInt32_.HasValue)
             {
-                var val10 = tmp10.GetValueOrDefault();
+                var val10 = tmp_AotFixtures_Enums_AsInt32_.GetValueOrDefault();
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)val10));  // MaybeEnum
             }
-            var tmp11 = value.EnumWithDefault;
-            if (tmp11 != (global::AotFixtures.Enums.AsInt32)(-70000)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp11));  // EnumWithDefault
-            var tmp12 = value.MaybeFlagsWithDefault;
-            if (tmp12.HasValue)
+            tmp_AotFixtures_Enums_AsInt32 = value.EnumWithDefault;
+            if (tmp_AotFixtures_Enums_AsInt32 != (global::AotFixtures.Enums.AsInt32)(-70000)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp_AotFixtures_Enums_AsInt32));  // EnumWithDefault
+            tmp_AotFixtures_Enums_Flagged_ = value.MaybeFlagsWithDefault;
+            if (tmp_AotFixtures_Enums_Flagged_.HasValue)
             {
-                var val12 = tmp12.GetValueOrDefault();
+                var val12 = tmp_AotFixtures_Enums_Flagged_.GetValueOrDefault();
                 if (val12 != (global::AotFixtures.Enums.Flagged)(3))
                 {
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)val12));  // MaybeFlagsWithDefault
                 }
             }
-            var tmp13 = value.Character;
-            if (tmp13 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32(tmp13);  // Character
-            var tmp14 = value.MaybeCharacter;
-            if (tmp14.HasValue)
+            tmp_char = value.Character;
+            if (tmp_char != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32(tmp_char);  // Character
+            tmp_char_ = value.MaybeCharacter;
+            if (tmp_char_.HasValue)
             {
-                var val14 = tmp14.GetValueOrDefault();
+                var val14 = tmp_char_.GetValueOrDefault();
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32(val14);  // MaybeCharacter
             }
             return len;

@@ -415,11 +415,12 @@ partial class InheritModel
                     global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
                 }
             }
-            var tmp1 = value.Name;
-            if (tmp1 != null)
+            string tmp_string;
+            tmp_string = value.Name;
+            if (tmp_string != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Name
-                state.WriteRawString(tmp1);
+                state.WriteRawString(tmp_string);
             }
         }
 
@@ -452,10 +453,11 @@ partial class InheritModel
                     global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
                 }
             }
-            var tmp1 = value.Name;
-            if (tmp1 != null)
+            string tmp_string;
+            tmp_string = value.Name;
+            if (tmp_string != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // Name
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Name
             }
             return len;
         }
@@ -523,10 +525,11 @@ partial class InheritModel
         public static void RawWriteSub_AotFixtures_Inherit_Cat(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Inherit.Cat value, int depth)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            var tmp1 = value.Purrs;
-            if (tmp1)
+            bool tmp_bool;
+            tmp_bool = value.Purrs;
+            if (tmp_bool)
             {
-                state.WriteRawTagBool((1 << 3) | 0, tmp1);  // Purrs
+                state.WriteRawTagBool((1 << 3) | 0, tmp_bool);  // Purrs
             }
         }
 
@@ -537,8 +540,9 @@ partial class InheritModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Purrs;
-            if (tmp1) len += 2;  // Purrs
+            bool tmp_bool;
+            tmp_bool = value.Purrs;
+            if (tmp_bool) len += 2;  // Purrs
             return len;
         }
 
@@ -624,11 +628,12 @@ partial class InheritModel
                     global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
                 }
             }
-            var tmp1 = value.Bark;
-            if (tmp1 != 0)
+            int tmp_int;
+            tmp_int = value.Bark;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Bark
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -653,8 +658,9 @@ partial class InheritModel
                     global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
                 }
             }
-            var tmp1 = value.Bark;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Bark
+            int tmp_int;
+            tmp_int = value.Bark;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Bark
             return len;
         }
 
@@ -726,14 +732,15 @@ partial class InheritModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long before = 0;
-            var tmp1 = value.Animal;
-            if (tmp1 != null)
+            global::AotFixtures.Inherit.Animal tmp_AotFixtures_Inherit_Animal;
+            tmp_AotFixtures_Inherit_Animal = value.Animal;
+            if (tmp_AotFixtures_Inherit_Animal != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Animal
                 var len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWriteSub_AotFixtures_Inherit_Animal(ref state, tmp1, depth);
+                RawWriteSub_AotFixtures_Inherit_Animal(ref state, tmp_AotFixtures_Inherit_Animal, depth);
                 DebugAssertPosition(ref state, before + len, "Animal");
             }
         }
@@ -742,11 +749,12 @@ partial class InheritModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Animal;
-            if (tmp1 != null)
+            global::AotFixtures.Inherit.Animal tmp_AotFixtures_Inherit_Animal;
+            tmp_AotFixtures_Inherit_Animal = value.Animal;
+            if (tmp_AotFixtures_Inherit_Animal != null)
             {
                 var slot1 = slots.Reserve();
-                var sub = Measure_AotFixtures_Inherit_Animal(tmp1, depth, slots, context);
+                var sub = Measure_AotFixtures_Inherit_Animal(tmp_AotFixtures_Inherit_Animal, depth, slots, context);
                 slots.Set(slot1, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Animal
             }
@@ -814,11 +822,12 @@ partial class InheritModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Age;
-            if (tmp1 != 0)
+            int tmp_int;
+            tmp_int = value.Age;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Age
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -830,8 +839,9 @@ partial class InheritModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Age;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Age
+            int tmp_int;
+            tmp_int = value.Age;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Age
             return len;
         }
 
@@ -886,11 +896,12 @@ partial class InheritModel
         public static void RawWrite_AotFixtures_Inherit_Standalone(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Inherit.Standalone value, int depth)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            var tmp1 = value.Value;
-            if (tmp1 != 0)
+            int tmp_int;
+            tmp_int = value.Value;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Value
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -898,8 +909,9 @@ partial class InheritModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Value;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
+            int tmp_int;
+            tmp_int = value.Value;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Value
             return len;
         }
 

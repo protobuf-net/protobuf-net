@@ -378,16 +378,18 @@ partial class InterfaceModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Name;
-            if (tmp1 != null)
+            string tmp_string;
+            bool tmp_bool;
+            tmp_string = value.Name;
+            if (tmp_string != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Name
-                state.WriteRawString(tmp1);
+                state.WriteRawString(tmp_string);
             }
-            var tmp3 = value.Aloof;
-            if (tmp3)
+            tmp_bool = value.Aloof;
+            if (tmp_bool)
             {
-                state.WriteRawTagBool((3 << 3) | 0, tmp3);  // Aloof
+                state.WriteRawTagBool((3 << 3) | 0, tmp_bool);  // Aloof
             }
         }
 
@@ -399,13 +401,15 @@ partial class InterfaceModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Name;
-            if (tmp1 != null)
+            string tmp_string;
+            bool tmp_bool;
+            tmp_string = value.Name;
+            if (tmp_string != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // Name
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Name
             }
-            var tmp3 = value.Aloof;
-            if (tmp3) len += 2;  // Aloof
+            tmp_bool = value.Aloof;
+            if (tmp_bool) len += 2;  // Aloof
             return len;
         }
 
@@ -472,17 +476,19 @@ partial class InterfaceModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Name;
-            if (tmp1 != null)
+            string tmp_string;
+            int tmp_int;
+            tmp_string = value.Name;
+            if (tmp_string != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Name
-                state.WriteRawString(tmp1);
+                state.WriteRawString(tmp_string);
             }
-            var tmp2 = value.Fetches;
-            if (tmp2 != 0)
+            tmp_int = value.Fetches;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((2 << 3) | 0);  // Fetches
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -494,13 +500,15 @@ partial class InterfaceModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Name;
-            if (tmp1 != null)
+            string tmp_string;
+            int tmp_int;
+            tmp_string = value.Name;
+            if (tmp_string != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // Name
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Name
             }
-            var tmp2 = value.Fetches;
-            if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // Fetches
+            tmp_int = value.Fetches;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Fetches
             return len;
         }
 
@@ -725,11 +733,12 @@ partial class InterfaceModel
                     global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
                 }
             }
-            var tmp1 = value.Label;
-            if (tmp1 != null)
+            string tmp_string;
+            tmp_string = value.Label;
+            if (tmp_string != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Label
-                state.WriteRawString(tmp1);
+                state.WriteRawString(tmp_string);
             }
         }
 
@@ -754,10 +763,11 @@ partial class InterfaceModel
                     global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
                 }
             }
-            var tmp1 = value.Label;
-            if (tmp1 != null)
+            string tmp_string;
+            tmp_string = value.Label;
+            if (tmp_string != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // Label
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Label
             }
             return len;
         }
@@ -821,17 +831,19 @@ partial class InterfaceModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Label;
-            if (tmp1 != null)
+            string tmp_string;
+            int tmp_int;
+            tmp_string = value.Label;
+            if (tmp_string != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Label
-                state.WriteRawString(tmp1);
+                state.WriteRawString(tmp_string);
             }
-            var tmp2 = value.Order;
-            if (tmp2 != 0)
+            tmp_int = value.Order;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((2 << 3) | 0);  // Order
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -843,13 +855,15 @@ partial class InterfaceModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Label;
-            if (tmp1 != null)
+            string tmp_string;
+            int tmp_int;
+            tmp_string = value.Label;
+            if (tmp_string != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // Label
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Label
             }
-            var tmp2 = value.Order;
-            if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // Order
+            tmp_int = value.Order;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Order
             return len;
         }
 
@@ -923,20 +937,23 @@ partial class InterfaceModel
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long len;
             long before = 0;
-            var tmp1 = value.Star;
-            if (tmp1 != null)
+            global::AotFixtures.Interface.IAnimal tmp_AotFixtures_Interface_IAnimal;
+            global::System.Collections.Generic.List<global::AotFixtures.Interface.IAnimal> tmp_System_Collections_Generic_List_global__AotFixtures_Interface_IAnimal_;
+            global::AotFixtures.Interface.INamed tmp_AotFixtures_Interface_INamed;
+            tmp_AotFixtures_Interface_IAnimal = value.Star;
+            if (tmp_AotFixtures_Interface_IAnimal != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Star
                 len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWriteSub_AotFixtures_Interface_IAnimal(ref state, tmp1, depth);
+                RawWriteSub_AotFixtures_Interface_IAnimal(ref state, tmp_AotFixtures_Interface_IAnimal, depth);
                 DebugAssertPosition(ref state, before + len, "Star");
             }
-            var tmp2 = value.All;
-            if (tmp2 != null)
+            tmp_System_Collections_Generic_List_global__AotFixtures_Interface_IAnimal_ = value.All;
+            if (tmp_System_Collections_Generic_List_global__AotFixtures_Interface_IAnimal_ != null)
             {
-                foreach (var item2 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp2))
+                foreach (var item2 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_global__AotFixtures_Interface_IAnimal_))
                 {
                     if (item2 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.Interface.IAnimal>();
                     state.WriteRawTag((2 << 3) | 2);  // All
@@ -947,24 +964,24 @@ partial class InterfaceModel
                     DebugAssertPosition(ref state, before + len, "All");
                 }
             }
-            var tmp3 = value.Tag;
-            if (tmp3 != null)
+            tmp_AotFixtures_Interface_INamed = value.Tag;
+            if (tmp_AotFixtures_Interface_INamed != null)
             {
                 state.WriteRawTag((3 << 3) | 2);  // Tag
                 len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWriteSub_AotFixtures_Interface_INamed(ref state, tmp3, depth);
+                RawWriteSub_AotFixtures_Interface_INamed(ref state, tmp_AotFixtures_Interface_INamed, depth);
                 DebugAssertPosition(ref state, before + len, "Tag");
             }
-            var tmp4 = value.Backup;
-            if (tmp4 != null)
+            tmp_AotFixtures_Interface_IAnimal = value.Backup;
+            if (tmp_AotFixtures_Interface_IAnimal != null)
             {
                 state.WriteRawTag((4 << 3) | 2);  // Backup
                 len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWriteSub_AotFixtures_Interface_IAnimal(ref state, tmp4, depth);
+                RawWriteSub_AotFixtures_Interface_IAnimal(ref state, tmp_AotFixtures_Interface_IAnimal, depth);
                 DebugAssertPosition(ref state, before + len, "Backup");
             }
         }
@@ -974,18 +991,21 @@ partial class InterfaceModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             long sub;
-            var tmp1 = value.Star;
-            if (tmp1 != null)
+            global::AotFixtures.Interface.IAnimal tmp_AotFixtures_Interface_IAnimal;
+            global::System.Collections.Generic.List<global::AotFixtures.Interface.IAnimal> tmp_System_Collections_Generic_List_global__AotFixtures_Interface_IAnimal_;
+            global::AotFixtures.Interface.INamed tmp_AotFixtures_Interface_INamed;
+            tmp_AotFixtures_Interface_IAnimal = value.Star;
+            if (tmp_AotFixtures_Interface_IAnimal != null)
             {
                 var slot1 = slots.Reserve();
-                sub = Measure_AotFixtures_Interface_IAnimal(tmp1, depth, slots, context);
+                sub = Measure_AotFixtures_Interface_IAnimal(tmp_AotFixtures_Interface_IAnimal, depth, slots, context);
                 slots.Set(slot1, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Star
             }
-            var tmp2 = value.All;
-            if (tmp2 != null)
+            tmp_System_Collections_Generic_List_global__AotFixtures_Interface_IAnimal_ = value.All;
+            if (tmp_System_Collections_Generic_List_global__AotFixtures_Interface_IAnimal_ != null)
             {
-                foreach (var item2 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp2))
+                foreach (var item2 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_global__AotFixtures_Interface_IAnimal_))
                 {
                     if (item2 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.Interface.IAnimal>();
                     var slot2 = slots.Reserve();
@@ -994,19 +1014,19 @@ partial class InterfaceModel
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
-            var tmp3 = value.Tag;
-            if (tmp3 != null)
+            tmp_AotFixtures_Interface_INamed = value.Tag;
+            if (tmp_AotFixtures_Interface_INamed != null)
             {
                 var slot3 = slots.Reserve();
-                sub = Measure_AotFixtures_Interface_INamed(tmp3, depth, slots, context);
+                sub = Measure_AotFixtures_Interface_INamed(tmp_AotFixtures_Interface_INamed, depth, slots, context);
                 slots.Set(slot3, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Tag
             }
-            var tmp4 = value.Backup;
-            if (tmp4 != null)
+            tmp_AotFixtures_Interface_IAnimal = value.Backup;
+            if (tmp_AotFixtures_Interface_IAnimal != null)
             {
                 var slot4 = slots.Reserve();
-                sub = Measure_AotFixtures_Interface_IAnimal(tmp4, depth, slots, context);
+                sub = Measure_AotFixtures_Interface_IAnimal(tmp_AotFixtures_Interface_IAnimal, depth, slots, context);
                 slots.Set(slot4, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Backup
             }

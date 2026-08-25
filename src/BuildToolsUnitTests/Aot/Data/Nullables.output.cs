@@ -93,55 +93,60 @@ partial class NullablesModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.MaybeInt;
-            if (tmp1.HasValue)
+            int? tmp_int_;
+            bool? tmp_bool_;
+            double? tmp_double_;
+            long? tmp_long_;
+            int tmp_int;
+            tmp_int_ = value.MaybeInt;
+            if (tmp_int_.HasValue)
             {
-                var val1 = tmp1.GetValueOrDefault();
+                var val1 = tmp_int_.GetValueOrDefault();
                 state.WriteRawTag((1 << 3) | 0);  // MaybeInt
                 state.WriteRawVarint64(unchecked((ulong)(long)val1));
             }
-            var tmp2 = value.MaybeBool;
-            if (tmp2.HasValue)
+            tmp_bool_ = value.MaybeBool;
+            if (tmp_bool_.HasValue)
             {
-                var val2 = tmp2.GetValueOrDefault();
+                var val2 = tmp_bool_.GetValueOrDefault();
                 state.WriteRawTagBool((2 << 3) | 0, val2);  // MaybeBool
             }
-            var tmp3 = value.MaybeDouble;
-            if (tmp3.HasValue)
+            tmp_double_ = value.MaybeDouble;
+            if (tmp_double_.HasValue)
             {
-                var val3 = tmp3.GetValueOrDefault();
+                var val3 = tmp_double_.GetValueOrDefault();
                 state.WriteRawTag((3 << 3) | 1);  // MaybeDouble
                 state.WriteRawDouble(val3);
             }
-            var tmp4 = value.MaybeLong;
-            if (tmp4.HasValue)
+            tmp_long_ = value.MaybeLong;
+            if (tmp_long_.HasValue)
             {
-                var val4 = tmp4.GetValueOrDefault();
+                var val4 = tmp_long_.GetValueOrDefault();
                 state.WriteRawTag((4 << 3) | 0);  // MaybeLong
                 state.WriteRawVarint64(unchecked((ulong)val4));
             }
-            var tmp5 = value.IntWithDefault;
-            if (tmp5.HasValue)
+            tmp_int_ = value.IntWithDefault;
+            if (tmp_int_.HasValue)
             {
-                var val5 = tmp5.GetValueOrDefault();
+                var val5 = tmp_int_.GetValueOrDefault();
                 if (val5 != 5)
                 {
                     state.WriteRawTag((5 << 3) | 0);  // IntWithDefault
                     state.WriteRawVarint64(unchecked((ulong)(long)val5));
                 }
             }
-            var tmp6 = value.IntWithNullDefault;
-            if (tmp6.HasValue)
+            tmp_int_ = value.IntWithNullDefault;
+            if (tmp_int_.HasValue)
             {
-                var val6 = tmp6.GetValueOrDefault();
+                var val6 = tmp_int_.GetValueOrDefault();
                 state.WriteRawTag((6 << 3) | 0);  // IntWithNullDefault
                 state.WriteRawVarint64(unchecked((ulong)(long)val6));
             }
-            var tmp7 = value.Plain;
-            if (tmp7 != 0)
+            tmp_int = value.Plain;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((7 << 3) | 0);  // Plain
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp7));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -149,47 +154,52 @@ partial class NullablesModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.MaybeInt;
-            if (tmp1.HasValue)
+            int? tmp_int_;
+            bool? tmp_bool_;
+            double? tmp_double_;
+            long? tmp_long_;
+            int tmp_int;
+            tmp_int_ = value.MaybeInt;
+            if (tmp_int_.HasValue)
             {
-                var val1 = tmp1.GetValueOrDefault();
+                var val1 = tmp_int_.GetValueOrDefault();
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)val1));  // MaybeInt
             }
-            var tmp2 = value.MaybeBool;
-            if (tmp2.HasValue)
+            tmp_bool_ = value.MaybeBool;
+            if (tmp_bool_.HasValue)
             {
-                var val2 = tmp2.GetValueOrDefault();
+                var val2 = tmp_bool_.GetValueOrDefault();
                 len += 2;  // MaybeBool
             }
-            var tmp3 = value.MaybeDouble;
-            if (tmp3.HasValue)
+            tmp_double_ = value.MaybeDouble;
+            if (tmp_double_.HasValue)
             {
-                var val3 = tmp3.GetValueOrDefault();
+                var val3 = tmp_double_.GetValueOrDefault();
                 len += 9;  // MaybeDouble
             }
-            var tmp4 = value.MaybeLong;
-            if (tmp4.HasValue)
+            tmp_long_ = value.MaybeLong;
+            if (tmp_long_.HasValue)
             {
-                var val4 = tmp4.GetValueOrDefault();
+                var val4 = tmp_long_.GetValueOrDefault();
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)val4));  // MaybeLong
             }
-            var tmp5 = value.IntWithDefault;
-            if (tmp5.HasValue)
+            tmp_int_ = value.IntWithDefault;
+            if (tmp_int_.HasValue)
             {
-                var val5 = tmp5.GetValueOrDefault();
+                var val5 = tmp_int_.GetValueOrDefault();
                 if (val5 != 5)
                 {
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)val5));  // IntWithDefault
                 }
             }
-            var tmp6 = value.IntWithNullDefault;
-            if (tmp6.HasValue)
+            tmp_int_ = value.IntWithNullDefault;
+            if (tmp_int_.HasValue)
             {
-                var val6 = tmp6.GetValueOrDefault();
+                var val6 = tmp_int_.GetValueOrDefault();
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)val6));  // IntWithNullDefault
             }
-            var tmp7 = value.Plain;
-            if (tmp7 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp7));  // Plain
+            tmp_int = value.Plain;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Plain
             return len;
         }
 

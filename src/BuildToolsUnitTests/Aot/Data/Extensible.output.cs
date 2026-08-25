@@ -353,11 +353,12 @@ partial class ExtensibleModel
                     global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
                 }
             }
-            var tmp1 = value.Shared;
-            if (tmp1 != 0)
+            int tmp_int;
+            tmp_int = value.Shared;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Shared
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
             state.AppendExtensionData(value, typeof(global::AotFixtures.Extensible.BaseExt));
         }
@@ -383,8 +384,9 @@ partial class ExtensibleModel
                     global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
                 }
             }
-            var tmp1 = value.Shared;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Shared
+            int tmp_int;
+            tmp_int = value.Shared;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Shared
             len += global::ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(value, typeof(global::AotFixtures.Extensible.BaseExt));
             return len;
         }
@@ -446,11 +448,12 @@ partial class ExtensibleModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Value;
-            if (tmp1 != 0)
+            int tmp_int;
+            tmp_int = value.Value;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Value
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
             state.AppendExtensionData(value);
         }
@@ -459,8 +462,9 @@ partial class ExtensibleModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Value;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
+            int tmp_int;
+            tmp_int = value.Value;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Value
             len += global::ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(value);
             return len;
         }
@@ -522,11 +526,12 @@ partial class ExtensibleModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Extra;
-            if (tmp1 != 0)
+            int tmp_int;
+            tmp_int = value.Extra;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Extra
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
             state.AppendExtensionData(value, typeof(global::AotFixtures.Extensible.DerivedExt));
         }
@@ -539,8 +544,9 @@ partial class ExtensibleModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Extra;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Extra
+            int tmp_int;
+            tmp_int = value.Extra;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Extra
             len += global::ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(value, typeof(global::AotFixtures.Extensible.DerivedExt));
             return len;
         }
@@ -597,11 +603,12 @@ partial class ExtensibleModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Value;
-            if (tmp1 != 0)
+            int tmp_int;
+            tmp_int = value.Value;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Value
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
             state.AppendExtensionData(value);
         }
@@ -610,8 +617,9 @@ partial class ExtensibleModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Value;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
+            int tmp_int;
+            tmp_int = value.Value;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Value
             len += global::ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(value);
             return len;
         }
@@ -668,11 +676,12 @@ partial class ExtensibleModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Value;
-            if (tmp1 != 0)
+            int tmp_int;
+            tmp_int = value.Value;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Value
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
             state.AppendExtensionData(value, typeof(global::AotFixtures.Extensible.TypedOnly));
         }
@@ -681,8 +690,9 @@ partial class ExtensibleModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Value;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
+            int tmp_int;
+            tmp_int = value.Value;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Value
             len += global::ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(value, typeof(global::AotFixtures.Extensible.TypedOnly));
             return len;
         }

@@ -105,30 +105,36 @@ partial class DynamicCategoryModel
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.DynamicCategory.Reading>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.DynamicCategory.Reading value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Scalar;
-            state.WriteAny<global::AotFixtures.DynamicCategory.Measure>(1, tmp1, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.DynamicCategory.MeasureSerializer, global::AotFixtures.DynamicCategory.Measure>());
-            var tmp2 = value.Message;
-            state.WriteAny<global::AotFixtures.DynamicCategory.Label>(2, tmp2, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.DynamicCategory.LabelSerializer, global::AotFixtures.DynamicCategory.Label>());
-            var tmp3 = value.Other;
-            if (tmp3 != 0)
+            global::AotFixtures.DynamicCategory.Measure tmp_AotFixtures_DynamicCategory_Measure;
+            global::AotFixtures.DynamicCategory.Label tmp_AotFixtures_DynamicCategory_Label;
+            int tmp_int;
+            global::System.Collections.Generic.List<global::AotFixtures.DynamicCategory.Measure> tmp_System_Collections_Generic_List_global__AotFixtures_DynamicCategory_Measure_;
+            global::System.Collections.Generic.List<global::AotFixtures.DynamicCategory.Label> tmp_System_Collections_Generic_List_global__AotFixtures_DynamicCategory_Label_;
+            global::AotFixtures.DynamicCategory.Measure? tmp_AotFixtures_DynamicCategory_Measure_;
+            tmp_AotFixtures_DynamicCategory_Measure = value.Scalar;
+            state.WriteAny<global::AotFixtures.DynamicCategory.Measure>(1, tmp_AotFixtures_DynamicCategory_Measure, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.DynamicCategory.MeasureSerializer, global::AotFixtures.DynamicCategory.Measure>());
+            tmp_AotFixtures_DynamicCategory_Label = value.Message;
+            state.WriteAny<global::AotFixtures.DynamicCategory.Label>(2, tmp_AotFixtures_DynamicCategory_Label, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.DynamicCategory.LabelSerializer, global::AotFixtures.DynamicCategory.Label>());
+            tmp_int = value.Other;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((3 << 3) | 0);  // Other
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp3));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
-            var tmp4 = value.Scalars;
-            if (tmp4 != null)
+            tmp_System_Collections_Generic_List_global__AotFixtures_DynamicCategory_Measure_ = value.Scalars;
+            if (tmp_System_Collections_Generic_List_global__AotFixtures_DynamicCategory_Measure_ != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.DynamicCategory.Measure>().WriteRepeated(ref state, 4, global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp4, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.DynamicCategory.MeasureSerializer, global::AotFixtures.DynamicCategory.Measure>());
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.DynamicCategory.Measure>().WriteRepeated(ref state, 4, global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp_System_Collections_Generic_List_global__AotFixtures_DynamicCategory_Measure_, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.DynamicCategory.MeasureSerializer, global::AotFixtures.DynamicCategory.Measure>());
             }
-            var tmp5 = value.Messages;
-            if (tmp5 != null)
+            tmp_System_Collections_Generic_List_global__AotFixtures_DynamicCategory_Label_ = value.Messages;
+            if (tmp_System_Collections_Generic_List_global__AotFixtures_DynamicCategory_Label_ != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.DynamicCategory.Label>().WriteRepeated(ref state, 5, global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp5, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.DynamicCategory.LabelSerializer, global::AotFixtures.DynamicCategory.Label>());
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.DynamicCategory.Label>().WriteRepeated(ref state, 5, global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp_System_Collections_Generic_List_global__AotFixtures_DynamicCategory_Label_, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.DynamicCategory.LabelSerializer, global::AotFixtures.DynamicCategory.Label>());
             }
-            var tmp6 = value.NullableScalar;
-            if (tmp6.HasValue)
+            tmp_AotFixtures_DynamicCategory_Measure_ = value.NullableScalar;
+            if (tmp_AotFixtures_DynamicCategory_Measure_.HasValue)
             {
-                state.WriteAny<global::AotFixtures.DynamicCategory.Measure>(6, tmp6.GetValueOrDefault(), global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.DynamicCategory.MeasureSerializer, global::AotFixtures.DynamicCategory.Measure>());
+                state.WriteAny<global::AotFixtures.DynamicCategory.Measure>(6, tmp_AotFixtures_DynamicCategory_Measure_.GetValueOrDefault(), global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.DynamicCategory.MeasureSerializer, global::AotFixtures.DynamicCategory.Measure>());
             }
         }
 

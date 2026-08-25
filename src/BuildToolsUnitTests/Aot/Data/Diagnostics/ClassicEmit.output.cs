@@ -113,10 +113,12 @@ partial class ClassicEmitModel
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ClassicEmit.Plain>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ClassicEmit.Plain value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Id;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
-            var tmp2 = value.Name;
-            state.WriteString(2, tmp2);
+            int tmp_int;
+            string tmp_string;
+            tmp_int = value.Id;
+            if (tmp_int != 0) state.WriteInt32Varint(1, tmp_int);
+            tmp_string = value.Name;
+            state.WriteString(2, tmp_string);
         }
     }
 }

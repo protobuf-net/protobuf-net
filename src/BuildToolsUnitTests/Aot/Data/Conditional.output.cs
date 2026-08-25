@@ -93,43 +93,45 @@ partial class ConditionalModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            int tmp_int;
+            string tmp_string;
             if (value.ValueSpecified)
             {
-                var tmp1 = value.Value;
+                tmp_int = value.Value;
                 state.WriteRawTag((1 << 3) | 0);  // Value
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
             if (value.ShouldSerializeText())
             {
-                var tmp2 = value.Text;
-                if (tmp2 != null)
+                tmp_string = value.Text;
+                if (tmp_string != null)
                 {
                     state.WriteRawTag((2 << 3) | 2);  // Text
-                    state.WriteRawString(tmp2);
+                    state.WriteRawString(tmp_string);
                 }
             }
             if (value.BothSpecified)
             {
-                var tmp3 = value.Both;
+                tmp_int = value.Both;
                 state.WriteRawTag((3 << 3) | 0);  // Both
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp3));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
             if (value.NamedSpecified)
             {
-                var tmp4 = value.Named;
-                if (tmp4 != null)
+                tmp_string = value.Named;
+                if (tmp_string != null)
                 {
                     state.WriteRawTag((4 << 3) | 2);  // Named
-                    state.WriteRawString(tmp4);
+                    state.WriteRawString(tmp_string);
                 }
             }
             if (value.ShouldSerializePresence())
             {
-                var tmp5 = value.Presence;
-                if (tmp5 != null)
+                tmp_string = value.Presence;
+                if (tmp_string != null)
                 {
                     state.WriteRawTag((5 << 3) | 2);  // Presence
-                    state.WriteRawString(tmp5);
+                    state.WriteRawString(tmp_string);
                 }
             }
         }
@@ -138,38 +140,40 @@ partial class ConditionalModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int tmp_int;
+            string tmp_string;
             if (value.ValueSpecified)
             {
-                var tmp1 = value.Value;
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
+                tmp_int = value.Value;
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Value
             }
             if (value.ShouldSerializeText())
             {
-                var tmp2 = value.Text;
-                if (tmp2 != null)
+                tmp_string = value.Text;
+                if (tmp_string != null)
                 {
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // Text
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Text
                 }
             }
             if (value.BothSpecified)
             {
-                var tmp3 = value.Both;
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp3));  // Both
+                tmp_int = value.Both;
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Both
             }
             if (value.NamedSpecified)
             {
-                var tmp4 = value.Named;
-                if (tmp4 != null)
+                tmp_string = value.Named;
+                if (tmp_string != null)
                 {
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp4);  // Named
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Named
                 }
             }
             if (value.ShouldSerializePresence())
             {
-                var tmp5 = value.Presence;
-                if (tmp5 != null)
+                tmp_string = value.Presence;
+                if (tmp_string != null)
                 {
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp5);  // Presence
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Presence
                 }
             }
             return len;

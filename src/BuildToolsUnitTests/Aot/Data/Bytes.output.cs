@@ -95,59 +95,69 @@ partial class BytesModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Payload;
-            if (tmp1 != null)
+            byte[] tmp_byte__;
+            byte tmp_byte;
+            global::System.ArraySegment<byte> tmp_System_ArraySegment_byte_;
+            global::System.Memory<byte> tmp_System_Memory_byte_;
+            global::System.ReadOnlyMemory<byte> tmp_System_ReadOnlyMemory_byte_;
+            tmp_byte__ = value.Payload;
+            if (tmp_byte__ != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Payload
-                state.WriteRawBytes(tmp1);
+                state.WriteRawBytes(tmp_byte__);
             }
-            var tmp2 = value.Other;
-            if (tmp2 != null)
+            tmp_byte__ = value.Other;
+            if (tmp_byte__ != null)
             {
                 state.WriteRawTag((2 << 3) | 2);  // Other
-                state.WriteRawBytes(tmp2);
+                state.WriteRawBytes(tmp_byte__);
             }
-            var tmp3 = value.Single;
-            if (tmp3 != 0)
+            tmp_byte = value.Single;
+            if (tmp_byte != 0)
             {
                 state.WriteRawTag((3 << 3) | 0);  // Single
-                state.WriteRawVarint32(tmp3);
+                state.WriteRawVarint32(tmp_byte);
             }
-            var tmp4 = value.Segment;
+            tmp_System_ArraySegment_byte_ = value.Segment;
             state.WriteFieldHeader(4, global::ProtoBuf.WireType.String);
-            state.WriteBytes(tmp4);
-            var tmp5 = value.Memory;
+            state.WriteBytes(tmp_System_ArraySegment_byte_);
+            tmp_System_Memory_byte_ = value.Memory;
             state.WriteFieldHeader(5, global::ProtoBuf.WireType.String);
-            state.WriteBytes(tmp5);
-            var tmp6 = value.ReadOnly;
+            state.WriteBytes(tmp_System_Memory_byte_);
+            tmp_System_ReadOnlyMemory_byte_ = value.ReadOnly;
             state.WriteFieldHeader(6, global::ProtoBuf.WireType.String);
-            state.WriteBytes(tmp6);
+            state.WriteBytes(tmp_System_ReadOnlyMemory_byte_);
         }
 
         private static long Measure_AotFixtures_Bytes_Blob(global::AotFixtures.Bytes.Blob value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Payload;
-            if (tmp1 != null)
+            byte[] tmp_byte__;
+            byte tmp_byte;
+            global::System.ArraySegment<byte> tmp_System_ArraySegment_byte_;
+            global::System.Memory<byte> tmp_System_Memory_byte_;
+            global::System.ReadOnlyMemory<byte> tmp_System_ReadOnlyMemory_byte_;
+            tmp_byte__ = value.Payload;
+            if (tmp_byte__ != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)tmp1.Length) + tmp1.Length;  // Payload
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)tmp_byte__.Length) + tmp_byte__.Length;  // Payload
             }
-            var tmp2 = value.Other;
-            if (tmp2 != null)
+            tmp_byte__ = value.Other;
+            if (tmp_byte__ != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)tmp2.Length) + tmp2.Length;  // Other
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)tmp_byte__.Length) + tmp_byte__.Length;  // Other
             }
-            var tmp3 = value.Single;
-            if (tmp3 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32(tmp3);  // Single
-            var tmp4 = value.Segment;
-            var bytes4 = ((global::System.ReadOnlyMemory<byte>)tmp4).Length;
+            tmp_byte = value.Single;
+            if (tmp_byte != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32(tmp_byte);  // Single
+            tmp_System_ArraySegment_byte_ = value.Segment;
+            var bytes4 = ((global::System.ReadOnlyMemory<byte>)tmp_System_ArraySegment_byte_).Length;
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bytes4) + bytes4;  // Segment
-            var tmp5 = value.Memory;
-            var bytes5 = ((global::System.ReadOnlyMemory<byte>)tmp5).Length;
+            tmp_System_Memory_byte_ = value.Memory;
+            var bytes5 = ((global::System.ReadOnlyMemory<byte>)tmp_System_Memory_byte_).Length;
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bytes5) + bytes5;  // Memory
-            var tmp6 = value.ReadOnly;
-            var bytes6 = ((global::System.ReadOnlyMemory<byte>)tmp6).Length;
+            tmp_System_ReadOnlyMemory_byte_ = value.ReadOnly;
+            var bytes6 = ((global::System.ReadOnlyMemory<byte>)tmp_System_ReadOnlyMemory_byte_).Length;
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bytes6) + bytes6;  // ReadOnly
             return len;
         }

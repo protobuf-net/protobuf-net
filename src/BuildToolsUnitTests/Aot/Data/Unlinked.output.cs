@@ -370,11 +370,12 @@ partial class UnlinkedModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp2 = value.FromDerived;
-            if (tmp2 != 0)
+            int tmp_int;
+            tmp_int = value.FromDerived;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((2 << 3) | 0);  // FromDerived
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -382,8 +383,9 @@ partial class UnlinkedModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp2 = value.FromDerived;
-            if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // FromDerived
+            int tmp_int;
+            tmp_int = value.FromDerived;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // FromDerived
             return len;
         }
 
@@ -472,11 +474,12 @@ partial class UnlinkedModel
                     global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
                 }
             }
-            var tmp1 = value.FromBase;
-            if (tmp1 != 0)
+            int tmp_int;
+            tmp_int = value.FromBase;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // FromBase
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -501,8 +504,9 @@ partial class UnlinkedModel
                     global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
                 }
             }
-            var tmp1 = value.FromBase;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // FromBase
+            int tmp_int;
+            tmp_int = value.FromBase;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // FromBase
             return len;
         }
 
@@ -563,11 +567,12 @@ partial class UnlinkedModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Name;
-            if (tmp1 != null)
+            string tmp_string;
+            tmp_string = value.Name;
+            if (tmp_string != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Name
-                state.WriteRawString(tmp1);
+                state.WriteRawString(tmp_string);
             }
         }
 
@@ -575,10 +580,11 @@ partial class UnlinkedModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Name;
-            if (tmp1 != null)
+            string tmp_string;
+            tmp_string = value.Name;
+            if (tmp_string != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // Name
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Name
             }
             return len;
         }
@@ -632,11 +638,12 @@ partial class UnlinkedModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Mine;
-            if (tmp1 != 0)
+            int tmp_int;
+            tmp_int = value.Mine;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Mine
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -644,8 +651,9 @@ partial class UnlinkedModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Mine;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Mine
+            int tmp_int;
+            tmp_int = value.Mine;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Mine
             return len;
         }
 
@@ -706,11 +714,12 @@ partial class UnlinkedModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp2 = value.Linked;
-            if (tmp2 != 0)
+            int tmp_int;
+            tmp_int = value.Linked;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((2 << 3) | 0);  // Linked
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -722,8 +731,9 @@ partial class UnlinkedModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp2 = value.Linked;
-            if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // Linked
+            int tmp_int;
+            tmp_int = value.Linked;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Linked
             return len;
         }
 
@@ -779,11 +789,12 @@ partial class UnlinkedModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp3 = value.NotLinked;
-            if (tmp3 != 0)
+            int tmp_int;
+            tmp_int = value.NotLinked;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((3 << 3) | 0);  // NotLinked
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp3));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -791,8 +802,9 @@ partial class UnlinkedModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp3 = value.NotLinked;
-            if (tmp3 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp3));  // NotLinked
+            int tmp_int;
+            tmp_int = value.NotLinked;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // NotLinked
             return len;
         }
 

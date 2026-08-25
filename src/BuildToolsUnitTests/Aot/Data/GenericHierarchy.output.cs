@@ -474,11 +474,12 @@ partial class GenericHierarchyModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Bar;
-            if (tmp1 != null)
+            string tmp_string;
+            tmp_string = value.Bar;
+            if (tmp_string != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Bar
-                state.WriteRawString(tmp1);
+                state.WriteRawString(tmp_string);
             }
         }
 
@@ -486,10 +487,11 @@ partial class GenericHierarchyModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Bar;
-            if (tmp1 != null)
+            string tmp_string;
+            tmp_string = value.Bar;
+            if (tmp_string != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // Bar
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Bar
             }
             return len;
         }
@@ -555,14 +557,15 @@ partial class GenericHierarchyModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long before = 0;
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Value;
-            if (tmp1 != null)
+            global::AotFixtures.GenericHierarchy.Crate tmp_AotFixtures_GenericHierarchy_Crate;
+            tmp_AotFixtures_GenericHierarchy_Crate = value.Value;
+            if (tmp_AotFixtures_GenericHierarchy_Crate != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Value
                 var len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWrite_AotFixtures_GenericHierarchy_Crate(ref state, tmp1, depth);
+                RawWrite_AotFixtures_GenericHierarchy_Crate(ref state, tmp_AotFixtures_GenericHierarchy_Crate, depth);
                 DebugAssertPosition(ref state, before + len, "Value");
             }
         }
@@ -575,11 +578,12 @@ partial class GenericHierarchyModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Value;
-            if (tmp1 != null)
+            global::AotFixtures.GenericHierarchy.Crate tmp_AotFixtures_GenericHierarchy_Crate;
+            tmp_AotFixtures_GenericHierarchy_Crate = value.Value;
+            if (tmp_AotFixtures_GenericHierarchy_Crate != null)
             {
                 var slot1 = slots.Reserve();
-                var sub = Measure_AotFixtures_GenericHierarchy_Crate(tmp1, depth, slots, context);
+                var sub = Measure_AotFixtures_GenericHierarchy_Crate(tmp_AotFixtures_GenericHierarchy_Crate, depth, slots, context);
                 slots.Set(slot1, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Value
             }
@@ -1001,11 +1005,12 @@ partial class GenericHierarchyModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.N;
-            if (tmp1 != 0)
+            int tmp_int;
+            tmp_int = value.N;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // N
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -1017,8 +1022,9 @@ partial class GenericHierarchyModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.N;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // N
+            int tmp_int;
+            tmp_int = value.N;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // N
             return len;
         }
 
@@ -1074,11 +1080,12 @@ partial class GenericHierarchyModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Foo;
-            if (tmp1 != 0)
+            int tmp_int;
+            tmp_int = value.Foo;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Foo
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -1086,8 +1093,9 @@ partial class GenericHierarchyModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Foo;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Foo
+            int tmp_int;
+            tmp_int = value.Foo;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Foo
             return len;
         }
 
@@ -1155,14 +1163,15 @@ partial class GenericHierarchyModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long before = 0;
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Value;
-            if (tmp1 != null)
+            global::AotFixtures.GenericHierarchy.Ship tmp_AotFixtures_GenericHierarchy_Ship;
+            tmp_AotFixtures_GenericHierarchy_Ship = value.Value;
+            if (tmp_AotFixtures_GenericHierarchy_Ship != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Value
                 var len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWrite_AotFixtures_GenericHierarchy_Ship(ref state, tmp1, depth);
+                RawWrite_AotFixtures_GenericHierarchy_Ship(ref state, tmp_AotFixtures_GenericHierarchy_Ship, depth);
                 DebugAssertPosition(ref state, before + len, "Value");
             }
         }
@@ -1175,11 +1184,12 @@ partial class GenericHierarchyModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Value;
-            if (tmp1 != null)
+            global::AotFixtures.GenericHierarchy.Ship tmp_AotFixtures_GenericHierarchy_Ship;
+            tmp_AotFixtures_GenericHierarchy_Ship = value.Value;
+            if (tmp_AotFixtures_GenericHierarchy_Ship != null)
             {
                 var slot1 = slots.Reserve();
-                var sub = Measure_AotFixtures_GenericHierarchy_Ship(tmp1, depth, slots, context);
+                var sub = Measure_AotFixtures_GenericHierarchy_Ship(tmp_AotFixtures_GenericHierarchy_Ship, depth, slots, context);
                 slots.Set(slot1, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Value
             }

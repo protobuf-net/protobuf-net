@@ -127,22 +127,27 @@ partial class ModelSerializerModel
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSerializer.Request>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ModelSerializer.Request value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Special;
-            state.WriteAny<global::AotFixtures.ModelSerializer.Wrapped<byte>>(1, tmp1, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ModelSerializer.WrappedByteSerializer, global::AotFixtures.ModelSerializer.Wrapped<byte>>());
-            var tmp2 = value.Plain;
-            if (tmp2 != 0)
+            global::AotFixtures.ModelSerializer.Wrapped<byte> tmp_AotFixtures_ModelSerializer_Wrapped_byte_;
+            int tmp_int;
+            global::AotFixtures.ModelSerializer.Wrapped<int> tmp_AotFixtures_ModelSerializer_Wrapped_int_;
+            global::AotFixtures.ModelSerializer.Wrapped<string> tmp_AotFixtures_ModelSerializer_Wrapped_string_;
+            global::AotFixtures.ModelSerializer.Wrapped<long>? tmp_AotFixtures_ModelSerializer_Wrapped_long__;
+            tmp_AotFixtures_ModelSerializer_Wrapped_byte_ = value.Special;
+            state.WriteAny<global::AotFixtures.ModelSerializer.Wrapped<byte>>(1, tmp_AotFixtures_ModelSerializer_Wrapped_byte_, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ModelSerializer.WrappedByteSerializer, global::AotFixtures.ModelSerializer.Wrapped<byte>>());
+            tmp_int = value.Plain;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((2 << 3) | 0);  // Plain
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
-            var tmp3 = value.Id;
-            state.WriteAny<global::AotFixtures.ModelSerializer.Wrapped<int>>(3, tmp3, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ModelSerializer.WrappedSerializer<int>, global::AotFixtures.ModelSerializer.Wrapped<int>>());
-            var tmp4 = value.Label;
-            state.WriteAny<global::AotFixtures.ModelSerializer.Wrapped<string>>(4, tmp4, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ModelSerializer.WrappedSerializer<string>, global::AotFixtures.ModelSerializer.Wrapped<string>>());
-            var tmp5 = value.Optional;
-            if (tmp5.HasValue)
+            tmp_AotFixtures_ModelSerializer_Wrapped_int_ = value.Id;
+            state.WriteAny<global::AotFixtures.ModelSerializer.Wrapped<int>>(3, tmp_AotFixtures_ModelSerializer_Wrapped_int_, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ModelSerializer.WrappedSerializer<int>, global::AotFixtures.ModelSerializer.Wrapped<int>>());
+            tmp_AotFixtures_ModelSerializer_Wrapped_string_ = value.Label;
+            state.WriteAny<global::AotFixtures.ModelSerializer.Wrapped<string>>(4, tmp_AotFixtures_ModelSerializer_Wrapped_string_, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ModelSerializer.WrappedSerializer<string>, global::AotFixtures.ModelSerializer.Wrapped<string>>());
+            tmp_AotFixtures_ModelSerializer_Wrapped_long__ = value.Optional;
+            if (tmp_AotFixtures_ModelSerializer_Wrapped_long__.HasValue)
             {
-                state.WriteAny<global::AotFixtures.ModelSerializer.Wrapped<long>>(5, tmp5.GetValueOrDefault(), global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ModelSerializer.WrappedSerializer<long>, global::AotFixtures.ModelSerializer.Wrapped<long>>());
+                state.WriteAny<global::AotFixtures.ModelSerializer.Wrapped<long>>(5, tmp_AotFixtures_ModelSerializer_Wrapped_long__.GetValueOrDefault(), global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ModelSerializer.WrappedSerializer<long>, global::AotFixtures.ModelSerializer.Wrapped<long>>());
             }
         }
 

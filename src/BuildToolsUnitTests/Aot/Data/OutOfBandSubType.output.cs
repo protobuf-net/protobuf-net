@@ -480,11 +480,12 @@ partial class OutOfBandSubTypeModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Radius;
-            if (tmp1 != 0)
+            int tmp_int;
+            tmp_int = value.Radius;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Radius
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -496,8 +497,9 @@ partial class OutOfBandSubTypeModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Radius;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Radius
+            int tmp_int;
+            tmp_int = value.Radius;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Radius
             return len;
         }
 
@@ -565,24 +567,26 @@ partial class OutOfBandSubTypeModel
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long len;
             long before = 0;
-            var tmp1 = value.Shape;
-            if (tmp1 != null)
+            global::AotFixtures.OutOfBandSubType.Shape tmp_AotFixtures_OutOfBandSubType_Shape;
+            global::AotFixtures.OutOfBandSubType.Vehicle tmp_AotFixtures_OutOfBandSubType_Vehicle;
+            tmp_AotFixtures_OutOfBandSubType_Shape = value.Shape;
+            if (tmp_AotFixtures_OutOfBandSubType_Shape != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Shape
                 len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWriteSub_AotFixtures_OutOfBandSubType_Shape(ref state, tmp1, depth);
+                RawWriteSub_AotFixtures_OutOfBandSubType_Shape(ref state, tmp_AotFixtures_OutOfBandSubType_Shape, depth);
                 DebugAssertPosition(ref state, before + len, "Shape");
             }
-            var tmp2 = value.Vehicle;
-            if (tmp2 != null)
+            tmp_AotFixtures_OutOfBandSubType_Vehicle = value.Vehicle;
+            if (tmp_AotFixtures_OutOfBandSubType_Vehicle != null)
             {
                 state.WriteRawTag((2 << 3) | 2);  // Vehicle
                 len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWriteSub_AotFixtures_OutOfBandSubType_Vehicle(ref state, tmp2, depth);
+                RawWriteSub_AotFixtures_OutOfBandSubType_Vehicle(ref state, tmp_AotFixtures_OutOfBandSubType_Vehicle, depth);
                 DebugAssertPosition(ref state, before + len, "Vehicle");
             }
         }
@@ -592,19 +596,21 @@ partial class OutOfBandSubTypeModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             long sub;
-            var tmp1 = value.Shape;
-            if (tmp1 != null)
+            global::AotFixtures.OutOfBandSubType.Shape tmp_AotFixtures_OutOfBandSubType_Shape;
+            global::AotFixtures.OutOfBandSubType.Vehicle tmp_AotFixtures_OutOfBandSubType_Vehicle;
+            tmp_AotFixtures_OutOfBandSubType_Shape = value.Shape;
+            if (tmp_AotFixtures_OutOfBandSubType_Shape != null)
             {
                 var slot1 = slots.Reserve();
-                sub = Measure_AotFixtures_OutOfBandSubType_Shape(tmp1, depth, slots, context);
+                sub = Measure_AotFixtures_OutOfBandSubType_Shape(tmp_AotFixtures_OutOfBandSubType_Shape, depth, slots, context);
                 slots.Set(slot1, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Shape
             }
-            var tmp2 = value.Vehicle;
-            if (tmp2 != null)
+            tmp_AotFixtures_OutOfBandSubType_Vehicle = value.Vehicle;
+            if (tmp_AotFixtures_OutOfBandSubType_Vehicle != null)
             {
                 var slot2 = slots.Reserve();
-                sub = Measure_AotFixtures_OutOfBandSubType_Vehicle(tmp2, depth, slots, context);
+                sub = Measure_AotFixtures_OutOfBandSubType_Vehicle(tmp_AotFixtures_OutOfBandSubType_Vehicle, depth, slots, context);
                 slots.Set(slot2, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Vehicle
             }
@@ -685,11 +691,12 @@ partial class OutOfBandSubTypeModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Doors;
-            if (tmp1 != 0)
+            int tmp_int;
+            tmp_int = value.Doors;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Doors
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -701,8 +708,9 @@ partial class OutOfBandSubTypeModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Doors;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Doors
+            int tmp_int;
+            tmp_int = value.Doors;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Doors
             return len;
         }
 
@@ -807,11 +815,12 @@ partial class OutOfBandSubTypeModel
                     global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
                 }
             }
-            var tmp1 = value.Label;
-            if (tmp1 != null)
+            string tmp_string;
+            tmp_string = value.Label;
+            if (tmp_string != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Label
-                state.WriteRawString(tmp1);
+                state.WriteRawString(tmp_string);
             }
         }
 
@@ -849,10 +858,11 @@ partial class OutOfBandSubTypeModel
                     global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
                 }
             }
-            var tmp1 = value.Label;
-            if (tmp1 != null)
+            string tmp_string;
+            tmp_string = value.Label;
+            if (tmp_string != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // Label
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Label
             }
             return len;
         }
@@ -926,11 +936,12 @@ partial class OutOfBandSubTypeModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Side;
-            if (tmp1 != 0)
+            int tmp_int;
+            tmp_int = value.Side;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Side
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -942,8 +953,9 @@ partial class OutOfBandSubTypeModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Side;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Side
+            int tmp_int;
+            tmp_int = value.Side;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Side
             return len;
         }
 
@@ -1004,11 +1016,12 @@ partial class OutOfBandSubTypeModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Value;
-            if (tmp1 != 0)
+            int tmp_int;
+            tmp_int = value.Value;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Value
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -1020,8 +1033,9 @@ partial class OutOfBandSubTypeModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Value;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
+            int tmp_int;
+            tmp_int = value.Value;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Value
             return len;
         }
 
@@ -1082,10 +1096,11 @@ partial class OutOfBandSubTypeModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.HasPlough;
-            if (tmp1)
+            bool tmp_bool;
+            tmp_bool = value.HasPlough;
+            if (tmp_bool)
             {
-                state.WriteRawTagBool((1 << 3) | 0, tmp1);  // HasPlough
+                state.WriteRawTagBool((1 << 3) | 0, tmp_bool);  // HasPlough
             }
         }
 
@@ -1097,8 +1112,9 @@ partial class OutOfBandSubTypeModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.HasPlough;
-            if (tmp1) len += 2;  // HasPlough
+            bool tmp_bool;
+            tmp_bool = value.HasPlough;
+            if (tmp_bool) len += 2;  // HasPlough
             return len;
         }
 
@@ -1197,11 +1213,12 @@ partial class OutOfBandSubTypeModel
                     global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
                 }
             }
-            var tmp1 = value.Wheels;
-            if (tmp1 != 0)
+            int tmp_int;
+            tmp_int = value.Wheels;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Wheels
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -1234,8 +1251,9 @@ partial class OutOfBandSubTypeModel
                     global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
                 }
             }
-            var tmp1 = value.Wheels;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Wheels
+            int tmp_int;
+            tmp_int = value.Wheels;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Wheels
             return len;
         }
 

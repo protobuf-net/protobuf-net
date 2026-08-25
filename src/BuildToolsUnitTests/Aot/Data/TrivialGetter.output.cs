@@ -145,22 +145,25 @@ partial class TrivialGetterModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Value;
-            if (tmp1 != 0)
+            int tmp_int;
+            string tmp_string;
+            global::System.Collections.Generic.List<int> tmp_System_Collections_Generic_List_int_;
+            tmp_int = value.Value;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Value
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
-            var tmp2 = value.Text;
-            if (tmp2 != null)
+            tmp_string = value.Text;
+            if (tmp_string != null)
             {
                 state.WriteRawTag((2 << 3) | 2);  // Text
-                state.WriteRawString(tmp2);
+                state.WriteRawString(tmp_string);
             }
-            var tmp3 = value.Numbers;
-            if (tmp3 != null)
+            tmp_System_Collections_Generic_List_int_ = value.Numbers;
+            if (tmp_System_Collections_Generic_List_int_ != null)
             {
-                foreach (var item3 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp3))
+                foreach (var item3 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_int_))
                 {
                     state.WriteRawTag((3 << 3) | 0);  // Numbers
                     state.WriteRawVarint64(unchecked((ulong)(long)item3));
@@ -172,17 +175,20 @@ partial class TrivialGetterModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Value;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
-            var tmp2 = value.Text;
-            if (tmp2 != null)
+            int tmp_int;
+            string tmp_string;
+            global::System.Collections.Generic.List<int> tmp_System_Collections_Generic_List_int_;
+            tmp_int = value.Value;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Value
+            tmp_string = value.Text;
+            if (tmp_string != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // Text
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Text
             }
-            var tmp3 = value.Numbers;
-            if (tmp3 != null)
+            tmp_System_Collections_Generic_List_int_ = value.Numbers;
+            if (tmp_System_Collections_Generic_List_int_ != null)
             {
-                foreach (var item3 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp3))
+                foreach (var item3 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_int_))
                 {
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)item3));
                 }
@@ -273,11 +279,12 @@ partial class TrivialGetterModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Doubled;
-            if (tmp1 != 0)
+            int tmp_int;
+            tmp_int = value.Doubled;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Doubled
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -285,8 +292,9 @@ partial class TrivialGetterModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Doubled;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Doubled
+            int tmp_int;
+            tmp_int = value.Doubled;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Doubled
             return len;
         }
 

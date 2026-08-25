@@ -362,14 +362,16 @@ partial class TuplesModel
         public static void RawWrite__int__string_(ref global::ProtoBuf.ProtoWriter.State state, (int, string) value, int depth)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            var tmp1 = value.Item1;
+            int tmp_int;
+            string tmp_string;
+            tmp_int = value.Item1;
             state.WriteRawTag((1 << 3) | 0);  // Item1
-            state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
-            var tmp2 = value.Item2;
-            if (tmp2 != null)
+            state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
+            tmp_string = value.Item2;
+            if (tmp_string != null)
             {
                 state.WriteRawTag((2 << 3) | 2);  // Item2
-                state.WriteRawString(tmp2);
+                state.WriteRawString(tmp_string);
             }
         }
 
@@ -377,12 +379,14 @@ partial class TuplesModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Item1;
-            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Item1
-            var tmp2 = value.Item2;
-            if (tmp2 != null)
+            int tmp_int;
+            string tmp_string;
+            tmp_int = value.Item1;
+            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Item1
+            tmp_string = value.Item2;
+            if (tmp_string != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // Item2
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Item2
             }
             return len;
         }
@@ -440,14 +444,16 @@ partial class TuplesModel
         public static void RawWrite_AotFixtures_Tuples_ClassTuple(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Tuples.ClassTuple value, int depth)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            var tmp1 = value.A;
+            int tmp_int;
+            string tmp_string;
+            tmp_int = value.A;
             state.WriteRawTag((1 << 3) | 0);  // A
-            state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
-            var tmp2 = value.B;
-            if (tmp2 != null)
+            state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
+            tmp_string = value.B;
+            if (tmp_string != null)
             {
                 state.WriteRawTag((2 << 3) | 2);  // B
-                state.WriteRawString(tmp2);
+                state.WriteRawString(tmp_string);
             }
         }
 
@@ -455,12 +461,14 @@ partial class TuplesModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.A;
-            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // A
-            var tmp2 = value.B;
-            if (tmp2 != null)
+            int tmp_int;
+            string tmp_string;
+            tmp_int = value.A;
+            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // A
+            tmp_string = value.B;
+            if (tmp_string != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // B
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // B
             }
             return len;
         }
@@ -515,22 +523,24 @@ partial class TuplesModel
         public static void RawWrite_AotFixtures_Tuples_NamedLikeATuple(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Tuples.NamedLikeATuple value, int depth)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            var tmp1 = value.First;
+            int tmp_int;
+            tmp_int = value.First;
             state.WriteRawTag((1 << 3) | 0);  // First
-            state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
-            var tmp2 = value.Second;
+            state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
+            tmp_int = value.Second;
             state.WriteRawTag((2 << 3) | 0);  // Second
-            state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
+            state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
         }
 
         private static long Measure_AotFixtures_Tuples_NamedLikeATuple(global::AotFixtures.Tuples.NamedLikeATuple value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.First;
-            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // First
-            var tmp2 = value.Second;
-            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // Second
+            int tmp_int;
+            tmp_int = value.First;
+            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // First
+            tmp_int = value.Second;
+            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Second
             return len;
         }
 
@@ -584,14 +594,16 @@ partial class TuplesModel
         public static void RawWrite_AotFixtures_Tuples_StructTuple(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Tuples.StructTuple value, int depth)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            var tmp1 = value.X;
+            int tmp_int;
+            string tmp_string;
+            tmp_int = value.X;
             state.WriteRawTag((1 << 3) | 0);  // X
-            state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
-            var tmp2 = value.Y;
-            if (tmp2 != null)
+            state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
+            tmp_string = value.Y;
+            if (tmp_string != null)
             {
                 state.WriteRawTag((2 << 3) | 2);  // Y
-                state.WriteRawString(tmp2);
+                state.WriteRawString(tmp_string);
             }
         }
 
@@ -599,12 +611,14 @@ partial class TuplesModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.X;
-            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // X
-            var tmp2 = value.Y;
-            if (tmp2 != null)
+            int tmp_int;
+            string tmp_string;
+            tmp_int = value.X;
+            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // X
+            tmp_string = value.Y;
+            if (tmp_string != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // Y
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Y
             }
             return len;
         }
@@ -659,14 +673,16 @@ partial class TuplesModel
         public static void RawWrite_System_Collections_Generic_KeyValuePair_int__string_(ref global::ProtoBuf.ProtoWriter.State state, global::System.Collections.Generic.KeyValuePair<int, string> value, int depth)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            var tmp1 = value.Key;
+            int tmp_int;
+            string tmp_string;
+            tmp_int = value.Key;
             state.WriteRawTag((1 << 3) | 0);  // Key
-            state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
-            var tmp2 = value.Value;
-            if (tmp2 != null)
+            state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
+            tmp_string = value.Value;
+            if (tmp_string != null)
             {
                 state.WriteRawTag((2 << 3) | 2);  // Value
-                state.WriteRawString(tmp2);
+                state.WriteRawString(tmp_string);
             }
         }
 
@@ -674,12 +690,14 @@ partial class TuplesModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Key;
-            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Key
-            var tmp2 = value.Value;
-            if (tmp2 != null)
+            int tmp_int;
+            string tmp_string;
+            tmp_int = value.Key;
+            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Key
+            tmp_string = value.Value;
+            if (tmp_string != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // Value
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Value
             }
             return len;
         }
@@ -737,14 +755,16 @@ partial class TuplesModel
         public static void RawWrite_System_Tuple_int__string_(ref global::ProtoBuf.ProtoWriter.State state, global::System.Tuple<int, string> value, int depth)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            var tmp1 = value.Item1;
+            int tmp_int;
+            string tmp_string;
+            tmp_int = value.Item1;
             state.WriteRawTag((1 << 3) | 0);  // Item1
-            state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
-            var tmp2 = value.Item2;
-            if (tmp2 != null)
+            state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
+            tmp_string = value.Item2;
+            if (tmp_string != null)
             {
                 state.WriteRawTag((2 << 3) | 2);  // Item2
-                state.WriteRawString(tmp2);
+                state.WriteRawString(tmp_string);
             }
         }
 
@@ -752,12 +772,14 @@ partial class TuplesModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Item1;
-            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Item1
-            var tmp2 = value.Item2;
-            if (tmp2 != null)
+            int tmp_int;
+            string tmp_string;
+            tmp_int = value.Item1;
+            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Item1
+            tmp_string = value.Item2;
+            if (tmp_string != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // Item2
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Item2
             }
             return len;
         }

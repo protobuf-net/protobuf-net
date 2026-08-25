@@ -91,131 +91,156 @@ partial class ExoticModel
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Exotic.Exotics>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Exotic.Exotics value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Interface;
-            if (tmp1 != null)
+            global::System.Collections.Generic.IList<int> tmp_System_Collections_Generic_IList_int_;
+            global::System.Collections.Generic.ICollection<int> tmp_System_Collections_Generic_ICollection_int_;
+            global::System.Collections.Generic.IEnumerable<int> tmp_System_Collections_Generic_IEnumerable_int_;
+            global::System.Collections.Generic.IReadOnlyList<int> tmp_System_Collections_Generic_IReadOnlyList_int_;
+            global::System.Collections.Generic.HashSet<int> tmp_System_Collections_Generic_HashSet_int_;
+            global::System.Collections.Generic.Queue<int> tmp_System_Collections_Generic_Queue_int_;
+            global::System.Collections.Generic.Stack<int> tmp_System_Collections_Generic_Stack_int_;
+            global::System.Collections.Immutable.ImmutableArray<int> tmp_System_Collections_Immutable_ImmutableArray_int_;
+            global::System.Collections.Immutable.ImmutableList<int> tmp_System_Collections_Immutable_ImmutableList_int_;
+            global::System.Collections.Immutable.IImmutableList<int> tmp_System_Collections_Immutable_IImmutableList_int_;
+            global::System.Collections.Concurrent.ConcurrentQueue<int> tmp_System_Collections_Concurrent_ConcurrentQueue_int_;
+            global::System.Collections.Concurrent.ConcurrentBag<int> tmp_System_Collections_Concurrent_ConcurrentBag_int_;
+            global::System.Collections.Generic.IList<string> tmp_System_Collections_Generic_IList_string_;
+            global::System.Collections.Generic.SortedSet<int> tmp_System_Collections_Generic_SortedSet_int_;
+            global::System.Collections.Generic.ISet<int> tmp_System_Collections_Generic_ISet_int_;
+            global::System.Collections.Generic.IReadOnlyCollection<int> tmp_System_Collections_Generic_IReadOnlyCollection_int_;
+            global::System.Collections.Concurrent.ConcurrentStack<int> tmp_System_Collections_Concurrent_ConcurrentStack_int_;
+            global::System.Collections.Immutable.ImmutableQueue<int> tmp_System_Collections_Immutable_ImmutableQueue_int_;
+            global::System.Collections.Immutable.IImmutableQueue<int> tmp_System_Collections_Immutable_IImmutableQueue_int_;
+            global::System.Collections.Immutable.ImmutableStack<int> tmp_System_Collections_Immutable_ImmutableStack_int_;
+            global::System.Collections.Immutable.IImmutableStack<int> tmp_System_Collections_Immutable_IImmutableStack_int_;
+            global::System.Collections.Immutable.ImmutableHashSet<int> tmp_System_Collections_Immutable_ImmutableHashSet_int_;
+            global::System.Collections.Immutable.ImmutableSortedSet<int> tmp_System_Collections_Immutable_ImmutableSortedSet_int_;
+            global::System.Collections.Immutable.IImmutableSet<int> tmp_System_Collections_Immutable_IImmutableSet_int_;
+            global::System.Collections.Generic.LinkedList<int> tmp_System_Collections_Generic_LinkedList_int_;
+            tmp_System_Collections_Generic_IList_int_ = value.Interface;
+            if (tmp_System_Collections_Generic_IList_int_ != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateEnumerable<global::System.Collections.Generic.IList<int>, int>().WriteRepeated(ref state, 1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1);
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateEnumerable<global::System.Collections.Generic.IList<int>, int>().WriteRepeated(ref state, 1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp_System_Collections_Generic_IList_int_);
             }
-            var tmp2 = value.Collection;
-            if (tmp2 != null)
+            tmp_System_Collections_Generic_ICollection_int_ = value.Collection;
+            if (tmp_System_Collections_Generic_ICollection_int_ != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateEnumerable<global::System.Collections.Generic.ICollection<int>, int>().WriteRepeated(ref state, 2, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp2);
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateEnumerable<global::System.Collections.Generic.ICollection<int>, int>().WriteRepeated(ref state, 2, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp_System_Collections_Generic_ICollection_int_);
             }
-            var tmp3 = value.Enumerable;
-            if (tmp3 != null)
+            tmp_System_Collections_Generic_IEnumerable_int_ = value.Enumerable;
+            if (tmp_System_Collections_Generic_IEnumerable_int_ != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateEnumerable<global::System.Collections.Generic.IEnumerable<int>, int>().WriteRepeated(ref state, 3, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp3);
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateEnumerable<global::System.Collections.Generic.IEnumerable<int>, int>().WriteRepeated(ref state, 3, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp_System_Collections_Generic_IEnumerable_int_);
             }
-            var tmp4 = value.ReadOnlyList;
-            if (tmp4 != null)
+            tmp_System_Collections_Generic_IReadOnlyList_int_ = value.ReadOnlyList;
+            if (tmp_System_Collections_Generic_IReadOnlyList_int_ != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateEnumerable<global::System.Collections.Generic.IReadOnlyList<int>, int>().WriteRepeated(ref state, 4, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp4);
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateEnumerable<global::System.Collections.Generic.IReadOnlyList<int>, int>().WriteRepeated(ref state, 4, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp_System_Collections_Generic_IReadOnlyList_int_);
             }
-            var tmp5 = value.Set;
-            if (tmp5 != null)
+            tmp_System_Collections_Generic_HashSet_int_ = value.Set;
+            if (tmp_System_Collections_Generic_HashSet_int_ != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateSet<global::System.Collections.Generic.HashSet<int>, int>().WriteRepeated(ref state, 5, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp5);
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateSet<global::System.Collections.Generic.HashSet<int>, int>().WriteRepeated(ref state, 5, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp_System_Collections_Generic_HashSet_int_);
             }
-            var tmp6 = value.Queue;
-            if (tmp6 != null)
+            tmp_System_Collections_Generic_Queue_int_ = value.Queue;
+            if (tmp_System_Collections_Generic_Queue_int_ != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateQueue<global::System.Collections.Generic.Queue<int>, int>().WriteRepeated(ref state, 6, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp6);
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateQueue<global::System.Collections.Generic.Queue<int>, int>().WriteRepeated(ref state, 6, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp_System_Collections_Generic_Queue_int_);
             }
-            var tmp7 = value.Stack;
-            if (tmp7 != null)
+            tmp_System_Collections_Generic_Stack_int_ = value.Stack;
+            if (tmp_System_Collections_Generic_Stack_int_ != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateStack<global::System.Collections.Generic.Stack<int>, int>().WriteRepeated(ref state, 7, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp7);
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateStack<global::System.Collections.Generic.Stack<int>, int>().WriteRepeated(ref state, 7, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp_System_Collections_Generic_Stack_int_);
             }
-            var tmp8 = value.ImmutableArray;
-            foreach (var item8 in tmp8.AsSpan())
+            tmp_System_Collections_Immutable_ImmutableArray_int_ = value.ImmutableArray;
+            foreach (var item8 in tmp_System_Collections_Immutable_ImmutableArray_int_.AsSpan())
             {
                 state.WriteRawTag((8 << 3) | 0);  // ImmutableArray
                 state.WriteRawVarint64(unchecked((ulong)(long)item8));
             }
-            var tmp9 = value.ImmutableList;
-            if (tmp9 != null)
+            tmp_System_Collections_Immutable_ImmutableList_int_ = value.ImmutableList;
+            if (tmp_System_Collections_Immutable_ImmutableList_int_ != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableList<int>().WriteRepeated(ref state, 9, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp9);
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableList<int>().WriteRepeated(ref state, 9, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp_System_Collections_Immutable_ImmutableList_int_);
             }
-            var tmp10 = value.ImmutableInterface;
-            if (tmp10 != null)
+            tmp_System_Collections_Immutable_IImmutableList_int_ = value.ImmutableInterface;
+            if (tmp_System_Collections_Immutable_IImmutableList_int_ != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableIList<int>().WriteRepeated(ref state, 10, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp10);
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableIList<int>().WriteRepeated(ref state, 10, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp_System_Collections_Immutable_IImmutableList_int_);
             }
-            var tmp11 = value.ConcurrentQueue;
-            if (tmp11 != null)
+            tmp_System_Collections_Concurrent_ConcurrentQueue_int_ = value.ConcurrentQueue;
+            if (tmp_System_Collections_Concurrent_ConcurrentQueue_int_ != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateConcurrentQueue<global::System.Collections.Concurrent.ConcurrentQueue<int>, int>().WriteRepeated(ref state, 11, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp11);
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateConcurrentQueue<global::System.Collections.Concurrent.ConcurrentQueue<int>, int>().WriteRepeated(ref state, 11, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp_System_Collections_Concurrent_ConcurrentQueue_int_);
             }
-            var tmp12 = value.ConcurrentBag;
-            if (tmp12 != null)
+            tmp_System_Collections_Concurrent_ConcurrentBag_int_ = value.ConcurrentBag;
+            if (tmp_System_Collections_Concurrent_ConcurrentBag_int_ != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateConcurrentBag<global::System.Collections.Concurrent.ConcurrentBag<int>, int>().WriteRepeated(ref state, 12, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp12);
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateConcurrentBag<global::System.Collections.Concurrent.ConcurrentBag<int>, int>().WriteRepeated(ref state, 12, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp_System_Collections_Concurrent_ConcurrentBag_int_);
             }
-            var tmp13 = value.Strings;
-            if (tmp13 != null)
+            tmp_System_Collections_Generic_IList_string_ = value.Strings;
+            if (tmp_System_Collections_Generic_IList_string_ != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateEnumerable<global::System.Collections.Generic.IList<string>, string>().WriteRepeated(ref state, 13, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp13);
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateEnumerable<global::System.Collections.Generic.IList<string>, string>().WriteRepeated(ref state, 13, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp_System_Collections_Generic_IList_string_);
             }
-            var tmp14 = value.SortedSet;
-            if (tmp14 != null)
+            tmp_System_Collections_Generic_SortedSet_int_ = value.SortedSet;
+            if (tmp_System_Collections_Generic_SortedSet_int_ != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateEnumerable<global::System.Collections.Generic.SortedSet<int>, int>().WriteRepeated(ref state, 14, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp14);
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateEnumerable<global::System.Collections.Generic.SortedSet<int>, int>().WriteRepeated(ref state, 14, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp_System_Collections_Generic_SortedSet_int_);
             }
-            var tmp15 = value.ISet;
-            if (tmp15 != null)
+            tmp_System_Collections_Generic_ISet_int_ = value.ISet;
+            if (tmp_System_Collections_Generic_ISet_int_ != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateSet<global::System.Collections.Generic.ISet<int>, int>().WriteRepeated(ref state, 15, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp15);
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateSet<global::System.Collections.Generic.ISet<int>, int>().WriteRepeated(ref state, 15, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp_System_Collections_Generic_ISet_int_);
             }
-            var tmp16 = value.ReadOnlyCollection;
-            if (tmp16 != null)
+            tmp_System_Collections_Generic_IReadOnlyCollection_int_ = value.ReadOnlyCollection;
+            if (tmp_System_Collections_Generic_IReadOnlyCollection_int_ != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateEnumerable<global::System.Collections.Generic.IReadOnlyCollection<int>, int>().WriteRepeated(ref state, 16, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp16);
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateEnumerable<global::System.Collections.Generic.IReadOnlyCollection<int>, int>().WriteRepeated(ref state, 16, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp_System_Collections_Generic_IReadOnlyCollection_int_);
             }
-            var tmp17 = value.ConcurrentStack;
-            if (tmp17 != null)
+            tmp_System_Collections_Concurrent_ConcurrentStack_int_ = value.ConcurrentStack;
+            if (tmp_System_Collections_Concurrent_ConcurrentStack_int_ != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateConcurrentStack<global::System.Collections.Concurrent.ConcurrentStack<int>, int>().WriteRepeated(ref state, 17, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp17);
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateConcurrentStack<global::System.Collections.Concurrent.ConcurrentStack<int>, int>().WriteRepeated(ref state, 17, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp_System_Collections_Concurrent_ConcurrentStack_int_);
             }
-            var tmp19 = value.ImmutableQueue;
-            if (tmp19 != null)
+            tmp_System_Collections_Immutable_ImmutableQueue_int_ = value.ImmutableQueue;
+            if (tmp_System_Collections_Immutable_ImmutableQueue_int_ != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableQueue<int>().WriteRepeated(ref state, 19, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp19);
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableQueue<int>().WriteRepeated(ref state, 19, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp_System_Collections_Immutable_ImmutableQueue_int_);
             }
-            var tmp20 = value.ImmutableIQueue;
-            if (tmp20 != null)
+            tmp_System_Collections_Immutable_IImmutableQueue_int_ = value.ImmutableIQueue;
+            if (tmp_System_Collections_Immutable_IImmutableQueue_int_ != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableIQueue<int>().WriteRepeated(ref state, 20, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp20);
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableIQueue<int>().WriteRepeated(ref state, 20, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp_System_Collections_Immutable_IImmutableQueue_int_);
             }
-            var tmp21 = value.ImmutableStack;
-            if (tmp21 != null)
+            tmp_System_Collections_Immutable_ImmutableStack_int_ = value.ImmutableStack;
+            if (tmp_System_Collections_Immutable_ImmutableStack_int_ != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableStack<int>().WriteRepeated(ref state, 21, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp21);
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableStack<int>().WriteRepeated(ref state, 21, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp_System_Collections_Immutable_ImmutableStack_int_);
             }
-            var tmp22 = value.ImmutableIStack;
-            if (tmp22 != null)
+            tmp_System_Collections_Immutable_IImmutableStack_int_ = value.ImmutableIStack;
+            if (tmp_System_Collections_Immutable_IImmutableStack_int_ != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableIStack<int>().WriteRepeated(ref state, 22, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp22);
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableIStack<int>().WriteRepeated(ref state, 22, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp_System_Collections_Immutable_IImmutableStack_int_);
             }
-            var tmp23 = value.ImmutableHashSet;
-            if (tmp23 != null)
+            tmp_System_Collections_Immutable_ImmutableHashSet_int_ = value.ImmutableHashSet;
+            if (tmp_System_Collections_Immutable_ImmutableHashSet_int_ != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableHashSet<int>().WriteRepeated(ref state, 23, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp23);
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableHashSet<int>().WriteRepeated(ref state, 23, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp_System_Collections_Immutable_ImmutableHashSet_int_);
             }
-            var tmp24 = value.ImmutableSortedSet;
-            if (tmp24 != null)
+            tmp_System_Collections_Immutable_ImmutableSortedSet_int_ = value.ImmutableSortedSet;
+            if (tmp_System_Collections_Immutable_ImmutableSortedSet_int_ != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableSortedSet<int>().WriteRepeated(ref state, 24, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp24);
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableSortedSet<int>().WriteRepeated(ref state, 24, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp_System_Collections_Immutable_ImmutableSortedSet_int_);
             }
-            var tmp25 = value.ImmutableISet;
-            if (tmp25 != null)
+            tmp_System_Collections_Immutable_IImmutableSet_int_ = value.ImmutableISet;
+            if (tmp_System_Collections_Immutable_IImmutableSet_int_ != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableISet<int>().WriteRepeated(ref state, 25, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp25);
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableISet<int>().WriteRepeated(ref state, 25, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp_System_Collections_Immutable_IImmutableSet_int_);
             }
-            var tmp26 = value.Linked;
-            if (tmp26 != null)
+            tmp_System_Collections_Generic_LinkedList_int_ = value.Linked;
+            if (tmp_System_Collections_Generic_LinkedList_int_ != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateEnumerable<global::System.Collections.Generic.LinkedList<int>, int>().WriteRepeated(ref state, 26, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp26);
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateEnumerable<global::System.Collections.Generic.LinkedList<int>, int>().WriteRepeated(ref state, 26, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp_System_Collections_Generic_LinkedList_int_);
             }
         }
 

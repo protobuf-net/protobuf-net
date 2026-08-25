@@ -295,23 +295,24 @@ partial class ImplicitModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = Field_AotFixtures_Implicit_AllFields__Ignored_k__BackingField(value);
-            if (tmp1 != 0)
+            int tmp_int;
+            tmp_int = Field_AotFixtures_Implicit_AllFields__Ignored_k__BackingField(value);
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // <Ignored>k__BackingField
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
-            var tmp2 = value.Apple;
-            if (tmp2 != 0)
+            tmp_int = value.Apple;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((2 << 3) | 0);  // Apple
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
-            var tmp3 = value.Zebra;
-            if (tmp3 != 0)
+            tmp_int = value.Zebra;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((3 << 3) | 0);  // Zebra
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp3));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -319,12 +320,13 @@ partial class ImplicitModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = Field_AotFixtures_Implicit_AllFields__Ignored_k__BackingField(value);
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // <Ignored>k__BackingField
-            var tmp2 = value.Apple;
-            if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // Apple
-            var tmp3 = value.Zebra;
-            if (tmp3 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp3));  // Zebra
+            int tmp_int;
+            tmp_int = Field_AotFixtures_Implicit_AllFields__Ignored_k__BackingField(value);
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // <Ignored>k__BackingField
+            tmp_int = value.Apple;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Apple
+            tmp_int = value.Zebra;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Zebra
             return len;
         }
 
@@ -400,23 +402,25 @@ partial class ImplicitModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Apple;
-            if (tmp1 != null)
+            string tmp_string;
+            int tmp_int;
+            tmp_string = value.Apple;
+            if (tmp_string != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Apple
-                state.WriteRawString(tmp1);
+                state.WriteRawString(tmp_string);
             }
-            var tmp2 = value.Mango;
-            if (tmp2 != 0)
+            tmp_int = value.Mango;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((2 << 3) | 0);  // Mango
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
-            var tmp3 = value.Zebra;
-            if (tmp3 != 0)
+            tmp_int = value.Zebra;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((3 << 3) | 0);  // Zebra
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp3));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -424,15 +428,17 @@ partial class ImplicitModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Apple;
-            if (tmp1 != null)
+            string tmp_string;
+            int tmp_int;
+            tmp_string = value.Apple;
+            if (tmp_string != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // Apple
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Apple
             }
-            var tmp2 = value.Mango;
-            if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // Mango
-            var tmp3 = value.Zebra;
-            if (tmp3 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp3));  // Zebra
+            tmp_int = value.Mango;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Mango
+            tmp_int = value.Zebra;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Zebra
             return len;
         }
 
@@ -503,17 +509,18 @@ partial class ImplicitModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp10 = value.Alpha;
-            if (tmp10 != 0)
+            int tmp_int;
+            tmp_int = value.Alpha;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((10 << 3) | 0);  // Alpha
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp10));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
-            var tmp11 = value.Beta;
-            if (tmp11 != 0)
+            tmp_int = value.Beta;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((11 << 3) | 0);  // Beta
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp11));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -521,10 +528,11 @@ partial class ImplicitModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp10 = value.Alpha;
-            if (tmp10 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp10));  // Alpha
-            var tmp11 = value.Beta;
-            if (tmp11 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp11));  // Beta
+            int tmp_int;
+            tmp_int = value.Alpha;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Alpha
+            tmp_int = value.Beta;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Beta
             return len;
         }
 
@@ -589,11 +597,12 @@ partial class ImplicitModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Kept;
-            if (tmp1 != 0)
+            int tmp_int;
+            tmp_int = value.Kept;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Kept
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -601,8 +610,9 @@ partial class ImplicitModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Kept;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Kept
+            int tmp_int;
+            tmp_int = value.Kept;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Kept
             return len;
         }
 
@@ -658,23 +668,24 @@ partial class ImplicitModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Alpha;
-            if (tmp1 != 0)
+            int tmp_int;
+            tmp_int = value.Alpha;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Alpha
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
-            var tmp2 = value.Zulu;
-            if (tmp2 != 0)
+            tmp_int = value.Zulu;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((2 << 3) | 0);  // Zulu
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
-            var tmp5 = value.Pinned;
-            if (tmp5 != 0)
+            tmp_int = value.Pinned;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((5 << 3) | 0);  // Pinned
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp5));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -682,12 +693,13 @@ partial class ImplicitModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Alpha;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Alpha
-            var tmp2 = value.Zulu;
-            if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // Zulu
-            var tmp5 = value.Pinned;
-            if (tmp5 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp5));  // Pinned
+            int tmp_int;
+            tmp_int = value.Alpha;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Alpha
+            tmp_int = value.Zulu;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Zulu
+            tmp_int = value.Pinned;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Pinned
             return len;
         }
 

@@ -145,40 +145,45 @@ partial class DefaultsModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Number;
-            if (tmp1 != 5)
+            int tmp_int;
+            string tmp_string;
+            bool tmp_bool;
+            double tmp_double;
+            long tmp_long;
+            tmp_int = value.Number;
+            if (tmp_int != 5)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Number
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
-            var tmp2 = value.Text;
-            if (tmp2 != null && tmp2 != "abc")
+            tmp_string = value.Text;
+            if (tmp_string != null && tmp_string != "abc")
             {
                 state.WriteRawTag((2 << 3) | 2);  // Text
-                state.WriteRawString(tmp2);
+                state.WriteRawString(tmp_string);
             }
-            var tmp3 = value.Flag;
-            if (tmp3 != true)
+            tmp_bool = value.Flag;
+            if (tmp_bool != true)
             {
-                state.WriteRawTagBool((3 << 3) | 0, tmp3);  // Flag
+                state.WriteRawTagBool((3 << 3) | 0, tmp_bool);  // Flag
             }
-            var tmp4 = value.Ratio;
-            if (tmp4 != 2.5D)
+            tmp_double = value.Ratio;
+            if (tmp_double != 2.5D)
             {
                 state.WriteRawTag((4 << 3) | 1);  // Ratio
-                state.WriteRawDouble(tmp4);
+                state.WriteRawDouble(tmp_double);
             }
-            var tmp5 = value.Big;
-            if (tmp5 != 7L)
+            tmp_long = value.Big;
+            if (tmp_long != 7L)
             {
                 state.WriteRawTag((5 << 3) | 0);  // Big
-                state.WriteRawVarint64(unchecked((ulong)tmp5));
+                state.WriteRawVarint64(unchecked((ulong)tmp_long));
             }
-            var tmp6 = value.Plain;
-            if (tmp6 != 0)
+            tmp_int = value.Plain;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((6 << 3) | 0);  // Plain
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp6));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -186,21 +191,26 @@ partial class DefaultsModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Number;
-            if (tmp1 != 5) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Number
-            var tmp2 = value.Text;
-            if (tmp2 != null && tmp2 != "abc")
+            int tmp_int;
+            string tmp_string;
+            bool tmp_bool;
+            double tmp_double;
+            long tmp_long;
+            tmp_int = value.Number;
+            if (tmp_int != 5) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Number
+            tmp_string = value.Text;
+            if (tmp_string != null && tmp_string != "abc")
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // Text
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Text
             }
-            var tmp3 = value.Flag;
-            if (tmp3 != true) len += 2;  // Flag
-            var tmp4 = value.Ratio;
-            if (tmp4 != 2.5D) len += 9;  // Ratio
-            var tmp5 = value.Big;
-            if (tmp5 != 7L) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)tmp5));  // Big
-            var tmp6 = value.Plain;
-            if (tmp6 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp6));  // Plain
+            tmp_bool = value.Flag;
+            if (tmp_bool != true) len += 2;  // Flag
+            tmp_double = value.Ratio;
+            if (tmp_double != 2.5D) len += 9;  // Ratio
+            tmp_long = value.Big;
+            if (tmp_long != 7L) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)tmp_long));  // Big
+            tmp_int = value.Plain;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Plain
             return len;
         }
 
@@ -292,35 +302,37 @@ partial class DefaultsModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.ByName;
-            if (tmp1 != (global::AotFixtures.Defaults.Shade)(2))
+            global::AotFixtures.Defaults.Shade tmp_AotFixtures_Defaults_Shade;
+            char tmp_char;
+            tmp_AotFixtures_Defaults_Shade = value.ByName;
+            if (tmp_AotFixtures_Defaults_Shade != (global::AotFixtures.Defaults.Shade)(2))
             {
                 state.WriteRawTag((1 << 3) | 0);  // ByName
-                state.WriteRawVarint32((ushort)tmp1);
+                state.WriteRawVarint32((ushort)tmp_AotFixtures_Defaults_Shade);
             }
-            var tmp2 = value.ByValue;
-            if (tmp2 != (global::AotFixtures.Defaults.Shade)(4))
+            tmp_AotFixtures_Defaults_Shade = value.ByValue;
+            if (tmp_AotFixtures_Defaults_Shade != (global::AotFixtures.Defaults.Shade)(4))
             {
                 state.WriteRawTag((2 << 3) | 0);  // ByValue
-                state.WriteRawVarint32((ushort)tmp2);
+                state.WriteRawVarint32((ushort)tmp_AotFixtures_Defaults_Shade);
             }
-            var tmp3 = value.Letter;
-            if (tmp3 != 'x')
+            tmp_char = value.Letter;
+            if (tmp_char != 'x')
             {
                 state.WriteRawTag((3 << 3) | 0);  // Letter
-                state.WriteRawVarint32(tmp3);
+                state.WriteRawVarint32(tmp_char);
             }
-            var tmp4 = value.DirectChar;
-            if (tmp4 != 'y')
+            tmp_char = value.DirectChar;
+            if (tmp_char != 'y')
             {
                 state.WriteRawTag((4 << 3) | 0);  // DirectChar
-                state.WriteRawVarint32(tmp4);
+                state.WriteRawVarint32(tmp_char);
             }
-            var tmp5 = value.ByConverter;
-            if (tmp5 != (global::AotFixtures.Defaults.Shade)(1))
+            tmp_AotFixtures_Defaults_Shade = value.ByConverter;
+            if (tmp_AotFixtures_Defaults_Shade != (global::AotFixtures.Defaults.Shade)(1))
             {
                 state.WriteRawTag((5 << 3) | 0);  // ByConverter
-                state.WriteRawVarint32((ushort)tmp5);
+                state.WriteRawVarint32((ushort)tmp_AotFixtures_Defaults_Shade);
             }
         }
 
@@ -328,16 +340,18 @@ partial class DefaultsModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.ByName;
-            if (tmp1 != (global::AotFixtures.Defaults.Shade)(2)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((ushort)tmp1);  // ByName
-            var tmp2 = value.ByValue;
-            if (tmp2 != (global::AotFixtures.Defaults.Shade)(4)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((ushort)tmp2);  // ByValue
-            var tmp3 = value.Letter;
-            if (tmp3 != 'x') len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32(tmp3);  // Letter
-            var tmp4 = value.DirectChar;
-            if (tmp4 != 'y') len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32(tmp4);  // DirectChar
-            var tmp5 = value.ByConverter;
-            if (tmp5 != (global::AotFixtures.Defaults.Shade)(1)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((ushort)tmp5);  // ByConverter
+            global::AotFixtures.Defaults.Shade tmp_AotFixtures_Defaults_Shade;
+            char tmp_char;
+            tmp_AotFixtures_Defaults_Shade = value.ByName;
+            if (tmp_AotFixtures_Defaults_Shade != (global::AotFixtures.Defaults.Shade)(2)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((ushort)tmp_AotFixtures_Defaults_Shade);  // ByName
+            tmp_AotFixtures_Defaults_Shade = value.ByValue;
+            if (tmp_AotFixtures_Defaults_Shade != (global::AotFixtures.Defaults.Shade)(4)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((ushort)tmp_AotFixtures_Defaults_Shade);  // ByValue
+            tmp_char = value.Letter;
+            if (tmp_char != 'x') len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32(tmp_char);  // Letter
+            tmp_char = value.DirectChar;
+            if (tmp_char != 'y') len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32(tmp_char);  // DirectChar
+            tmp_AotFixtures_Defaults_Shade = value.ByConverter;
+            if (tmp_AotFixtures_Defaults_Shade != (global::AotFixtures.Defaults.Shade)(1)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((ushort)tmp_AotFixtures_Defaults_Shade);  // ByConverter
             return len;
         }
 

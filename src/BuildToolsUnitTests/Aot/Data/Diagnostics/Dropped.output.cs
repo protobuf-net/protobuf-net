@@ -316,11 +316,12 @@ partial class DroppedModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Value;
-            if (tmp1 != 0)
+            int tmp_int;
+            tmp_int = value.Value;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Value
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -328,8 +329,9 @@ partial class DroppedModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Value;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
+            int tmp_int;
+            tmp_int = value.Value;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Value
             return len;
         }
 
@@ -387,16 +389,18 @@ partial class DroppedModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Id;
-            if (tmp1 != 0)
+            int tmp_int;
+            global::System.Collections.Generic.List<string> tmp_System_Collections_Generic_List_string_;
+            tmp_int = value.Id;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Id
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
-            var tmp2 = value.Tags;
-            if (tmp2 != null)
+            tmp_System_Collections_Generic_List_string_ = value.Tags;
+            if (tmp_System_Collections_Generic_List_string_ != null)
             {
-                foreach (var item2 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp2))
+                foreach (var item2 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_string_))
                 {
                     if (item2 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<string>();
                     state.WriteRawTag((2 << 3) | 2);  // Tags
@@ -409,12 +413,14 @@ partial class DroppedModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Id;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Id
-            var tmp2 = value.Tags;
-            if (tmp2 != null)
+            int tmp_int;
+            global::System.Collections.Generic.List<string> tmp_System_Collections_Generic_List_string_;
+            tmp_int = value.Id;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Id
+            tmp_System_Collections_Generic_List_string_ = value.Tags;
+            if (tmp_System_Collections_Generic_List_string_ != null)
             {
-                foreach (var item2 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp2))
+                foreach (var item2 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_string_))
                 {
                     if (item2 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<string>();
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(item2);
@@ -491,14 +497,15 @@ partial class DroppedModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long before = 0;
-            var tmp1 = value.Child;
-            if (tmp1 != null)
+            global::AotFixtures.Dropped.HasUnsupportedMember tmp_AotFixtures_Dropped_HasUnsupportedMember;
+            tmp_AotFixtures_Dropped_HasUnsupportedMember = value.Child;
+            if (tmp_AotFixtures_Dropped_HasUnsupportedMember != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Child
                 var len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWrite_AotFixtures_Dropped_HasUnsupportedMember(ref state, tmp1, depth);
+                RawWrite_AotFixtures_Dropped_HasUnsupportedMember(ref state, tmp_AotFixtures_Dropped_HasUnsupportedMember, depth);
                 DebugAssertPosition(ref state, before + len, "Child");
             }
         }
@@ -507,11 +514,12 @@ partial class DroppedModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Child;
-            if (tmp1 != null)
+            global::AotFixtures.Dropped.HasUnsupportedMember tmp_AotFixtures_Dropped_HasUnsupportedMember;
+            tmp_AotFixtures_Dropped_HasUnsupportedMember = value.Child;
+            if (tmp_AotFixtures_Dropped_HasUnsupportedMember != null)
             {
                 var slot1 = slots.Reserve();
-                var sub = Measure_AotFixtures_Dropped_HasUnsupportedMember(tmp1, depth, slots, context);
+                var sub = Measure_AotFixtures_Dropped_HasUnsupportedMember(tmp_AotFixtures_Dropped_HasUnsupportedMember, depth, slots, context);
                 slots.Set(slot1, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Child
             }
@@ -569,11 +577,12 @@ partial class DroppedModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Value;
-            if (tmp1 != 5)
+            int tmp_int;
+            tmp_int = value.Value;
+            if (tmp_int != 5)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Value
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -581,8 +590,9 @@ partial class DroppedModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Value;
-            if (tmp1 != 5) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
+            int tmp_int;
+            tmp_int = value.Value;
+            if (tmp_int != 5) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Value
             return len;
         }
 
@@ -638,17 +648,19 @@ partial class DroppedModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Value;
+            int tmp_int;
+            tmp_int = value.Value;
             state.WriteRawTag((1 << 3) | 0);  // Value
-            state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
         }
 
         private static long Measure_AotFixtures_Dropped_UsesMemberOptions(global::AotFixtures.Dropped.UsesMemberOptions value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Value;
-            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
+            int tmp_int;
+            tmp_int = value.Value;
+            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Value
             return len;
         }
 

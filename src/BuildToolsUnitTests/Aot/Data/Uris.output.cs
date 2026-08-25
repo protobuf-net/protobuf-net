@@ -91,44 +91,49 @@ partial class UrisModel
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Uris.Links>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Uris.Links value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Home;
-            if (tmp1 != null)
+            global::System.Uri tmp_System_Uri;
+            string tmp_string;
+            global::System.Collections.Generic.List<global::System.Uri> tmp_System_Collections_Generic_List_global__System_Uri_;
+            global::System.Uri[] tmp_System_Uri__;
+            global::System.Collections.Generic.Dictionary<int, global::System.Uri> tmp_System_Collections_Generic_Dictionary_int__global__System_Uri_;
+            tmp_System_Uri = value.Home;
+            if (tmp_System_Uri != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Home
-                state.WriteRawString(tmp1.OriginalString);
+                state.WriteRawString(tmp_System_Uri.OriginalString);
             }
-            var tmp2 = value.Name;
-            if (tmp2 != null)
+            tmp_string = value.Name;
+            if (tmp_string != null)
             {
                 state.WriteRawTag((2 << 3) | 2);  // Name
-                state.WriteRawString(tmp2);
+                state.WriteRawString(tmp_string);
             }
-            var tmp3 = value.Relative;
-            if (tmp3 != null)
+            tmp_System_Uri = value.Relative;
+            if (tmp_System_Uri != null)
             {
                 state.WriteRawTag((3 << 3) | 2);  // Relative
-                state.WriteRawString(tmp3.OriginalString);
+                state.WriteRawString(tmp_System_Uri.OriginalString);
             }
-            var tmp4 = value.All;
-            if (tmp4 != null)
+            tmp_System_Collections_Generic_List_global__System_Uri_ = value.All;
+            if (tmp_System_Collections_Generic_List_global__System_Uri_ != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::System.Uri>().WriteRepeated(ref state, 4, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp4);
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::System.Uri>().WriteRepeated(ref state, 4, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp_System_Collections_Generic_List_global__System_Uri_);
             }
-            var tmp5 = value.More;
-            if (tmp5 != null)
+            tmp_System_Uri__ = value.More;
+            if (tmp_System_Uri__ != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<global::System.Uri>().WriteRepeated(ref state, 5, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp5);
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<global::System.Uri>().WriteRepeated(ref state, 5, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp_System_Uri__);
             }
-            var tmp6 = value.ById;
-            if (tmp6 != null)
+            tmp_System_Collections_Generic_Dictionary_int__global__System_Uri_ = value.ById;
+            if (tmp_System_Collections_Generic_Dictionary_int__global__System_Uri_ != null)
             {
-                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::System.Uri>().WriteMap(ref state, 6, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp6, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::System.Uri>().WriteMap(ref state, 6, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp_System_Collections_Generic_Dictionary_int__global__System_Uri_, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
             }
-            var tmp7 = value.Fixed;
-            if (tmp7 != null)
+            tmp_System_Uri = value.Fixed;
+            if (tmp_System_Uri != null)
             {
                 state.WriteRawTag((7 << 3) | 2);  // Fixed
-                state.WriteRawString(tmp7.OriginalString);
+                state.WriteRawString(tmp_System_Uri.OriginalString);
             }
         }
 

@@ -91,57 +91,63 @@ partial class NativeScalarsModel
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NativeScalars.Natives>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.NativeScalars.Natives value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Handle;
-            if (tmp1 != 0)
+            nint tmp_nint;
+            nuint tmp_nuint;
+            nint? tmp_nint_;
+            nuint? tmp_nuint_;
+            global::System.Collections.Generic.List<nint> tmp_System_Collections_Generic_List_nint_;
+            nint[] tmp_nint__;
+            tmp_nint = value.Handle;
+            if (tmp_nint != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Handle
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_nint));
             }
-            var tmp2 = value.Size;
-            if (tmp2 != 0)
+            tmp_nuint = value.Size;
+            if (tmp_nuint != 0)
             {
                 state.WriteRawTag((2 << 3) | 0);  // Size
-                state.WriteRawVarint64(unchecked((ulong)tmp2));
+                state.WriteRawVarint64(unchecked((ulong)tmp_nuint));
             }
-            var tmp3 = value.MaybeHandle;
-            if (tmp3.HasValue)
+            tmp_nint_ = value.MaybeHandle;
+            if (tmp_nint_.HasValue)
             {
-                var val3 = tmp3.GetValueOrDefault();
+                var val3 = tmp_nint_.GetValueOrDefault();
                 state.WriteRawTag((3 << 3) | 0);  // MaybeHandle
                 state.WriteRawVarint64(unchecked((ulong)(long)val3));
             }
-            var tmp4 = value.MaybeSize;
-            if (tmp4.HasValue)
+            tmp_nuint_ = value.MaybeSize;
+            if (tmp_nuint_.HasValue)
             {
-                var val4 = tmp4.GetValueOrDefault();
+                var val4 = tmp_nuint_.GetValueOrDefault();
                 state.WriteRawTag((4 << 3) | 0);  // MaybeSize
                 state.WriteRawVarint64(unchecked((ulong)val4));
             }
-            var tmp5 = value.Fixed;
-            if (tmp5 != 0)
+            tmp_nint = value.Fixed;
+            if (tmp_nint != 0)
             {
                 state.WriteFieldHeader(5, global::ProtoBuf.WireType.Fixed64);
-                state.WriteIntPtr(tmp5);
+                state.WriteIntPtr(tmp_nint);
             }
-            var tmp6 = value.Zigzag;
-            if (tmp6 != 0)
+            tmp_nint = value.Zigzag;
+            if (tmp_nint != 0)
             {
                 state.WriteFieldHeader(6, global::ProtoBuf.WireType.SignedVarint);
-                state.WriteIntPtr(tmp6);
+                state.WriteIntPtr(tmp_nint);
             }
-            var tmp7 = value.Handles;
-            if (tmp7 != null)
+            tmp_System_Collections_Generic_List_nint_ = value.Handles;
+            if (tmp_System_Collections_Generic_List_nint_ != null)
             {
-                foreach (var item7 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp7))
+                foreach (var item7 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_nint_))
                 {
                     state.WriteRawTag((7 << 3) | 0);  // Handles
                     state.WriteRawVarint64(unchecked((ulong)(long)item7));
                 }
             }
-            var tmp8 = value.More;
-            if (tmp8 != null)
+            tmp_nint__ = value.More;
+            if (tmp_nint__ != null)
             {
-                foreach (var item8 in tmp8)
+                foreach (var item8 in tmp_nint__)
                 {
                     state.WriteRawTag((8 << 3) | 0);  // More
                     state.WriteRawVarint64(unchecked((ulong)(long)item8));

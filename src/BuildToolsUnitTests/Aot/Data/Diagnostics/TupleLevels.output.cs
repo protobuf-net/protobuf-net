@@ -192,23 +192,27 @@ partial class TupleLevelsModel
         public static void RawWrite__global__System_Guid__decimal_(ref global::ProtoBuf.ProtoWriter.State state, (global::System.Guid, decimal) value, int depth)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            var tmp1 = value.Item1;
+            global::System.Guid tmp_System_Guid;
+            decimal tmp_decimal;
+            tmp_System_Guid = value.Item1;
             state.WriteFieldHeader(1, global::ProtoBuf.WireType.String);
-            global::ProtoBuf.BclHelpers.WriteGuid(ref state, tmp1);
-            var tmp2 = value.Item2;
+            global::ProtoBuf.BclHelpers.WriteGuid(ref state, tmp_System_Guid);
+            tmp_decimal = value.Item2;
             state.WriteFieldHeader(2, global::ProtoBuf.WireType.String);
-            global::ProtoBuf.BclHelpers.WriteDecimal(ref state, tmp2);
+            global::ProtoBuf.BclHelpers.WriteDecimal(ref state, tmp_decimal);
         }
 
         private static long Measure__global__System_Guid__decimal_((global::System.Guid, decimal) value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Item1;
-            var bcl1 = global::ProtoBuf.BclHelpers.MeasureGuid(tmp1);
+            global::System.Guid tmp_System_Guid;
+            decimal tmp_decimal;
+            tmp_System_Guid = value.Item1;
+            var bcl1 = global::ProtoBuf.BclHelpers.MeasureGuid(tmp_System_Guid);
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bcl1) + bcl1;  // Item1
-            var tmp2 = value.Item2;
-            var bcl2 = global::ProtoBuf.BclHelpers.MeasureDecimal(tmp2);
+            tmp_decimal = value.Item2;
+            var bcl2 = global::ProtoBuf.BclHelpers.MeasureDecimal(tmp_decimal);
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bcl2) + bcl2;  // Item2
             return len;
         }
@@ -248,17 +252,19 @@ partial class TupleLevelsModel
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long len;
             long before = 0;
-            var tmp1 = value.One;
+            (global::System.Guid, decimal) tmp__global__System_Guid__decimal_;
+            global::System.Collections.Generic.List<(global::System.Guid, decimal)> tmp_System_Collections_Generic_List__global__System_Guid__decimal__;
+            tmp__global__System_Guid__decimal_ = value.One;
             state.WriteRawTag((1 << 3) | 2);  // One
             len = state.RawSlots.Next();
             state.WriteRawVarint64((ulong)len);
             DebugCapturePosition(ref state, ref before);
-            RawWrite__global__System_Guid__decimal_(ref state, tmp1, depth);
+            RawWrite__global__System_Guid__decimal_(ref state, tmp__global__System_Guid__decimal_, depth);
             DebugAssertPosition(ref state, before + len, "One");
-            var tmp2 = value.Two;
-            if (tmp2 != null)
+            tmp_System_Collections_Generic_List__global__System_Guid__decimal__ = value.Two;
+            if (tmp_System_Collections_Generic_List__global__System_Guid__decimal__ != null)
             {
-                foreach (var item2 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp2))
+                foreach (var item2 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List__global__System_Guid__decimal__))
                 {
                     state.WriteRawTag((2 << 3) | 2);  // Two
                     len = state.RawSlots.Next();
@@ -275,15 +281,17 @@ partial class TupleLevelsModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             long sub;
-            var tmp1 = value.One;
+            (global::System.Guid, decimal) tmp__global__System_Guid__decimal_;
+            global::System.Collections.Generic.List<(global::System.Guid, decimal)> tmp_System_Collections_Generic_List__global__System_Guid__decimal__;
+            tmp__global__System_Guid__decimal_ = value.One;
             var slot1 = slots.Reserve();
-            sub = Measure__global__System_Guid__decimal_(tmp1, depth, slots, context);
+            sub = Measure__global__System_Guid__decimal_(tmp__global__System_Guid__decimal_, depth, slots, context);
             slots.Set(slot1, sub);
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // One
-            var tmp2 = value.Two;
-            if (tmp2 != null)
+            tmp_System_Collections_Generic_List__global__System_Guid__decimal__ = value.Two;
+            if (tmp_System_Collections_Generic_List__global__System_Guid__decimal__ != null)
             {
-                foreach (var item2 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp2))
+                foreach (var item2 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List__global__System_Guid__decimal__))
                 {
                     var slot2 = slots.Reserve();
                     sub = Measure__global__System_Guid__decimal_(item2, depth, slots, context);

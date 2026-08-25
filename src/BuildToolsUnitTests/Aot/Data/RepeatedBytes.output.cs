@@ -95,31 +95,34 @@ partial class RepeatedBytesModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Chunks;
-            if (tmp1 != null)
+            global::System.Collections.Generic.List<byte[]> tmp_System_Collections_Generic_List_byte___;
+            byte[][] tmp_byte____;
+            byte[] tmp_byte__;
+            tmp_System_Collections_Generic_List_byte___ = value.Chunks;
+            if (tmp_System_Collections_Generic_List_byte___ != null)
             {
-                foreach (var item1 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp1))
+                foreach (var item1 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_byte___))
                 {
                     if (item1 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<byte[]>();
                     state.WriteRawTag((1 << 3) | 2);  // Chunks
                     state.WriteRawBytes(item1);
                 }
             }
-            var tmp2 = value.Blocks;
-            if (tmp2 != null)
+            tmp_byte____ = value.Blocks;
+            if (tmp_byte____ != null)
             {
-                foreach (var item2 in tmp2)
+                foreach (var item2 in tmp_byte____)
                 {
                     if (item2 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<byte[]>();
                     state.WriteRawTag((2 << 3) | 2);  // Blocks
                     state.WriteRawBytes(item2);
                 }
             }
-            var tmp3 = value.Single;
-            if (tmp3 != null)
+            tmp_byte__ = value.Single;
+            if (tmp_byte__ != null)
             {
                 state.WriteRawTag((3 << 3) | 2);  // Single
-                state.WriteRawBytes(tmp3);
+                state.WriteRawBytes(tmp_byte__);
             }
         }
 
@@ -127,28 +130,31 @@ partial class RepeatedBytesModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Chunks;
-            if (tmp1 != null)
+            global::System.Collections.Generic.List<byte[]> tmp_System_Collections_Generic_List_byte___;
+            byte[][] tmp_byte____;
+            byte[] tmp_byte__;
+            tmp_System_Collections_Generic_List_byte___ = value.Chunks;
+            if (tmp_System_Collections_Generic_List_byte___ != null)
             {
-                foreach (var item1 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp1))
+                foreach (var item1 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_byte___))
                 {
                     if (item1 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<byte[]>();
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)item1.Length) + item1.Length;
                 }
             }
-            var tmp2 = value.Blocks;
-            if (tmp2 != null)
+            tmp_byte____ = value.Blocks;
+            if (tmp_byte____ != null)
             {
-                foreach (var item2 in tmp2)
+                foreach (var item2 in tmp_byte____)
                 {
                     if (item2 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<byte[]>();
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)item2.Length) + item2.Length;
                 }
             }
-            var tmp3 = value.Single;
-            if (tmp3 != null)
+            tmp_byte__ = value.Single;
+            if (tmp_byte__ != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)tmp3.Length) + tmp3.Length;  // Single
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)tmp_byte__.Length) + tmp_byte__.Length;  // Single
             }
             return len;
         }

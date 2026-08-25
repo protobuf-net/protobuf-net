@@ -216,11 +216,12 @@ partial class NestedModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.City;
-            if (tmp1 != null)
+            string tmp_string;
+            tmp_string = value.City;
+            if (tmp_string != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // City
-                state.WriteRawString(tmp1);
+                state.WriteRawString(tmp_string);
             }
         }
 
@@ -228,10 +229,11 @@ partial class NestedModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.City;
-            if (tmp1 != null)
+            string tmp_string;
+            tmp_string = value.City;
+            if (tmp_string != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // City
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // City
             }
             return len;
         }
@@ -296,20 +298,22 @@ partial class NestedModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long before = 0;
-            var tmp1 = value.Id;
-            if (tmp1 != 0)
+            int tmp_int;
+            global::AotFixtures.Nested.Address tmp_AotFixtures_Nested_Address;
+            tmp_int = value.Id;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Id
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
-            var tmp2 = value.Address;
-            if (tmp2 != null)
+            tmp_AotFixtures_Nested_Address = value.Address;
+            if (tmp_AotFixtures_Nested_Address != null)
             {
                 state.WriteRawTag((2 << 3) | 2);  // Address
                 var len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWrite_AotFixtures_Nested_Address(ref state, tmp2, depth);
+                RawWrite_AotFixtures_Nested_Address(ref state, tmp_AotFixtures_Nested_Address, depth);
                 DebugAssertPosition(ref state, before + len, "Address");
             }
         }
@@ -318,13 +322,15 @@ partial class NestedModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Id;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Id
-            var tmp2 = value.Address;
-            if (tmp2 != null)
+            int tmp_int;
+            global::AotFixtures.Nested.Address tmp_AotFixtures_Nested_Address;
+            tmp_int = value.Id;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Id
+            tmp_AotFixtures_Nested_Address = value.Address;
+            if (tmp_AotFixtures_Nested_Address != null)
             {
                 var slot2 = slots.Reserve();
-                var sub = Measure_AotFixtures_Nested_Address(tmp2, depth, slots, context);
+                var sub = Measure_AotFixtures_Nested_Address(tmp_AotFixtures_Nested_Address, depth, slots, context);
                 slots.Set(slot2, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Address
             }
@@ -403,30 +409,33 @@ partial class NestedModel
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long len;
             long before = 0;
-            var tmp1 = value.Number;
-            if (tmp1 != 0)
+            int tmp_int;
+            global::AotFixtures.Nested.Customer tmp_AotFixtures_Nested_Customer;
+            global::AotFixtures.Nested.Address tmp_AotFixtures_Nested_Address;
+            tmp_int = value.Number;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Number
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
-            var tmp2 = value.Customer;
-            if (tmp2 != null)
+            tmp_AotFixtures_Nested_Customer = value.Customer;
+            if (tmp_AotFixtures_Nested_Customer != null)
             {
                 state.WriteRawTag((2 << 3) | 2);  // Customer
                 len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWrite_AotFixtures_Nested_Customer(ref state, tmp2, depth);
+                RawWrite_AotFixtures_Nested_Customer(ref state, tmp_AotFixtures_Nested_Customer, depth);
                 DebugAssertPosition(ref state, before + len, "Customer");
             }
-            var tmp3 = value.ShipTo;
-            if (tmp3 != null)
+            tmp_AotFixtures_Nested_Address = value.ShipTo;
+            if (tmp_AotFixtures_Nested_Address != null)
             {
                 state.WriteRawTag((3 << 3) | 2);  // ShipTo
                 len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWrite_AotFixtures_Nested_Address(ref state, tmp3, depth);
+                RawWrite_AotFixtures_Nested_Address(ref state, tmp_AotFixtures_Nested_Address, depth);
                 DebugAssertPosition(ref state, before + len, "ShipTo");
             }
         }
@@ -436,21 +445,24 @@ partial class NestedModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             long sub;
-            var tmp1 = value.Number;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Number
-            var tmp2 = value.Customer;
-            if (tmp2 != null)
+            int tmp_int;
+            global::AotFixtures.Nested.Customer tmp_AotFixtures_Nested_Customer;
+            global::AotFixtures.Nested.Address tmp_AotFixtures_Nested_Address;
+            tmp_int = value.Number;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Number
+            tmp_AotFixtures_Nested_Customer = value.Customer;
+            if (tmp_AotFixtures_Nested_Customer != null)
             {
                 var slot2 = slots.Reserve();
-                sub = Measure_AotFixtures_Nested_Customer(tmp2, depth, slots, context);
+                sub = Measure_AotFixtures_Nested_Customer(tmp_AotFixtures_Nested_Customer, depth, slots, context);
                 slots.Set(slot2, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Customer
             }
-            var tmp3 = value.ShipTo;
-            if (tmp3 != null)
+            tmp_AotFixtures_Nested_Address = value.ShipTo;
+            if (tmp_AotFixtures_Nested_Address != null)
             {
                 var slot3 = slots.Reserve();
-                sub = Measure_AotFixtures_Nested_Address(tmp3, depth, slots, context);
+                sub = Measure_AotFixtures_Nested_Address(tmp_AotFixtures_Nested_Address, depth, slots, context);
                 slots.Set(slot3, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // ShipTo
             }

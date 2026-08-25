@@ -1949,19 +1949,29 @@ partial class CustomProtogenSerializer
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long len;
             long before = 0;
+            string tmp_string;
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.FieldDescriptorProto> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_FieldDescriptorProto_;
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.DescriptorProto> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_DescriptorProto_;
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.EnumDescriptorProto> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_EnumDescriptorProto_;
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.DescriptorProto.ExtensionRange> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_DescriptorProto_ExtensionRange_;
+            global::Google.Protobuf.Reflection.MessageOptions tmp_Google_Protobuf_Reflection_MessageOptions;
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.OneofDescriptorProto> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_OneofDescriptorProto_;
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.DescriptorProto.ReservedRange> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_DescriptorProto_ReservedRange_;
+            global::System.Collections.Generic.List<string> tmp_System_Collections_Generic_List_string_;
+            global::Google.Protobuf.Reflection.SymbolVisibility tmp_Google_Protobuf_Reflection_SymbolVisibility;
             if (value.ShouldSerializeName())
             {
-                var tmp1 = value.Name;
-                if (tmp1 != null)
+                tmp_string = value.Name;
+                if (tmp_string != null)
                 {
                     state.WriteRawTag((1 << 3) | 2);  // Name
-                    state.WriteRawString(tmp1);
+                    state.WriteRawString(tmp_string);
                 }
             }
-            var tmp2 = value.Fields;
-            if (tmp2 != null)
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_FieldDescriptorProto_ = value.Fields;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_FieldDescriptorProto_ != null)
             {
-                foreach (var item2 in tmp2)
+                foreach (var item2 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_FieldDescriptorProto_)
                 {
                     if (item2 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.FieldDescriptorProto>();
                     state.WriteRawTag((2 << 3) | 2);  // Fields
@@ -1972,10 +1982,10 @@ partial class CustomProtogenSerializer
                     DebugAssertPosition(ref state, before + len, "Fields");
                 }
             }
-            var tmp3 = value.NestedTypes;
-            if (tmp3 != null)
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_DescriptorProto_ = value.NestedTypes;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_DescriptorProto_ != null)
             {
-                foreach (var item3 in tmp3)
+                foreach (var item3 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_DescriptorProto_)
                 {
                     if (item3 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.DescriptorProto>();
                     state.WriteRawTag((3 << 3) | 2);  // NestedTypes
@@ -1986,10 +1996,10 @@ partial class CustomProtogenSerializer
                     DebugAssertPosition(ref state, before + len, "NestedTypes");
                 }
             }
-            var tmp4 = value.EnumTypes;
-            if (tmp4 != null)
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_EnumDescriptorProto_ = value.EnumTypes;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_EnumDescriptorProto_ != null)
             {
-                foreach (var item4 in tmp4)
+                foreach (var item4 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_EnumDescriptorProto_)
                 {
                     if (item4 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.EnumDescriptorProto>();
                     state.WriteRawTag((4 << 3) | 2);  // EnumTypes
@@ -2000,10 +2010,10 @@ partial class CustomProtogenSerializer
                     DebugAssertPosition(ref state, before + len, "EnumTypes");
                 }
             }
-            var tmp5 = value.ExtensionRanges;
-            if (tmp5 != null)
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_DescriptorProto_ExtensionRange_ = value.ExtensionRanges;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_DescriptorProto_ExtensionRange_ != null)
             {
-                foreach (var item5 in tmp5)
+                foreach (var item5 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_DescriptorProto_ExtensionRange_)
                 {
                     if (item5 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.DescriptorProto.ExtensionRange>();
                     state.WriteRawTag((5 << 3) | 2);  // ExtensionRanges
@@ -2014,10 +2024,10 @@ partial class CustomProtogenSerializer
                     DebugAssertPosition(ref state, before + len, "ExtensionRanges");
                 }
             }
-            var tmp6 = value.Extensions;
-            if (tmp6 != null)
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_FieldDescriptorProto_ = value.Extensions;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_FieldDescriptorProto_ != null)
             {
-                foreach (var item6 in tmp6)
+                foreach (var item6 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_FieldDescriptorProto_)
                 {
                     if (item6 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.FieldDescriptorProto>();
                     state.WriteRawTag((6 << 3) | 2);  // Extensions
@@ -2028,20 +2038,20 @@ partial class CustomProtogenSerializer
                     DebugAssertPosition(ref state, before + len, "Extensions");
                 }
             }
-            var tmp7 = value.Options;
-            if (tmp7 != null)
+            tmp_Google_Protobuf_Reflection_MessageOptions = value.Options;
+            if (tmp_Google_Protobuf_Reflection_MessageOptions != null)
             {
                 state.WriteRawTag((7 << 3) | 2);  // Options
                 len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWrite_Google_Protobuf_Reflection_MessageOptions(ref state, tmp7, depth);
+                RawWrite_Google_Protobuf_Reflection_MessageOptions(ref state, tmp_Google_Protobuf_Reflection_MessageOptions, depth);
                 DebugAssertPosition(ref state, before + len, "Options");
             }
-            var tmp8 = value.OneofDecls;
-            if (tmp8 != null)
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_OneofDescriptorProto_ = value.OneofDecls;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_OneofDescriptorProto_ != null)
             {
-                foreach (var item8 in tmp8)
+                foreach (var item8 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_OneofDescriptorProto_)
                 {
                     if (item8 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.OneofDescriptorProto>();
                     state.WriteRawTag((8 << 3) | 2);  // OneofDecls
@@ -2052,10 +2062,10 @@ partial class CustomProtogenSerializer
                     DebugAssertPosition(ref state, before + len, "OneofDecls");
                 }
             }
-            var tmp9 = value.ReservedRanges;
-            if (tmp9 != null)
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_DescriptorProto_ReservedRange_ = value.ReservedRanges;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_DescriptorProto_ReservedRange_ != null)
             {
-                foreach (var item9 in tmp9)
+                foreach (var item9 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_DescriptorProto_ReservedRange_)
                 {
                     if (item9 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.DescriptorProto.ReservedRange>();
                     state.WriteRawTag((9 << 3) | 2);  // ReservedRanges
@@ -2066,10 +2076,10 @@ partial class CustomProtogenSerializer
                     DebugAssertPosition(ref state, before + len, "ReservedRanges");
                 }
             }
-            var tmp10 = value.ReservedNames;
-            if (tmp10 != null)
+            tmp_System_Collections_Generic_List_string_ = value.ReservedNames;
+            if (tmp_System_Collections_Generic_List_string_ != null)
             {
-                foreach (var item10 in tmp10)
+                foreach (var item10 in tmp_System_Collections_Generic_List_string_)
                 {
                     if (item10 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<string>();
                     state.WriteRawTag((10 << 3) | 2);  // ReservedNames
@@ -2078,9 +2088,9 @@ partial class CustomProtogenSerializer
             }
             if (value.ShouldSerializeVisibility())
             {
-                var tmp11 = value.Visibility;
+                tmp_Google_Protobuf_Reflection_SymbolVisibility = value.Visibility;
                 state.WriteRawTag((11 << 3) | 0);  // Visibility
-                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp11));
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp_Google_Protobuf_Reflection_SymbolVisibility));
             }
             state.AppendExtensionData(value);
         }
@@ -2090,18 +2100,28 @@ partial class CustomProtogenSerializer
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             long sub;
+            string tmp_string;
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.FieldDescriptorProto> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_FieldDescriptorProto_;
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.DescriptorProto> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_DescriptorProto_;
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.EnumDescriptorProto> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_EnumDescriptorProto_;
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.DescriptorProto.ExtensionRange> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_DescriptorProto_ExtensionRange_;
+            global::Google.Protobuf.Reflection.MessageOptions tmp_Google_Protobuf_Reflection_MessageOptions;
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.OneofDescriptorProto> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_OneofDescriptorProto_;
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.DescriptorProto.ReservedRange> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_DescriptorProto_ReservedRange_;
+            global::System.Collections.Generic.List<string> tmp_System_Collections_Generic_List_string_;
+            global::Google.Protobuf.Reflection.SymbolVisibility tmp_Google_Protobuf_Reflection_SymbolVisibility;
             if (value.ShouldSerializeName())
             {
-                var tmp1 = value.Name;
-                if (tmp1 != null)
+                tmp_string = value.Name;
+                if (tmp_string != null)
                 {
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // Name
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Name
                 }
             }
-            var tmp2 = value.Fields;
-            if (tmp2 != null)
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_FieldDescriptorProto_ = value.Fields;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_FieldDescriptorProto_ != null)
             {
-                foreach (var item2 in tmp2)
+                foreach (var item2 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_FieldDescriptorProto_)
                 {
                     if (item2 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.FieldDescriptorProto>();
                     var slot2 = slots.Reserve();
@@ -2110,10 +2130,10 @@ partial class CustomProtogenSerializer
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
-            var tmp3 = value.NestedTypes;
-            if (tmp3 != null)
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_DescriptorProto_ = value.NestedTypes;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_DescriptorProto_ != null)
             {
-                foreach (var item3 in tmp3)
+                foreach (var item3 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_DescriptorProto_)
                 {
                     if (item3 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.DescriptorProto>();
                     var slot3 = slots.Reserve();
@@ -2122,10 +2142,10 @@ partial class CustomProtogenSerializer
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
-            var tmp4 = value.EnumTypes;
-            if (tmp4 != null)
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_EnumDescriptorProto_ = value.EnumTypes;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_EnumDescriptorProto_ != null)
             {
-                foreach (var item4 in tmp4)
+                foreach (var item4 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_EnumDescriptorProto_)
                 {
                     if (item4 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.EnumDescriptorProto>();
                     var slot4 = slots.Reserve();
@@ -2134,10 +2154,10 @@ partial class CustomProtogenSerializer
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
-            var tmp5 = value.ExtensionRanges;
-            if (tmp5 != null)
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_DescriptorProto_ExtensionRange_ = value.ExtensionRanges;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_DescriptorProto_ExtensionRange_ != null)
             {
-                foreach (var item5 in tmp5)
+                foreach (var item5 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_DescriptorProto_ExtensionRange_)
                 {
                     if (item5 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.DescriptorProto.ExtensionRange>();
                     var slot5 = slots.Reserve();
@@ -2146,10 +2166,10 @@ partial class CustomProtogenSerializer
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
-            var tmp6 = value.Extensions;
-            if (tmp6 != null)
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_FieldDescriptorProto_ = value.Extensions;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_FieldDescriptorProto_ != null)
             {
-                foreach (var item6 in tmp6)
+                foreach (var item6 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_FieldDescriptorProto_)
                 {
                     if (item6 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.FieldDescriptorProto>();
                     var slot6 = slots.Reserve();
@@ -2158,18 +2178,18 @@ partial class CustomProtogenSerializer
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
-            var tmp7 = value.Options;
-            if (tmp7 != null)
+            tmp_Google_Protobuf_Reflection_MessageOptions = value.Options;
+            if (tmp_Google_Protobuf_Reflection_MessageOptions != null)
             {
                 var slot7 = slots.Reserve();
-                sub = Measure_Google_Protobuf_Reflection_MessageOptions(tmp7, depth, slots, context);
+                sub = Measure_Google_Protobuf_Reflection_MessageOptions(tmp_Google_Protobuf_Reflection_MessageOptions, depth, slots, context);
                 slots.Set(slot7, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Options
             }
-            var tmp8 = value.OneofDecls;
-            if (tmp8 != null)
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_OneofDescriptorProto_ = value.OneofDecls;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_OneofDescriptorProto_ != null)
             {
-                foreach (var item8 in tmp8)
+                foreach (var item8 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_OneofDescriptorProto_)
                 {
                     if (item8 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.OneofDescriptorProto>();
                     var slot8 = slots.Reserve();
@@ -2178,10 +2198,10 @@ partial class CustomProtogenSerializer
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
-            var tmp9 = value.ReservedRanges;
-            if (tmp9 != null)
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_DescriptorProto_ReservedRange_ = value.ReservedRanges;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_DescriptorProto_ReservedRange_ != null)
             {
-                foreach (var item9 in tmp9)
+                foreach (var item9 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_DescriptorProto_ReservedRange_)
                 {
                     if (item9 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.DescriptorProto.ReservedRange>();
                     var slot9 = slots.Reserve();
@@ -2190,10 +2210,10 @@ partial class CustomProtogenSerializer
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
-            var tmp10 = value.ReservedNames;
-            if (tmp10 != null)
+            tmp_System_Collections_Generic_List_string_ = value.ReservedNames;
+            if (tmp_System_Collections_Generic_List_string_ != null)
             {
-                foreach (var item10 in tmp10)
+                foreach (var item10 in tmp_System_Collections_Generic_List_string_)
                 {
                     if (item10 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<string>();
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(item10);
@@ -2201,8 +2221,8 @@ partial class CustomProtogenSerializer
             }
             if (value.ShouldSerializeVisibility())
             {
-                var tmp11 = value.Visibility;
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp11));  // Visibility
+                tmp_Google_Protobuf_Reflection_SymbolVisibility = value.Visibility;
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp_Google_Protobuf_Reflection_SymbolVisibility));  // Visibility
             }
             len += global::ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(value);
             return len;
@@ -2373,26 +2393,28 @@ partial class CustomProtogenSerializer
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long before = 0;
+            int tmp_int;
+            global::Google.Protobuf.Reflection.ExtensionRangeOptions tmp_Google_Protobuf_Reflection_ExtensionRangeOptions;
             if (value.ShouldSerializeStart())
             {
-                var tmp1 = value.Start;
+                tmp_int = value.Start;
                 state.WriteRawTag((1 << 3) | 0);  // Start
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
             if (value.ShouldSerializeEnd())
             {
-                var tmp2 = value.End;
+                tmp_int = value.End;
                 state.WriteRawTag((2 << 3) | 0);  // End
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
-            var tmp3 = value.Options;
-            if (tmp3 != null)
+            tmp_Google_Protobuf_Reflection_ExtensionRangeOptions = value.Options;
+            if (tmp_Google_Protobuf_Reflection_ExtensionRangeOptions != null)
             {
                 state.WriteRawTag((3 << 3) | 2);  // Options
                 var len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWrite_Google_Protobuf_Reflection_ExtensionRangeOptions(ref state, tmp3, depth);
+                RawWrite_Google_Protobuf_Reflection_ExtensionRangeOptions(ref state, tmp_Google_Protobuf_Reflection_ExtensionRangeOptions, depth);
                 DebugAssertPosition(ref state, before + len, "Options");
             }
             state.AppendExtensionData(value);
@@ -2402,21 +2424,23 @@ partial class CustomProtogenSerializer
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int tmp_int;
+            global::Google.Protobuf.Reflection.ExtensionRangeOptions tmp_Google_Protobuf_Reflection_ExtensionRangeOptions;
             if (value.ShouldSerializeStart())
             {
-                var tmp1 = value.Start;
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Start
+                tmp_int = value.Start;
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Start
             }
             if (value.ShouldSerializeEnd())
             {
-                var tmp2 = value.End;
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // End
+                tmp_int = value.End;
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // End
             }
-            var tmp3 = value.Options;
-            if (tmp3 != null)
+            tmp_Google_Protobuf_Reflection_ExtensionRangeOptions = value.Options;
+            if (tmp_Google_Protobuf_Reflection_ExtensionRangeOptions != null)
             {
                 var slot3 = slots.Reserve();
-                var sub = Measure_Google_Protobuf_Reflection_ExtensionRangeOptions(tmp3, depth, slots, context);
+                var sub = Measure_Google_Protobuf_Reflection_ExtensionRangeOptions(tmp_Google_Protobuf_Reflection_ExtensionRangeOptions, depth, slots, context);
                 slots.Set(slot3, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Options
             }
@@ -2493,17 +2517,18 @@ partial class CustomProtogenSerializer
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            int tmp_int;
             if (value.ShouldSerializeStart())
             {
-                var tmp1 = value.Start;
+                tmp_int = value.Start;
                 state.WriteRawTag((1 << 3) | 0);  // Start
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
             if (value.ShouldSerializeEnd())
             {
-                var tmp2 = value.End;
+                tmp_int = value.End;
                 state.WriteRawTag((2 << 3) | 0);  // End
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
             state.AppendExtensionData(value);
         }
@@ -2512,15 +2537,16 @@ partial class CustomProtogenSerializer
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int tmp_int;
             if (value.ShouldSerializeStart())
             {
-                var tmp1 = value.Start;
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Start
+                tmp_int = value.Start;
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Start
             }
             if (value.ShouldSerializeEnd())
             {
-                var tmp2 = value.End;
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // End
+                tmp_int = value.End;
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // End
             }
             len += global::ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(value);
             return len;
@@ -2599,19 +2625,25 @@ partial class CustomProtogenSerializer
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long len;
             long before = 0;
+            string tmp_string;
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.EnumValueDescriptorProto> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_EnumValueDescriptorProto_;
+            global::Google.Protobuf.Reflection.EnumOptions tmp_Google_Protobuf_Reflection_EnumOptions;
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.EnumDescriptorProto.EnumReservedRange> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_EnumDescriptorProto_EnumReservedRange_;
+            global::System.Collections.Generic.List<string> tmp_System_Collections_Generic_List_string_;
+            global::Google.Protobuf.Reflection.SymbolVisibility tmp_Google_Protobuf_Reflection_SymbolVisibility;
             if (value.ShouldSerializeName())
             {
-                var tmp1 = value.Name;
-                if (tmp1 != null)
+                tmp_string = value.Name;
+                if (tmp_string != null)
                 {
                     state.WriteRawTag((1 << 3) | 2);  // Name
-                    state.WriteRawString(tmp1);
+                    state.WriteRawString(tmp_string);
                 }
             }
-            var tmp2 = value.Values;
-            if (tmp2 != null)
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_EnumValueDescriptorProto_ = value.Values;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_EnumValueDescriptorProto_ != null)
             {
-                foreach (var item2 in tmp2)
+                foreach (var item2 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_EnumValueDescriptorProto_)
                 {
                     if (item2 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.EnumValueDescriptorProto>();
                     state.WriteRawTag((2 << 3) | 2);  // Values
@@ -2622,20 +2654,20 @@ partial class CustomProtogenSerializer
                     DebugAssertPosition(ref state, before + len, "Values");
                 }
             }
-            var tmp3 = value.Options;
-            if (tmp3 != null)
+            tmp_Google_Protobuf_Reflection_EnumOptions = value.Options;
+            if (tmp_Google_Protobuf_Reflection_EnumOptions != null)
             {
                 state.WriteRawTag((3 << 3) | 2);  // Options
                 len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWrite_Google_Protobuf_Reflection_EnumOptions(ref state, tmp3, depth);
+                RawWrite_Google_Protobuf_Reflection_EnumOptions(ref state, tmp_Google_Protobuf_Reflection_EnumOptions, depth);
                 DebugAssertPosition(ref state, before + len, "Options");
             }
-            var tmp4 = value.ReservedRanges;
-            if (tmp4 != null)
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_EnumDescriptorProto_EnumReservedRange_ = value.ReservedRanges;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_EnumDescriptorProto_EnumReservedRange_ != null)
             {
-                foreach (var item4 in tmp4)
+                foreach (var item4 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_EnumDescriptorProto_EnumReservedRange_)
                 {
                     if (item4 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.EnumDescriptorProto.EnumReservedRange>();
                     state.WriteRawTag((4 << 3) | 2);  // ReservedRanges
@@ -2646,10 +2678,10 @@ partial class CustomProtogenSerializer
                     DebugAssertPosition(ref state, before + len, "ReservedRanges");
                 }
             }
-            var tmp5 = value.ReservedNames;
-            if (tmp5 != null)
+            tmp_System_Collections_Generic_List_string_ = value.ReservedNames;
+            if (tmp_System_Collections_Generic_List_string_ != null)
             {
-                foreach (var item5 in tmp5)
+                foreach (var item5 in tmp_System_Collections_Generic_List_string_)
                 {
                     if (item5 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<string>();
                     state.WriteRawTag((5 << 3) | 2);  // ReservedNames
@@ -2658,9 +2690,9 @@ partial class CustomProtogenSerializer
             }
             if (value.ShouldSerializeVisibility())
             {
-                var tmp6 = value.Visibility;
+                tmp_Google_Protobuf_Reflection_SymbolVisibility = value.Visibility;
                 state.WriteRawTag((6 << 3) | 0);  // Visibility
-                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp6));
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp_Google_Protobuf_Reflection_SymbolVisibility));
             }
             state.AppendExtensionData(value);
         }
@@ -2670,18 +2702,24 @@ partial class CustomProtogenSerializer
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             long sub;
+            string tmp_string;
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.EnumValueDescriptorProto> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_EnumValueDescriptorProto_;
+            global::Google.Protobuf.Reflection.EnumOptions tmp_Google_Protobuf_Reflection_EnumOptions;
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.EnumDescriptorProto.EnumReservedRange> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_EnumDescriptorProto_EnumReservedRange_;
+            global::System.Collections.Generic.List<string> tmp_System_Collections_Generic_List_string_;
+            global::Google.Protobuf.Reflection.SymbolVisibility tmp_Google_Protobuf_Reflection_SymbolVisibility;
             if (value.ShouldSerializeName())
             {
-                var tmp1 = value.Name;
-                if (tmp1 != null)
+                tmp_string = value.Name;
+                if (tmp_string != null)
                 {
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // Name
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Name
                 }
             }
-            var tmp2 = value.Values;
-            if (tmp2 != null)
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_EnumValueDescriptorProto_ = value.Values;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_EnumValueDescriptorProto_ != null)
             {
-                foreach (var item2 in tmp2)
+                foreach (var item2 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_EnumValueDescriptorProto_)
                 {
                     if (item2 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.EnumValueDescriptorProto>();
                     var slot2 = slots.Reserve();
@@ -2690,18 +2728,18 @@ partial class CustomProtogenSerializer
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
-            var tmp3 = value.Options;
-            if (tmp3 != null)
+            tmp_Google_Protobuf_Reflection_EnumOptions = value.Options;
+            if (tmp_Google_Protobuf_Reflection_EnumOptions != null)
             {
                 var slot3 = slots.Reserve();
-                sub = Measure_Google_Protobuf_Reflection_EnumOptions(tmp3, depth, slots, context);
+                sub = Measure_Google_Protobuf_Reflection_EnumOptions(tmp_Google_Protobuf_Reflection_EnumOptions, depth, slots, context);
                 slots.Set(slot3, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Options
             }
-            var tmp4 = value.ReservedRanges;
-            if (tmp4 != null)
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_EnumDescriptorProto_EnumReservedRange_ = value.ReservedRanges;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_EnumDescriptorProto_EnumReservedRange_ != null)
             {
-                foreach (var item4 in tmp4)
+                foreach (var item4 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_EnumDescriptorProto_EnumReservedRange_)
                 {
                     if (item4 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.EnumDescriptorProto.EnumReservedRange>();
                     var slot4 = slots.Reserve();
@@ -2710,10 +2748,10 @@ partial class CustomProtogenSerializer
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
-            var tmp5 = value.ReservedNames;
-            if (tmp5 != null)
+            tmp_System_Collections_Generic_List_string_ = value.ReservedNames;
+            if (tmp_System_Collections_Generic_List_string_ != null)
             {
-                foreach (var item5 in tmp5)
+                foreach (var item5 in tmp_System_Collections_Generic_List_string_)
                 {
                     if (item5 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<string>();
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(item5);
@@ -2721,8 +2759,8 @@ partial class CustomProtogenSerializer
             }
             if (value.ShouldSerializeVisibility())
             {
-                var tmp6 = value.Visibility;
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp6));  // Visibility
+                tmp_Google_Protobuf_Reflection_SymbolVisibility = value.Visibility;
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp_Google_Protobuf_Reflection_SymbolVisibility));  // Visibility
             }
             len += global::ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(value);
             return len;
@@ -2822,17 +2860,18 @@ partial class CustomProtogenSerializer
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            int tmp_int;
             if (value.ShouldSerializeStart())
             {
-                var tmp1 = value.Start;
+                tmp_int = value.Start;
                 state.WriteRawTag((1 << 3) | 0);  // Start
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
             if (value.ShouldSerializeEnd())
             {
-                var tmp2 = value.End;
+                tmp_int = value.End;
                 state.WriteRawTag((2 << 3) | 0);  // End
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
             state.AppendExtensionData(value);
         }
@@ -2841,15 +2880,16 @@ partial class CustomProtogenSerializer
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int tmp_int;
             if (value.ShouldSerializeStart())
             {
-                var tmp1 = value.Start;
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Start
+                tmp_int = value.Start;
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Start
             }
             if (value.ShouldSerializeEnd())
             {
-                var tmp2 = value.End;
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // End
+                tmp_int = value.End;
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // End
             }
             len += global::ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(value);
             return len;
@@ -2928,35 +2968,38 @@ partial class CustomProtogenSerializer
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long len;
             long before = 0;
+            bool tmp_bool;
+            global::Google.Protobuf.Reflection.FeatureSet tmp_Google_Protobuf_Reflection_FeatureSet;
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.UninterpretedOption> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_;
             if (value.ShouldSerializeAllowAlias())
             {
-                var tmp2 = value.AllowAlias;
-                state.WriteRawTagBool((2 << 3) | 0, tmp2);  // AllowAlias
+                tmp_bool = value.AllowAlias;
+                state.WriteRawTagBool((2 << 3) | 0, tmp_bool);  // AllowAlias
             }
             if (value.ShouldSerializeDeprecated())
             {
-                var tmp3 = value.Deprecated;
-                state.WriteRawTagBool((3 << 3) | 0, tmp3);  // Deprecated
+                tmp_bool = value.Deprecated;
+                state.WriteRawTagBool((3 << 3) | 0, tmp_bool);  // Deprecated
             }
             if (value.ShouldSerializeDeprecatedLegacyJsonFieldConflicts())
             {
-                var tmp6 = value.DeprecatedLegacyJsonFieldConflicts;
-                state.WriteRawTagBool((6 << 3) | 0, tmp6);  // DeprecatedLegacyJsonFieldConflicts
+                tmp_bool = value.DeprecatedLegacyJsonFieldConflicts;
+                state.WriteRawTagBool((6 << 3) | 0, tmp_bool);  // DeprecatedLegacyJsonFieldConflicts
             }
-            var tmp7 = value.Features;
-            if (tmp7 != null)
+            tmp_Google_Protobuf_Reflection_FeatureSet = value.Features;
+            if (tmp_Google_Protobuf_Reflection_FeatureSet != null)
             {
                 state.WriteRawTag((7 << 3) | 2);  // Features
                 len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWrite_Google_Protobuf_Reflection_FeatureSet(ref state, tmp7, depth);
+                RawWrite_Google_Protobuf_Reflection_FeatureSet(ref state, tmp_Google_Protobuf_Reflection_FeatureSet, depth);
                 DebugAssertPosition(ref state, before + len, "Features");
             }
-            var tmp999 = value.UninterpretedOptions;
-            if (tmp999 != null)
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_ = value.UninterpretedOptions;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_ != null)
             {
-                foreach (var item999 in tmp999)
+                foreach (var item999 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_)
                 {
                     if (item999 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.UninterpretedOption>();
                     state.WriteRawTag((999 << 3) | 2);  // UninterpretedOptions
@@ -2975,33 +3018,36 @@ partial class CustomProtogenSerializer
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             long sub;
+            bool tmp_bool;
+            global::Google.Protobuf.Reflection.FeatureSet tmp_Google_Protobuf_Reflection_FeatureSet;
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.UninterpretedOption> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_;
             if (value.ShouldSerializeAllowAlias())
             {
-                var tmp2 = value.AllowAlias;
+                tmp_bool = value.AllowAlias;
                 len += 2;  // AllowAlias
             }
             if (value.ShouldSerializeDeprecated())
             {
-                var tmp3 = value.Deprecated;
+                tmp_bool = value.Deprecated;
                 len += 2;  // Deprecated
             }
             if (value.ShouldSerializeDeprecatedLegacyJsonFieldConflicts())
             {
-                var tmp6 = value.DeprecatedLegacyJsonFieldConflicts;
+                tmp_bool = value.DeprecatedLegacyJsonFieldConflicts;
                 len += 2;  // DeprecatedLegacyJsonFieldConflicts
             }
-            var tmp7 = value.Features;
-            if (tmp7 != null)
+            tmp_Google_Protobuf_Reflection_FeatureSet = value.Features;
+            if (tmp_Google_Protobuf_Reflection_FeatureSet != null)
             {
                 var slot7 = slots.Reserve();
-                sub = Measure_Google_Protobuf_Reflection_FeatureSet(tmp7, depth, slots, context);
+                sub = Measure_Google_Protobuf_Reflection_FeatureSet(tmp_Google_Protobuf_Reflection_FeatureSet, depth, slots, context);
                 slots.Set(slot7, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Features
             }
-            var tmp999 = value.UninterpretedOptions;
-            if (tmp999 != null)
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_ = value.UninterpretedOptions;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_ != null)
             {
-                foreach (var item999 in tmp999)
+                foreach (var item999 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_)
                 {
                     if (item999 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.UninterpretedOption>();
                     var slot999 = slots.Reserve();
@@ -3115,29 +3161,32 @@ partial class CustomProtogenSerializer
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long before = 0;
+            string tmp_string;
+            int tmp_int;
+            global::Google.Protobuf.Reflection.EnumValueOptions tmp_Google_Protobuf_Reflection_EnumValueOptions;
             if (value.ShouldSerializeName())
             {
-                var tmp1 = value.Name;
-                if (tmp1 != null)
+                tmp_string = value.Name;
+                if (tmp_string != null)
                 {
                     state.WriteRawTag((1 << 3) | 2);  // Name
-                    state.WriteRawString(tmp1);
+                    state.WriteRawString(tmp_string);
                 }
             }
             if (value.ShouldSerializeNumber())
             {
-                var tmp2 = value.Number;
+                tmp_int = value.Number;
                 state.WriteRawTag((2 << 3) | 0);  // Number
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
-            var tmp3 = value.Options;
-            if (tmp3 != null)
+            tmp_Google_Protobuf_Reflection_EnumValueOptions = value.Options;
+            if (tmp_Google_Protobuf_Reflection_EnumValueOptions != null)
             {
                 state.WriteRawTag((3 << 3) | 2);  // Options
                 var len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWrite_Google_Protobuf_Reflection_EnumValueOptions(ref state, tmp3, depth);
+                RawWrite_Google_Protobuf_Reflection_EnumValueOptions(ref state, tmp_Google_Protobuf_Reflection_EnumValueOptions, depth);
                 DebugAssertPosition(ref state, before + len, "Options");
             }
             state.AppendExtensionData(value);
@@ -3147,24 +3196,27 @@ partial class CustomProtogenSerializer
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            string tmp_string;
+            int tmp_int;
+            global::Google.Protobuf.Reflection.EnumValueOptions tmp_Google_Protobuf_Reflection_EnumValueOptions;
             if (value.ShouldSerializeName())
             {
-                var tmp1 = value.Name;
-                if (tmp1 != null)
+                tmp_string = value.Name;
+                if (tmp_string != null)
                 {
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // Name
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Name
                 }
             }
             if (value.ShouldSerializeNumber())
             {
-                var tmp2 = value.Number;
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // Number
+                tmp_int = value.Number;
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Number
             }
-            var tmp3 = value.Options;
-            if (tmp3 != null)
+            tmp_Google_Protobuf_Reflection_EnumValueOptions = value.Options;
+            if (tmp_Google_Protobuf_Reflection_EnumValueOptions != null)
             {
                 var slot3 = slots.Reserve();
-                var sub = Measure_Google_Protobuf_Reflection_EnumValueOptions(tmp3, depth, slots, context);
+                var sub = Measure_Google_Protobuf_Reflection_EnumValueOptions(tmp_Google_Protobuf_Reflection_EnumValueOptions, depth, slots, context);
                 slots.Set(slot3, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Options
             }
@@ -3250,40 +3302,44 @@ partial class CustomProtogenSerializer
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long len;
             long before = 0;
+            bool tmp_bool;
+            global::Google.Protobuf.Reflection.FeatureSet tmp_Google_Protobuf_Reflection_FeatureSet;
+            global::Google.Protobuf.Reflection.FieldOptions.FeatureSupport tmp_Google_Protobuf_Reflection_FieldOptions_FeatureSupport;
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.UninterpretedOption> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_;
             if (value.ShouldSerializeDeprecated())
             {
-                var tmp1 = value.Deprecated;
-                state.WriteRawTagBool((1 << 3) | 0, tmp1);  // Deprecated
+                tmp_bool = value.Deprecated;
+                state.WriteRawTagBool((1 << 3) | 0, tmp_bool);  // Deprecated
             }
-            var tmp2 = value.Features;
-            if (tmp2 != null)
+            tmp_Google_Protobuf_Reflection_FeatureSet = value.Features;
+            if (tmp_Google_Protobuf_Reflection_FeatureSet != null)
             {
                 state.WriteRawTag((2 << 3) | 2);  // Features
                 len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWrite_Google_Protobuf_Reflection_FeatureSet(ref state, tmp2, depth);
+                RawWrite_Google_Protobuf_Reflection_FeatureSet(ref state, tmp_Google_Protobuf_Reflection_FeatureSet, depth);
                 DebugAssertPosition(ref state, before + len, "Features");
             }
             if (value.ShouldSerializeDebugRedact())
             {
-                var tmp3 = value.DebugRedact;
-                state.WriteRawTagBool((3 << 3) | 0, tmp3);  // DebugRedact
+                tmp_bool = value.DebugRedact;
+                state.WriteRawTagBool((3 << 3) | 0, tmp_bool);  // DebugRedact
             }
-            var tmp4 = value.FeatureSupport;
-            if (tmp4 != null)
+            tmp_Google_Protobuf_Reflection_FieldOptions_FeatureSupport = value.FeatureSupport;
+            if (tmp_Google_Protobuf_Reflection_FieldOptions_FeatureSupport != null)
             {
                 state.WriteRawTag((4 << 3) | 2);  // FeatureSupport
                 len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWrite_Google_Protobuf_Reflection_FieldOptions_FeatureSupport(ref state, tmp4, depth);
+                RawWrite_Google_Protobuf_Reflection_FieldOptions_FeatureSupport(ref state, tmp_Google_Protobuf_Reflection_FieldOptions_FeatureSupport, depth);
                 DebugAssertPosition(ref state, before + len, "FeatureSupport");
             }
-            var tmp999 = value.UninterpretedOptions;
-            if (tmp999 != null)
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_ = value.UninterpretedOptions;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_ != null)
             {
-                foreach (var item999 in tmp999)
+                foreach (var item999 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_)
                 {
                     if (item999 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.UninterpretedOption>();
                     state.WriteRawTag((999 << 3) | 2);  // UninterpretedOptions
@@ -3302,36 +3358,40 @@ partial class CustomProtogenSerializer
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             long sub;
+            bool tmp_bool;
+            global::Google.Protobuf.Reflection.FeatureSet tmp_Google_Protobuf_Reflection_FeatureSet;
+            global::Google.Protobuf.Reflection.FieldOptions.FeatureSupport tmp_Google_Protobuf_Reflection_FieldOptions_FeatureSupport;
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.UninterpretedOption> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_;
             if (value.ShouldSerializeDeprecated())
             {
-                var tmp1 = value.Deprecated;
+                tmp_bool = value.Deprecated;
                 len += 2;  // Deprecated
             }
-            var tmp2 = value.Features;
-            if (tmp2 != null)
+            tmp_Google_Protobuf_Reflection_FeatureSet = value.Features;
+            if (tmp_Google_Protobuf_Reflection_FeatureSet != null)
             {
                 var slot2 = slots.Reserve();
-                sub = Measure_Google_Protobuf_Reflection_FeatureSet(tmp2, depth, slots, context);
+                sub = Measure_Google_Protobuf_Reflection_FeatureSet(tmp_Google_Protobuf_Reflection_FeatureSet, depth, slots, context);
                 slots.Set(slot2, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Features
             }
             if (value.ShouldSerializeDebugRedact())
             {
-                var tmp3 = value.DebugRedact;
+                tmp_bool = value.DebugRedact;
                 len += 2;  // DebugRedact
             }
-            var tmp4 = value.FeatureSupport;
-            if (tmp4 != null)
+            tmp_Google_Protobuf_Reflection_FieldOptions_FeatureSupport = value.FeatureSupport;
+            if (tmp_Google_Protobuf_Reflection_FieldOptions_FeatureSupport != null)
             {
                 var slot4 = slots.Reserve();
-                sub = Measure_Google_Protobuf_Reflection_FieldOptions_FeatureSupport(tmp4, depth, slots, context);
+                sub = Measure_Google_Protobuf_Reflection_FieldOptions_FeatureSupport(tmp_Google_Protobuf_Reflection_FieldOptions_FeatureSupport, depth, slots, context);
                 slots.Set(slot4, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // FeatureSupport
             }
-            var tmp999 = value.UninterpretedOptions;
-            if (tmp999 != null)
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_ = value.UninterpretedOptions;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_ != null)
             {
-                foreach (var item999 in tmp999)
+                foreach (var item999 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_)
                 {
                     if (item999 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.UninterpretedOption>();
                     var slot999 = slots.Reserve();
@@ -3445,10 +3505,14 @@ partial class CustomProtogenSerializer
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long len;
             long before = 0;
-            var tmp2 = value.Declarations;
-            if (tmp2 != null)
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.ExtensionRangeOptions.Declaration> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_ExtensionRangeOptions_Declaration_;
+            global::Google.Protobuf.Reflection.ExtensionRangeOptions.VerificationState tmp_Google_Protobuf_Reflection_ExtensionRangeOptions_VerificationState;
+            global::Google.Protobuf.Reflection.FeatureSet tmp_Google_Protobuf_Reflection_FeatureSet;
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.UninterpretedOption> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_;
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_ExtensionRangeOptions_Declaration_ = value.Declarations;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_ExtensionRangeOptions_Declaration_ != null)
             {
-                foreach (var item2 in tmp2)
+                foreach (var item2 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_ExtensionRangeOptions_Declaration_)
                 {
                     if (item2 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.ExtensionRangeOptions.Declaration>();
                     state.WriteRawTag((2 << 3) | 2);  // Declarations
@@ -3461,24 +3525,24 @@ partial class CustomProtogenSerializer
             }
             if (value.ShouldSerializeVerification())
             {
-                var tmp3 = value.Verification;
+                tmp_Google_Protobuf_Reflection_ExtensionRangeOptions_VerificationState = value.Verification;
                 state.WriteRawTag((3 << 3) | 0);  // Verification
-                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp3));
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp_Google_Protobuf_Reflection_ExtensionRangeOptions_VerificationState));
             }
-            var tmp50 = value.Features;
-            if (tmp50 != null)
+            tmp_Google_Protobuf_Reflection_FeatureSet = value.Features;
+            if (tmp_Google_Protobuf_Reflection_FeatureSet != null)
             {
                 state.WriteRawTag((50 << 3) | 2);  // Features
                 len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWrite_Google_Protobuf_Reflection_FeatureSet(ref state, tmp50, depth);
+                RawWrite_Google_Protobuf_Reflection_FeatureSet(ref state, tmp_Google_Protobuf_Reflection_FeatureSet, depth);
                 DebugAssertPosition(ref state, before + len, "Features");
             }
-            var tmp999 = value.UninterpretedOptions;
-            if (tmp999 != null)
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_ = value.UninterpretedOptions;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_ != null)
             {
-                foreach (var item999 in tmp999)
+                foreach (var item999 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_)
                 {
                     if (item999 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.UninterpretedOption>();
                     state.WriteRawTag((999 << 3) | 2);  // UninterpretedOptions
@@ -3497,10 +3561,14 @@ partial class CustomProtogenSerializer
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             long sub;
-            var tmp2 = value.Declarations;
-            if (tmp2 != null)
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.ExtensionRangeOptions.Declaration> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_ExtensionRangeOptions_Declaration_;
+            global::Google.Protobuf.Reflection.ExtensionRangeOptions.VerificationState tmp_Google_Protobuf_Reflection_ExtensionRangeOptions_VerificationState;
+            global::Google.Protobuf.Reflection.FeatureSet tmp_Google_Protobuf_Reflection_FeatureSet;
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.UninterpretedOption> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_;
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_ExtensionRangeOptions_Declaration_ = value.Declarations;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_ExtensionRangeOptions_Declaration_ != null)
             {
-                foreach (var item2 in tmp2)
+                foreach (var item2 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_ExtensionRangeOptions_Declaration_)
                 {
                     if (item2 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.ExtensionRangeOptions.Declaration>();
                     var slot2 = slots.Reserve();
@@ -3511,21 +3579,21 @@ partial class CustomProtogenSerializer
             }
             if (value.ShouldSerializeVerification())
             {
-                var tmp3 = value.Verification;
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp3));  // Verification
+                tmp_Google_Protobuf_Reflection_ExtensionRangeOptions_VerificationState = value.Verification;
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp_Google_Protobuf_Reflection_ExtensionRangeOptions_VerificationState));  // Verification
             }
-            var tmp50 = value.Features;
-            if (tmp50 != null)
+            tmp_Google_Protobuf_Reflection_FeatureSet = value.Features;
+            if (tmp_Google_Protobuf_Reflection_FeatureSet != null)
             {
                 var slot50 = slots.Reserve();
-                sub = Measure_Google_Protobuf_Reflection_FeatureSet(tmp50, depth, slots, context);
+                sub = Measure_Google_Protobuf_Reflection_FeatureSet(tmp_Google_Protobuf_Reflection_FeatureSet, depth, slots, context);
                 slots.Set(slot50, sub);
                 len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Features
             }
-            var tmp999 = value.UninterpretedOptions;
-            if (tmp999 != null)
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_ = value.UninterpretedOptions;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_ != null)
             {
-                foreach (var item999 in tmp999)
+                foreach (var item999 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_)
                 {
                     if (item999 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.UninterpretedOption>();
                     var slot999 = slots.Reserve();
@@ -3622,39 +3690,42 @@ partial class CustomProtogenSerializer
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            int tmp_int;
+            string tmp_string;
+            bool tmp_bool;
             if (value.ShouldSerializeNumber())
             {
-                var tmp1 = value.Number;
+                tmp_int = value.Number;
                 state.WriteRawTag((1 << 3) | 0);  // Number
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
             if (value.ShouldSerializeFullName())
             {
-                var tmp2 = value.FullName;
-                if (tmp2 != null)
+                tmp_string = value.FullName;
+                if (tmp_string != null)
                 {
                     state.WriteRawTag((2 << 3) | 2);  // FullName
-                    state.WriteRawString(tmp2);
+                    state.WriteRawString(tmp_string);
                 }
             }
             if (value.ShouldSerializeType())
             {
-                var tmp3 = value.Type;
-                if (tmp3 != null)
+                tmp_string = value.Type;
+                if (tmp_string != null)
                 {
                     state.WriteRawTag((3 << 3) | 2);  // Type
-                    state.WriteRawString(tmp3);
+                    state.WriteRawString(tmp_string);
                 }
             }
             if (value.ShouldSerializeReserved())
             {
-                var tmp5 = value.Reserved;
-                state.WriteRawTagBool((5 << 3) | 0, tmp5);  // Reserved
+                tmp_bool = value.Reserved;
+                state.WriteRawTagBool((5 << 3) | 0, tmp_bool);  // Reserved
             }
             if (value.ShouldSerializeRepeated())
             {
-                var tmp6 = value.Repeated;
-                state.WriteRawTagBool((6 << 3) | 0, tmp6);  // Repeated
+                tmp_bool = value.Repeated;
+                state.WriteRawTagBool((6 << 3) | 0, tmp_bool);  // Repeated
             }
             state.AppendExtensionData(value);
         }
@@ -3663,35 +3734,38 @@ partial class CustomProtogenSerializer
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int tmp_int;
+            string tmp_string;
+            bool tmp_bool;
             if (value.ShouldSerializeNumber())
             {
-                var tmp1 = value.Number;
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Number
+                tmp_int = value.Number;
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Number
             }
             if (value.ShouldSerializeFullName())
             {
-                var tmp2 = value.FullName;
-                if (tmp2 != null)
+                tmp_string = value.FullName;
+                if (tmp_string != null)
                 {
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // FullName
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // FullName
                 }
             }
             if (value.ShouldSerializeType())
             {
-                var tmp3 = value.Type;
-                if (tmp3 != null)
+                tmp_string = value.Type;
+                if (tmp_string != null)
                 {
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp3);  // Type
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Type
                 }
             }
             if (value.ShouldSerializeReserved())
             {
-                var tmp5 = value.Reserved;
+                tmp_bool = value.Reserved;
                 len += 2;  // Reserved
             }
             if (value.ShouldSerializeRepeated())
             {
-                var tmp6 = value.Repeated;
+                tmp_bool = value.Repeated;
                 len += 2;  // Repeated
             }
             len += global::ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(value);
@@ -3780,53 +3854,61 @@ partial class CustomProtogenSerializer
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            global::Google.Protobuf.Reflection.FeatureSet.FieldPresence tmp_Google_Protobuf_Reflection_FeatureSet_FieldPresence;
+            global::Google.Protobuf.Reflection.FeatureSet.EnumType tmp_Google_Protobuf_Reflection_FeatureSet_EnumType;
+            global::Google.Protobuf.Reflection.FeatureSet.RepeatedFieldEncoding tmp_Google_Protobuf_Reflection_FeatureSet_RepeatedFieldEncoding;
+            global::Google.Protobuf.Reflection.FeatureSet.Utf8Validation tmp_Google_Protobuf_Reflection_FeatureSet_Utf8Validation;
+            global::Google.Protobuf.Reflection.FeatureSet.MessageEncoding tmp_Google_Protobuf_Reflection_FeatureSet_MessageEncoding;
+            global::Google.Protobuf.Reflection.FeatureSet.JsonFormat tmp_Google_Protobuf_Reflection_FeatureSet_JsonFormat;
+            global::Google.Protobuf.Reflection.FeatureSet.EnforceNamingStyle tmp_Google_Protobuf_Reflection_FeatureSet_EnforceNamingStyle;
+            global::Google.Protobuf.Reflection.FeatureSet.VisibilityFeature.DefaultSymbolVisibility tmp_Google_Protobuf_Reflection_FeatureSet_VisibilityFeature_DefaultSymbolVisibility;
             if (value.ShouldSerializefield_presence())
             {
-                var tmp1 = value.field_presence;
+                tmp_Google_Protobuf_Reflection_FeatureSet_FieldPresence = value.field_presence;
                 state.WriteRawTag((1 << 3) | 0);  // field_presence
-                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp_Google_Protobuf_Reflection_FeatureSet_FieldPresence));
             }
             if (value.ShouldSerializeenum_type())
             {
-                var tmp2 = value.enum_type;
+                tmp_Google_Protobuf_Reflection_FeatureSet_EnumType = value.enum_type;
                 state.WriteRawTag((2 << 3) | 0);  // enum_type
-                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp2));
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp_Google_Protobuf_Reflection_FeatureSet_EnumType));
             }
             if (value.ShouldSerializerepeated_field_encoding())
             {
-                var tmp3 = value.repeated_field_encoding;
+                tmp_Google_Protobuf_Reflection_FeatureSet_RepeatedFieldEncoding = value.repeated_field_encoding;
                 state.WriteRawTag((3 << 3) | 0);  // repeated_field_encoding
-                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp3));
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp_Google_Protobuf_Reflection_FeatureSet_RepeatedFieldEncoding));
             }
             if (value.ShouldSerializeutf8_validation())
             {
-                var tmp4 = value.utf8_validation;
+                tmp_Google_Protobuf_Reflection_FeatureSet_Utf8Validation = value.utf8_validation;
                 state.WriteRawTag((4 << 3) | 0);  // utf8_validation
-                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp4));
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp_Google_Protobuf_Reflection_FeatureSet_Utf8Validation));
             }
             if (value.ShouldSerializemessage_encoding())
             {
-                var tmp5 = value.message_encoding;
+                tmp_Google_Protobuf_Reflection_FeatureSet_MessageEncoding = value.message_encoding;
                 state.WriteRawTag((5 << 3) | 0);  // message_encoding
-                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp5));
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp_Google_Protobuf_Reflection_FeatureSet_MessageEncoding));
             }
             if (value.ShouldSerializejson_format())
             {
-                var tmp6 = value.json_format;
+                tmp_Google_Protobuf_Reflection_FeatureSet_JsonFormat = value.json_format;
                 state.WriteRawTag((6 << 3) | 0);  // json_format
-                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp6));
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp_Google_Protobuf_Reflection_FeatureSet_JsonFormat));
             }
             if (value.ShouldSerializeenforce_naming_style())
             {
-                var tmp7 = value.enforce_naming_style;
+                tmp_Google_Protobuf_Reflection_FeatureSet_EnforceNamingStyle = value.enforce_naming_style;
                 state.WriteRawTag((7 << 3) | 0);  // enforce_naming_style
-                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp7));
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp_Google_Protobuf_Reflection_FeatureSet_EnforceNamingStyle));
             }
             if (value.ShouldSerializeDefaultSymbolVisibility())
             {
-                var tmp8 = value.DefaultSymbolVisibility;
+                tmp_Google_Protobuf_Reflection_FeatureSet_VisibilityFeature_DefaultSymbolVisibility = value.DefaultSymbolVisibility;
                 state.WriteRawTag((8 << 3) | 0);  // DefaultSymbolVisibility
-                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp8));
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp_Google_Protobuf_Reflection_FeatureSet_VisibilityFeature_DefaultSymbolVisibility));
             }
             state.AppendExtensionData(value);
         }
@@ -3835,45 +3917,53 @@ partial class CustomProtogenSerializer
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            global::Google.Protobuf.Reflection.FeatureSet.FieldPresence tmp_Google_Protobuf_Reflection_FeatureSet_FieldPresence;
+            global::Google.Protobuf.Reflection.FeatureSet.EnumType tmp_Google_Protobuf_Reflection_FeatureSet_EnumType;
+            global::Google.Protobuf.Reflection.FeatureSet.RepeatedFieldEncoding tmp_Google_Protobuf_Reflection_FeatureSet_RepeatedFieldEncoding;
+            global::Google.Protobuf.Reflection.FeatureSet.Utf8Validation tmp_Google_Protobuf_Reflection_FeatureSet_Utf8Validation;
+            global::Google.Protobuf.Reflection.FeatureSet.MessageEncoding tmp_Google_Protobuf_Reflection_FeatureSet_MessageEncoding;
+            global::Google.Protobuf.Reflection.FeatureSet.JsonFormat tmp_Google_Protobuf_Reflection_FeatureSet_JsonFormat;
+            global::Google.Protobuf.Reflection.FeatureSet.EnforceNamingStyle tmp_Google_Protobuf_Reflection_FeatureSet_EnforceNamingStyle;
+            global::Google.Protobuf.Reflection.FeatureSet.VisibilityFeature.DefaultSymbolVisibility tmp_Google_Protobuf_Reflection_FeatureSet_VisibilityFeature_DefaultSymbolVisibility;
             if (value.ShouldSerializefield_presence())
             {
-                var tmp1 = value.field_presence;
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp1));  // field_presence
+                tmp_Google_Protobuf_Reflection_FeatureSet_FieldPresence = value.field_presence;
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp_Google_Protobuf_Reflection_FeatureSet_FieldPresence));  // field_presence
             }
             if (value.ShouldSerializeenum_type())
             {
-                var tmp2 = value.enum_type;
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp2));  // enum_type
+                tmp_Google_Protobuf_Reflection_FeatureSet_EnumType = value.enum_type;
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp_Google_Protobuf_Reflection_FeatureSet_EnumType));  // enum_type
             }
             if (value.ShouldSerializerepeated_field_encoding())
             {
-                var tmp3 = value.repeated_field_encoding;
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp3));  // repeated_field_encoding
+                tmp_Google_Protobuf_Reflection_FeatureSet_RepeatedFieldEncoding = value.repeated_field_encoding;
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp_Google_Protobuf_Reflection_FeatureSet_RepeatedFieldEncoding));  // repeated_field_encoding
             }
             if (value.ShouldSerializeutf8_validation())
             {
-                var tmp4 = value.utf8_validation;
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp4));  // utf8_validation
+                tmp_Google_Protobuf_Reflection_FeatureSet_Utf8Validation = value.utf8_validation;
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp_Google_Protobuf_Reflection_FeatureSet_Utf8Validation));  // utf8_validation
             }
             if (value.ShouldSerializemessage_encoding())
             {
-                var tmp5 = value.message_encoding;
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp5));  // message_encoding
+                tmp_Google_Protobuf_Reflection_FeatureSet_MessageEncoding = value.message_encoding;
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp_Google_Protobuf_Reflection_FeatureSet_MessageEncoding));  // message_encoding
             }
             if (value.ShouldSerializejson_format())
             {
-                var tmp6 = value.json_format;
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp6));  // json_format
+                tmp_Google_Protobuf_Reflection_FeatureSet_JsonFormat = value.json_format;
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp_Google_Protobuf_Reflection_FeatureSet_JsonFormat));  // json_format
             }
             if (value.ShouldSerializeenforce_naming_style())
             {
-                var tmp7 = value.enforce_naming_style;
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp7));  // enforce_naming_style
+                tmp_Google_Protobuf_Reflection_FeatureSet_EnforceNamingStyle = value.enforce_naming_style;
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp_Google_Protobuf_Reflection_FeatureSet_EnforceNamingStyle));  // enforce_naming_style
             }
             if (value.ShouldSerializeDefaultSymbolVisibility())
             {
-                var tmp8 = value.DefaultSymbolVisibility;
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp8));  // DefaultSymbolVisibility
+                tmp_Google_Protobuf_Reflection_FeatureSet_VisibilityFeature_DefaultSymbolVisibility = value.DefaultSymbolVisibility;
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp_Google_Protobuf_Reflection_FeatureSet_VisibilityFeature_DefaultSymbolVisibility));  // DefaultSymbolVisibility
             }
             len += global::ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(value);
             return len;
@@ -4005,89 +4095,95 @@ partial class CustomProtogenSerializer
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long before = 0;
+            string tmp_string;
+            int tmp_int;
+            global::Google.Protobuf.Reflection.FieldDescriptorProto.Label tmp_Google_Protobuf_Reflection_FieldDescriptorProto_Label;
+            global::Google.Protobuf.Reflection.FieldDescriptorProto.Type tmp_Google_Protobuf_Reflection_FieldDescriptorProto_Type;
+            global::Google.Protobuf.Reflection.FieldOptions tmp_Google_Protobuf_Reflection_FieldOptions;
+            bool tmp_bool;
             if (value.ShouldSerializeName())
             {
-                var tmp1 = value.Name;
-                if (tmp1 != null)
+                tmp_string = value.Name;
+                if (tmp_string != null)
                 {
                     state.WriteRawTag((1 << 3) | 2);  // Name
-                    state.WriteRawString(tmp1);
+                    state.WriteRawString(tmp_string);
                 }
             }
             if (value.ShouldSerializeExtendee())
             {
-                var tmp2 = value.Extendee;
-                if (tmp2 != null)
+                tmp_string = value.Extendee;
+                if (tmp_string != null)
                 {
                     state.WriteRawTag((2 << 3) | 2);  // Extendee
-                    state.WriteRawString(tmp2);
+                    state.WriteRawString(tmp_string);
                 }
             }
             if (value.ShouldSerializeNumber())
             {
-                var tmp3 = value.Number;
+                tmp_int = value.Number;
                 state.WriteRawTag((3 << 3) | 0);  // Number
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp3));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
             if (value.ShouldSerializelabel())
             {
-                var tmp4 = value.label;
+                tmp_Google_Protobuf_Reflection_FieldDescriptorProto_Label = value.label;
                 state.WriteRawTag((4 << 3) | 0);  // label
-                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp4));
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp_Google_Protobuf_Reflection_FieldDescriptorProto_Label));
             }
             if (value.ShouldSerializetype())
             {
-                var tmp5 = value.type;
+                tmp_Google_Protobuf_Reflection_FieldDescriptorProto_Type = value.type;
                 state.WriteRawTag((5 << 3) | 0);  // type
-                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp5));
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp_Google_Protobuf_Reflection_FieldDescriptorProto_Type));
             }
             if (value.ShouldSerializeTypeName())
             {
-                var tmp6 = value.TypeName;
-                if (tmp6 != null)
+                tmp_string = value.TypeName;
+                if (tmp_string != null)
                 {
                     state.WriteRawTag((6 << 3) | 2);  // TypeName
-                    state.WriteRawString(tmp6);
+                    state.WriteRawString(tmp_string);
                 }
             }
             if (value.ShouldSerializeDefaultValue())
             {
-                var tmp7 = value.DefaultValue;
-                if (tmp7 != null)
+                tmp_string = value.DefaultValue;
+                if (tmp_string != null)
                 {
                     state.WriteRawTag((7 << 3) | 2);  // DefaultValue
-                    state.WriteRawString(tmp7);
+                    state.WriteRawString(tmp_string);
                 }
             }
-            var tmp8 = value.Options;
-            if (tmp8 != null)
+            tmp_Google_Protobuf_Reflection_FieldOptions = value.Options;
+            if (tmp_Google_Protobuf_Reflection_FieldOptions != null)
             {
                 state.WriteRawTag((8 << 3) | 2);  // Options
                 var len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWrite_Google_Protobuf_Reflection_FieldOptions(ref state, tmp8, depth);
+                RawWrite_Google_Protobuf_Reflection_FieldOptions(ref state, tmp_Google_Protobuf_Reflection_FieldOptions, depth);
                 DebugAssertPosition(ref state, before + len, "Options");
             }
             if (value.ShouldSerializeOneofIndex())
             {
-                var tmp9 = value.OneofIndex;
+                tmp_int = value.OneofIndex;
                 state.WriteRawTag((9 << 3) | 0);  // OneofIndex
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp9));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
             if (value.ShouldSerializeJsonName())
             {
-                var tmp10 = value.JsonName;
-                if (tmp10 != null)
+                tmp_string = value.JsonName;
+                if (tmp_string != null)
                 {
                     state.WriteRawTag((10 << 3) | 2);  // JsonName
-                    state.WriteRawString(tmp10);
+                    state.WriteRawString(tmp_string);
                 }
             }
             if (value.ShouldSerializeProto3Optional())
             {
-                var tmp17 = value.Proto3Optional;
-                state.WriteRawTagBool((17 << 3) | 0, tmp17);  // Proto3Optional
+                tmp_bool = value.Proto3Optional;
+                state.WriteRawTagBool((17 << 3) | 0, tmp_bool);  // Proto3Optional
             }
             state.AppendExtensionData(value);
         }
@@ -4096,77 +4192,83 @@ partial class CustomProtogenSerializer
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            string tmp_string;
+            int tmp_int;
+            global::Google.Protobuf.Reflection.FieldDescriptorProto.Label tmp_Google_Protobuf_Reflection_FieldDescriptorProto_Label;
+            global::Google.Protobuf.Reflection.FieldDescriptorProto.Type tmp_Google_Protobuf_Reflection_FieldDescriptorProto_Type;
+            global::Google.Protobuf.Reflection.FieldOptions tmp_Google_Protobuf_Reflection_FieldOptions;
+            bool tmp_bool;
             if (value.ShouldSerializeName())
             {
-                var tmp1 = value.Name;
-                if (tmp1 != null)
+                tmp_string = value.Name;
+                if (tmp_string != null)
                 {
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // Name
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Name
                 }
             }
             if (value.ShouldSerializeExtendee())
             {
-                var tmp2 = value.Extendee;
-                if (tmp2 != null)
+                tmp_string = value.Extendee;
+                if (tmp_string != null)
                 {
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // Extendee
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Extendee
                 }
             }
             if (value.ShouldSerializeNumber())
             {
-                var tmp3 = value.Number;
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp3));  // Number
+                tmp_int = value.Number;
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Number
             }
             if (value.ShouldSerializelabel())
             {
-                var tmp4 = value.label;
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp4));  // label
+                tmp_Google_Protobuf_Reflection_FieldDescriptorProto_Label = value.label;
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp_Google_Protobuf_Reflection_FieldDescriptorProto_Label));  // label
             }
             if (value.ShouldSerializetype())
             {
-                var tmp5 = value.type;
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp5));  // type
+                tmp_Google_Protobuf_Reflection_FieldDescriptorProto_Type = value.type;
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp_Google_Protobuf_Reflection_FieldDescriptorProto_Type));  // type
             }
             if (value.ShouldSerializeTypeName())
             {
-                var tmp6 = value.TypeName;
-                if (tmp6 != null)
+                tmp_string = value.TypeName;
+                if (tmp_string != null)
                 {
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp6);  // TypeName
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // TypeName
                 }
             }
             if (value.ShouldSerializeDefaultValue())
             {
-                var tmp7 = value.DefaultValue;
-                if (tmp7 != null)
+                tmp_string = value.DefaultValue;
+                if (tmp_string != null)
                 {
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp7);  // DefaultValue
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // DefaultValue
                 }
             }
-            var tmp8 = value.Options;
-            if (tmp8 != null)
+            tmp_Google_Protobuf_Reflection_FieldOptions = value.Options;
+            if (tmp_Google_Protobuf_Reflection_FieldOptions != null)
             {
                 var slot8 = slots.Reserve();
-                var sub = Measure_Google_Protobuf_Reflection_FieldOptions(tmp8, depth, slots, context);
+                var sub = Measure_Google_Protobuf_Reflection_FieldOptions(tmp_Google_Protobuf_Reflection_FieldOptions, depth, slots, context);
                 slots.Set(slot8, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Options
             }
             if (value.ShouldSerializeOneofIndex())
             {
-                var tmp9 = value.OneofIndex;
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp9));  // OneofIndex
+                tmp_int = value.OneofIndex;
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // OneofIndex
             }
             if (value.ShouldSerializeJsonName())
             {
-                var tmp10 = value.JsonName;
-                if (tmp10 != null)
+                tmp_string = value.JsonName;
+                if (tmp_string != null)
                 {
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp10);  // JsonName
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // JsonName
                 }
             }
             if (value.ShouldSerializeProto3Optional())
             {
-                var tmp17 = value.Proto3Optional;
+                tmp_bool = value.Proto3Optional;
                 len += 3;  // Proto3Optional
             }
             len += global::ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(value);
@@ -4311,67 +4413,76 @@ partial class CustomProtogenSerializer
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long len;
             long before = 0;
+            global::Google.Protobuf.Reflection.FieldOptions.CType tmp_Google_Protobuf_Reflection_FieldOptions_CType;
+            bool tmp_bool;
+            global::Google.Protobuf.Reflection.FieldOptions.JSType tmp_Google_Protobuf_Reflection_FieldOptions_JSType;
+            global::Google.Protobuf.Reflection.FieldOptions.OptionRetention tmp_Google_Protobuf_Reflection_FieldOptions_OptionRetention;
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.FieldOptions.OptionTargetType> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_FieldOptions_OptionTargetType_;
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.FieldOptions.EditionDefault> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_FieldOptions_EditionDefault_;
+            global::Google.Protobuf.Reflection.FeatureSet tmp_Google_Protobuf_Reflection_FeatureSet;
+            global::Google.Protobuf.Reflection.FieldOptions.FeatureSupport tmp_Google_Protobuf_Reflection_FieldOptions_FeatureSupport;
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.UninterpretedOption> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_;
             if (value.ShouldSerializeCtype())
             {
-                var tmp1 = value.Ctype;
+                tmp_Google_Protobuf_Reflection_FieldOptions_CType = value.Ctype;
                 state.WriteRawTag((1 << 3) | 0);  // Ctype
-                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp_Google_Protobuf_Reflection_FieldOptions_CType));
             }
             if (value.ShouldSerializePacked())
             {
-                var tmp2 = value.Packed;
-                state.WriteRawTagBool((2 << 3) | 0, tmp2);  // Packed
+                tmp_bool = value.Packed;
+                state.WriteRawTagBool((2 << 3) | 0, tmp_bool);  // Packed
             }
             if (value.ShouldSerializeDeprecated())
             {
-                var tmp3 = value.Deprecated;
-                state.WriteRawTagBool((3 << 3) | 0, tmp3);  // Deprecated
+                tmp_bool = value.Deprecated;
+                state.WriteRawTagBool((3 << 3) | 0, tmp_bool);  // Deprecated
             }
             if (value.ShouldSerializeLazy())
             {
-                var tmp5 = value.Lazy;
-                state.WriteRawTagBool((5 << 3) | 0, tmp5);  // Lazy
+                tmp_bool = value.Lazy;
+                state.WriteRawTagBool((5 << 3) | 0, tmp_bool);  // Lazy
             }
             if (value.ShouldSerializeJstype())
             {
-                var tmp6 = value.Jstype;
+                tmp_Google_Protobuf_Reflection_FieldOptions_JSType = value.Jstype;
                 state.WriteRawTag((6 << 3) | 0);  // Jstype
-                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp6));
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp_Google_Protobuf_Reflection_FieldOptions_JSType));
             }
             if (value.ShouldSerializeWeak())
             {
-                var tmp10 = value.Weak;
-                state.WriteRawTagBool((10 << 3) | 0, tmp10);  // Weak
+                tmp_bool = value.Weak;
+                state.WriteRawTagBool((10 << 3) | 0, tmp_bool);  // Weak
             }
             if (value.ShouldSerializeUnverifiedLazy())
             {
-                var tmp15 = value.UnverifiedLazy;
-                state.WriteRawTagBool((15 << 3) | 0, tmp15);  // UnverifiedLazy
+                tmp_bool = value.UnverifiedLazy;
+                state.WriteRawTagBool((15 << 3) | 0, tmp_bool);  // UnverifiedLazy
             }
             if (value.ShouldSerializeDebugRedact())
             {
-                var tmp16 = value.DebugRedact;
-                state.WriteRawTagBool((16 << 3) | 0, tmp16);  // DebugRedact
+                tmp_bool = value.DebugRedact;
+                state.WriteRawTagBool((16 << 3) | 0, tmp_bool);  // DebugRedact
             }
             if (value.ShouldSerializeRetention())
             {
-                var tmp17 = value.Retention;
+                tmp_Google_Protobuf_Reflection_FieldOptions_OptionRetention = value.Retention;
                 state.WriteRawTag((17 << 3) | 0);  // Retention
-                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp17));
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp_Google_Protobuf_Reflection_FieldOptions_OptionRetention));
             }
-            var tmp19 = value.Targets;
-            if (tmp19 != null)
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_FieldOptions_OptionTargetType_ = value.Targets;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_FieldOptions_OptionTargetType_ != null)
             {
-                foreach (var item19 in tmp19)
+                foreach (var item19 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_FieldOptions_OptionTargetType_)
                 {
                     state.WriteRawTag((19 << 3) | 0);  // Targets
                     state.WriteRawVarint64(unchecked((ulong)(long)(int)item19));
                 }
             }
-            var tmp20 = value.EditionDefaults;
-            if (tmp20 != null)
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_FieldOptions_EditionDefault_ = value.EditionDefaults;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_FieldOptions_EditionDefault_ != null)
             {
-                foreach (var item20 in tmp20)
+                foreach (var item20 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_FieldOptions_EditionDefault_)
                 {
                     if (item20 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.FieldOptions.EditionDefault>();
                     state.WriteRawTag((20 << 3) | 2);  // EditionDefaults
@@ -4382,30 +4493,30 @@ partial class CustomProtogenSerializer
                     DebugAssertPosition(ref state, before + len, "EditionDefaults");
                 }
             }
-            var tmp21 = value.Features;
-            if (tmp21 != null)
+            tmp_Google_Protobuf_Reflection_FeatureSet = value.Features;
+            if (tmp_Google_Protobuf_Reflection_FeatureSet != null)
             {
                 state.WriteRawTag((21 << 3) | 2);  // Features
                 len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWrite_Google_Protobuf_Reflection_FeatureSet(ref state, tmp21, depth);
+                RawWrite_Google_Protobuf_Reflection_FeatureSet(ref state, tmp_Google_Protobuf_Reflection_FeatureSet, depth);
                 DebugAssertPosition(ref state, before + len, "Features");
             }
-            var tmp22 = value.feature_support;
-            if (tmp22 != null)
+            tmp_Google_Protobuf_Reflection_FieldOptions_FeatureSupport = value.feature_support;
+            if (tmp_Google_Protobuf_Reflection_FieldOptions_FeatureSupport != null)
             {
                 state.WriteRawTag((22 << 3) | 2);  // feature_support
                 len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWrite_Google_Protobuf_Reflection_FieldOptions_FeatureSupport(ref state, tmp22, depth);
+                RawWrite_Google_Protobuf_Reflection_FieldOptions_FeatureSupport(ref state, tmp_Google_Protobuf_Reflection_FieldOptions_FeatureSupport, depth);
                 DebugAssertPosition(ref state, before + len, "feature_support");
             }
-            var tmp999 = value.UninterpretedOptions;
-            if (tmp999 != null)
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_ = value.UninterpretedOptions;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_ != null)
             {
-                foreach (var item999 in tmp999)
+                foreach (var item999 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_)
                 {
                     if (item999 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.UninterpretedOption>();
                     state.WriteRawTag((999 << 3) | 2);  // UninterpretedOptions
@@ -4424,63 +4535,72 @@ partial class CustomProtogenSerializer
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             long sub;
+            global::Google.Protobuf.Reflection.FieldOptions.CType tmp_Google_Protobuf_Reflection_FieldOptions_CType;
+            bool tmp_bool;
+            global::Google.Protobuf.Reflection.FieldOptions.JSType tmp_Google_Protobuf_Reflection_FieldOptions_JSType;
+            global::Google.Protobuf.Reflection.FieldOptions.OptionRetention tmp_Google_Protobuf_Reflection_FieldOptions_OptionRetention;
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.FieldOptions.OptionTargetType> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_FieldOptions_OptionTargetType_;
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.FieldOptions.EditionDefault> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_FieldOptions_EditionDefault_;
+            global::Google.Protobuf.Reflection.FeatureSet tmp_Google_Protobuf_Reflection_FeatureSet;
+            global::Google.Protobuf.Reflection.FieldOptions.FeatureSupport tmp_Google_Protobuf_Reflection_FieldOptions_FeatureSupport;
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.UninterpretedOption> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_;
             if (value.ShouldSerializeCtype())
             {
-                var tmp1 = value.Ctype;
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp1));  // Ctype
+                tmp_Google_Protobuf_Reflection_FieldOptions_CType = value.Ctype;
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp_Google_Protobuf_Reflection_FieldOptions_CType));  // Ctype
             }
             if (value.ShouldSerializePacked())
             {
-                var tmp2 = value.Packed;
+                tmp_bool = value.Packed;
                 len += 2;  // Packed
             }
             if (value.ShouldSerializeDeprecated())
             {
-                var tmp3 = value.Deprecated;
+                tmp_bool = value.Deprecated;
                 len += 2;  // Deprecated
             }
             if (value.ShouldSerializeLazy())
             {
-                var tmp5 = value.Lazy;
+                tmp_bool = value.Lazy;
                 len += 2;  // Lazy
             }
             if (value.ShouldSerializeJstype())
             {
-                var tmp6 = value.Jstype;
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp6));  // Jstype
+                tmp_Google_Protobuf_Reflection_FieldOptions_JSType = value.Jstype;
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp_Google_Protobuf_Reflection_FieldOptions_JSType));  // Jstype
             }
             if (value.ShouldSerializeWeak())
             {
-                var tmp10 = value.Weak;
+                tmp_bool = value.Weak;
                 len += 2;  // Weak
             }
             if (value.ShouldSerializeUnverifiedLazy())
             {
-                var tmp15 = value.UnverifiedLazy;
+                tmp_bool = value.UnverifiedLazy;
                 len += 2;  // UnverifiedLazy
             }
             if (value.ShouldSerializeDebugRedact())
             {
-                var tmp16 = value.DebugRedact;
+                tmp_bool = value.DebugRedact;
                 len += 3;  // DebugRedact
             }
             if (value.ShouldSerializeRetention())
             {
-                var tmp17 = value.Retention;
-                len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp17));  // Retention
+                tmp_Google_Protobuf_Reflection_FieldOptions_OptionRetention = value.Retention;
+                len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp_Google_Protobuf_Reflection_FieldOptions_OptionRetention));  // Retention
             }
-            var tmp19 = value.Targets;
-            if (tmp19 != null)
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_FieldOptions_OptionTargetType_ = value.Targets;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_FieldOptions_OptionTargetType_ != null)
             {
-                foreach (var item19 in tmp19)
+                foreach (var item19 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_FieldOptions_OptionTargetType_)
                 {
                     len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)item19));
                 }
             }
-            var tmp20 = value.EditionDefaults;
-            if (tmp20 != null)
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_FieldOptions_EditionDefault_ = value.EditionDefaults;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_FieldOptions_EditionDefault_ != null)
             {
-                foreach (var item20 in tmp20)
+                foreach (var item20 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_FieldOptions_EditionDefault_)
                 {
                     if (item20 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.FieldOptions.EditionDefault>();
                     var slot20 = slots.Reserve();
@@ -4489,26 +4609,26 @@ partial class CustomProtogenSerializer
                     len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
-            var tmp21 = value.Features;
-            if (tmp21 != null)
+            tmp_Google_Protobuf_Reflection_FeatureSet = value.Features;
+            if (tmp_Google_Protobuf_Reflection_FeatureSet != null)
             {
                 var slot21 = slots.Reserve();
-                sub = Measure_Google_Protobuf_Reflection_FeatureSet(tmp21, depth, slots, context);
+                sub = Measure_Google_Protobuf_Reflection_FeatureSet(tmp_Google_Protobuf_Reflection_FeatureSet, depth, slots, context);
                 slots.Set(slot21, sub);
                 len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Features
             }
-            var tmp22 = value.feature_support;
-            if (tmp22 != null)
+            tmp_Google_Protobuf_Reflection_FieldOptions_FeatureSupport = value.feature_support;
+            if (tmp_Google_Protobuf_Reflection_FieldOptions_FeatureSupport != null)
             {
                 var slot22 = slots.Reserve();
-                sub = Measure_Google_Protobuf_Reflection_FieldOptions_FeatureSupport(tmp22, depth, slots, context);
+                sub = Measure_Google_Protobuf_Reflection_FieldOptions_FeatureSupport(tmp_Google_Protobuf_Reflection_FieldOptions_FeatureSupport, depth, slots, context);
                 slots.Set(slot22, sub);
                 len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // feature_support
             }
-            var tmp999 = value.UninterpretedOptions;
-            if (tmp999 != null)
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_ = value.UninterpretedOptions;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_ != null)
             {
-                foreach (var item999 in tmp999)
+                foreach (var item999 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_)
                 {
                     if (item999 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.UninterpretedOption>();
                     var slot999 = slots.Reserve();
@@ -4702,20 +4822,22 @@ partial class CustomProtogenSerializer
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            string tmp_string;
+            global::Google.Protobuf.Reflection.Edition tmp_Google_Protobuf_Reflection_Edition;
             if (value.ShouldSerializeValue())
             {
-                var tmp2 = value.Value;
-                if (tmp2 != null)
+                tmp_string = value.Value;
+                if (tmp_string != null)
                 {
                     state.WriteRawTag((2 << 3) | 2);  // Value
-                    state.WriteRawString(tmp2);
+                    state.WriteRawString(tmp_string);
                 }
             }
             if (value.ShouldSerializeEdition())
             {
-                var tmp3 = value.Edition;
+                tmp_Google_Protobuf_Reflection_Edition = value.Edition;
                 state.WriteRawTag((3 << 3) | 0);  // Edition
-                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp3));
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp_Google_Protobuf_Reflection_Edition));
             }
             state.AppendExtensionData(value);
         }
@@ -4724,18 +4846,20 @@ partial class CustomProtogenSerializer
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            string tmp_string;
+            global::Google.Protobuf.Reflection.Edition tmp_Google_Protobuf_Reflection_Edition;
             if (value.ShouldSerializeValue())
             {
-                var tmp2 = value.Value;
-                if (tmp2 != null)
+                tmp_string = value.Value;
+                if (tmp_string != null)
                 {
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // Value
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Value
                 }
             }
             if (value.ShouldSerializeEdition())
             {
-                var tmp3 = value.Edition;
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp3));  // Edition
+                tmp_Google_Protobuf_Reflection_Edition = value.Edition;
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp_Google_Protobuf_Reflection_Edition));  // Edition
             }
             len += global::ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(value);
             return len;
@@ -4799,40 +4923,42 @@ partial class CustomProtogenSerializer
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            global::Google.Protobuf.Reflection.Edition tmp_Google_Protobuf_Reflection_Edition;
+            string tmp_string;
             if (value.ShouldSerializeEditionIntroduced())
             {
-                var tmp1 = value.EditionIntroduced;
+                tmp_Google_Protobuf_Reflection_Edition = value.EditionIntroduced;
                 state.WriteRawTag((1 << 3) | 0);  // EditionIntroduced
-                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp_Google_Protobuf_Reflection_Edition));
             }
             if (value.ShouldSerializeEditionDeprecated())
             {
-                var tmp2 = value.EditionDeprecated;
+                tmp_Google_Protobuf_Reflection_Edition = value.EditionDeprecated;
                 state.WriteRawTag((2 << 3) | 0);  // EditionDeprecated
-                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp2));
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp_Google_Protobuf_Reflection_Edition));
             }
             if (value.ShouldSerializeDeprecationWarning())
             {
-                var tmp3 = value.DeprecationWarning;
-                if (tmp3 != null)
+                tmp_string = value.DeprecationWarning;
+                if (tmp_string != null)
                 {
                     state.WriteRawTag((3 << 3) | 2);  // DeprecationWarning
-                    state.WriteRawString(tmp3);
+                    state.WriteRawString(tmp_string);
                 }
             }
             if (value.ShouldSerializeEditionRemoved())
             {
-                var tmp4 = value.EditionRemoved;
+                tmp_Google_Protobuf_Reflection_Edition = value.EditionRemoved;
                 state.WriteRawTag((4 << 3) | 0);  // EditionRemoved
-                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp4));
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp_Google_Protobuf_Reflection_Edition));
             }
             if (value.ShouldSerializeRemovalError())
             {
-                var tmp5 = value.RemovalError;
-                if (tmp5 != null)
+                tmp_string = value.RemovalError;
+                if (tmp_string != null)
                 {
                     state.WriteRawTag((5 << 3) | 2);  // RemovalError
-                    state.WriteRawString(tmp5);
+                    state.WriteRawString(tmp_string);
                 }
             }
             state.AppendExtensionData(value);
@@ -4842,35 +4968,37 @@ partial class CustomProtogenSerializer
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            global::Google.Protobuf.Reflection.Edition tmp_Google_Protobuf_Reflection_Edition;
+            string tmp_string;
             if (value.ShouldSerializeEditionIntroduced())
             {
-                var tmp1 = value.EditionIntroduced;
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp1));  // EditionIntroduced
+                tmp_Google_Protobuf_Reflection_Edition = value.EditionIntroduced;
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp_Google_Protobuf_Reflection_Edition));  // EditionIntroduced
             }
             if (value.ShouldSerializeEditionDeprecated())
             {
-                var tmp2 = value.EditionDeprecated;
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp2));  // EditionDeprecated
+                tmp_Google_Protobuf_Reflection_Edition = value.EditionDeprecated;
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp_Google_Protobuf_Reflection_Edition));  // EditionDeprecated
             }
             if (value.ShouldSerializeDeprecationWarning())
             {
-                var tmp3 = value.DeprecationWarning;
-                if (tmp3 != null)
+                tmp_string = value.DeprecationWarning;
+                if (tmp_string != null)
                 {
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp3);  // DeprecationWarning
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // DeprecationWarning
                 }
             }
             if (value.ShouldSerializeEditionRemoved())
             {
-                var tmp4 = value.EditionRemoved;
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp4));  // EditionRemoved
+                tmp_Google_Protobuf_Reflection_Edition = value.EditionRemoved;
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp_Google_Protobuf_Reflection_Edition));  // EditionRemoved
             }
             if (value.ShouldSerializeRemovalError())
             {
-                var tmp5 = value.RemovalError;
-                if (tmp5 != null)
+                tmp_string = value.RemovalError;
+                if (tmp_string != null)
                 {
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp5);  // RemovalError
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // RemovalError
                 }
             }
             len += global::ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(value);
@@ -4971,38 +5099,48 @@ partial class CustomProtogenSerializer
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long len;
             long before = 0;
+            string tmp_string;
+            global::System.Collections.Generic.List<string> tmp_System_Collections_Generic_List_string_;
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.DescriptorProto> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_DescriptorProto_;
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.EnumDescriptorProto> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_EnumDescriptorProto_;
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.ServiceDescriptorProto> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_ServiceDescriptorProto_;
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.FieldDescriptorProto> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_FieldDescriptorProto_;
+            global::Google.Protobuf.Reflection.FileOptions tmp_Google_Protobuf_Reflection_FileOptions;
+            global::Google.Protobuf.Reflection.SourceCodeInfo tmp_Google_Protobuf_Reflection_SourceCodeInfo;
+            int[] tmp_int__;
+            global::Google.Protobuf.Reflection.Edition tmp_Google_Protobuf_Reflection_Edition;
             if (value.ShouldSerializeName())
             {
-                var tmp1 = value.Name;
-                if (tmp1 != null)
+                tmp_string = value.Name;
+                if (tmp_string != null)
                 {
                     state.WriteRawTag((1 << 3) | 2);  // Name
-                    state.WriteRawString(tmp1);
+                    state.WriteRawString(tmp_string);
                 }
             }
             if (value.ShouldSerializePackage())
             {
-                var tmp2 = value.Package;
-                if (tmp2 != null)
+                tmp_string = value.Package;
+                if (tmp_string != null)
                 {
                     state.WriteRawTag((2 << 3) | 2);  // Package
-                    state.WriteRawString(tmp2);
+                    state.WriteRawString(tmp_string);
                 }
             }
-            var tmp3 = value.Dependencies;
-            if (tmp3 != null)
+            tmp_System_Collections_Generic_List_string_ = value.Dependencies;
+            if (tmp_System_Collections_Generic_List_string_ != null)
             {
-                foreach (var item3 in tmp3)
+                foreach (var item3 in tmp_System_Collections_Generic_List_string_)
                 {
                     if (item3 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<string>();
                     state.WriteRawTag((3 << 3) | 2);  // Dependencies
                     state.WriteRawString(item3);
                 }
             }
-            var tmp4 = value.MessageTypes;
-            if (tmp4 != null)
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_DescriptorProto_ = value.MessageTypes;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_DescriptorProto_ != null)
             {
-                foreach (var item4 in tmp4)
+                foreach (var item4 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_DescriptorProto_)
                 {
                     if (item4 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.DescriptorProto>();
                     state.WriteRawTag((4 << 3) | 2);  // MessageTypes
@@ -5013,10 +5151,10 @@ partial class CustomProtogenSerializer
                     DebugAssertPosition(ref state, before + len, "MessageTypes");
                 }
             }
-            var tmp5 = value.EnumTypes;
-            if (tmp5 != null)
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_EnumDescriptorProto_ = value.EnumTypes;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_EnumDescriptorProto_ != null)
             {
-                foreach (var item5 in tmp5)
+                foreach (var item5 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_EnumDescriptorProto_)
                 {
                     if (item5 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.EnumDescriptorProto>();
                     state.WriteRawTag((5 << 3) | 2);  // EnumTypes
@@ -5027,10 +5165,10 @@ partial class CustomProtogenSerializer
                     DebugAssertPosition(ref state, before + len, "EnumTypes");
                 }
             }
-            var tmp6 = value.Services;
-            if (tmp6 != null)
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_ServiceDescriptorProto_ = value.Services;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_ServiceDescriptorProto_ != null)
             {
-                foreach (var item6 in tmp6)
+                foreach (var item6 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_ServiceDescriptorProto_)
                 {
                     if (item6 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.ServiceDescriptorProto>();
                     state.WriteRawTag((6 << 3) | 2);  // Services
@@ -5041,10 +5179,10 @@ partial class CustomProtogenSerializer
                     DebugAssertPosition(ref state, before + len, "Services");
                 }
             }
-            var tmp7 = value.Extensions;
-            if (tmp7 != null)
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_FieldDescriptorProto_ = value.Extensions;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_FieldDescriptorProto_ != null)
             {
-                foreach (var item7 in tmp7)
+                foreach (var item7 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_FieldDescriptorProto_)
                 {
                     if (item7 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.FieldDescriptorProto>();
                     state.WriteRawTag((7 << 3) | 2);  // Extensions
@@ -5055,39 +5193,39 @@ partial class CustomProtogenSerializer
                     DebugAssertPosition(ref state, before + len, "Extensions");
                 }
             }
-            var tmp8 = value.Options;
-            if (tmp8 != null)
+            tmp_Google_Protobuf_Reflection_FileOptions = value.Options;
+            if (tmp_Google_Protobuf_Reflection_FileOptions != null)
             {
                 state.WriteRawTag((8 << 3) | 2);  // Options
                 len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWrite_Google_Protobuf_Reflection_FileOptions(ref state, tmp8, depth);
+                RawWrite_Google_Protobuf_Reflection_FileOptions(ref state, tmp_Google_Protobuf_Reflection_FileOptions, depth);
                 DebugAssertPosition(ref state, before + len, "Options");
             }
-            var tmp9 = value.SourceCodeInfo;
-            if (tmp9 != null)
+            tmp_Google_Protobuf_Reflection_SourceCodeInfo = value.SourceCodeInfo;
+            if (tmp_Google_Protobuf_Reflection_SourceCodeInfo != null)
             {
                 state.WriteRawTag((9 << 3) | 2);  // SourceCodeInfo
                 len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWrite_Google_Protobuf_Reflection_SourceCodeInfo(ref state, tmp9, depth);
+                RawWrite_Google_Protobuf_Reflection_SourceCodeInfo(ref state, tmp_Google_Protobuf_Reflection_SourceCodeInfo, depth);
                 DebugAssertPosition(ref state, before + len, "SourceCodeInfo");
             }
-            var tmp10 = value.PublicDependencies;
-            if (tmp10 != null)
+            tmp_int__ = value.PublicDependencies;
+            if (tmp_int__ != null)
             {
-                foreach (var item10 in tmp10)
+                foreach (var item10 in tmp_int__)
                 {
                     state.WriteRawTag((10 << 3) | 0);  // PublicDependencies
                     state.WriteRawVarint64(unchecked((ulong)(long)item10));
                 }
             }
-            var tmp11 = value.WeakDependencies;
-            if (tmp11 != null)
+            tmp_int__ = value.WeakDependencies;
+            if (tmp_int__ != null)
             {
-                foreach (var item11 in tmp11)
+                foreach (var item11 in tmp_int__)
                 {
                     state.WriteRawTag((11 << 3) | 0);  // WeakDependencies
                     state.WriteRawVarint64(unchecked((ulong)(long)item11));
@@ -5095,23 +5233,23 @@ partial class CustomProtogenSerializer
             }
             if (value.ShouldSerializeSyntax())
             {
-                var tmp12 = value.Syntax;
-                if (tmp12 != null)
+                tmp_string = value.Syntax;
+                if (tmp_string != null)
                 {
                     state.WriteRawTag((12 << 3) | 2);  // Syntax
-                    state.WriteRawString(tmp12);
+                    state.WriteRawString(tmp_string);
                 }
             }
             if (value.ShouldSerializeEdition())
             {
-                var tmp14 = value.Edition;
+                tmp_Google_Protobuf_Reflection_Edition = value.Edition;
                 state.WriteRawTag((14 << 3) | 0);  // Edition
-                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp14));
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp_Google_Protobuf_Reflection_Edition));
             }
-            var tmp15 = value.OptionDependencies;
-            if (tmp15 != null)
+            tmp_System_Collections_Generic_List_string_ = value.OptionDependencies;
+            if (tmp_System_Collections_Generic_List_string_ != null)
             {
-                foreach (var item15 in tmp15)
+                foreach (var item15 in tmp_System_Collections_Generic_List_string_)
                 {
                     if (item15 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<string>();
                     state.WriteRawTag((15 << 3) | 2);  // OptionDependencies
@@ -5126,35 +5264,45 @@ partial class CustomProtogenSerializer
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             long sub;
+            string tmp_string;
+            global::System.Collections.Generic.List<string> tmp_System_Collections_Generic_List_string_;
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.DescriptorProto> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_DescriptorProto_;
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.EnumDescriptorProto> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_EnumDescriptorProto_;
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.ServiceDescriptorProto> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_ServiceDescriptorProto_;
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.FieldDescriptorProto> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_FieldDescriptorProto_;
+            global::Google.Protobuf.Reflection.FileOptions tmp_Google_Protobuf_Reflection_FileOptions;
+            global::Google.Protobuf.Reflection.SourceCodeInfo tmp_Google_Protobuf_Reflection_SourceCodeInfo;
+            int[] tmp_int__;
+            global::Google.Protobuf.Reflection.Edition tmp_Google_Protobuf_Reflection_Edition;
             if (value.ShouldSerializeName())
             {
-                var tmp1 = value.Name;
-                if (tmp1 != null)
+                tmp_string = value.Name;
+                if (tmp_string != null)
                 {
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // Name
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Name
                 }
             }
             if (value.ShouldSerializePackage())
             {
-                var tmp2 = value.Package;
-                if (tmp2 != null)
+                tmp_string = value.Package;
+                if (tmp_string != null)
                 {
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // Package
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Package
                 }
             }
-            var tmp3 = value.Dependencies;
-            if (tmp3 != null)
+            tmp_System_Collections_Generic_List_string_ = value.Dependencies;
+            if (tmp_System_Collections_Generic_List_string_ != null)
             {
-                foreach (var item3 in tmp3)
+                foreach (var item3 in tmp_System_Collections_Generic_List_string_)
                 {
                     if (item3 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<string>();
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(item3);
                 }
             }
-            var tmp4 = value.MessageTypes;
-            if (tmp4 != null)
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_DescriptorProto_ = value.MessageTypes;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_DescriptorProto_ != null)
             {
-                foreach (var item4 in tmp4)
+                foreach (var item4 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_DescriptorProto_)
                 {
                     if (item4 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.DescriptorProto>();
                     var slot4 = slots.Reserve();
@@ -5163,10 +5311,10 @@ partial class CustomProtogenSerializer
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
-            var tmp5 = value.EnumTypes;
-            if (tmp5 != null)
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_EnumDescriptorProto_ = value.EnumTypes;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_EnumDescriptorProto_ != null)
             {
-                foreach (var item5 in tmp5)
+                foreach (var item5 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_EnumDescriptorProto_)
                 {
                     if (item5 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.EnumDescriptorProto>();
                     var slot5 = slots.Reserve();
@@ -5175,10 +5323,10 @@ partial class CustomProtogenSerializer
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
-            var tmp6 = value.Services;
-            if (tmp6 != null)
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_ServiceDescriptorProto_ = value.Services;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_ServiceDescriptorProto_ != null)
             {
-                foreach (var item6 in tmp6)
+                foreach (var item6 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_ServiceDescriptorProto_)
                 {
                     if (item6 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.ServiceDescriptorProto>();
                     var slot6 = slots.Reserve();
@@ -5187,10 +5335,10 @@ partial class CustomProtogenSerializer
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
-            var tmp7 = value.Extensions;
-            if (tmp7 != null)
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_FieldDescriptorProto_ = value.Extensions;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_FieldDescriptorProto_ != null)
             {
-                foreach (var item7 in tmp7)
+                foreach (var item7 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_FieldDescriptorProto_)
                 {
                     if (item7 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.FieldDescriptorProto>();
                     var slot7 = slots.Reserve();
@@ -5199,55 +5347,55 @@ partial class CustomProtogenSerializer
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
-            var tmp8 = value.Options;
-            if (tmp8 != null)
+            tmp_Google_Protobuf_Reflection_FileOptions = value.Options;
+            if (tmp_Google_Protobuf_Reflection_FileOptions != null)
             {
                 var slot8 = slots.Reserve();
-                sub = Measure_Google_Protobuf_Reflection_FileOptions(tmp8, depth, slots, context);
+                sub = Measure_Google_Protobuf_Reflection_FileOptions(tmp_Google_Protobuf_Reflection_FileOptions, depth, slots, context);
                 slots.Set(slot8, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Options
             }
-            var tmp9 = value.SourceCodeInfo;
-            if (tmp9 != null)
+            tmp_Google_Protobuf_Reflection_SourceCodeInfo = value.SourceCodeInfo;
+            if (tmp_Google_Protobuf_Reflection_SourceCodeInfo != null)
             {
                 var slot9 = slots.Reserve();
-                sub = Measure_Google_Protobuf_Reflection_SourceCodeInfo(tmp9, depth, slots, context);
+                sub = Measure_Google_Protobuf_Reflection_SourceCodeInfo(tmp_Google_Protobuf_Reflection_SourceCodeInfo, depth, slots, context);
                 slots.Set(slot9, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // SourceCodeInfo
             }
-            var tmp10 = value.PublicDependencies;
-            if (tmp10 != null)
+            tmp_int__ = value.PublicDependencies;
+            if (tmp_int__ != null)
             {
-                foreach (var item10 in tmp10)
+                foreach (var item10 in tmp_int__)
                 {
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)item10));
                 }
             }
-            var tmp11 = value.WeakDependencies;
-            if (tmp11 != null)
+            tmp_int__ = value.WeakDependencies;
+            if (tmp_int__ != null)
             {
-                foreach (var item11 in tmp11)
+                foreach (var item11 in tmp_int__)
                 {
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)item11));
                 }
             }
             if (value.ShouldSerializeSyntax())
             {
-                var tmp12 = value.Syntax;
-                if (tmp12 != null)
+                tmp_string = value.Syntax;
+                if (tmp_string != null)
                 {
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp12);  // Syntax
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Syntax
                 }
             }
             if (value.ShouldSerializeEdition())
             {
-                var tmp14 = value.Edition;
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp14));  // Edition
+                tmp_Google_Protobuf_Reflection_Edition = value.Edition;
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp_Google_Protobuf_Reflection_Edition));  // Edition
             }
-            var tmp15 = value.OptionDependencies;
-            if (tmp15 != null)
+            tmp_System_Collections_Generic_List_string_ = value.OptionDependencies;
+            if (tmp_System_Collections_Generic_List_string_ != null)
             {
-                foreach (var item15 in tmp15)
+                foreach (var item15 in tmp_System_Collections_Generic_List_string_)
                 {
                     if (item15 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<string>();
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(item15);
@@ -5456,10 +5604,11 @@ partial class CustomProtogenSerializer
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long before = 0;
-            var tmp1 = value.Files;
-            if (tmp1 != null)
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.FileDescriptorProto> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_FileDescriptorProto_;
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_FileDescriptorProto_ = value.Files;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_FileDescriptorProto_ != null)
             {
-                foreach (var item1 in tmp1)
+                foreach (var item1 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_FileDescriptorProto_)
                 {
                     if (item1 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.FileDescriptorProto>();
                     state.WriteRawTag((1 << 3) | 2);  // Files
@@ -5477,10 +5626,11 @@ partial class CustomProtogenSerializer
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Files;
-            if (tmp1 != null)
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.FileDescriptorProto> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_FileDescriptorProto_;
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_FileDescriptorProto_ = value.Files;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_FileDescriptorProto_ != null)
             {
-                foreach (var item1 in tmp1)
+                foreach (var item1 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_FileDescriptorProto_)
                 {
                     if (item1 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.FileDescriptorProto>();
                     var slot1 = slots.Reserve();
@@ -5560,161 +5710,166 @@ partial class CustomProtogenSerializer
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long len;
             long before = 0;
+            string tmp_string;
+            global::Google.Protobuf.Reflection.FileOptions.OptimizeMode tmp_Google_Protobuf_Reflection_FileOptions_OptimizeMode;
+            bool tmp_bool;
+            global::Google.Protobuf.Reflection.FeatureSet tmp_Google_Protobuf_Reflection_FeatureSet;
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.UninterpretedOption> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_;
             if (value.ShouldSerializeJavaPackage())
             {
-                var tmp1 = value.JavaPackage;
-                if (tmp1 != null)
+                tmp_string = value.JavaPackage;
+                if (tmp_string != null)
                 {
                     state.WriteRawTag((1 << 3) | 2);  // JavaPackage
-                    state.WriteRawString(tmp1);
+                    state.WriteRawString(tmp_string);
                 }
             }
             if (value.ShouldSerializeJavaOuterClassname())
             {
-                var tmp8 = value.JavaOuterClassname;
-                if (tmp8 != null)
+                tmp_string = value.JavaOuterClassname;
+                if (tmp_string != null)
                 {
                     state.WriteRawTag((8 << 3) | 2);  // JavaOuterClassname
-                    state.WriteRawString(tmp8);
+                    state.WriteRawString(tmp_string);
                 }
             }
             if (value.ShouldSerializeOptimizeFor())
             {
-                var tmp9 = value.OptimizeFor;
+                tmp_Google_Protobuf_Reflection_FileOptions_OptimizeMode = value.OptimizeFor;
                 state.WriteRawTag((9 << 3) | 0);  // OptimizeFor
-                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp9));
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp_Google_Protobuf_Reflection_FileOptions_OptimizeMode));
             }
             if (value.ShouldSerializeJavaMultipleFiles())
             {
-                var tmp10 = value.JavaMultipleFiles;
-                state.WriteRawTagBool((10 << 3) | 0, tmp10);  // JavaMultipleFiles
+                tmp_bool = value.JavaMultipleFiles;
+                state.WriteRawTagBool((10 << 3) | 0, tmp_bool);  // JavaMultipleFiles
             }
             if (value.ShouldSerializeGoPackage())
             {
-                var tmp11 = value.GoPackage;
-                if (tmp11 != null)
+                tmp_string = value.GoPackage;
+                if (tmp_string != null)
                 {
                     state.WriteRawTag((11 << 3) | 2);  // GoPackage
-                    state.WriteRawString(tmp11);
+                    state.WriteRawString(tmp_string);
                 }
             }
             if (value.ShouldSerializeCcGenericServices())
             {
-                var tmp16 = value.CcGenericServices;
-                state.WriteRawTagBool((16 << 3) | 0, tmp16);  // CcGenericServices
+                tmp_bool = value.CcGenericServices;
+                state.WriteRawTagBool((16 << 3) | 0, tmp_bool);  // CcGenericServices
             }
             if (value.ShouldSerializeJavaGenericServices())
             {
-                var tmp17 = value.JavaGenericServices;
-                state.WriteRawTagBool((17 << 3) | 0, tmp17);  // JavaGenericServices
+                tmp_bool = value.JavaGenericServices;
+                state.WriteRawTagBool((17 << 3) | 0, tmp_bool);  // JavaGenericServices
             }
             if (value.ShouldSerializePyGenericServices())
             {
-                var tmp18 = value.PyGenericServices;
-                state.WriteRawTagBool((18 << 3) | 0, tmp18);  // PyGenericServices
+                tmp_bool = value.PyGenericServices;
+                state.WriteRawTagBool((18 << 3) | 0, tmp_bool);  // PyGenericServices
             }
             if (value.ShouldSerializeJavaGenerateEqualsAndHash())
             {
-                var tmp20 = value.JavaGenerateEqualsAndHash;
-                state.WriteRawTagBool((20 << 3) | 0, tmp20);  // JavaGenerateEqualsAndHash
+                tmp_bool = value.JavaGenerateEqualsAndHash;
+                state.WriteRawTagBool((20 << 3) | 0, tmp_bool);  // JavaGenerateEqualsAndHash
             }
             if (value.ShouldSerializeDeprecated())
             {
-                var tmp23 = value.Deprecated;
-                state.WriteRawTagBool((23 << 3) | 0, tmp23);  // Deprecated
+                tmp_bool = value.Deprecated;
+                state.WriteRawTagBool((23 << 3) | 0, tmp_bool);  // Deprecated
             }
             if (value.ShouldSerializeJavaStringCheckUtf8())
             {
-                var tmp27 = value.JavaStringCheckUtf8;
-                state.WriteRawTagBool((27 << 3) | 0, tmp27);  // JavaStringCheckUtf8
+                tmp_bool = value.JavaStringCheckUtf8;
+                state.WriteRawTagBool((27 << 3) | 0, tmp_bool);  // JavaStringCheckUtf8
             }
             if (value.ShouldSerializeCcEnableArenas())
             {
-                var tmp31 = value.CcEnableArenas;
-                state.WriteRawTagBool((31 << 3) | 0, tmp31);  // CcEnableArenas
+                tmp_bool = value.CcEnableArenas;
+                state.WriteRawTagBool((31 << 3) | 0, tmp_bool);  // CcEnableArenas
             }
             if (value.ShouldSerializeObjcClassPrefix())
             {
-                var tmp36 = value.ObjcClassPrefix;
-                if (tmp36 != null)
+                tmp_string = value.ObjcClassPrefix;
+                if (tmp_string != null)
                 {
                     state.WriteRawTag((36 << 3) | 2);  // ObjcClassPrefix
-                    state.WriteRawString(tmp36);
+                    state.WriteRawString(tmp_string);
                 }
             }
             if (value.ShouldSerializeCsharpNamespace())
             {
-                var tmp37 = value.CsharpNamespace;
-                if (tmp37 != null)
+                tmp_string = value.CsharpNamespace;
+                if (tmp_string != null)
                 {
                     state.WriteRawTag((37 << 3) | 2);  // CsharpNamespace
-                    state.WriteRawString(tmp37);
+                    state.WriteRawString(tmp_string);
                 }
             }
             if (value.ShouldSerializeSwiftPrefix())
             {
-                var tmp39 = value.SwiftPrefix;
-                if (tmp39 != null)
+                tmp_string = value.SwiftPrefix;
+                if (tmp_string != null)
                 {
                     state.WriteRawTag((39 << 3) | 2);  // SwiftPrefix
-                    state.WriteRawString(tmp39);
+                    state.WriteRawString(tmp_string);
                 }
             }
             if (value.ShouldSerializePhpClassPrefix())
             {
-                var tmp40 = value.PhpClassPrefix;
-                if (tmp40 != null)
+                tmp_string = value.PhpClassPrefix;
+                if (tmp_string != null)
                 {
                     state.WriteRawTag((40 << 3) | 2);  // PhpClassPrefix
-                    state.WriteRawString(tmp40);
+                    state.WriteRawString(tmp_string);
                 }
             }
             if (value.ShouldSerializePhpNamespace())
             {
-                var tmp41 = value.PhpNamespace;
-                if (tmp41 != null)
+                tmp_string = value.PhpNamespace;
+                if (tmp_string != null)
                 {
                     state.WriteRawTag((41 << 3) | 2);  // PhpNamespace
-                    state.WriteRawString(tmp41);
+                    state.WriteRawString(tmp_string);
                 }
             }
             if (value.ShouldSerializePhpGenericServices())
             {
-                var tmp42 = value.PhpGenericServices;
-                state.WriteRawTagBool((42 << 3) | 0, tmp42);  // PhpGenericServices
+                tmp_bool = value.PhpGenericServices;
+                state.WriteRawTagBool((42 << 3) | 0, tmp_bool);  // PhpGenericServices
             }
             if (value.ShouldSerializePhpMetadataNamespace())
             {
-                var tmp44 = value.PhpMetadataNamespace;
-                if (tmp44 != null)
+                tmp_string = value.PhpMetadataNamespace;
+                if (tmp_string != null)
                 {
                     state.WriteRawTag((44 << 3) | 2);  // PhpMetadataNamespace
-                    state.WriteRawString(tmp44);
+                    state.WriteRawString(tmp_string);
                 }
             }
             if (value.ShouldSerializeRubyPackage())
             {
-                var tmp45 = value.RubyPackage;
-                if (tmp45 != null)
+                tmp_string = value.RubyPackage;
+                if (tmp_string != null)
                 {
                     state.WriteRawTag((45 << 3) | 2);  // RubyPackage
-                    state.WriteRawString(tmp45);
+                    state.WriteRawString(tmp_string);
                 }
             }
-            var tmp50 = value.Features;
-            if (tmp50 != null)
+            tmp_Google_Protobuf_Reflection_FeatureSet = value.Features;
+            if (tmp_Google_Protobuf_Reflection_FeatureSet != null)
             {
                 state.WriteRawTag((50 << 3) | 2);  // Features
                 len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWrite_Google_Protobuf_Reflection_FeatureSet(ref state, tmp50, depth);
+                RawWrite_Google_Protobuf_Reflection_FeatureSet(ref state, tmp_Google_Protobuf_Reflection_FeatureSet, depth);
                 DebugAssertPosition(ref state, before + len, "Features");
             }
-            var tmp999 = value.UninterpretedOptions;
-            if (tmp999 != null)
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_ = value.UninterpretedOptions;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_ != null)
             {
-                foreach (var item999 in tmp999)
+                foreach (var item999 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_)
                 {
                     if (item999 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.UninterpretedOption>();
                     state.WriteRawTag((999 << 3) | 2);  // UninterpretedOptions
@@ -5733,148 +5888,153 @@ partial class CustomProtogenSerializer
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             long sub;
+            string tmp_string;
+            global::Google.Protobuf.Reflection.FileOptions.OptimizeMode tmp_Google_Protobuf_Reflection_FileOptions_OptimizeMode;
+            bool tmp_bool;
+            global::Google.Protobuf.Reflection.FeatureSet tmp_Google_Protobuf_Reflection_FeatureSet;
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.UninterpretedOption> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_;
             if (value.ShouldSerializeJavaPackage())
             {
-                var tmp1 = value.JavaPackage;
-                if (tmp1 != null)
+                tmp_string = value.JavaPackage;
+                if (tmp_string != null)
                 {
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // JavaPackage
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // JavaPackage
                 }
             }
             if (value.ShouldSerializeJavaOuterClassname())
             {
-                var tmp8 = value.JavaOuterClassname;
-                if (tmp8 != null)
+                tmp_string = value.JavaOuterClassname;
+                if (tmp_string != null)
                 {
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp8);  // JavaOuterClassname
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // JavaOuterClassname
                 }
             }
             if (value.ShouldSerializeOptimizeFor())
             {
-                var tmp9 = value.OptimizeFor;
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp9));  // OptimizeFor
+                tmp_Google_Protobuf_Reflection_FileOptions_OptimizeMode = value.OptimizeFor;
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp_Google_Protobuf_Reflection_FileOptions_OptimizeMode));  // OptimizeFor
             }
             if (value.ShouldSerializeJavaMultipleFiles())
             {
-                var tmp10 = value.JavaMultipleFiles;
+                tmp_bool = value.JavaMultipleFiles;
                 len += 2;  // JavaMultipleFiles
             }
             if (value.ShouldSerializeGoPackage())
             {
-                var tmp11 = value.GoPackage;
-                if (tmp11 != null)
+                tmp_string = value.GoPackage;
+                if (tmp_string != null)
                 {
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp11);  // GoPackage
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // GoPackage
                 }
             }
             if (value.ShouldSerializeCcGenericServices())
             {
-                var tmp16 = value.CcGenericServices;
+                tmp_bool = value.CcGenericServices;
                 len += 3;  // CcGenericServices
             }
             if (value.ShouldSerializeJavaGenericServices())
             {
-                var tmp17 = value.JavaGenericServices;
+                tmp_bool = value.JavaGenericServices;
                 len += 3;  // JavaGenericServices
             }
             if (value.ShouldSerializePyGenericServices())
             {
-                var tmp18 = value.PyGenericServices;
+                tmp_bool = value.PyGenericServices;
                 len += 3;  // PyGenericServices
             }
             if (value.ShouldSerializeJavaGenerateEqualsAndHash())
             {
-                var tmp20 = value.JavaGenerateEqualsAndHash;
+                tmp_bool = value.JavaGenerateEqualsAndHash;
                 len += 3;  // JavaGenerateEqualsAndHash
             }
             if (value.ShouldSerializeDeprecated())
             {
-                var tmp23 = value.Deprecated;
+                tmp_bool = value.Deprecated;
                 len += 3;  // Deprecated
             }
             if (value.ShouldSerializeJavaStringCheckUtf8())
             {
-                var tmp27 = value.JavaStringCheckUtf8;
+                tmp_bool = value.JavaStringCheckUtf8;
                 len += 3;  // JavaStringCheckUtf8
             }
             if (value.ShouldSerializeCcEnableArenas())
             {
-                var tmp31 = value.CcEnableArenas;
+                tmp_bool = value.CcEnableArenas;
                 len += 3;  // CcEnableArenas
             }
             if (value.ShouldSerializeObjcClassPrefix())
             {
-                var tmp36 = value.ObjcClassPrefix;
-                if (tmp36 != null)
+                tmp_string = value.ObjcClassPrefix;
+                if (tmp_string != null)
                 {
-                    len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp36);  // ObjcClassPrefix
+                    len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // ObjcClassPrefix
                 }
             }
             if (value.ShouldSerializeCsharpNamespace())
             {
-                var tmp37 = value.CsharpNamespace;
-                if (tmp37 != null)
+                tmp_string = value.CsharpNamespace;
+                if (tmp_string != null)
                 {
-                    len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp37);  // CsharpNamespace
+                    len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // CsharpNamespace
                 }
             }
             if (value.ShouldSerializeSwiftPrefix())
             {
-                var tmp39 = value.SwiftPrefix;
-                if (tmp39 != null)
+                tmp_string = value.SwiftPrefix;
+                if (tmp_string != null)
                 {
-                    len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp39);  // SwiftPrefix
+                    len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // SwiftPrefix
                 }
             }
             if (value.ShouldSerializePhpClassPrefix())
             {
-                var tmp40 = value.PhpClassPrefix;
-                if (tmp40 != null)
+                tmp_string = value.PhpClassPrefix;
+                if (tmp_string != null)
                 {
-                    len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp40);  // PhpClassPrefix
+                    len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // PhpClassPrefix
                 }
             }
             if (value.ShouldSerializePhpNamespace())
             {
-                var tmp41 = value.PhpNamespace;
-                if (tmp41 != null)
+                tmp_string = value.PhpNamespace;
+                if (tmp_string != null)
                 {
-                    len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp41);  // PhpNamespace
+                    len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // PhpNamespace
                 }
             }
             if (value.ShouldSerializePhpGenericServices())
             {
-                var tmp42 = value.PhpGenericServices;
+                tmp_bool = value.PhpGenericServices;
                 len += 3;  // PhpGenericServices
             }
             if (value.ShouldSerializePhpMetadataNamespace())
             {
-                var tmp44 = value.PhpMetadataNamespace;
-                if (tmp44 != null)
+                tmp_string = value.PhpMetadataNamespace;
+                if (tmp_string != null)
                 {
-                    len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp44);  // PhpMetadataNamespace
+                    len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // PhpMetadataNamespace
                 }
             }
             if (value.ShouldSerializeRubyPackage())
             {
-                var tmp45 = value.RubyPackage;
-                if (tmp45 != null)
+                tmp_string = value.RubyPackage;
+                if (tmp_string != null)
                 {
-                    len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp45);  // RubyPackage
+                    len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // RubyPackage
                 }
             }
-            var tmp50 = value.Features;
-            if (tmp50 != null)
+            tmp_Google_Protobuf_Reflection_FeatureSet = value.Features;
+            if (tmp_Google_Protobuf_Reflection_FeatureSet != null)
             {
                 var slot50 = slots.Reserve();
-                sub = Measure_Google_Protobuf_Reflection_FeatureSet(tmp50, depth, slots, context);
+                sub = Measure_Google_Protobuf_Reflection_FeatureSet(tmp_Google_Protobuf_Reflection_FeatureSet, depth, slots, context);
                 slots.Set(slot50, sub);
                 len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Features
             }
-            var tmp999 = value.UninterpretedOptions;
-            if (tmp999 != null)
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_ = value.UninterpretedOptions;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_ != null)
             {
-                foreach (var item999 in tmp999)
+                foreach (var item999 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_)
                 {
                     if (item999 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.UninterpretedOption>();
                     var slot999 = slots.Reserve();
@@ -6112,45 +6272,48 @@ partial class CustomProtogenSerializer
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long len;
             long before = 0;
+            bool tmp_bool;
+            global::Google.Protobuf.Reflection.FeatureSet tmp_Google_Protobuf_Reflection_FeatureSet;
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.UninterpretedOption> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_;
             if (value.ShouldSerializeMessageSetWireFormat())
             {
-                var tmp1 = value.MessageSetWireFormat;
-                state.WriteRawTagBool((1 << 3) | 0, tmp1);  // MessageSetWireFormat
+                tmp_bool = value.MessageSetWireFormat;
+                state.WriteRawTagBool((1 << 3) | 0, tmp_bool);  // MessageSetWireFormat
             }
             if (value.ShouldSerializeNoStandardDescriptorAccessor())
             {
-                var tmp2 = value.NoStandardDescriptorAccessor;
-                state.WriteRawTagBool((2 << 3) | 0, tmp2);  // NoStandardDescriptorAccessor
+                tmp_bool = value.NoStandardDescriptorAccessor;
+                state.WriteRawTagBool((2 << 3) | 0, tmp_bool);  // NoStandardDescriptorAccessor
             }
             if (value.ShouldSerializeDeprecated())
             {
-                var tmp3 = value.Deprecated;
-                state.WriteRawTagBool((3 << 3) | 0, tmp3);  // Deprecated
+                tmp_bool = value.Deprecated;
+                state.WriteRawTagBool((3 << 3) | 0, tmp_bool);  // Deprecated
             }
             if (value.ShouldSerializeMapEntry())
             {
-                var tmp7 = value.MapEntry;
-                state.WriteRawTagBool((7 << 3) | 0, tmp7);  // MapEntry
+                tmp_bool = value.MapEntry;
+                state.WriteRawTagBool((7 << 3) | 0, tmp_bool);  // MapEntry
             }
             if (value.ShouldSerializeDeprecatedLegacyJsonFieldConflicts())
             {
-                var tmp11 = value.DeprecatedLegacyJsonFieldConflicts;
-                state.WriteRawTagBool((11 << 3) | 0, tmp11);  // DeprecatedLegacyJsonFieldConflicts
+                tmp_bool = value.DeprecatedLegacyJsonFieldConflicts;
+                state.WriteRawTagBool((11 << 3) | 0, tmp_bool);  // DeprecatedLegacyJsonFieldConflicts
             }
-            var tmp12 = value.Features;
-            if (tmp12 != null)
+            tmp_Google_Protobuf_Reflection_FeatureSet = value.Features;
+            if (tmp_Google_Protobuf_Reflection_FeatureSet != null)
             {
                 state.WriteRawTag((12 << 3) | 2);  // Features
                 len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWrite_Google_Protobuf_Reflection_FeatureSet(ref state, tmp12, depth);
+                RawWrite_Google_Protobuf_Reflection_FeatureSet(ref state, tmp_Google_Protobuf_Reflection_FeatureSet, depth);
                 DebugAssertPosition(ref state, before + len, "Features");
             }
-            var tmp999 = value.UninterpretedOptions;
-            if (tmp999 != null)
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_ = value.UninterpretedOptions;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_ != null)
             {
-                foreach (var item999 in tmp999)
+                foreach (var item999 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_)
                 {
                     if (item999 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.UninterpretedOption>();
                     state.WriteRawTag((999 << 3) | 2);  // UninterpretedOptions
@@ -6169,43 +6332,46 @@ partial class CustomProtogenSerializer
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             long sub;
+            bool tmp_bool;
+            global::Google.Protobuf.Reflection.FeatureSet tmp_Google_Protobuf_Reflection_FeatureSet;
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.UninterpretedOption> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_;
             if (value.ShouldSerializeMessageSetWireFormat())
             {
-                var tmp1 = value.MessageSetWireFormat;
+                tmp_bool = value.MessageSetWireFormat;
                 len += 2;  // MessageSetWireFormat
             }
             if (value.ShouldSerializeNoStandardDescriptorAccessor())
             {
-                var tmp2 = value.NoStandardDescriptorAccessor;
+                tmp_bool = value.NoStandardDescriptorAccessor;
                 len += 2;  // NoStandardDescriptorAccessor
             }
             if (value.ShouldSerializeDeprecated())
             {
-                var tmp3 = value.Deprecated;
+                tmp_bool = value.Deprecated;
                 len += 2;  // Deprecated
             }
             if (value.ShouldSerializeMapEntry())
             {
-                var tmp7 = value.MapEntry;
+                tmp_bool = value.MapEntry;
                 len += 2;  // MapEntry
             }
             if (value.ShouldSerializeDeprecatedLegacyJsonFieldConflicts())
             {
-                var tmp11 = value.DeprecatedLegacyJsonFieldConflicts;
+                tmp_bool = value.DeprecatedLegacyJsonFieldConflicts;
                 len += 2;  // DeprecatedLegacyJsonFieldConflicts
             }
-            var tmp12 = value.Features;
-            if (tmp12 != null)
+            tmp_Google_Protobuf_Reflection_FeatureSet = value.Features;
+            if (tmp_Google_Protobuf_Reflection_FeatureSet != null)
             {
                 var slot12 = slots.Reserve();
-                sub = Measure_Google_Protobuf_Reflection_FeatureSet(tmp12, depth, slots, context);
+                sub = Measure_Google_Protobuf_Reflection_FeatureSet(tmp_Google_Protobuf_Reflection_FeatureSet, depth, slots, context);
                 slots.Set(slot12, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Features
             }
-            var tmp999 = value.UninterpretedOptions;
-            if (tmp999 != null)
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_ = value.UninterpretedOptions;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_ != null)
             {
-                foreach (var item999 in tmp999)
+                foreach (var item999 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_)
                 {
                     if (item999 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.UninterpretedOption>();
                     var slot999 = slots.Reserve();
@@ -6337,52 +6503,55 @@ partial class CustomProtogenSerializer
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long before = 0;
+            string tmp_string;
+            global::Google.Protobuf.Reflection.MethodOptions tmp_Google_Protobuf_Reflection_MethodOptions;
+            bool tmp_bool;
             if (value.ShouldSerializeName())
             {
-                var tmp1 = value.Name;
-                if (tmp1 != null)
+                tmp_string = value.Name;
+                if (tmp_string != null)
                 {
                     state.WriteRawTag((1 << 3) | 2);  // Name
-                    state.WriteRawString(tmp1);
+                    state.WriteRawString(tmp_string);
                 }
             }
             if (value.ShouldSerializeInputType())
             {
-                var tmp2 = value.InputType;
-                if (tmp2 != null)
+                tmp_string = value.InputType;
+                if (tmp_string != null)
                 {
                     state.WriteRawTag((2 << 3) | 2);  // InputType
-                    state.WriteRawString(tmp2);
+                    state.WriteRawString(tmp_string);
                 }
             }
             if (value.ShouldSerializeOutputType())
             {
-                var tmp3 = value.OutputType;
-                if (tmp3 != null)
+                tmp_string = value.OutputType;
+                if (tmp_string != null)
                 {
                     state.WriteRawTag((3 << 3) | 2);  // OutputType
-                    state.WriteRawString(tmp3);
+                    state.WriteRawString(tmp_string);
                 }
             }
-            var tmp4 = value.Options;
-            if (tmp4 != null)
+            tmp_Google_Protobuf_Reflection_MethodOptions = value.Options;
+            if (tmp_Google_Protobuf_Reflection_MethodOptions != null)
             {
                 state.WriteRawTag((4 << 3) | 2);  // Options
                 var len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWrite_Google_Protobuf_Reflection_MethodOptions(ref state, tmp4, depth);
+                RawWrite_Google_Protobuf_Reflection_MethodOptions(ref state, tmp_Google_Protobuf_Reflection_MethodOptions, depth);
                 DebugAssertPosition(ref state, before + len, "Options");
             }
             if (value.ShouldSerializeClientStreaming())
             {
-                var tmp5 = value.ClientStreaming;
-                state.WriteRawTagBool((5 << 3) | 0, tmp5);  // ClientStreaming
+                tmp_bool = value.ClientStreaming;
+                state.WriteRawTagBool((5 << 3) | 0, tmp_bool);  // ClientStreaming
             }
             if (value.ShouldSerializeServerStreaming())
             {
-                var tmp6 = value.ServerStreaming;
-                state.WriteRawTagBool((6 << 3) | 0, tmp6);  // ServerStreaming
+                tmp_bool = value.ServerStreaming;
+                state.WriteRawTagBool((6 << 3) | 0, tmp_bool);  // ServerStreaming
             }
             state.AppendExtensionData(value);
         }
@@ -6391,46 +6560,49 @@ partial class CustomProtogenSerializer
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            string tmp_string;
+            global::Google.Protobuf.Reflection.MethodOptions tmp_Google_Protobuf_Reflection_MethodOptions;
+            bool tmp_bool;
             if (value.ShouldSerializeName())
             {
-                var tmp1 = value.Name;
-                if (tmp1 != null)
+                tmp_string = value.Name;
+                if (tmp_string != null)
                 {
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // Name
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Name
                 }
             }
             if (value.ShouldSerializeInputType())
             {
-                var tmp2 = value.InputType;
-                if (tmp2 != null)
+                tmp_string = value.InputType;
+                if (tmp_string != null)
                 {
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // InputType
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // InputType
                 }
             }
             if (value.ShouldSerializeOutputType())
             {
-                var tmp3 = value.OutputType;
-                if (tmp3 != null)
+                tmp_string = value.OutputType;
+                if (tmp_string != null)
                 {
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp3);  // OutputType
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // OutputType
                 }
             }
-            var tmp4 = value.Options;
-            if (tmp4 != null)
+            tmp_Google_Protobuf_Reflection_MethodOptions = value.Options;
+            if (tmp_Google_Protobuf_Reflection_MethodOptions != null)
             {
                 var slot4 = slots.Reserve();
-                var sub = Measure_Google_Protobuf_Reflection_MethodOptions(tmp4, depth, slots, context);
+                var sub = Measure_Google_Protobuf_Reflection_MethodOptions(tmp_Google_Protobuf_Reflection_MethodOptions, depth, slots, context);
                 slots.Set(slot4, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Options
             }
             if (value.ShouldSerializeClientStreaming())
             {
-                var tmp5 = value.ClientStreaming;
+                tmp_bool = value.ClientStreaming;
                 len += 2;  // ClientStreaming
             }
             if (value.ShouldSerializeServerStreaming())
             {
-                var tmp6 = value.ServerStreaming;
+                tmp_bool = value.ServerStreaming;
                 len += 2;  // ServerStreaming
             }
             len += global::ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(value);
@@ -6536,31 +6708,35 @@ partial class CustomProtogenSerializer
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long len;
             long before = 0;
+            bool tmp_bool;
+            global::Google.Protobuf.Reflection.MethodOptions.IdempotencyLevel tmp_Google_Protobuf_Reflection_MethodOptions_IdempotencyLevel;
+            global::Google.Protobuf.Reflection.FeatureSet tmp_Google_Protobuf_Reflection_FeatureSet;
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.UninterpretedOption> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_;
             if (value.ShouldSerializeDeprecated())
             {
-                var tmp33 = value.Deprecated;
-                state.WriteRawTagBool((33 << 3) | 0, tmp33);  // Deprecated
+                tmp_bool = value.Deprecated;
+                state.WriteRawTagBool((33 << 3) | 0, tmp_bool);  // Deprecated
             }
             if (value.ShouldSerializeidempotency_level())
             {
-                var tmp34 = value.idempotency_level;
+                tmp_Google_Protobuf_Reflection_MethodOptions_IdempotencyLevel = value.idempotency_level;
                 state.WriteRawTag((34 << 3) | 0);  // idempotency_level
-                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp34));
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp_Google_Protobuf_Reflection_MethodOptions_IdempotencyLevel));
             }
-            var tmp35 = value.Features;
-            if (tmp35 != null)
+            tmp_Google_Protobuf_Reflection_FeatureSet = value.Features;
+            if (tmp_Google_Protobuf_Reflection_FeatureSet != null)
             {
                 state.WriteRawTag((35 << 3) | 2);  // Features
                 len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWrite_Google_Protobuf_Reflection_FeatureSet(ref state, tmp35, depth);
+                RawWrite_Google_Protobuf_Reflection_FeatureSet(ref state, tmp_Google_Protobuf_Reflection_FeatureSet, depth);
                 DebugAssertPosition(ref state, before + len, "Features");
             }
-            var tmp999 = value.UninterpretedOptions;
-            if (tmp999 != null)
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_ = value.UninterpretedOptions;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_ != null)
             {
-                foreach (var item999 in tmp999)
+                foreach (var item999 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_)
                 {
                     if (item999 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.UninterpretedOption>();
                     state.WriteRawTag((999 << 3) | 2);  // UninterpretedOptions
@@ -6579,28 +6755,32 @@ partial class CustomProtogenSerializer
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             long sub;
+            bool tmp_bool;
+            global::Google.Protobuf.Reflection.MethodOptions.IdempotencyLevel tmp_Google_Protobuf_Reflection_MethodOptions_IdempotencyLevel;
+            global::Google.Protobuf.Reflection.FeatureSet tmp_Google_Protobuf_Reflection_FeatureSet;
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.UninterpretedOption> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_;
             if (value.ShouldSerializeDeprecated())
             {
-                var tmp33 = value.Deprecated;
+                tmp_bool = value.Deprecated;
                 len += 3;  // Deprecated
             }
             if (value.ShouldSerializeidempotency_level())
             {
-                var tmp34 = value.idempotency_level;
-                len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp34));  // idempotency_level
+                tmp_Google_Protobuf_Reflection_MethodOptions_IdempotencyLevel = value.idempotency_level;
+                len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp_Google_Protobuf_Reflection_MethodOptions_IdempotencyLevel));  // idempotency_level
             }
-            var tmp35 = value.Features;
-            if (tmp35 != null)
+            tmp_Google_Protobuf_Reflection_FeatureSet = value.Features;
+            if (tmp_Google_Protobuf_Reflection_FeatureSet != null)
             {
                 var slot35 = slots.Reserve();
-                sub = Measure_Google_Protobuf_Reflection_FeatureSet(tmp35, depth, slots, context);
+                sub = Measure_Google_Protobuf_Reflection_FeatureSet(tmp_Google_Protobuf_Reflection_FeatureSet, depth, slots, context);
                 slots.Set(slot35, sub);
                 len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Features
             }
-            var tmp999 = value.UninterpretedOptions;
-            if (tmp999 != null)
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_ = value.UninterpretedOptions;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_ != null)
             {
-                foreach (var item999 in tmp999)
+                foreach (var item999 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_)
                 {
                     if (item999 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.UninterpretedOption>();
                     var slot999 = slots.Reserve();
@@ -6705,23 +6885,25 @@ partial class CustomProtogenSerializer
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long before = 0;
+            string tmp_string;
+            global::Google.Protobuf.Reflection.OneofOptions tmp_Google_Protobuf_Reflection_OneofOptions;
             if (value.ShouldSerializeName())
             {
-                var tmp1 = value.Name;
-                if (tmp1 != null)
+                tmp_string = value.Name;
+                if (tmp_string != null)
                 {
                     state.WriteRawTag((1 << 3) | 2);  // Name
-                    state.WriteRawString(tmp1);
+                    state.WriteRawString(tmp_string);
                 }
             }
-            var tmp2 = value.Options;
-            if (tmp2 != null)
+            tmp_Google_Protobuf_Reflection_OneofOptions = value.Options;
+            if (tmp_Google_Protobuf_Reflection_OneofOptions != null)
             {
                 state.WriteRawTag((2 << 3) | 2);  // Options
                 var len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWrite_Google_Protobuf_Reflection_OneofOptions(ref state, tmp2, depth);
+                RawWrite_Google_Protobuf_Reflection_OneofOptions(ref state, tmp_Google_Protobuf_Reflection_OneofOptions, depth);
                 DebugAssertPosition(ref state, before + len, "Options");
             }
             state.AppendExtensionData(value);
@@ -6731,19 +6913,21 @@ partial class CustomProtogenSerializer
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            string tmp_string;
+            global::Google.Protobuf.Reflection.OneofOptions tmp_Google_Protobuf_Reflection_OneofOptions;
             if (value.ShouldSerializeName())
             {
-                var tmp1 = value.Name;
-                if (tmp1 != null)
+                tmp_string = value.Name;
+                if (tmp_string != null)
                 {
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // Name
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Name
                 }
             }
-            var tmp2 = value.Options;
-            if (tmp2 != null)
+            tmp_Google_Protobuf_Reflection_OneofOptions = value.Options;
+            if (tmp_Google_Protobuf_Reflection_OneofOptions != null)
             {
                 var slot2 = slots.Reserve();
-                var sub = Measure_Google_Protobuf_Reflection_OneofOptions(tmp2, depth, slots, context);
+                var sub = Measure_Google_Protobuf_Reflection_OneofOptions(tmp_Google_Protobuf_Reflection_OneofOptions, depth, slots, context);
                 slots.Set(slot2, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Options
             }
@@ -6820,20 +7004,22 @@ partial class CustomProtogenSerializer
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long len;
             long before = 0;
-            var tmp1 = value.Features;
-            if (tmp1 != null)
+            global::Google.Protobuf.Reflection.FeatureSet tmp_Google_Protobuf_Reflection_FeatureSet;
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.UninterpretedOption> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_;
+            tmp_Google_Protobuf_Reflection_FeatureSet = value.Features;
+            if (tmp_Google_Protobuf_Reflection_FeatureSet != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Features
                 len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWrite_Google_Protobuf_Reflection_FeatureSet(ref state, tmp1, depth);
+                RawWrite_Google_Protobuf_Reflection_FeatureSet(ref state, tmp_Google_Protobuf_Reflection_FeatureSet, depth);
                 DebugAssertPosition(ref state, before + len, "Features");
             }
-            var tmp999 = value.UninterpretedOptions;
-            if (tmp999 != null)
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_ = value.UninterpretedOptions;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_ != null)
             {
-                foreach (var item999 in tmp999)
+                foreach (var item999 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_)
                 {
                     if (item999 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.UninterpretedOption>();
                     state.WriteRawTag((999 << 3) | 2);  // UninterpretedOptions
@@ -6852,18 +7038,20 @@ partial class CustomProtogenSerializer
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             long sub;
-            var tmp1 = value.Features;
-            if (tmp1 != null)
+            global::Google.Protobuf.Reflection.FeatureSet tmp_Google_Protobuf_Reflection_FeatureSet;
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.UninterpretedOption> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_;
+            tmp_Google_Protobuf_Reflection_FeatureSet = value.Features;
+            if (tmp_Google_Protobuf_Reflection_FeatureSet != null)
             {
                 var slot1 = slots.Reserve();
-                sub = Measure_Google_Protobuf_Reflection_FeatureSet(tmp1, depth, slots, context);
+                sub = Measure_Google_Protobuf_Reflection_FeatureSet(tmp_Google_Protobuf_Reflection_FeatureSet, depth, slots, context);
                 slots.Set(slot1, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Features
             }
-            var tmp999 = value.UninterpretedOptions;
-            if (tmp999 != null)
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_ = value.UninterpretedOptions;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_ != null)
             {
-                foreach (var item999 in tmp999)
+                foreach (var item999 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_)
                 {
                     if (item999 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.UninterpretedOption>();
                     var slot999 = slots.Reserve();
@@ -6951,19 +7139,22 @@ partial class CustomProtogenSerializer
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long len;
             long before = 0;
+            string tmp_string;
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.MethodDescriptorProto> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_MethodDescriptorProto_;
+            global::Google.Protobuf.Reflection.ServiceOptions tmp_Google_Protobuf_Reflection_ServiceOptions;
             if (value.ShouldSerializeName())
             {
-                var tmp1 = value.Name;
-                if (tmp1 != null)
+                tmp_string = value.Name;
+                if (tmp_string != null)
                 {
                     state.WriteRawTag((1 << 3) | 2);  // Name
-                    state.WriteRawString(tmp1);
+                    state.WriteRawString(tmp_string);
                 }
             }
-            var tmp2 = value.Methods;
-            if (tmp2 != null)
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_MethodDescriptorProto_ = value.Methods;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_MethodDescriptorProto_ != null)
             {
-                foreach (var item2 in tmp2)
+                foreach (var item2 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_MethodDescriptorProto_)
                 {
                     if (item2 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.MethodDescriptorProto>();
                     state.WriteRawTag((2 << 3) | 2);  // Methods
@@ -6974,14 +7165,14 @@ partial class CustomProtogenSerializer
                     DebugAssertPosition(ref state, before + len, "Methods");
                 }
             }
-            var tmp3 = value.Options;
-            if (tmp3 != null)
+            tmp_Google_Protobuf_Reflection_ServiceOptions = value.Options;
+            if (tmp_Google_Protobuf_Reflection_ServiceOptions != null)
             {
                 state.WriteRawTag((3 << 3) | 2);  // Options
                 len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWrite_Google_Protobuf_Reflection_ServiceOptions(ref state, tmp3, depth);
+                RawWrite_Google_Protobuf_Reflection_ServiceOptions(ref state, tmp_Google_Protobuf_Reflection_ServiceOptions, depth);
                 DebugAssertPosition(ref state, before + len, "Options");
             }
             state.AppendExtensionData(value);
@@ -6992,18 +7183,21 @@ partial class CustomProtogenSerializer
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             long sub;
+            string tmp_string;
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.MethodDescriptorProto> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_MethodDescriptorProto_;
+            global::Google.Protobuf.Reflection.ServiceOptions tmp_Google_Protobuf_Reflection_ServiceOptions;
             if (value.ShouldSerializeName())
             {
-                var tmp1 = value.Name;
-                if (tmp1 != null)
+                tmp_string = value.Name;
+                if (tmp_string != null)
                 {
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // Name
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Name
                 }
             }
-            var tmp2 = value.Methods;
-            if (tmp2 != null)
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_MethodDescriptorProto_ = value.Methods;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_MethodDescriptorProto_ != null)
             {
-                foreach (var item2 in tmp2)
+                foreach (var item2 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_MethodDescriptorProto_)
                 {
                     if (item2 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.MethodDescriptorProto>();
                     var slot2 = slots.Reserve();
@@ -7012,11 +7206,11 @@ partial class CustomProtogenSerializer
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
-            var tmp3 = value.Options;
-            if (tmp3 != null)
+            tmp_Google_Protobuf_Reflection_ServiceOptions = value.Options;
+            if (tmp_Google_Protobuf_Reflection_ServiceOptions != null)
             {
                 var slot3 = slots.Reserve();
-                sub = Measure_Google_Protobuf_Reflection_ServiceOptions(tmp3, depth, slots, context);
+                sub = Measure_Google_Protobuf_Reflection_ServiceOptions(tmp_Google_Protobuf_Reflection_ServiceOptions, depth, slots, context);
                 slots.Set(slot3, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Options
             }
@@ -7105,25 +7299,28 @@ partial class CustomProtogenSerializer
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long len;
             long before = 0;
+            bool tmp_bool;
+            global::Google.Protobuf.Reflection.FeatureSet tmp_Google_Protobuf_Reflection_FeatureSet;
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.UninterpretedOption> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_;
             if (value.ShouldSerializeDeprecated())
             {
-                var tmp33 = value.Deprecated;
-                state.WriteRawTagBool((33 << 3) | 0, tmp33);  // Deprecated
+                tmp_bool = value.Deprecated;
+                state.WriteRawTagBool((33 << 3) | 0, tmp_bool);  // Deprecated
             }
-            var tmp34 = value.Features;
-            if (tmp34 != null)
+            tmp_Google_Protobuf_Reflection_FeatureSet = value.Features;
+            if (tmp_Google_Protobuf_Reflection_FeatureSet != null)
             {
                 state.WriteRawTag((34 << 3) | 2);  // Features
                 len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWrite_Google_Protobuf_Reflection_FeatureSet(ref state, tmp34, depth);
+                RawWrite_Google_Protobuf_Reflection_FeatureSet(ref state, tmp_Google_Protobuf_Reflection_FeatureSet, depth);
                 DebugAssertPosition(ref state, before + len, "Features");
             }
-            var tmp999 = value.UninterpretedOptions;
-            if (tmp999 != null)
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_ = value.UninterpretedOptions;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_ != null)
             {
-                foreach (var item999 in tmp999)
+                foreach (var item999 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_)
                 {
                     if (item999 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.UninterpretedOption>();
                     state.WriteRawTag((999 << 3) | 2);  // UninterpretedOptions
@@ -7142,23 +7339,26 @@ partial class CustomProtogenSerializer
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             long sub;
+            bool tmp_bool;
+            global::Google.Protobuf.Reflection.FeatureSet tmp_Google_Protobuf_Reflection_FeatureSet;
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.UninterpretedOption> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_;
             if (value.ShouldSerializeDeprecated())
             {
-                var tmp33 = value.Deprecated;
+                tmp_bool = value.Deprecated;
                 len += 3;  // Deprecated
             }
-            var tmp34 = value.Features;
-            if (tmp34 != null)
+            tmp_Google_Protobuf_Reflection_FeatureSet = value.Features;
+            if (tmp_Google_Protobuf_Reflection_FeatureSet != null)
             {
                 var slot34 = slots.Reserve();
-                sub = Measure_Google_Protobuf_Reflection_FeatureSet(tmp34, depth, slots, context);
+                sub = Measure_Google_Protobuf_Reflection_FeatureSet(tmp_Google_Protobuf_Reflection_FeatureSet, depth, slots, context);
                 slots.Set(slot34, sub);
                 len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Features
             }
-            var tmp999 = value.UninterpretedOptions;
-            if (tmp999 != null)
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_ = value.UninterpretedOptions;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_ != null)
             {
-                foreach (var item999 in tmp999)
+                foreach (var item999 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_)
                 {
                     if (item999 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.UninterpretedOption>();
                     var slot999 = slots.Reserve();
@@ -7254,10 +7454,11 @@ partial class CustomProtogenSerializer
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long before = 0;
-            var tmp1 = value.Locations;
-            if (tmp1 != null)
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.SourceCodeInfo.Location> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_SourceCodeInfo_Location_;
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_SourceCodeInfo_Location_ = value.Locations;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_SourceCodeInfo_Location_ != null)
             {
-                foreach (var item1 in tmp1)
+                foreach (var item1 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_SourceCodeInfo_Location_)
                 {
                     if (item1 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.SourceCodeInfo.Location>();
                     state.WriteRawTag((1 << 3) | 2);  // Locations
@@ -7275,10 +7476,11 @@ partial class CustomProtogenSerializer
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Locations;
-            if (tmp1 != null)
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.SourceCodeInfo.Location> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_SourceCodeInfo_Location_;
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_SourceCodeInfo_Location_ = value.Locations;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_SourceCodeInfo_Location_ != null)
             {
-                foreach (var item1 in tmp1)
+                foreach (var item1 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_SourceCodeInfo_Location_)
                 {
                     if (item1 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.SourceCodeInfo.Location>();
                     var slot1 = slots.Reserve();
@@ -7346,38 +7548,41 @@ partial class CustomProtogenSerializer
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Paths;
-            if (tmp1 != null)
+            int[] tmp_int__;
+            string tmp_string;
+            global::System.Collections.Generic.List<string> tmp_System_Collections_Generic_List_string_;
+            tmp_int__ = value.Paths;
+            if (tmp_int__ != null)
             {
-                state.WriteRawPackedVarint(1, tmp1);  // Paths
+                state.WriteRawPackedVarint(1, tmp_int__);  // Paths
             }
-            var tmp2 = value.Spans;
-            if (tmp2 != null)
+            tmp_int__ = value.Spans;
+            if (tmp_int__ != null)
             {
-                state.WriteRawPackedVarint(2, tmp2);  // Spans
+                state.WriteRawPackedVarint(2, tmp_int__);  // Spans
             }
             if (value.ShouldSerializeLeadingComments())
             {
-                var tmp3 = value.LeadingComments;
-                if (tmp3 != null)
+                tmp_string = value.LeadingComments;
+                if (tmp_string != null)
                 {
                     state.WriteRawTag((3 << 3) | 2);  // LeadingComments
-                    state.WriteRawString(tmp3);
+                    state.WriteRawString(tmp_string);
                 }
             }
             if (value.ShouldSerializeTrailingComments())
             {
-                var tmp4 = value.TrailingComments;
-                if (tmp4 != null)
+                tmp_string = value.TrailingComments;
+                if (tmp_string != null)
                 {
                     state.WriteRawTag((4 << 3) | 2);  // TrailingComments
-                    state.WriteRawString(tmp4);
+                    state.WriteRawString(tmp_string);
                 }
             }
-            var tmp6 = value.LeadingDetachedComments;
-            if (tmp6 != null)
+            tmp_System_Collections_Generic_List_string_ = value.LeadingDetachedComments;
+            if (tmp_System_Collections_Generic_List_string_ != null)
             {
-                foreach (var item6 in tmp6)
+                foreach (var item6 in tmp_System_Collections_Generic_List_string_)
                 {
                     if (item6 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<string>();
                     state.WriteRawTag((6 << 3) | 2);  // LeadingDetachedComments
@@ -7391,36 +7596,39 @@ partial class CustomProtogenSerializer
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Paths;
-            if (tmp1 != null)
+            int[] tmp_int__;
+            string tmp_string;
+            global::System.Collections.Generic.List<string> tmp_System_Collections_Generic_List_string_;
+            tmp_int__ = value.Paths;
+            if (tmp_int__ != null)
             {
-                len += global::ProtoBuf.ProtoWriter.State.MeasureRawPackedVarint(1, tmp1);  // Paths
+                len += global::ProtoBuf.ProtoWriter.State.MeasureRawPackedVarint(1, tmp_int__);  // Paths
             }
-            var tmp2 = value.Spans;
-            if (tmp2 != null)
+            tmp_int__ = value.Spans;
+            if (tmp_int__ != null)
             {
-                len += global::ProtoBuf.ProtoWriter.State.MeasureRawPackedVarint(2, tmp2);  // Spans
+                len += global::ProtoBuf.ProtoWriter.State.MeasureRawPackedVarint(2, tmp_int__);  // Spans
             }
             if (value.ShouldSerializeLeadingComments())
             {
-                var tmp3 = value.LeadingComments;
-                if (tmp3 != null)
+                tmp_string = value.LeadingComments;
+                if (tmp_string != null)
                 {
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp3);  // LeadingComments
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // LeadingComments
                 }
             }
             if (value.ShouldSerializeTrailingComments())
             {
-                var tmp4 = value.TrailingComments;
-                if (tmp4 != null)
+                tmp_string = value.TrailingComments;
+                if (tmp_string != null)
                 {
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp4);  // TrailingComments
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // TrailingComments
                 }
             }
-            var tmp6 = value.LeadingDetachedComments;
-            if (tmp6 != null)
+            tmp_System_Collections_Generic_List_string_ = value.LeadingDetachedComments;
+            if (tmp_System_Collections_Generic_List_string_ != null)
             {
-                foreach (var item6 in tmp6)
+                foreach (var item6 in tmp_System_Collections_Generic_List_string_)
                 {
                     if (item6 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<string>();
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(item6);
@@ -7546,10 +7754,16 @@ partial class CustomProtogenSerializer
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long before = 0;
-            var tmp2 = value.Names;
-            if (tmp2 != null)
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.UninterpretedOption.NamePart> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_NamePart_;
+            string tmp_string;
+            ulong tmp_ulong;
+            long tmp_long;
+            double tmp_double;
+            byte[] tmp_byte__;
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_NamePart_ = value.Names;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_NamePart_ != null)
             {
-                foreach (var item2 in tmp2)
+                foreach (var item2 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_NamePart_)
                 {
                     if (item2 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.UninterpretedOption.NamePart>();
                     state.WriteRawTag((2 << 3) | 2);  // Names
@@ -7562,47 +7776,47 @@ partial class CustomProtogenSerializer
             }
             if (value.ShouldSerializeIdentifierValue())
             {
-                var tmp3 = value.IdentifierValue;
-                if (tmp3 != null)
+                tmp_string = value.IdentifierValue;
+                if (tmp_string != null)
                 {
                     state.WriteRawTag((3 << 3) | 2);  // IdentifierValue
-                    state.WriteRawString(tmp3);
+                    state.WriteRawString(tmp_string);
                 }
             }
             if (value.ShouldSerializePositiveIntValue())
             {
-                var tmp4 = value.PositiveIntValue;
+                tmp_ulong = value.PositiveIntValue;
                 state.WriteRawTag((4 << 3) | 0);  // PositiveIntValue
-                state.WriteRawVarint64(tmp4);
+                state.WriteRawVarint64(tmp_ulong);
             }
             if (value.ShouldSerializeNegativeIntValue())
             {
-                var tmp5 = value.NegativeIntValue;
+                tmp_long = value.NegativeIntValue;
                 state.WriteRawTag((5 << 3) | 0);  // NegativeIntValue
-                state.WriteRawVarint64(unchecked((ulong)tmp5));
+                state.WriteRawVarint64(unchecked((ulong)tmp_long));
             }
             if (value.ShouldSerializeDoubleValue())
             {
-                var tmp6 = value.DoubleValue;
+                tmp_double = value.DoubleValue;
                 state.WriteRawTag((6 << 3) | 1);  // DoubleValue
-                state.WriteRawDouble(tmp6);
+                state.WriteRawDouble(tmp_double);
             }
             if (value.ShouldSerializeStringValue())
             {
-                var tmp7 = value.StringValue;
-                if (tmp7 != null)
+                tmp_byte__ = value.StringValue;
+                if (tmp_byte__ != null)
                 {
                     state.WriteRawTag((7 << 3) | 2);  // StringValue
-                    state.WriteRawBytes(tmp7);
+                    state.WriteRawBytes(tmp_byte__);
                 }
             }
             if (value.ShouldSerializeAggregateValue())
             {
-                var tmp8 = value.AggregateValue;
-                if (tmp8 != null)
+                tmp_string = value.AggregateValue;
+                if (tmp_string != null)
                 {
                     state.WriteRawTag((8 << 3) | 2);  // AggregateValue
-                    state.WriteRawString(tmp8);
+                    state.WriteRawString(tmp_string);
                 }
             }
             state.AppendExtensionData(value);
@@ -7612,10 +7826,16 @@ partial class CustomProtogenSerializer
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp2 = value.Names;
-            if (tmp2 != null)
+            global::System.Collections.Generic.List<global::Google.Protobuf.Reflection.UninterpretedOption.NamePart> tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_NamePart_;
+            string tmp_string;
+            ulong tmp_ulong;
+            long tmp_long;
+            double tmp_double;
+            byte[] tmp_byte__;
+            tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_NamePart_ = value.Names;
+            if (tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_NamePart_ != null)
             {
-                foreach (var item2 in tmp2)
+                foreach (var item2 in tmp_System_Collections_Generic_List_global__Google_Protobuf_Reflection_UninterpretedOption_NamePart_)
                 {
                     if (item2 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.UninterpretedOption.NamePart>();
                     var slot2 = slots.Reserve();
@@ -7626,41 +7846,41 @@ partial class CustomProtogenSerializer
             }
             if (value.ShouldSerializeIdentifierValue())
             {
-                var tmp3 = value.IdentifierValue;
-                if (tmp3 != null)
+                tmp_string = value.IdentifierValue;
+                if (tmp_string != null)
                 {
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp3);  // IdentifierValue
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // IdentifierValue
                 }
             }
             if (value.ShouldSerializePositiveIntValue())
             {
-                var tmp4 = value.PositiveIntValue;
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(tmp4);  // PositiveIntValue
+                tmp_ulong = value.PositiveIntValue;
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(tmp_ulong);  // PositiveIntValue
             }
             if (value.ShouldSerializeNegativeIntValue())
             {
-                var tmp5 = value.NegativeIntValue;
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)tmp5));  // NegativeIntValue
+                tmp_long = value.NegativeIntValue;
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)tmp_long));  // NegativeIntValue
             }
             if (value.ShouldSerializeDoubleValue())
             {
-                var tmp6 = value.DoubleValue;
+                tmp_double = value.DoubleValue;
                 len += 9;  // DoubleValue
             }
             if (value.ShouldSerializeStringValue())
             {
-                var tmp7 = value.StringValue;
-                if (tmp7 != null)
+                tmp_byte__ = value.StringValue;
+                if (tmp_byte__ != null)
                 {
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)tmp7.Length) + tmp7.Length;  // StringValue
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)tmp_byte__.Length) + tmp_byte__.Length;  // StringValue
                 }
             }
             if (value.ShouldSerializeAggregateValue())
             {
-                var tmp8 = value.AggregateValue;
-                if (tmp8 != null)
+                tmp_string = value.AggregateValue;
+                if (tmp_string != null)
                 {
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp8);  // AggregateValue
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // AggregateValue
                 }
             }
             len += global::ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(value);
@@ -7758,14 +7978,16 @@ partial class CustomProtogenSerializer
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.name_part;
-            if (tmp1 != null)
+            string tmp_string;
+            bool tmp_bool;
+            tmp_string = value.name_part;
+            if (tmp_string != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // name_part
-                state.WriteRawString(tmp1);
+                state.WriteRawString(tmp_string);
             }
-            var tmp2 = value.IsExtension;
-            state.WriteRawTagBool((2 << 3) | 0, tmp2);  // IsExtension
+            tmp_bool = value.IsExtension;
+            state.WriteRawTagBool((2 << 3) | 0, tmp_bool);  // IsExtension
             state.AppendExtensionData(value);
         }
 
@@ -7773,12 +7995,14 @@ partial class CustomProtogenSerializer
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.name_part;
-            if (tmp1 != null)
+            string tmp_string;
+            bool tmp_bool;
+            tmp_string = value.name_part;
+            if (tmp_string != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // name_part
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // name_part
             }
-            var tmp2 = value.IsExtension;
+            tmp_bool = value.IsExtension;
             len += 2;  // IsExtension
             len += global::ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(value);
             return len;
@@ -7842,23 +8066,25 @@ partial class CustomProtogenSerializer
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Name;
-            if (tmp1 != null && tmp1 != "")
+            string tmp_string;
+            global::ProtoBuf.Reflection.Access tmp_ProtoBuf_Reflection_Access;
+            tmp_string = value.Name;
+            if (tmp_string != null && tmp_string != "")
             {
                 state.WriteRawTag((1 << 3) | 2);  // Name
-                state.WriteRawString(tmp1);
+                state.WriteRawString(tmp_string);
             }
-            var tmp2 = value.Access;
-            if (tmp2 != default(global::ProtoBuf.Reflection.Access))
+            tmp_ProtoBuf_Reflection_Access = value.Access;
+            if (tmp_ProtoBuf_Reflection_Access != default(global::ProtoBuf.Reflection.Access))
             {
                 state.WriteRawTag((2 << 3) | 0);  // Access
-                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp2));
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp_ProtoBuf_Reflection_Access));
             }
-            var tmp3 = value.Namespace;
-            if (tmp3 != null && tmp3 != "")
+            tmp_string = value.Namespace;
+            if (tmp_string != null && tmp_string != "")
             {
                 state.WriteRawTag((3 << 3) | 2);  // Namespace
-                state.WriteRawString(tmp3);
+                state.WriteRawString(tmp_string);
             }
             state.AppendExtensionData(value);
         }
@@ -7867,17 +8093,19 @@ partial class CustomProtogenSerializer
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Name;
-            if (tmp1 != null && tmp1 != "")
+            string tmp_string;
+            global::ProtoBuf.Reflection.Access tmp_ProtoBuf_Reflection_Access;
+            tmp_string = value.Name;
+            if (tmp_string != null && tmp_string != "")
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // Name
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Name
             }
-            var tmp2 = value.Access;
-            if (tmp2 != default(global::ProtoBuf.Reflection.Access)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp2));  // Access
-            var tmp3 = value.Namespace;
-            if (tmp3 != null && tmp3 != "")
+            tmp_ProtoBuf_Reflection_Access = value.Access;
+            if (tmp_ProtoBuf_Reflection_Access != default(global::ProtoBuf.Reflection.Access)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp_ProtoBuf_Reflection_Access));  // Access
+            tmp_string = value.Namespace;
+            if (tmp_string != null && tmp_string != "")
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp3);  // Namespace
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Namespace
             }
             len += global::ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(value);
             return len;
@@ -7947,11 +8175,12 @@ partial class CustomProtogenSerializer
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Name;
-            if (tmp1 != null && tmp1 != "")
+            string tmp_string;
+            tmp_string = value.Name;
+            if (tmp_string != null && tmp_string != "")
             {
                 state.WriteRawTag((1 << 3) | 2);  // Name
-                state.WriteRawString(tmp1);
+                state.WriteRawString(tmp_string);
             }
             state.AppendExtensionData(value);
         }
@@ -7960,10 +8189,11 @@ partial class CustomProtogenSerializer
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Name;
-            if (tmp1 != null && tmp1 != "")
+            string tmp_string;
+            tmp_string = value.Name;
+            if (tmp_string != null && tmp_string != "")
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // Name
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Name
             }
             len += global::ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(value);
             return len;
@@ -8018,27 +8248,30 @@ partial class CustomProtogenSerializer
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Name;
-            if (tmp1 != null && tmp1 != "")
+            string tmp_string;
+            global::ProtoBuf.Reflection.Access tmp_ProtoBuf_Reflection_Access;
+            bool tmp_bool;
+            tmp_string = value.Name;
+            if (tmp_string != null && tmp_string != "")
             {
                 state.WriteRawTag((1 << 3) | 2);  // Name
-                state.WriteRawString(tmp1);
+                state.WriteRawString(tmp_string);
             }
-            var tmp2 = value.Access;
-            if (tmp2 != default(global::ProtoBuf.Reflection.Access))
+            tmp_ProtoBuf_Reflection_Access = value.Access;
+            if (tmp_ProtoBuf_Reflection_Access != default(global::ProtoBuf.Reflection.Access))
             {
                 state.WriteRawTag((2 << 3) | 0);  // Access
-                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp2));
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp_ProtoBuf_Reflection_Access));
             }
-            var tmp3 = value.AsReference;
-            if (tmp3)
+            tmp_bool = value.AsReference;
+            if (tmp_bool)
             {
-                state.WriteRawTagBool((3 << 3) | 0, tmp3);  // AsReference
+                state.WriteRawTagBool((3 << 3) | 0, tmp_bool);  // AsReference
             }
-            var tmp4 = value.DynamicType;
-            if (tmp4)
+            tmp_bool = value.DynamicType;
+            if (tmp_bool)
             {
-                state.WriteRawTagBool((4 << 3) | 0, tmp4);  // DynamicType
+                state.WriteRawTagBool((4 << 3) | 0, tmp_bool);  // DynamicType
             }
             state.AppendExtensionData(value);
         }
@@ -8047,17 +8280,20 @@ partial class CustomProtogenSerializer
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Name;
-            if (tmp1 != null && tmp1 != "")
+            string tmp_string;
+            global::ProtoBuf.Reflection.Access tmp_ProtoBuf_Reflection_Access;
+            bool tmp_bool;
+            tmp_string = value.Name;
+            if (tmp_string != null && tmp_string != "")
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // Name
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Name
             }
-            var tmp2 = value.Access;
-            if (tmp2 != default(global::ProtoBuf.Reflection.Access)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp2));  // Access
-            var tmp3 = value.AsReference;
-            if (tmp3) len += 2;  // AsReference
-            var tmp4 = value.DynamicType;
-            if (tmp4) len += 2;  // DynamicType
+            tmp_ProtoBuf_Reflection_Access = value.Access;
+            if (tmp_ProtoBuf_Reflection_Access != default(global::ProtoBuf.Reflection.Access)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp_ProtoBuf_Reflection_Access));  // Access
+            tmp_bool = value.AsReference;
+            if (tmp_bool) len += 2;  // AsReference
+            tmp_bool = value.DynamicType;
+            if (tmp_bool) len += 2;  // DynamicType
             len += global::ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(value);
             return len;
         }
@@ -8138,45 +8374,48 @@ partial class CustomProtogenSerializer
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Namespace;
-            if (tmp1 != null && tmp1 != "")
+            string tmp_string;
+            global::ProtoBuf.Reflection.Access tmp_ProtoBuf_Reflection_Access;
+            bool tmp_bool;
+            tmp_string = value.Namespace;
+            if (tmp_string != null && tmp_string != "")
             {
                 state.WriteRawTag((1 << 3) | 2);  // Namespace
-                state.WriteRawString(tmp1);
+                state.WriteRawString(tmp_string);
             }
-            var tmp2 = value.Access;
-            if (tmp2 != default(global::ProtoBuf.Reflection.Access))
+            tmp_ProtoBuf_Reflection_Access = value.Access;
+            if (tmp_ProtoBuf_Reflection_Access != default(global::ProtoBuf.Reflection.Access))
             {
                 state.WriteRawTag((2 << 3) | 0);  // Access
-                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp2));
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp_ProtoBuf_Reflection_Access));
             }
-            var tmp3 = value.ExtensionTypeName;
-            if (tmp3 != null && tmp3 != "")
+            tmp_string = value.ExtensionTypeName;
+            if (tmp_string != null && tmp_string != "")
             {
                 state.WriteRawTag((3 << 3) | 2);  // ExtensionTypeName
-                state.WriteRawString(tmp3);
+                state.WriteRawString(tmp_string);
             }
-            var tmp4 = value.CSharpLanguageVersion;
-            if (tmp4 != null && tmp4 != "")
+            tmp_string = value.CSharpLanguageVersion;
+            if (tmp_string != null && tmp_string != "")
             {
                 state.WriteRawTag((4 << 3) | 2);  // CSharpLanguageVersion
-                state.WriteRawString(tmp4);
+                state.WriteRawString(tmp_string);
             }
-            var tmp5 = value.EmitRequiredDefaults;
-            if (tmp5)
+            tmp_bool = value.EmitRequiredDefaults;
+            if (tmp_bool)
             {
-                state.WriteRawTagBool((5 << 3) | 0, tmp5);  // EmitRequiredDefaults
+                state.WriteRawTagBool((5 << 3) | 0, tmp_bool);  // EmitRequiredDefaults
             }
-            var tmp6 = value.EmitOneOfEnum;
-            if (tmp6)
+            tmp_bool = value.EmitOneOfEnum;
+            if (tmp_bool)
             {
-                state.WriteRawTagBool((6 << 3) | 0, tmp6);  // EmitOneOfEnum
+                state.WriteRawTagBool((6 << 3) | 0, tmp_bool);  // EmitOneOfEnum
             }
-            var tmp7 = value.VisualBasicLanguageVersion;
-            if (tmp7 != null && tmp7 != "")
+            tmp_string = value.VisualBasicLanguageVersion;
+            if (tmp_string != null && tmp_string != "")
             {
                 state.WriteRawTag((7 << 3) | 2);  // VisualBasicLanguageVersion
-                state.WriteRawString(tmp7);
+                state.WriteRawString(tmp_string);
             }
             state.AppendExtensionData(value);
         }
@@ -8185,31 +8424,34 @@ partial class CustomProtogenSerializer
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Namespace;
-            if (tmp1 != null && tmp1 != "")
+            string tmp_string;
+            global::ProtoBuf.Reflection.Access tmp_ProtoBuf_Reflection_Access;
+            bool tmp_bool;
+            tmp_string = value.Namespace;
+            if (tmp_string != null && tmp_string != "")
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // Namespace
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Namespace
             }
-            var tmp2 = value.Access;
-            if (tmp2 != default(global::ProtoBuf.Reflection.Access)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp2));  // Access
-            var tmp3 = value.ExtensionTypeName;
-            if (tmp3 != null && tmp3 != "")
+            tmp_ProtoBuf_Reflection_Access = value.Access;
+            if (tmp_ProtoBuf_Reflection_Access != default(global::ProtoBuf.Reflection.Access)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp_ProtoBuf_Reflection_Access));  // Access
+            tmp_string = value.ExtensionTypeName;
+            if (tmp_string != null && tmp_string != "")
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp3);  // ExtensionTypeName
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // ExtensionTypeName
             }
-            var tmp4 = value.CSharpLanguageVersion;
-            if (tmp4 != null && tmp4 != "")
+            tmp_string = value.CSharpLanguageVersion;
+            if (tmp_string != null && tmp_string != "")
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp4);  // CSharpLanguageVersion
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // CSharpLanguageVersion
             }
-            var tmp5 = value.EmitRequiredDefaults;
-            if (tmp5) len += 2;  // EmitRequiredDefaults
-            var tmp6 = value.EmitOneOfEnum;
-            if (tmp6) len += 2;  // EmitOneOfEnum
-            var tmp7 = value.VisualBasicLanguageVersion;
-            if (tmp7 != null && tmp7 != "")
+            tmp_bool = value.EmitRequiredDefaults;
+            if (tmp_bool) len += 2;  // EmitRequiredDefaults
+            tmp_bool = value.EmitOneOfEnum;
+            if (tmp_bool) len += 2;  // EmitOneOfEnum
+            tmp_string = value.VisualBasicLanguageVersion;
+            if (tmp_string != null && tmp_string != "")
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp7);  // VisualBasicLanguageVersion
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // VisualBasicLanguageVersion
             }
             len += global::ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(value);
             return len;
@@ -8309,35 +8551,38 @@ partial class CustomProtogenSerializer
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Name;
-            if (tmp1 != null && tmp1 != "")
+            string tmp_string;
+            global::ProtoBuf.Reflection.Access tmp_ProtoBuf_Reflection_Access;
+            global::ProtoBuf.Reflection.MessageKind tmp_ProtoBuf_Reflection_MessageKind;
+            tmp_string = value.Name;
+            if (tmp_string != null && tmp_string != "")
             {
                 state.WriteRawTag((1 << 3) | 2);  // Name
-                state.WriteRawString(tmp1);
+                state.WriteRawString(tmp_string);
             }
-            var tmp2 = value.Access;
-            if (tmp2 != default(global::ProtoBuf.Reflection.Access))
+            tmp_ProtoBuf_Reflection_Access = value.Access;
+            if (tmp_ProtoBuf_Reflection_Access != default(global::ProtoBuf.Reflection.Access))
             {
                 state.WriteRawTag((2 << 3) | 0);  // Access
-                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp2));
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp_ProtoBuf_Reflection_Access));
             }
-            var tmp3 = value.ExtensionTypeName;
-            if (tmp3 != null && tmp3 != "")
+            tmp_string = value.ExtensionTypeName;
+            if (tmp_string != null && tmp_string != "")
             {
                 state.WriteRawTag((3 << 3) | 2);  // ExtensionTypeName
-                state.WriteRawString(tmp3);
+                state.WriteRawString(tmp_string);
             }
-            var tmp4 = value.Namespace;
-            if (tmp4 != null && tmp4 != "")
+            tmp_string = value.Namespace;
+            if (tmp_string != null && tmp_string != "")
             {
                 state.WriteRawTag((4 << 3) | 2);  // Namespace
-                state.WriteRawString(tmp4);
+                state.WriteRawString(tmp_string);
             }
-            var tmp5 = value.MessageKind;
-            if (tmp5 != (global::ProtoBuf.Reflection.MessageKind)(0))
+            tmp_ProtoBuf_Reflection_MessageKind = value.MessageKind;
+            if (tmp_ProtoBuf_Reflection_MessageKind != (global::ProtoBuf.Reflection.MessageKind)(0))
             {
                 state.WriteRawTag((5 << 3) | 0);  // MessageKind
-                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp5));
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp_ProtoBuf_Reflection_MessageKind));
             }
             state.AppendExtensionData(value);
         }
@@ -8346,25 +8591,28 @@ partial class CustomProtogenSerializer
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Name;
-            if (tmp1 != null && tmp1 != "")
+            string tmp_string;
+            global::ProtoBuf.Reflection.Access tmp_ProtoBuf_Reflection_Access;
+            global::ProtoBuf.Reflection.MessageKind tmp_ProtoBuf_Reflection_MessageKind;
+            tmp_string = value.Name;
+            if (tmp_string != null && tmp_string != "")
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // Name
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Name
             }
-            var tmp2 = value.Access;
-            if (tmp2 != default(global::ProtoBuf.Reflection.Access)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp2));  // Access
-            var tmp3 = value.ExtensionTypeName;
-            if (tmp3 != null && tmp3 != "")
+            tmp_ProtoBuf_Reflection_Access = value.Access;
+            if (tmp_ProtoBuf_Reflection_Access != default(global::ProtoBuf.Reflection.Access)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp_ProtoBuf_Reflection_Access));  // Access
+            tmp_string = value.ExtensionTypeName;
+            if (tmp_string != null && tmp_string != "")
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp3);  // ExtensionTypeName
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // ExtensionTypeName
             }
-            var tmp4 = value.Namespace;
-            if (tmp4 != null && tmp4 != "")
+            tmp_string = value.Namespace;
+            if (tmp_string != null && tmp_string != "")
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp4);  // Namespace
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Namespace
             }
-            var tmp5 = value.MessageKind;
-            if (tmp5 != (global::ProtoBuf.Reflection.MessageKind)(0)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp5));  // MessageKind
+            tmp_ProtoBuf_Reflection_MessageKind = value.MessageKind;
+            if (tmp_ProtoBuf_Reflection_MessageKind != (global::ProtoBuf.Reflection.MessageKind)(0)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp_ProtoBuf_Reflection_MessageKind));  // MessageKind
             len += global::ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(value);
             return len;
         }
@@ -8448,11 +8696,12 @@ partial class CustomProtogenSerializer
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Name;
-            if (tmp1 != null && tmp1 != "")
+            string tmp_string;
+            tmp_string = value.Name;
+            if (tmp_string != null && tmp_string != "")
             {
                 state.WriteRawTag((1 << 3) | 2);  // Name
-                state.WriteRawString(tmp1);
+                state.WriteRawString(tmp_string);
             }
             state.AppendExtensionData(value);
         }
@@ -8461,10 +8710,11 @@ partial class CustomProtogenSerializer
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Name;
-            if (tmp1 != null && tmp1 != "")
+            string tmp_string;
+            tmp_string = value.Name;
+            if (tmp_string != null && tmp_string != "")
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // Name
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Name
             }
             len += global::ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(value);
             return len;
@@ -8519,16 +8769,18 @@ partial class CustomProtogenSerializer
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Name;
-            if (tmp1 != null && tmp1 != "")
+            string tmp_string;
+            bool tmp_bool;
+            tmp_string = value.Name;
+            if (tmp_string != null && tmp_string != "")
             {
                 state.WriteRawTag((1 << 3) | 2);  // Name
-                state.WriteRawString(tmp1);
+                state.WriteRawString(tmp_string);
             }
-            var tmp2 = value.IsSubType;
-            if (tmp2)
+            tmp_bool = value.IsSubType;
+            if (tmp_bool)
             {
-                state.WriteRawTagBool((2 << 3) | 0, tmp2);  // IsSubType
+                state.WriteRawTagBool((2 << 3) | 0, tmp_bool);  // IsSubType
             }
             state.AppendExtensionData(value);
         }
@@ -8537,13 +8789,15 @@ partial class CustomProtogenSerializer
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Name;
-            if (tmp1 != null && tmp1 != "")
+            string tmp_string;
+            bool tmp_bool;
+            tmp_string = value.Name;
+            if (tmp_string != null && tmp_string != "")
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // Name
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Name
             }
-            var tmp2 = value.IsSubType;
-            if (tmp2) len += 2;  // IsSubType
+            tmp_bool = value.IsSubType;
+            if (tmp_bool) len += 2;  // IsSubType
             len += global::ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(value);
             return len;
         }
@@ -8606,17 +8860,19 @@ partial class CustomProtogenSerializer
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Name;
-            if (tmp1 != null && tmp1 != "")
+            string tmp_string;
+            global::ProtoBuf.Reflection.Access tmp_ProtoBuf_Reflection_Access;
+            tmp_string = value.Name;
+            if (tmp_string != null && tmp_string != "")
             {
                 state.WriteRawTag((1 << 3) | 2);  // Name
-                state.WriteRawString(tmp1);
+                state.WriteRawString(tmp_string);
             }
-            var tmp2 = value.Access;
-            if (tmp2 != default(global::ProtoBuf.Reflection.Access))
+            tmp_ProtoBuf_Reflection_Access = value.Access;
+            if (tmp_ProtoBuf_Reflection_Access != default(global::ProtoBuf.Reflection.Access))
             {
                 state.WriteRawTag((2 << 3) | 0);  // Access
-                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp2));
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp_ProtoBuf_Reflection_Access));
             }
             state.AppendExtensionData(value);
         }
@@ -8625,13 +8881,15 @@ partial class CustomProtogenSerializer
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Name;
-            if (tmp1 != null && tmp1 != "")
+            string tmp_string;
+            global::ProtoBuf.Reflection.Access tmp_ProtoBuf_Reflection_Access;
+            tmp_string = value.Name;
+            if (tmp_string != null && tmp_string != "")
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // Name
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Name
             }
-            var tmp2 = value.Access;
-            if (tmp2 != default(global::ProtoBuf.Reflection.Access)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp2));  // Access
+            tmp_ProtoBuf_Reflection_Access = value.Access;
+            if (tmp_ProtoBuf_Reflection_Access != default(global::ProtoBuf.Reflection.Access)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp_ProtoBuf_Reflection_Access));  // Access
             len += global::ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(value);
             return len;
         }

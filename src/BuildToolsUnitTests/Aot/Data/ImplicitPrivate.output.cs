@@ -145,11 +145,12 @@ partial class ImplicitPrivateModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = Field_AotFixtures_ImplicitPrivate_Explicit__value(value);
-            if (tmp1 != 0)
+            int tmp_int;
+            tmp_int = Field_AotFixtures_ImplicitPrivate_Explicit__value(value);
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // _value
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -157,8 +158,9 @@ partial class ImplicitPrivateModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = Field_AotFixtures_ImplicitPrivate_Explicit__value(value);
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // _value
+            int tmp_int;
+            tmp_int = Field_AotFixtures_ImplicitPrivate_Explicit__value(value);
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // _value
             return len;
         }
 
@@ -216,23 +218,25 @@ partial class ImplicitPrivateModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Public;
-            if (tmp1 != 0)
+            int tmp_int;
+            string tmp_string;
+            tmp_int = value.Public;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Public
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
-            var tmp2 = Field_AotFixtures_ImplicitPrivate_Private__apple(value);
-            if (tmp2 != null)
+            tmp_string = Field_AotFixtures_ImplicitPrivate_Private__apple(value);
+            if (tmp_string != null)
             {
                 state.WriteRawTag((2 << 3) | 2);  // _apple
-                state.WriteRawString(tmp2);
+                state.WriteRawString(tmp_string);
             }
-            var tmp3 = Field_AotFixtures_ImplicitPrivate_Private__zebra(value);
-            if (tmp3 != 0)
+            tmp_int = Field_AotFixtures_ImplicitPrivate_Private__zebra(value);
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((3 << 3) | 0);  // _zebra
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp3));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -240,15 +244,17 @@ partial class ImplicitPrivateModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Public;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Public
-            var tmp2 = Field_AotFixtures_ImplicitPrivate_Private__apple(value);
-            if (tmp2 != null)
+            int tmp_int;
+            string tmp_string;
+            tmp_int = value.Public;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Public
+            tmp_string = Field_AotFixtures_ImplicitPrivate_Private__apple(value);
+            if (tmp_string != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // _apple
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // _apple
             }
-            var tmp3 = Field_AotFixtures_ImplicitPrivate_Private__zebra(value);
-            if (tmp3 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp3));  // _zebra
+            tmp_int = Field_AotFixtures_ImplicitPrivate_Private__zebra(value);
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // _zebra
             return len;
         }
 

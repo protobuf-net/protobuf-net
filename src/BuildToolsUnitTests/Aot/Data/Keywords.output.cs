@@ -218,11 +218,12 @@ partial class KeywordsModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.@int;
-            if (tmp1 != 0)
+            int tmp_int;
+            tmp_int = value.@int;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // int
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -230,8 +231,9 @@ partial class KeywordsModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.@int;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // int
+            int tmp_int;
+            tmp_int = value.@int;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // int
             return len;
         }
 
@@ -299,52 +301,57 @@ partial class KeywordsModel
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long len;
             long before = 0;
-            var tmp1 = value.@case;
-            if (tmp1 != 0)
+            int tmp_int;
+            string tmp_string;
+            global::System.Collections.Generic.List<int> tmp_System_Collections_Generic_List_int_;
+            global::AotFixtures.Keywords.Inner tmp_AotFixtures_Keywords_Inner;
+            global::AotFixtures.Keywords.Pair tmp_AotFixtures_Keywords_Pair;
+            tmp_int = value.@case;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // case
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
-            var tmp2 = value.@event;
-            if (tmp2 != null)
+            tmp_string = value.@event;
+            if (tmp_string != null)
             {
                 state.WriteRawTag((2 << 3) | 2);  // event
-                state.WriteRawString(tmp2);
+                state.WriteRawString(tmp_string);
             }
-            var tmp3 = value.@params;
-            if (tmp3 != null)
+            tmp_System_Collections_Generic_List_int_ = value.@params;
+            if (tmp_System_Collections_Generic_List_int_ != null)
             {
-                foreach (var item3 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp3))
+                foreach (var item3 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_int_))
                 {
                     state.WriteRawTag((3 << 3) | 0);  // params
                     state.WriteRawVarint64(unchecked((ulong)(long)item3));
                 }
             }
-            var tmp4 = value.@class;
-            if (tmp4 != null)
+            tmp_AotFixtures_Keywords_Inner = value.@class;
+            if (tmp_AotFixtures_Keywords_Inner != null)
             {
                 state.WriteRawTag((4 << 3) | 2);  // class
                 len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWrite_AotFixtures_Keywords_Inner(ref state, tmp4, depth);
+                RawWrite_AotFixtures_Keywords_Inner(ref state, tmp_AotFixtures_Keywords_Inner, depth);
                 DebugAssertPosition(ref state, before + len, "class");
             }
-            var tmp5 = value.@lock;
-            if (tmp5 != null)
+            tmp_AotFixtures_Keywords_Pair = value.@lock;
+            if (tmp_AotFixtures_Keywords_Pair != null)
             {
                 state.WriteRawTag((5 << 3) | 2);  // lock
                 len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWrite_AotFixtures_Keywords_Pair(ref state, tmp5, depth);
+                RawWrite_AotFixtures_Keywords_Pair(ref state, tmp_AotFixtures_Keywords_Pair, depth);
                 DebugAssertPosition(ref state, before + len, "lock");
             }
-            var tmp6 = value.value;
-            if (tmp6 != 0)
+            tmp_int = value.value;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((6 << 3) | 0);  // value
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp6));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -353,39 +360,44 @@ partial class KeywordsModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             long sub;
-            var tmp1 = value.@case;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // case
-            var tmp2 = value.@event;
-            if (tmp2 != null)
+            int tmp_int;
+            string tmp_string;
+            global::System.Collections.Generic.List<int> tmp_System_Collections_Generic_List_int_;
+            global::AotFixtures.Keywords.Inner tmp_AotFixtures_Keywords_Inner;
+            global::AotFixtures.Keywords.Pair tmp_AotFixtures_Keywords_Pair;
+            tmp_int = value.@case;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // case
+            tmp_string = value.@event;
+            if (tmp_string != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // event
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // event
             }
-            var tmp3 = value.@params;
-            if (tmp3 != null)
+            tmp_System_Collections_Generic_List_int_ = value.@params;
+            if (tmp_System_Collections_Generic_List_int_ != null)
             {
-                foreach (var item3 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp3))
+                foreach (var item3 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_int_))
                 {
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)item3));
                 }
             }
-            var tmp4 = value.@class;
-            if (tmp4 != null)
+            tmp_AotFixtures_Keywords_Inner = value.@class;
+            if (tmp_AotFixtures_Keywords_Inner != null)
             {
                 var slot4 = slots.Reserve();
-                sub = Measure_AotFixtures_Keywords_Inner(tmp4, depth, slots, context);
+                sub = Measure_AotFixtures_Keywords_Inner(tmp_AotFixtures_Keywords_Inner, depth, slots, context);
                 slots.Set(slot4, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // class
             }
-            var tmp5 = value.@lock;
-            if (tmp5 != null)
+            tmp_AotFixtures_Keywords_Pair = value.@lock;
+            if (tmp_AotFixtures_Keywords_Pair != null)
             {
                 var slot5 = slots.Reserve();
-                sub = Measure_AotFixtures_Keywords_Pair(tmp5, depth, slots, context);
+                sub = Measure_AotFixtures_Keywords_Pair(tmp_AotFixtures_Keywords_Pair, depth, slots, context);
                 slots.Set(slot5, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // lock
             }
-            var tmp6 = value.value;
-            if (tmp6 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp6));  // value
+            tmp_int = value.value;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // value
             return len;
         }
 
@@ -524,14 +536,16 @@ partial class KeywordsModel
         public static void RawWrite_AotFixtures_Keywords_Pair(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Keywords.Pair value, int depth)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            var tmp1 = value.@if;
+            int tmp_int;
+            string tmp_string;
+            tmp_int = value.@if;
             state.WriteRawTag((1 << 3) | 0);  // if
-            state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
-            var tmp2 = value.@else;
-            if (tmp2 != null)
+            state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
+            tmp_string = value.@else;
+            if (tmp_string != null)
             {
                 state.WriteRawTag((2 << 3) | 2);  // else
-                state.WriteRawString(tmp2);
+                state.WriteRawString(tmp_string);
             }
         }
 
@@ -539,12 +553,14 @@ partial class KeywordsModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.@if;
-            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // if
-            var tmp2 = value.@else;
-            if (tmp2 != null)
+            int tmp_int;
+            string tmp_string;
+            tmp_int = value.@if;
+            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // if
+            tmp_string = value.@else;
+            if (tmp_string != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // else
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // else
             }
             return len;
         }

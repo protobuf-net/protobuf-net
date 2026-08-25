@@ -96,10 +96,11 @@ partial class MemberTypeAdviceModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var rawDepth = state.SyncRawDepth(depth);
-            var tmp1 = value.ByShade;
-            if (tmp1 != null)
+            global::System.Collections.Generic.Dictionary<global::AotFixtures.MemberTypeAdvice.Shade, int> tmp_System_Collections_Generic_Dictionary_global__AotFixtures_MemberTypeAdvice_Shade__int_;
+            tmp_System_Collections_Generic_Dictionary_global__AotFixtures_MemberTypeAdvice_Shade__int_ = value.ByShade;
+            if (tmp_System_Collections_Generic_Dictionary_global__AotFixtures_MemberTypeAdvice_Shade__int_ != null)
             {
-                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<global::AotFixtures.MemberTypeAdvice.Shade, int>().WriteMap(ref state, 1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<global::AotFixtures.MemberTypeAdvice.Shade, int>().WriteMap(ref state, 1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp_System_Collections_Generic_Dictionary_global__AotFixtures_MemberTypeAdvice_Shade__int_, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
             }
             state.SyncRawDepth(rawDepth);
         }
@@ -108,10 +109,11 @@ partial class MemberTypeAdviceModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.ByShade;
-            if (tmp1 != null)
+            global::System.Collections.Generic.Dictionary<global::AotFixtures.MemberTypeAdvice.Shade, int> tmp_System_Collections_Generic_Dictionary_global__AotFixtures_MemberTypeAdvice_Shade__int_;
+            tmp_System_Collections_Generic_Dictionary_global__AotFixtures_MemberTypeAdvice_Shade__int_ = value.ByShade;
+            if (tmp_System_Collections_Generic_Dictionary_global__AotFixtures_MemberTypeAdvice_Shade__int_ != null)
             {
-                foreach (var pair1 in tmp1)
+                foreach (var pair1 in tmp_System_Collections_Generic_Dictionary_global__AotFixtures_MemberTypeAdvice_Shade__int_)
                 {
                     long entry1 = 0;
                     entry1 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)pair1.Key));

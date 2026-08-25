@@ -214,23 +214,26 @@ partial class ParseableModel
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Parseable.Endpoint>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Parseable.Endpoint value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Address;
-            if (tmp1 != null)
+            global::AotFixtures.Parseable.Moniker tmp_AotFixtures_Parseable_Moniker;
+            string tmp_string;
+            global::System.Net.IPAddress tmp_System_Net_IPAddress;
+            tmp_AotFixtures_Parseable_Moniker = value.Address;
+            if (tmp_AotFixtures_Parseable_Moniker != null)
             {
                 state.WriteFieldHeader(1, global::ProtoBuf.WireType.String);
-                state.WriteString(tmp1.ToString());
+                state.WriteString(tmp_AotFixtures_Parseable_Moniker.ToString());
             }
-            var tmp2 = value.Name;
-            if (tmp2 != null)
+            tmp_string = value.Name;
+            if (tmp_string != null)
             {
                 state.WriteRawTag((2 << 3) | 2);  // Name
-                state.WriteRawString(tmp2);
+                state.WriteRawString(tmp_string);
             }
-            var tmp3 = value.Ip;
-            if (tmp3 != null)
+            tmp_System_Net_IPAddress = value.Ip;
+            if (tmp_System_Net_IPAddress != null)
             {
                 state.WriteFieldHeader(3, global::ProtoBuf.WireType.String);
-                state.WriteString(tmp3.ToString());
+                state.WriteString(tmp_System_Net_IPAddress.ToString());
             }
         }
 
@@ -293,19 +296,21 @@ partial class ParseableModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long before = 0;
-            var tmp1 = value.Ratio;
+            global::AotFixtures.Parseable.Fraction tmp_AotFixtures_Parseable_Fraction;
+            global::AotFixtures.Parseable.NotParseable tmp_AotFixtures_Parseable_NotParseable;
+            tmp_AotFixtures_Parseable_Fraction = value.Ratio;
             state.WriteFieldHeader(1, global::ProtoBuf.WireType.String);
-            state.WriteString(tmp1.ToString());
-            var tmp2 = value.Child;
-            if (tmp2 != null)
+            state.WriteString(tmp_AotFixtures_Parseable_Fraction.ToString());
+            tmp_AotFixtures_Parseable_NotParseable = value.Child;
+            if (tmp_AotFixtures_Parseable_NotParseable != null)
             {
                 state.WriteRawTag((2 << 3) | 2);  // Child
                 var mark2 = state.RawSlots.Mark();
-                var len = Measure_AotFixtures_Parseable_NotParseable(tmp2, state.RawDepthBudget, state.RawSlots, state.Context);
+                var len = Measure_AotFixtures_Parseable_NotParseable(tmp_AotFixtures_Parseable_NotParseable, state.RawDepthBudget, state.RawSlots, state.Context);
                 state.RawSlots.SeekTo(mark2);
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWrite_AotFixtures_Parseable_NotParseable(ref state, tmp2, state.RawDepthBudget);
+                RawWrite_AotFixtures_Parseable_NotParseable(ref state, tmp_AotFixtures_Parseable_NotParseable, state.RawDepthBudget);
                 DebugAssertPosition(ref state, before + len, "Child");
             }
         }
@@ -363,11 +368,12 @@ partial class ParseableModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Value;
-            if (tmp1 != 0)
+            int tmp_int;
+            tmp_int = value.Value;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Value
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -375,8 +381,9 @@ partial class ParseableModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Value;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
+            int tmp_int;
+            tmp_int = value.Value;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Value
             return len;
         }
 

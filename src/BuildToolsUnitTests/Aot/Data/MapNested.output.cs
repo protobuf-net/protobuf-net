@@ -94,25 +94,29 @@ partial class MapNestedModel
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapNested.Nested>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.MapNested.Nested value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Lists;
-            if (tmp1 != null)
+            global::System.Collections.Generic.Dictionary<int, global::System.Collections.Generic.List<int>> tmp_System_Collections_Generic_Dictionary_int__global__System_Collections_Generic_List_int__;
+            global::System.Collections.Generic.Dictionary<long, long[]> tmp_System_Collections_Generic_Dictionary_long__long___;
+            global::System.Collections.Generic.Dictionary<string, global::System.Collections.Generic.Dictionary<string, string>> tmp_System_Collections_Generic_Dictionary_string__global__System_Collections_Generic_Dictionary_string__string__;
+            global::System.Collections.Generic.Dictionary<float, global::System.Collections.Generic.List<int>> tmp_System_Collections_Generic_Dictionary_float__global__System_Collections_Generic_List_int__;
+            tmp_System_Collections_Generic_Dictionary_int__global__System_Collections_Generic_List_int__ = value.Lists;
+            if (tmp_System_Collections_Generic_Dictionary_int__global__System_Collections_Generic_List_int__ != null)
             {
-                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::System.Collections.Generic.List<int>>().WriteMap(ref state, 1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::System.Collections.Generic.List<int>>().WriteMap(ref state, 1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp_System_Collections_Generic_Dictionary_int__global__System_Collections_Generic_List_int__, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
             }
-            var tmp2 = value.Arrays;
-            if (tmp2 != null)
+            tmp_System_Collections_Generic_Dictionary_long__long___ = value.Arrays;
+            if (tmp_System_Collections_Generic_Dictionary_long__long___ != null)
             {
-                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<long, long[]>().WriteMap(ref state, 2, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp2, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<long, long[]>().WriteMap(ref state, 2, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp_System_Collections_Generic_Dictionary_long__long___, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
             }
-            var tmp3 = value.Maps;
-            if (tmp3 != null)
+            tmp_System_Collections_Generic_Dictionary_string__global__System_Collections_Generic_Dictionary_string__string__ = value.Maps;
+            if (tmp_System_Collections_Generic_Dictionary_string__global__System_Collections_Generic_Dictionary_string__string__ != null)
             {
-                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<string, global::System.Collections.Generic.Dictionary<string, string>>().WriteMap(ref state, 3, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp3, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<string, global::System.Collections.Generic.Dictionary<string, string>>().WriteMap(ref state, 3, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp_System_Collections_Generic_Dictionary_string__global__System_Collections_Generic_Dictionary_string__string__, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
             }
-            var tmp4 = value.FloatKeyed;
-            if (tmp4 != null)
+            tmp_System_Collections_Generic_Dictionary_float__global__System_Collections_Generic_List_int__ = value.FloatKeyed;
+            if (tmp_System_Collections_Generic_Dictionary_float__global__System_Collections_Generic_List_int__ != null)
             {
-                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<float, global::System.Collections.Generic.List<int>>().WriteMap(ref state, 4, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp4, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeFixed32, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<float, global::System.Collections.Generic.List<int>>().WriteMap(ref state, 4, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp_System_Collections_Generic_Dictionary_float__global__System_Collections_Generic_List_int__, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeFixed32, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
             }
         }
 

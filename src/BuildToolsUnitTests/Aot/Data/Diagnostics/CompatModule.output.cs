@@ -145,20 +145,23 @@ partial class CompatModuleModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.When;
+            global::System.DateTime tmp_System_DateTime;
+            global::System.Guid tmp_System_Guid;
+            decimal tmp_decimal;
+            tmp_System_DateTime = value.When;
             state.WriteFieldHeader(1, global::ProtoBuf.WireType.String);
-            global::ProtoBuf.BclHelpers.WriteTimestamp(ref state, tmp1);
-            var tmp2 = value.Id;
-            if (tmp2 != global::System.Guid.Empty)
+            global::ProtoBuf.BclHelpers.WriteTimestamp(ref state, tmp_System_DateTime);
+            tmp_System_Guid = value.Id;
+            if (tmp_System_Guid != global::System.Guid.Empty)
             {
                 state.WriteFieldHeader(2, global::ProtoBuf.WireType.String);
-                global::ProtoBuf.BclHelpers.WriteGuidString(ref state, tmp2);
+                global::ProtoBuf.BclHelpers.WriteGuidString(ref state, tmp_System_Guid);
             }
-            var tmp3 = value.Amount;
-            if (tmp3 != 0m)
+            tmp_decimal = value.Amount;
+            if (tmp_decimal != 0m)
             {
                 state.WriteFieldHeader(3, global::ProtoBuf.WireType.String);
-                global::ProtoBuf.BclHelpers.WriteDecimalString(ref state, tmp3);
+                global::ProtoBuf.BclHelpers.WriteDecimalString(ref state, tmp_decimal);
             }
         }
 
@@ -166,19 +169,22 @@ partial class CompatModuleModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.When;
-            var bcl1 = global::ProtoBuf.BclHelpers.MeasureTimestamp(tmp1);
+            global::System.DateTime tmp_System_DateTime;
+            global::System.Guid tmp_System_Guid;
+            decimal tmp_decimal;
+            tmp_System_DateTime = value.When;
+            var bcl1 = global::ProtoBuf.BclHelpers.MeasureTimestamp(tmp_System_DateTime);
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bcl1) + bcl1;  // When
-            var tmp2 = value.Id;
-            if (tmp2 != global::System.Guid.Empty)
+            tmp_System_Guid = value.Id;
+            if (tmp_System_Guid != global::System.Guid.Empty)
             {
-                var bcl2 = global::ProtoBuf.BclHelpers.MeasureGuidString(tmp2);
+                var bcl2 = global::ProtoBuf.BclHelpers.MeasureGuidString(tmp_System_Guid);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bcl2) + bcl2;  // Id
             }
-            var tmp3 = value.Amount;
-            if (tmp3 != 0m)
+            tmp_decimal = value.Amount;
+            if (tmp_decimal != 0m)
             {
-                var bcl3 = global::ProtoBuf.BclHelpers.MeasureDecimalString(tmp3);
+                var bcl3 = global::ProtoBuf.BclHelpers.MeasureDecimalString(tmp_decimal);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bcl3) + bcl3;  // Amount
             }
             return len;
@@ -259,14 +265,16 @@ partial class CompatModuleModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.When;
+            global::System.DateTime tmp_System_DateTime;
+            global::System.Guid tmp_System_Guid;
+            tmp_System_DateTime = value.When;
             state.WriteFieldHeader(1, global::ProtoBuf.WireType.String);
-            global::ProtoBuf.BclHelpers.WriteDateTime(ref state, tmp1);
-            var tmp2 = value.Id;
-            if (tmp2 != global::System.Guid.Empty)
+            global::ProtoBuf.BclHelpers.WriteDateTime(ref state, tmp_System_DateTime);
+            tmp_System_Guid = value.Id;
+            if (tmp_System_Guid != global::System.Guid.Empty)
             {
                 state.WriteFieldHeader(2, global::ProtoBuf.WireType.String);
-                global::ProtoBuf.BclHelpers.WriteGuid(ref state, tmp2);
+                global::ProtoBuf.BclHelpers.WriteGuid(ref state, tmp_System_Guid);
             }
         }
 
@@ -274,13 +282,15 @@ partial class CompatModuleModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.When;
-            var bcl1 = global::ProtoBuf.BclHelpers.MeasureDateTime(tmp1);
+            global::System.DateTime tmp_System_DateTime;
+            global::System.Guid tmp_System_Guid;
+            tmp_System_DateTime = value.When;
+            var bcl1 = global::ProtoBuf.BclHelpers.MeasureDateTime(tmp_System_DateTime);
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bcl1) + bcl1;  // When
-            var tmp2 = value.Id;
-            if (tmp2 != global::System.Guid.Empty)
+            tmp_System_Guid = value.Id;
+            if (tmp_System_Guid != global::System.Guid.Empty)
             {
-                var bcl2 = global::ProtoBuf.BclHelpers.MeasureGuid(tmp2);
+                var bcl2 = global::ProtoBuf.BclHelpers.MeasureGuid(tmp_System_Guid);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bcl2) + bcl2;  // Id
             }
             return len;

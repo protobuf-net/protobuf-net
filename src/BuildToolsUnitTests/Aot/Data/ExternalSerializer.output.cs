@@ -182,12 +182,15 @@ partial class ExternalSerializerModel
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ExternalSerializer.Holder>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ExternalSerializer.Holder value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Thing;
-            state.WriteMessage<global::AotFixtures.ExternalSerializer.Thing>(1, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ExternalSerializer.ThingSerializer, global::AotFixtures.ExternalSerializer.Thing>());
-            var tmp2 = value.Ticket;
-            state.WriteAny<global::AotFixtures.ExternalSerializer.Ticket>(2, tmp2, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ExternalSerializer.TicketSerializer, global::AotFixtures.ExternalSerializer.Ticket>());
-            var tmp3 = value.Stamp;
-            state.WriteAny<global::AotFixtures.ExternalSerializer.Stamp>(3, tmp3, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ExternalSerializer.StampSerializer, global::AotFixtures.ExternalSerializer.Stamp>());
+            global::AotFixtures.ExternalSerializer.Thing tmp_AotFixtures_ExternalSerializer_Thing;
+            global::AotFixtures.ExternalSerializer.Ticket tmp_AotFixtures_ExternalSerializer_Ticket;
+            global::AotFixtures.ExternalSerializer.Stamp tmp_AotFixtures_ExternalSerializer_Stamp;
+            tmp_AotFixtures_ExternalSerializer_Thing = value.Thing;
+            state.WriteMessage<global::AotFixtures.ExternalSerializer.Thing>(1, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp_AotFixtures_ExternalSerializer_Thing, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ExternalSerializer.ThingSerializer, global::AotFixtures.ExternalSerializer.Thing>());
+            tmp_AotFixtures_ExternalSerializer_Ticket = value.Ticket;
+            state.WriteAny<global::AotFixtures.ExternalSerializer.Ticket>(2, tmp_AotFixtures_ExternalSerializer_Ticket, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ExternalSerializer.TicketSerializer, global::AotFixtures.ExternalSerializer.Ticket>());
+            tmp_AotFixtures_ExternalSerializer_Stamp = value.Stamp;
+            state.WriteAny<global::AotFixtures.ExternalSerializer.Stamp>(3, tmp_AotFixtures_ExternalSerializer_Stamp, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ExternalSerializer.StampSerializer, global::AotFixtures.ExternalSerializer.Stamp>());
         }
 
         private static global::AotFixtures.ExternalSerializer.Holder RawRead_AotFixtures_ExternalSerializer_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ExternalSerializer.Holder value)
@@ -264,13 +267,15 @@ partial class ExternalSerializerModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var rawDepth = state.SyncRawDepth(depth);
-            var tmp1 = value.Gauge;
-            state.WriteMessage<global::AotFixtures.ExternalSerializer.Gauge>(1, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ExternalSerializer.GaugeSerializer, global::AotFixtures.ExternalSerializer.Gauge>());
-            var tmp2 = value.Label;
-            if (tmp2 != 0)
+            global::AotFixtures.ExternalSerializer.Gauge tmp_AotFixtures_ExternalSerializer_Gauge;
+            int tmp_int;
+            tmp_AotFixtures_ExternalSerializer_Gauge = value.Gauge;
+            state.WriteMessage<global::AotFixtures.ExternalSerializer.Gauge>(1, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp_AotFixtures_ExternalSerializer_Gauge, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ExternalSerializer.GaugeSerializer, global::AotFixtures.ExternalSerializer.Gauge>());
+            tmp_int = value.Label;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((2 << 3) | 0);  // Label
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
             state.SyncRawDepth(rawDepth);
         }
@@ -279,14 +284,16 @@ partial class ExternalSerializerModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Gauge;
-            if (tmp1 != null)
+            global::AotFixtures.ExternalSerializer.Gauge tmp_AotFixtures_ExternalSerializer_Gauge;
+            int tmp_int;
+            tmp_AotFixtures_ExternalSerializer_Gauge = value.Gauge;
+            if (tmp_AotFixtures_ExternalSerializer_Gauge != null)
             {
-                var sub = ((global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ExternalSerializer.Gauge>)global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ExternalSerializer.GaugeSerializer, global::AotFixtures.ExternalSerializer.Gauge>()).Measure(context, global::ProtoBuf.WireType.String, tmp1);
+                var sub = ((global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ExternalSerializer.Gauge>)global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ExternalSerializer.GaugeSerializer, global::AotFixtures.ExternalSerializer.Gauge>()).Measure(context, global::ProtoBuf.WireType.String, tmp_AotFixtures_ExternalSerializer_Gauge);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Gauge
             }
-            var tmp2 = value.Label;
-            if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // Label
+            tmp_int = value.Label;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Label
             return len;
         }
 

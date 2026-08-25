@@ -321,30 +321,38 @@ partial class WrapMeasureModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var rawDepth = state.SyncRawDepth(depth);
-            var tmp1 = value.Count;
-            state.WriteAny<int?>(1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue, tmp1);
-            var tmp2 = value.Grouped;
-            state.WriteAny<int?>(2, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueGroup, tmp2);
-            var tmp3 = value.Label;
-            state.WriteAny<string>(3, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue, tmp3);
-            var tmp4 = value.GroupedLabel;
-            state.WriteAny<string>(4, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueGroup, tmp4);
-            var tmp5 = value.Blob;
-            state.WriteAny<byte[]>(5, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue, tmp5);
-            var tmp6 = value.Shade;
-            state.WriteAny<global::AotFixtures.WrapMeasure.Tint?>(6, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue, tmp6);
-            var tmp7 = value.Flag;
-            state.WriteAny<bool?>(7, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue, tmp7);
-            var tmp8 = value.Ratio;
-            state.WriteAny<double?>(8, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeFixed64 | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue, tmp8);
-            var tmp9 = value.Trailer;
-            if (tmp9 != 0)
+            int? tmp_int_;
+            string tmp_string;
+            byte[] tmp_byte__;
+            global::AotFixtures.WrapMeasure.Tint? tmp_AotFixtures_WrapMeasure_Tint_;
+            bool? tmp_bool_;
+            double? tmp_double_;
+            int tmp_int;
+            long? tmp_long_;
+            tmp_int_ = value.Count;
+            state.WriteAny<int?>(1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue, tmp_int_);
+            tmp_int_ = value.Grouped;
+            state.WriteAny<int?>(2, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueGroup, tmp_int_);
+            tmp_string = value.Label;
+            state.WriteAny<string>(3, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue, tmp_string);
+            tmp_string = value.GroupedLabel;
+            state.WriteAny<string>(4, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueGroup, tmp_string);
+            tmp_byte__ = value.Blob;
+            state.WriteAny<byte[]>(5, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue, tmp_byte__);
+            tmp_AotFixtures_WrapMeasure_Tint_ = value.Shade;
+            state.WriteAny<global::AotFixtures.WrapMeasure.Tint?>(6, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue, tmp_AotFixtures_WrapMeasure_Tint_);
+            tmp_bool_ = value.Flag;
+            state.WriteAny<bool?>(7, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue, tmp_bool_);
+            tmp_double_ = value.Ratio;
+            state.WriteAny<double?>(8, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeFixed64 | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue, tmp_double_);
+            tmp_int = value.Trailer;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((9 << 3) | 0);  // Trailer
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp9));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
-            var tmp20 = value.Big;
-            state.WriteAny<long?>(20, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue, tmp20);
+            tmp_long_ = value.Big;
+            state.WriteAny<long?>(20, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue, tmp_long_);
             state.SyncRawDepth(rawDepth);
         }
 
@@ -352,65 +360,73 @@ partial class WrapMeasureModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Count;
-            if (tmp1.HasValue)
+            int? tmp_int_;
+            string tmp_string;
+            byte[] tmp_byte__;
+            global::AotFixtures.WrapMeasure.Tint? tmp_AotFixtures_WrapMeasure_Tint_;
+            bool? tmp_bool_;
+            double? tmp_double_;
+            int tmp_int;
+            long? tmp_long_;
+            tmp_int_ = value.Count;
+            if (tmp_int_.HasValue)
             {
-                var val1 = tmp1.GetValueOrDefault();
+                var val1 = tmp_int_.GetValueOrDefault();
                 long wrap1 = val1 != 0 ? 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)val1)) : 0;
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)wrap1) + wrap1;  // Count
             }
-            var tmp2 = value.Grouped;
-            if (tmp2.HasValue)
+            tmp_int_ = value.Grouped;
+            if (tmp_int_.HasValue)
             {
-                var val2 = tmp2.GetValueOrDefault();
+                var val2 = tmp_int_.GetValueOrDefault();
                 long wrap2 = val2 != 0 ? 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)val2)) : 0;
                 len += 2 + wrap2;  // Grouped (group: no length prefix)
             }
-            var tmp3 = value.Label;
-            if (tmp3 != null)
+            tmp_string = value.Label;
+            if (tmp_string != null)
             {
-                long wrap3 = 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp3);
+                long wrap3 = 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)wrap3) + wrap3;  // Label
             }
-            var tmp4 = value.GroupedLabel;
-            if (tmp4 != null)
+            tmp_string = value.GroupedLabel;
+            if (tmp_string != null)
             {
-                long wrap4 = 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp4);
+                long wrap4 = 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);
                 len += 2 + wrap4;  // GroupedLabel (group: no length prefix)
             }
-            var tmp5 = value.Blob;
-            if (tmp5 != null)
+            tmp_byte__ = value.Blob;
+            if (tmp_byte__ != null)
             {
-                long wrap5 = 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)tmp5.Length) + tmp5.Length;
+                long wrap5 = 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)tmp_byte__.Length) + tmp_byte__.Length;
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)wrap5) + wrap5;  // Blob
             }
-            var tmp6 = value.Shade;
-            if (tmp6.HasValue)
+            tmp_AotFixtures_WrapMeasure_Tint_ = value.Shade;
+            if (tmp_AotFixtures_WrapMeasure_Tint_.HasValue)
             {
-                var val6 = tmp6.GetValueOrDefault();
+                var val6 = tmp_AotFixtures_WrapMeasure_Tint_.GetValueOrDefault();
                 long wrap6 = 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)val6));
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)wrap6) + wrap6;  // Shade
             }
-            var tmp7 = value.Flag;
-            if (tmp7.HasValue)
+            tmp_bool_ = value.Flag;
+            if (tmp_bool_.HasValue)
             {
-                var val7 = tmp7.GetValueOrDefault();
+                var val7 = tmp_bool_.GetValueOrDefault();
                 long wrap7 = val7 ? 1 + 1 : 0;
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)wrap7) + wrap7;  // Flag
             }
-            var tmp8 = value.Ratio;
-            if (tmp8.HasValue)
+            tmp_double_ = value.Ratio;
+            if (tmp_double_.HasValue)
             {
-                var val8 = tmp8.GetValueOrDefault();
+                var val8 = tmp_double_.GetValueOrDefault();
                 long wrap8 = val8 != 0 ? 1 + 8 : 0;
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)wrap8) + wrap8;  // Ratio
             }
-            var tmp9 = value.Trailer;
-            if (tmp9 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp9));  // Trailer
-            var tmp20 = value.Big;
-            if (tmp20.HasValue)
+            tmp_int = value.Trailer;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Trailer
+            tmp_long_ = value.Big;
+            if (tmp_long_.HasValue)
             {
-                var val20 = tmp20.GetValueOrDefault();
+                var val20 = tmp_long_.GetValueOrDefault();
                 long wrap20 = val20 != 0 ? 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)val20)) : 0;
                 len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)wrap20) + wrap20;  // Big
             }
@@ -598,40 +614,44 @@ partial class WrapMeasureModel
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long len;
             long before = 0;
-            var tmp1 = value.Inner;
-            if (tmp1 != null)
+            global::AotFixtures.WrapMeasure.Boxed tmp_AotFixtures_WrapMeasure_Boxed;
+            int tmp_int;
+            global::AotFixtures.WrapMeasure.Crate tmp_AotFixtures_WrapMeasure_Crate;
+            global::AotFixtures.WrapMeasure.Ledger tmp_AotFixtures_WrapMeasure_Ledger;
+            tmp_AotFixtures_WrapMeasure_Boxed = value.Inner;
+            if (tmp_AotFixtures_WrapMeasure_Boxed != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Inner
                 len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWrite_AotFixtures_WrapMeasure_Boxed(ref state, tmp1, depth);
+                RawWrite_AotFixtures_WrapMeasure_Boxed(ref state, tmp_AotFixtures_WrapMeasure_Boxed, depth);
                 DebugAssertPosition(ref state, before + len, "Inner");
             }
-            var tmp2 = value.Tag;
-            if (tmp2 != 0)
+            tmp_int = value.Tag;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((2 << 3) | 0);  // Tag
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
-            var tmp3 = value.Packed;
-            if (tmp3 != null)
+            tmp_AotFixtures_WrapMeasure_Crate = value.Packed;
+            if (tmp_AotFixtures_WrapMeasure_Crate != null)
             {
                 state.WriteRawTag((3 << 3) | 2);  // Packed
                 len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWrite_AotFixtures_WrapMeasure_Crate(ref state, tmp3, depth);
+                RawWrite_AotFixtures_WrapMeasure_Crate(ref state, tmp_AotFixtures_WrapMeasure_Crate, depth);
                 DebugAssertPosition(ref state, before + len, "Packed");
             }
-            var tmp4 = value.Book;
-            if (tmp4 != null)
+            tmp_AotFixtures_WrapMeasure_Ledger = value.Book;
+            if (tmp_AotFixtures_WrapMeasure_Ledger != null)
             {
                 state.WriteRawTag((4 << 3) | 2);  // Book
                 len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWrite_AotFixtures_WrapMeasure_Ledger(ref state, tmp4, depth);
+                RawWrite_AotFixtures_WrapMeasure_Ledger(ref state, tmp_AotFixtures_WrapMeasure_Ledger, depth);
                 DebugAssertPosition(ref state, before + len, "Book");
             }
         }
@@ -641,29 +661,33 @@ partial class WrapMeasureModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             long sub;
-            var tmp1 = value.Inner;
-            if (tmp1 != null)
+            global::AotFixtures.WrapMeasure.Boxed tmp_AotFixtures_WrapMeasure_Boxed;
+            int tmp_int;
+            global::AotFixtures.WrapMeasure.Crate tmp_AotFixtures_WrapMeasure_Crate;
+            global::AotFixtures.WrapMeasure.Ledger tmp_AotFixtures_WrapMeasure_Ledger;
+            tmp_AotFixtures_WrapMeasure_Boxed = value.Inner;
+            if (tmp_AotFixtures_WrapMeasure_Boxed != null)
             {
                 var slot1 = slots.Reserve();
-                sub = Measure_AotFixtures_WrapMeasure_Boxed(tmp1, depth, slots, context);
+                sub = Measure_AotFixtures_WrapMeasure_Boxed(tmp_AotFixtures_WrapMeasure_Boxed, depth, slots, context);
                 slots.Set(slot1, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Inner
             }
-            var tmp2 = value.Tag;
-            if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // Tag
-            var tmp3 = value.Packed;
-            if (tmp3 != null)
+            tmp_int = value.Tag;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Tag
+            tmp_AotFixtures_WrapMeasure_Crate = value.Packed;
+            if (tmp_AotFixtures_WrapMeasure_Crate != null)
             {
                 var slot3 = slots.Reserve();
-                sub = Measure_AotFixtures_WrapMeasure_Crate(tmp3, depth, slots, context);
+                sub = Measure_AotFixtures_WrapMeasure_Crate(tmp_AotFixtures_WrapMeasure_Crate, depth, slots, context);
                 slots.Set(slot3, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Packed
             }
-            var tmp4 = value.Book;
-            if (tmp4 != null)
+            tmp_AotFixtures_WrapMeasure_Ledger = value.Book;
+            if (tmp_AotFixtures_WrapMeasure_Ledger != null)
             {
                 var slot4 = slots.Reserve();
-                sub = Measure_AotFixtures_WrapMeasure_Ledger(tmp4, depth, slots, context);
+                sub = Measure_AotFixtures_WrapMeasure_Ledger(tmp_AotFixtures_WrapMeasure_Ledger, depth, slots, context);
                 slots.Set(slot4, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Book
             }
@@ -757,76 +781,82 @@ partial class WrapMeasureModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var rawDepth = state.SyncRawDepth(depth);
-            var tmp1 = value.Counts;
-            if (tmp1 != null)
+            global::System.Collections.Generic.List<int?> tmp_System_Collections_Generic_List_int__;
+            global::System.Collections.Generic.List<string> tmp_System_Collections_Generic_List_string_;
+            global::System.Collections.Generic.List<global::AotFixtures.WrapMeasure.Tint?> tmp_System_Collections_Generic_List_global__AotFixtures_WrapMeasure_Tint__;
+            global::System.Collections.Generic.List<int> tmp_System_Collections_Generic_List_int_;
+            int tmp_int;
+            global::System.Collections.Generic.List<global::AotFixtures.WrapMeasure.Leaf> tmp_System_Collections_Generic_List_global__AotFixtures_WrapMeasure_Leaf_;
+            tmp_System_Collections_Generic_List_int__ = value.Counts;
+            if (tmp_System_Collections_Generic_List_int__ != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int?>().WriteRepeated(ref state, 1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp1);
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int?>().WriteRepeated(ref state, 1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp_System_Collections_Generic_List_int__);
             }
-            var tmp2 = value.Grouped;
-            if (tmp2 != null)
+            tmp_System_Collections_Generic_List_int__ = value.Grouped;
+            if (tmp_System_Collections_Generic_List_int__ != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int?>().WriteRepeated(ref state, 2, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueGroup | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp2);
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int?>().WriteRepeated(ref state, 2, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueGroup | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp_System_Collections_Generic_List_int__);
             }
-            var tmp3 = value.Labels;
-            if (tmp3 != null)
+            tmp_System_Collections_Generic_List_string_ = value.Labels;
+            if (tmp_System_Collections_Generic_List_string_ != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<string>().WriteRepeated(ref state, 3, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp3);
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<string>().WriteRepeated(ref state, 3, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp_System_Collections_Generic_List_string_);
             }
-            var tmp4 = value.Shades;
-            if (tmp4 != null)
+            tmp_System_Collections_Generic_List_global__AotFixtures_WrapMeasure_Tint__ = value.Shades;
+            if (tmp_System_Collections_Generic_List_global__AotFixtures_WrapMeasure_Tint__ != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.WrapMeasure.Tint?>().WriteRepeated(ref state, 4, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp4);
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.WrapMeasure.Tint?>().WriteRepeated(ref state, 4, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp_System_Collections_Generic_List_global__AotFixtures_WrapMeasure_Tint__);
             }
-            var tmp5 = value.Sizes;
-            if (tmp5 != null)
+            tmp_System_Collections_Generic_List_int_ = value.Sizes;
+            if (tmp_System_Collections_Generic_List_int_ != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int>().WriteRepeated(ref state, 5, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedCollection, tmp5);
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int>().WriteRepeated(ref state, 5, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedCollection, tmp_System_Collections_Generic_List_int_);
             }
-            var tmp6 = value.GroupedSizes;
-            if (tmp6 != null)
+            tmp_System_Collections_Generic_List_int_ = value.GroupedSizes;
+            if (tmp_System_Collections_Generic_List_int_ != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int>().WriteRepeated(ref state, 6, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedCollection | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedCollectionGroup, tmp6);
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int>().WriteRepeated(ref state, 6, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedCollection | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedCollectionGroup, tmp_System_Collections_Generic_List_int_);
             }
-            var tmp7 = value.Names;
-            if (tmp7 != null)
+            tmp_System_Collections_Generic_List_string_ = value.Names;
+            if (tmp_System_Collections_Generic_List_string_ != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<string>().WriteRepeated(ref state, 7, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedCollection, tmp7);
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<string>().WriteRepeated(ref state, 7, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedCollection, tmp_System_Collections_Generic_List_string_);
             }
-            var tmp8 = value.Both;
-            if (tmp8 != null)
+            tmp_System_Collections_Generic_List_int__ = value.Both;
+            if (tmp_System_Collections_Generic_List_int__ != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int?>().WriteRepeated(ref state, 8, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedCollection, tmp8);
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int?>().WriteRepeated(ref state, 8, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedCollection, tmp_System_Collections_Generic_List_int__);
             }
-            var tmp9 = value.Trailer;
-            if (tmp9 != 0)
+            tmp_int = value.Trailer;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((9 << 3) | 0);  // Trailer
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp9));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
-            var tmp10 = value.Parts;
-            if (tmp10 != null)
+            tmp_System_Collections_Generic_List_global__AotFixtures_WrapMeasure_Leaf_ = value.Parts;
+            if (tmp_System_Collections_Generic_List_global__AotFixtures_WrapMeasure_Leaf_ != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.WrapMeasure.Leaf>().WriteRepeated(ref state, 10, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp10, Self);
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.WrapMeasure.Leaf>().WriteRepeated(ref state, 10, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp_System_Collections_Generic_List_global__AotFixtures_WrapMeasure_Leaf_, Self);
             }
-            var tmp11 = value.GroupedParts;
-            if (tmp11 != null)
+            tmp_System_Collections_Generic_List_global__AotFixtures_WrapMeasure_Leaf_ = value.GroupedParts;
+            if (tmp_System_Collections_Generic_List_global__AotFixtures_WrapMeasure_Leaf_ != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.WrapMeasure.Leaf>().WriteRepeated(ref state, 11, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueGroup | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp11, Self);
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.WrapMeasure.Leaf>().WriteRepeated(ref state, 11, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueGroup | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp_System_Collections_Generic_List_global__AotFixtures_WrapMeasure_Leaf_, Self);
             }
-            var tmp12 = value.Bundle;
-            if (tmp12 != null)
+            tmp_System_Collections_Generic_List_global__AotFixtures_WrapMeasure_Leaf_ = value.Bundle;
+            if (tmp_System_Collections_Generic_List_global__AotFixtures_WrapMeasure_Leaf_ != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.WrapMeasure.Leaf>().WriteRepeated(ref state, 12, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedCollection, tmp12, Self);
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.WrapMeasure.Leaf>().WriteRepeated(ref state, 12, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedCollection, tmp_System_Collections_Generic_List_global__AotFixtures_WrapMeasure_Leaf_, Self);
             }
-            var tmp13 = value.BundledParts;
-            if (tmp13 != null)
+            tmp_System_Collections_Generic_List_global__AotFixtures_WrapMeasure_Leaf_ = value.BundledParts;
+            if (tmp_System_Collections_Generic_List_global__AotFixtures_WrapMeasure_Leaf_ != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.WrapMeasure.Leaf>().WriteRepeated(ref state, 13, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedCollection, tmp13, Self);
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.WrapMeasure.Leaf>().WriteRepeated(ref state, 13, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedCollection, tmp_System_Collections_Generic_List_global__AotFixtures_WrapMeasure_Leaf_, Self);
             }
-            var tmp21 = value.Far;
-            if (tmp21 != null)
+            tmp_System_Collections_Generic_List_int__ = value.Far;
+            if (tmp_System_Collections_Generic_List_int__ != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int?>().WriteRepeated(ref state, 21, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp21);
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int?>().WriteRepeated(ref state, 21, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp_System_Collections_Generic_List_int__);
             }
             state.SyncRawDepth(rawDepth);
         }
@@ -836,90 +866,96 @@ partial class WrapMeasureModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             long sub;
-            var tmp1 = value.Counts;
-            if (tmp1 != null)
+            global::System.Collections.Generic.List<int?> tmp_System_Collections_Generic_List_int__;
+            global::System.Collections.Generic.List<string> tmp_System_Collections_Generic_List_string_;
+            global::System.Collections.Generic.List<global::AotFixtures.WrapMeasure.Tint?> tmp_System_Collections_Generic_List_global__AotFixtures_WrapMeasure_Tint__;
+            global::System.Collections.Generic.List<int> tmp_System_Collections_Generic_List_int_;
+            int tmp_int;
+            global::System.Collections.Generic.List<global::AotFixtures.WrapMeasure.Leaf> tmp_System_Collections_Generic_List_global__AotFixtures_WrapMeasure_Leaf_;
+            tmp_System_Collections_Generic_List_int__ = value.Counts;
+            if (tmp_System_Collections_Generic_List_int__ != null)
             {
-                foreach (var item1 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp1))
+                foreach (var item1 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_int__))
                 {
                     long wrap1 = item1 is null ? 0 : 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)item1.GetValueOrDefault()));
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)wrap1) + wrap1;
                 }
             }
-            var tmp2 = value.Grouped;
-            if (tmp2 != null)
+            tmp_System_Collections_Generic_List_int__ = value.Grouped;
+            if (tmp_System_Collections_Generic_List_int__ != null)
             {
-                foreach (var item2 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp2))
+                foreach (var item2 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_int__))
                 {
                     long wrap2 = item2 is null ? 0 : 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)item2.GetValueOrDefault()));
                     len += 2 + wrap2;
                 }
             }
-            var tmp3 = value.Labels;
-            if (tmp3 != null)
+            tmp_System_Collections_Generic_List_string_ = value.Labels;
+            if (tmp_System_Collections_Generic_List_string_ != null)
             {
-                foreach (var item3 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp3))
+                foreach (var item3 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_string_))
                 {
                     long wrap3 = item3 is null ? 0 : 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(item3);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)wrap3) + wrap3;
                 }
             }
-            var tmp4 = value.Shades;
-            if (tmp4 != null)
+            tmp_System_Collections_Generic_List_global__AotFixtures_WrapMeasure_Tint__ = value.Shades;
+            if (tmp_System_Collections_Generic_List_global__AotFixtures_WrapMeasure_Tint__ != null)
             {
-                foreach (var item4 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp4))
+                foreach (var item4 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_global__AotFixtures_WrapMeasure_Tint__))
                 {
                     long wrap4 = item4 is null ? 0 : 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)item4.GetValueOrDefault()));
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)wrap4) + wrap4;
                 }
             }
-            var tmp5 = value.Sizes;
-            if (tmp5 != null)
+            tmp_System_Collections_Generic_List_int_ = value.Sizes;
+            if (tmp_System_Collections_Generic_List_int_ != null)
             {
                 long col5 = 0;
-                foreach (var item5 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp5))
+                foreach (var item5 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_int_))
                 {
                     col5 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)item5));
                 }
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)col5) + col5;  // Sizes (wrapped collection)
             }
-            var tmp6 = value.GroupedSizes;
-            if (tmp6 != null)
+            tmp_System_Collections_Generic_List_int_ = value.GroupedSizes;
+            if (tmp_System_Collections_Generic_List_int_ != null)
             {
                 long col6 = 0;
-                foreach (var item6 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp6))
+                foreach (var item6 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_int_))
                 {
                     col6 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)item6));
                 }
                 len += 2 + col6;  // GroupedSizes (wrapped collection, group)
             }
-            var tmp7 = value.Names;
-            if (tmp7 != null)
+            tmp_System_Collections_Generic_List_string_ = value.Names;
+            if (tmp_System_Collections_Generic_List_string_ != null)
             {
                 long col7 = 0;
-                foreach (var item7 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp7))
+                foreach (var item7 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_string_))
                 {
                     if (item7 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<string>();
                     col7 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(item7);
                 }
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)col7) + col7;  // Names (wrapped collection)
             }
-            var tmp8 = value.Both;
-            if (tmp8 != null)
+            tmp_System_Collections_Generic_List_int__ = value.Both;
+            if (tmp_System_Collections_Generic_List_int__ != null)
             {
                 long col8 = 0;
-                foreach (var item8 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp8))
+                foreach (var item8 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_int__))
                 {
                     long wrap8 = item8 is null ? 0 : 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)item8.GetValueOrDefault()));
                     col8 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)wrap8) + wrap8;
                 }
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)col8) + col8;  // Both (wrapped collection)
             }
-            var tmp9 = value.Trailer;
-            if (tmp9 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp9));  // Trailer
-            var tmp10 = value.Parts;
-            if (tmp10 != null)
+            tmp_int = value.Trailer;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Trailer
+            tmp_System_Collections_Generic_List_global__AotFixtures_WrapMeasure_Leaf_ = value.Parts;
+            if (tmp_System_Collections_Generic_List_global__AotFixtures_WrapMeasure_Leaf_ != null)
             {
-                foreach (var item10 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp10))
+                foreach (var item10 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_global__AotFixtures_WrapMeasure_Leaf_))
                 {
                     long wrap10 = 0;
                     if (item10 is not null)
@@ -930,10 +966,10 @@ partial class WrapMeasureModel
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)wrap10) + wrap10;
                 }
             }
-            var tmp11 = value.GroupedParts;
-            if (tmp11 != null)
+            tmp_System_Collections_Generic_List_global__AotFixtures_WrapMeasure_Leaf_ = value.GroupedParts;
+            if (tmp_System_Collections_Generic_List_global__AotFixtures_WrapMeasure_Leaf_ != null)
             {
-                foreach (var item11 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp11))
+                foreach (var item11 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_global__AotFixtures_WrapMeasure_Leaf_))
                 {
                     long wrap11 = 0;
                     if (item11 is not null)
@@ -944,11 +980,11 @@ partial class WrapMeasureModel
                     len += 2 + wrap11;
                 }
             }
-            var tmp12 = value.Bundle;
-            if (tmp12 != null)
+            tmp_System_Collections_Generic_List_global__AotFixtures_WrapMeasure_Leaf_ = value.Bundle;
+            if (tmp_System_Collections_Generic_List_global__AotFixtures_WrapMeasure_Leaf_ != null)
             {
                 long col12 = 0;
-                foreach (var item12 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp12))
+                foreach (var item12 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_global__AotFixtures_WrapMeasure_Leaf_))
                 {
                     if (item12 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.WrapMeasure.Leaf>();
                     sub = Measure_AotFixtures_WrapMeasure_Leaf(item12, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);
@@ -956,11 +992,11 @@ partial class WrapMeasureModel
                 }
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)col12) + col12;  // Bundle (wrapped collection)
             }
-            var tmp13 = value.BundledParts;
-            if (tmp13 != null)
+            tmp_System_Collections_Generic_List_global__AotFixtures_WrapMeasure_Leaf_ = value.BundledParts;
+            if (tmp_System_Collections_Generic_List_global__AotFixtures_WrapMeasure_Leaf_ != null)
             {
                 long col13 = 0;
-                foreach (var item13 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp13))
+                foreach (var item13 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_global__AotFixtures_WrapMeasure_Leaf_))
                 {
                     long wrap13 = 0;
                     if (item13 is not null)
@@ -972,10 +1008,10 @@ partial class WrapMeasureModel
                 }
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)col13) + col13;  // BundledParts (wrapped collection)
             }
-            var tmp21 = value.Far;
-            if (tmp21 != null)
+            tmp_System_Collections_Generic_List_int__ = value.Far;
+            if (tmp_System_Collections_Generic_List_int__ != null)
             {
-                foreach (var item21 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp21))
+                foreach (var item21 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_int__))
                 {
                     long wrap21 = item21 is null ? 0 : 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)item21.GetValueOrDefault()));
                     len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)wrap21) + wrap21;
@@ -1205,11 +1241,12 @@ partial class WrapMeasureModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Id;
-            if (tmp1 != 0)
+            int tmp_int;
+            tmp_int = value.Id;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Id
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -1217,8 +1254,9 @@ partial class WrapMeasureModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Id;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Id
+            int tmp_int;
+            tmp_int = value.Id;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Id
             return len;
         }
 
@@ -1275,41 +1313,46 @@ partial class WrapMeasureModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var rawDepth = state.SyncRawDepth(depth);
-            var tmp1 = value.Counts;
-            if (tmp1 != null)
+            global::System.Collections.Generic.Dictionary<int, int?> tmp_System_Collections_Generic_Dictionary_int__int__;
+            global::System.Collections.Generic.Dictionary<int, string> tmp_System_Collections_Generic_Dictionary_int__string_;
+            global::System.Collections.Generic.Dictionary<int, int> tmp_System_Collections_Generic_Dictionary_int__int_;
+            int tmp_int;
+            global::System.Collections.Generic.Dictionary<string, string> tmp_System_Collections_Generic_Dictionary_string__string_;
+            tmp_System_Collections_Generic_Dictionary_int__int__ = value.Counts;
+            if (tmp_System_Collections_Generic_Dictionary_int__int__ != null)
             {
-                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, int?>().WriteMap(ref state, 1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue);
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, int?>().WriteMap(ref state, 1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp_System_Collections_Generic_Dictionary_int__int__, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue);
             }
-            var tmp2 = value.Notes;
-            if (tmp2 != null)
+            tmp_System_Collections_Generic_Dictionary_int__string_ = value.Notes;
+            if (tmp_System_Collections_Generic_Dictionary_int__string_ != null)
             {
-                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, string>().WriteMap(ref state, 2, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp2, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue);
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, string>().WriteMap(ref state, 2, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp_System_Collections_Generic_Dictionary_int__string_, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue);
             }
-            var tmp3 = value.Grouped;
-            if (tmp3 != null)
+            tmp_System_Collections_Generic_Dictionary_int__int__ = value.Grouped;
+            if (tmp_System_Collections_Generic_Dictionary_int__int__ != null)
             {
-                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, int?>().WriteMap(ref state, 3, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp3, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueGroup);
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, int?>().WriteMap(ref state, 3, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp_System_Collections_Generic_Dictionary_int__int__, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueGroup);
             }
-            var tmp4 = value.Whole;
-            if (tmp4 != null)
+            tmp_System_Collections_Generic_Dictionary_int__int_ = value.Whole;
+            if (tmp_System_Collections_Generic_Dictionary_int__int_ != null)
             {
-                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, int>().WriteMap(ref state, 4, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedCollection, tmp4, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, int>().WriteMap(ref state, 4, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedCollection, tmp_System_Collections_Generic_Dictionary_int__int_, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
             }
-            var tmp5 = value.Both;
-            if (tmp5 != null)
+            tmp_System_Collections_Generic_Dictionary_int__int__ = value.Both;
+            if (tmp_System_Collections_Generic_Dictionary_int__int__ != null)
             {
-                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, int?>().WriteMap(ref state, 5, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedCollection, tmp5, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue);
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, int?>().WriteMap(ref state, 5, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedCollection, tmp_System_Collections_Generic_Dictionary_int__int__, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue);
             }
-            var tmp6 = value.Trailer;
-            if (tmp6 != 0)
+            tmp_int = value.Trailer;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((6 << 3) | 0);  // Trailer
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp6));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
-            var tmp20 = value.Far;
-            if (tmp20 != null)
+            tmp_System_Collections_Generic_Dictionary_string__string_ = value.Far;
+            if (tmp_System_Collections_Generic_Dictionary_string__string_ != null)
             {
-                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<string, string>().WriteMap(ref state, 20, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp20, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue);
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<string, string>().WriteMap(ref state, 20, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp_System_Collections_Generic_Dictionary_string__string_, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue);
             }
             state.SyncRawDepth(rawDepth);
         }
@@ -1318,10 +1361,15 @@ partial class WrapMeasureModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Counts;
-            if (tmp1 != null)
+            global::System.Collections.Generic.Dictionary<int, int?> tmp_System_Collections_Generic_Dictionary_int__int__;
+            global::System.Collections.Generic.Dictionary<int, string> tmp_System_Collections_Generic_Dictionary_int__string_;
+            global::System.Collections.Generic.Dictionary<int, int> tmp_System_Collections_Generic_Dictionary_int__int_;
+            int tmp_int;
+            global::System.Collections.Generic.Dictionary<string, string> tmp_System_Collections_Generic_Dictionary_string__string_;
+            tmp_System_Collections_Generic_Dictionary_int__int__ = value.Counts;
+            if (tmp_System_Collections_Generic_Dictionary_int__int__ != null)
             {
-                foreach (var pair1 in tmp1)
+                foreach (var pair1 in tmp_System_Collections_Generic_Dictionary_int__int__)
                 {
                     long entry1 = 0;
                     if (pair1.Key != 0) entry1 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair1.Key));
@@ -1333,10 +1381,10 @@ partial class WrapMeasureModel
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)entry1) + entry1;  // Counts
                 }
             }
-            var tmp2 = value.Notes;
-            if (tmp2 != null)
+            tmp_System_Collections_Generic_Dictionary_int__string_ = value.Notes;
+            if (tmp_System_Collections_Generic_Dictionary_int__string_ != null)
             {
-                foreach (var pair2 in tmp2)
+                foreach (var pair2 in tmp_System_Collections_Generic_Dictionary_int__string_)
                 {
                     long entry2 = 0;
                     if (pair2.Key != 0) entry2 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair2.Key));
@@ -1348,10 +1396,10 @@ partial class WrapMeasureModel
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)entry2) + entry2;  // Notes
                 }
             }
-            var tmp3 = value.Grouped;
-            if (tmp3 != null)
+            tmp_System_Collections_Generic_Dictionary_int__int__ = value.Grouped;
+            if (tmp_System_Collections_Generic_Dictionary_int__int__ != null)
             {
-                foreach (var pair3 in tmp3)
+                foreach (var pair3 in tmp_System_Collections_Generic_Dictionary_int__int__)
                 {
                     long entry3 = 0;
                     if (pair3.Key != 0) entry3 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair3.Key));
@@ -1363,11 +1411,11 @@ partial class WrapMeasureModel
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)entry3) + entry3;  // Grouped
                 }
             }
-            var tmp4 = value.Whole;
-            if (tmp4 != null)
+            tmp_System_Collections_Generic_Dictionary_int__int_ = value.Whole;
+            if (tmp_System_Collections_Generic_Dictionary_int__int_ != null)
             {
                 long col4 = 0;
-                foreach (var pair4 in tmp4)
+                foreach (var pair4 in tmp_System_Collections_Generic_Dictionary_int__int_)
                 {
                     long entry4 = 0;
                     if (pair4.Key != 0) entry4 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair4.Key));
@@ -1376,11 +1424,11 @@ partial class WrapMeasureModel
                 }
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)col4) + col4;  // Whole (wrapped collection)
             }
-            var tmp5 = value.Both;
-            if (tmp5 != null)
+            tmp_System_Collections_Generic_Dictionary_int__int__ = value.Both;
+            if (tmp_System_Collections_Generic_Dictionary_int__int__ != null)
             {
                 long col5 = 0;
-                foreach (var pair5 in tmp5)
+                foreach (var pair5 in tmp_System_Collections_Generic_Dictionary_int__int__)
                 {
                     long entry5 = 0;
                     if (pair5.Key != 0) entry5 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair5.Key));
@@ -1393,12 +1441,12 @@ partial class WrapMeasureModel
                 }
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)col5) + col5;  // Both (wrapped collection)
             }
-            var tmp6 = value.Trailer;
-            if (tmp6 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp6));  // Trailer
-            var tmp20 = value.Far;
-            if (tmp20 != null)
+            tmp_int = value.Trailer;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Trailer
+            tmp_System_Collections_Generic_Dictionary_string__string_ = value.Far;
+            if (tmp_System_Collections_Generic_Dictionary_string__string_ != null)
             {
-                foreach (var pair20 in tmp20)
+                foreach (var pair20 in tmp_System_Collections_Generic_Dictionary_string__string_)
                 {
                     long entry20 = 0;
                     if (pair20.Key != null) entry20 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(pair20.Key);

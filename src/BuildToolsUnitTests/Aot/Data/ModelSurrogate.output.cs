@@ -414,17 +414,19 @@ partial class ModelSurrogateModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Ticks;
-            if (tmp1 != 0)
+            long tmp_long;
+            short tmp_short;
+            tmp_long = value.Ticks;
+            if (tmp_long != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Ticks
-                state.WriteRawVarint64(unchecked((ulong)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)tmp_long));
             }
-            var tmp2 = value.OffsetMinutes;
-            if (tmp2 != 0)
+            tmp_short = value.OffsetMinutes;
+            if (tmp_short != 0)
             {
                 state.WriteRawTag((2 << 3) | 0);  // OffsetMinutes
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_short));
             }
         }
 
@@ -432,10 +434,12 @@ partial class ModelSurrogateModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Ticks;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)tmp1));  // Ticks
-            var tmp2 = value.OffsetMinutes;
-            if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // OffsetMinutes
+            long tmp_long;
+            short tmp_short;
+            tmp_long = value.Ticks;
+            if (tmp_long != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)tmp_long));  // Ticks
+            tmp_short = value.OffsetMinutes;
+            if (tmp_short != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_short));  // OffsetMinutes
             return len;
         }
 
@@ -514,29 +518,32 @@ partial class ModelSurrogateModel
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long len;
             long before = 0;
-            var tmp1 = value.Release;
-            if (tmp1 != null)
+            global::System.Version tmp_System_Version;
+            global::AotFixtures.ModelSurrogate.Ticks tmp_AotFixtures_ModelSurrogate_Ticks;
+            global::System.DateTimeOffset tmp_System_DateTimeOffset;
+            tmp_System_Version = value.Release;
+            if (tmp_System_Version != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Release
                 len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWrite_System_Version(ref state, tmp1, depth);
+                RawWrite_System_Version(ref state, tmp_System_Version, depth);
                 DebugAssertPosition(ref state, before + len, "Release");
             }
-            var tmp2 = value.Elapsed;
+            tmp_AotFixtures_ModelSurrogate_Ticks = value.Elapsed;
             state.WriteRawTag((2 << 3) | 2);  // Elapsed
             len = state.RawSlots.Next();
             state.WriteRawVarint64((ulong)len);
             DebugCapturePosition(ref state, ref before);
-            RawWrite_AotFixtures_ModelSurrogate_Ticks(ref state, tmp2, depth);
+            RawWrite_AotFixtures_ModelSurrogate_Ticks(ref state, tmp_AotFixtures_ModelSurrogate_Ticks, depth);
             DebugAssertPosition(ref state, before + len, "Elapsed");
-            var tmp3 = value.When;
+            tmp_System_DateTimeOffset = value.When;
             state.WriteRawTag((3 << 3) | 2);  // When
             len = state.RawSlots.Next();
             state.WriteRawVarint64((ulong)len);
             DebugCapturePosition(ref state, ref before);
-            RawWrite_System_DateTimeOffset(ref state, tmp3, depth);
+            RawWrite_System_DateTimeOffset(ref state, tmp_System_DateTimeOffset, depth);
             DebugAssertPosition(ref state, before + len, "When");
         }
 
@@ -545,22 +552,25 @@ partial class ModelSurrogateModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             long sub;
-            var tmp1 = value.Release;
-            if (tmp1 != null)
+            global::System.Version tmp_System_Version;
+            global::AotFixtures.ModelSurrogate.Ticks tmp_AotFixtures_ModelSurrogate_Ticks;
+            global::System.DateTimeOffset tmp_System_DateTimeOffset;
+            tmp_System_Version = value.Release;
+            if (tmp_System_Version != null)
             {
                 var slot1 = slots.Reserve();
-                sub = Measure_System_Version(tmp1, depth, slots, context);
+                sub = Measure_System_Version(tmp_System_Version, depth, slots, context);
                 slots.Set(slot1, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Release
             }
-            var tmp2 = value.Elapsed;
+            tmp_AotFixtures_ModelSurrogate_Ticks = value.Elapsed;
             var slot2 = slots.Reserve();
-            sub = Measure_AotFixtures_ModelSurrogate_Ticks(tmp2, depth, slots, context);
+            sub = Measure_AotFixtures_ModelSurrogate_Ticks(tmp_AotFixtures_ModelSurrogate_Ticks, depth, slots, context);
             slots.Set(slot2, sub);
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Elapsed
-            var tmp3 = value.When;
+            tmp_System_DateTimeOffset = value.When;
             var slot3 = slots.Reserve();
-            sub = Measure_System_DateTimeOffset(tmp3, depth, slots, context);
+            sub = Measure_System_DateTimeOffset(tmp_System_DateTimeOffset, depth, slots, context);
             slots.Set(slot3, sub);
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // When
             return len;
@@ -667,11 +677,12 @@ partial class ModelSurrogateModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             var surrogate = global::AotFixtures.ModelSurrogate.TicksConverter.ToSurrogate(value);
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(surrogate);
-            var tmp1 = surrogate.Value;
-            if (tmp1 != 0)
+            long tmp_long;
+            tmp_long = surrogate.Value;
+            if (tmp_long != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Value
-                state.WriteRawVarint64(unchecked((ulong)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)tmp_long));
             }
         }
 
@@ -680,8 +691,9 @@ partial class ModelSurrogateModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             var surrogate = global::AotFixtures.ModelSurrogate.TicksConverter.ToSurrogate(value);
             long len = 0;
-            var tmp1 = surrogate.Value;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)tmp1));  // Value
+            long tmp_long;
+            tmp_long = surrogate.Value;
+            if (tmp_long != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)tmp_long));  // Value
             return len;
         }
 
@@ -709,11 +721,12 @@ partial class ModelSurrogateModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Value;
-            if (tmp1 != 0)
+            long tmp_long;
+            tmp_long = value.Value;
+            if (tmp_long != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Value
-                state.WriteRawVarint64(unchecked((ulong)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)tmp_long));
             }
         }
 
@@ -721,8 +734,9 @@ partial class ModelSurrogateModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Value;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)tmp1));  // Value
+            long tmp_long;
+            tmp_long = value.Value;
+            if (tmp_long != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)tmp_long));  // Value
             return len;
         }
 
@@ -778,11 +792,12 @@ partial class ModelSurrogateModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Value;
-            if (tmp1 != null)
+            string tmp_string;
+            tmp_string = value.Value;
+            if (tmp_string != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Value
-                state.WriteRawString(tmp1);
+                state.WriteRawString(tmp_string);
             }
         }
 
@@ -790,10 +805,11 @@ partial class ModelSurrogateModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Value;
-            if (tmp1 != null)
+            string tmp_string;
+            tmp_string = value.Value;
+            if (tmp_string != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // Value
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Value
             }
             return len;
         }
@@ -873,17 +889,19 @@ partial class ModelSurrogateModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             var surrogate = (global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate)value;
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(surrogate);
-            var tmp1 = surrogate.Ticks;
-            if (tmp1 != 0)
+            long tmp_long;
+            short tmp_short;
+            tmp_long = surrogate.Ticks;
+            if (tmp_long != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Ticks
-                state.WriteRawVarint64(unchecked((ulong)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)tmp_long));
             }
-            var tmp2 = surrogate.OffsetMinutes;
-            if (tmp2 != 0)
+            tmp_short = surrogate.OffsetMinutes;
+            if (tmp_short != 0)
             {
                 state.WriteRawTag((2 << 3) | 0);  // OffsetMinutes
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_short));
             }
         }
 
@@ -892,10 +910,12 @@ partial class ModelSurrogateModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             var surrogate = (global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate)value;
             long len = 0;
-            var tmp1 = surrogate.Ticks;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)tmp1));  // Ticks
-            var tmp2 = surrogate.OffsetMinutes;
-            if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // OffsetMinutes
+            long tmp_long;
+            short tmp_short;
+            tmp_long = surrogate.Ticks;
+            if (tmp_long != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)tmp_long));  // Ticks
+            tmp_short = surrogate.OffsetMinutes;
+            if (tmp_short != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_short));  // OffsetMinutes
             return len;
         }
 
@@ -945,11 +965,12 @@ partial class ModelSurrogateModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             var surrogate = (global::AotFixtures.ModelSurrogate.VersionSurrogate)value;
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(surrogate);
-            var tmp1 = surrogate.Value;
-            if (tmp1 != null)
+            string tmp_string;
+            tmp_string = surrogate.Value;
+            if (tmp_string != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Value
-                state.WriteRawString(tmp1);
+                state.WriteRawString(tmp_string);
             }
         }
 
@@ -958,10 +979,11 @@ partial class ModelSurrogateModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             var surrogate = (global::AotFixtures.ModelSurrogate.VersionSurrogate)value;
             long len = 0;
-            var tmp1 = surrogate.Value;
-            if (tmp1 != null)
+            string tmp_string;
+            tmp_string = surrogate.Value;
+            if (tmp_string != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // Value
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Value
             }
             return len;
         }

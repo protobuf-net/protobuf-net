@@ -366,17 +366,18 @@ partial class OrderingModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp2 = value.OnlyDataMember;
-            if (tmp2 != 0)
+            int tmp_int;
+            tmp_int = value.OnlyDataMember;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((2 << 3) | 0);  // OnlyDataMember
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
-            var tmp5 = value.Both;
-            if (tmp5 != 0)
+            tmp_int = value.Both;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((5 << 3) | 0);  // Both
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp5));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -384,10 +385,11 @@ partial class OrderingModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp2 = value.OnlyDataMember;
-            if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // OnlyDataMember
-            var tmp5 = value.Both;
-            if (tmp5 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp5));  // Both
+            int tmp_int;
+            tmp_int = value.OnlyDataMember;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // OnlyDataMember
+            tmp_int = value.Both;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Both
             return len;
         }
 
@@ -452,11 +454,12 @@ partial class OrderingModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.First;
-            if (tmp1 != 0)
+            int tmp_int;
+            tmp_int = value.First;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // First
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -464,8 +467,9 @@ partial class OrderingModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.First;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // First
+            int tmp_int;
+            tmp_int = value.First;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // First
             return len;
         }
 
@@ -533,30 +537,33 @@ partial class OrderingModel
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long len;
             long before = 0;
-            var tmp1 = value.FromDataContract;
-            if (tmp1 != null)
+            global::AotFixtures.Ordering.ViaDataMember tmp_AotFixtures_Ordering_ViaDataMember;
+            global::AotFixtures.Ordering.ViaXmlElement tmp_AotFixtures_Ordering_ViaXmlElement;
+            global::System.Collections.Generic.List<global::AotFixtures.Ordering.ViaDataMember> tmp_System_Collections_Generic_List_global__AotFixtures_Ordering_ViaDataMember_;
+            tmp_AotFixtures_Ordering_ViaDataMember = value.FromDataContract;
+            if (tmp_AotFixtures_Ordering_ViaDataMember != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // FromDataContract
                 len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWrite_AotFixtures_Ordering_ViaDataMember(ref state, tmp1, depth);
+                RawWrite_AotFixtures_Ordering_ViaDataMember(ref state, tmp_AotFixtures_Ordering_ViaDataMember, depth);
                 DebugAssertPosition(ref state, before + len, "FromDataContract");
             }
-            var tmp2 = value.FromXmlType;
-            if (tmp2 != null)
+            tmp_AotFixtures_Ordering_ViaXmlElement = value.FromXmlType;
+            if (tmp_AotFixtures_Ordering_ViaXmlElement != null)
             {
                 state.WriteRawTag((2 << 3) | 2);  // FromXmlType
                 len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWrite_AotFixtures_Ordering_ViaXmlElement(ref state, tmp2, depth);
+                RawWrite_AotFixtures_Ordering_ViaXmlElement(ref state, tmp_AotFixtures_Ordering_ViaXmlElement, depth);
                 DebugAssertPosition(ref state, before + len, "FromXmlType");
             }
-            var tmp3 = value.Several;
-            if (tmp3 != null)
+            tmp_System_Collections_Generic_List_global__AotFixtures_Ordering_ViaDataMember_ = value.Several;
+            if (tmp_System_Collections_Generic_List_global__AotFixtures_Ordering_ViaDataMember_ != null)
             {
-                foreach (var item3 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp3))
+                foreach (var item3 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_global__AotFixtures_Ordering_ViaDataMember_))
                 {
                     if (item3 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.Ordering.ViaDataMember>();
                     state.WriteRawTag((3 << 3) | 2);  // Several
@@ -574,26 +581,29 @@ partial class OrderingModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             long sub;
-            var tmp1 = value.FromDataContract;
-            if (tmp1 != null)
+            global::AotFixtures.Ordering.ViaDataMember tmp_AotFixtures_Ordering_ViaDataMember;
+            global::AotFixtures.Ordering.ViaXmlElement tmp_AotFixtures_Ordering_ViaXmlElement;
+            global::System.Collections.Generic.List<global::AotFixtures.Ordering.ViaDataMember> tmp_System_Collections_Generic_List_global__AotFixtures_Ordering_ViaDataMember_;
+            tmp_AotFixtures_Ordering_ViaDataMember = value.FromDataContract;
+            if (tmp_AotFixtures_Ordering_ViaDataMember != null)
             {
                 var slot1 = slots.Reserve();
-                sub = Measure_AotFixtures_Ordering_ViaDataMember(tmp1, depth, slots, context);
+                sub = Measure_AotFixtures_Ordering_ViaDataMember(tmp_AotFixtures_Ordering_ViaDataMember, depth, slots, context);
                 slots.Set(slot1, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // FromDataContract
             }
-            var tmp2 = value.FromXmlType;
-            if (tmp2 != null)
+            tmp_AotFixtures_Ordering_ViaXmlElement = value.FromXmlType;
+            if (tmp_AotFixtures_Ordering_ViaXmlElement != null)
             {
                 var slot2 = slots.Reserve();
-                sub = Measure_AotFixtures_Ordering_ViaXmlElement(tmp2, depth, slots, context);
+                sub = Measure_AotFixtures_Ordering_ViaXmlElement(tmp_AotFixtures_Ordering_ViaXmlElement, depth, slots, context);
                 slots.Set(slot2, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // FromXmlType
             }
-            var tmp3 = value.Several;
-            if (tmp3 != null)
+            tmp_System_Collections_Generic_List_global__AotFixtures_Ordering_ViaDataMember_ = value.Several;
+            if (tmp_System_Collections_Generic_List_global__AotFixtures_Ordering_ViaDataMember_ != null)
             {
-                foreach (var item3 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp3))
+                foreach (var item3 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_global__AotFixtures_Ordering_ViaDataMember_))
                 {
                     if (item3 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.Ordering.ViaDataMember>();
                     var slot3 = slots.Reserve();
@@ -677,17 +687,19 @@ partial class OrderingModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.First;
-            if (tmp1 != 0)
+            int tmp_int;
+            string tmp_string;
+            tmp_int = value.First;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // First
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
-            var tmp2 = value.Second;
-            if (tmp2 != null)
+            tmp_string = value.Second;
+            if (tmp_string != null)
             {
                 state.WriteRawTag((2 << 3) | 2);  // Second
-                state.WriteRawString(tmp2);
+                state.WriteRawString(tmp_string);
             }
         }
 
@@ -695,12 +707,14 @@ partial class OrderingModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.First;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // First
-            var tmp2 = value.Second;
-            if (tmp2 != null)
+            int tmp_int;
+            string tmp_string;
+            tmp_int = value.First;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // First
+            tmp_string = value.Second;
+            if (tmp_string != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // Second
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Second
             }
             return len;
         }
@@ -763,17 +777,19 @@ partial class OrderingModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp11 = value.First;
-            if (tmp11 != 0)
+            int tmp_int;
+            string tmp_string;
+            tmp_int = value.First;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((11 << 3) | 0);  // First
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp11));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
-            var tmp12 = value.Second;
-            if (tmp12 != null)
+            tmp_string = value.Second;
+            if (tmp_string != null)
             {
                 state.WriteRawTag((12 << 3) | 2);  // Second
-                state.WriteRawString(tmp12);
+                state.WriteRawString(tmp_string);
             }
         }
 
@@ -781,12 +797,14 @@ partial class OrderingModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp11 = value.First;
-            if (tmp11 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp11));  // First
-            var tmp12 = value.Second;
-            if (tmp12 != null)
+            int tmp_int;
+            string tmp_string;
+            tmp_int = value.First;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // First
+            tmp_string = value.Second;
+            if (tmp_string != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp12);  // Second
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Second
             }
             return len;
         }
@@ -849,17 +867,19 @@ partial class OrderingModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.First;
-            if (tmp1 != 0)
+            int tmp_int;
+            string tmp_string;
+            tmp_int = value.First;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // First
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
-            var tmp2 = value.Second;
-            if (tmp2 != null)
+            tmp_string = value.Second;
+            if (tmp_string != null)
             {
                 state.WriteRawTag((2 << 3) | 2);  // Second
-                state.WriteRawString(tmp2);
+                state.WriteRawString(tmp_string);
             }
         }
 
@@ -867,12 +887,14 @@ partial class OrderingModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.First;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // First
-            var tmp2 = value.Second;
-            if (tmp2 != null)
+            int tmp_int;
+            string tmp_string;
+            tmp_int = value.First;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // First
+            tmp_string = value.Second;
+            if (tmp_string != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // Second
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Second
             }
             return len;
         }

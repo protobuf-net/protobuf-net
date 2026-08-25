@@ -179,21 +179,23 @@ partial class AbstractLeafModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long before = 0;
-            var tmp1 = value.Value;
-            if (tmp1 != null)
+            global::AotFixtures.AbstractLeaf.Shape tmp_AotFixtures_AbstractLeaf_Shape;
+            string tmp_string;
+            tmp_AotFixtures_AbstractLeaf_Shape = value.Value;
+            if (tmp_AotFixtures_AbstractLeaf_Shape != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Value
                 var len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWrite_AotFixtures_AbstractLeaf_Shape(ref state, tmp1, depth);
+                RawWrite_AotFixtures_AbstractLeaf_Shape(ref state, tmp_AotFixtures_AbstractLeaf_Shape, depth);
                 DebugAssertPosition(ref state, before + len, "Value");
             }
-            var tmp2 = value.Name;
-            if (tmp2 != null)
+            tmp_string = value.Name;
+            if (tmp_string != null)
             {
                 state.WriteRawTag((2 << 3) | 2);  // Name
-                state.WriteRawString(tmp2);
+                state.WriteRawString(tmp_string);
             }
         }
 
@@ -201,18 +203,20 @@ partial class AbstractLeafModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Value;
-            if (tmp1 != null)
+            global::AotFixtures.AbstractLeaf.Shape tmp_AotFixtures_AbstractLeaf_Shape;
+            string tmp_string;
+            tmp_AotFixtures_AbstractLeaf_Shape = value.Value;
+            if (tmp_AotFixtures_AbstractLeaf_Shape != null)
             {
                 var slot1 = slots.Reserve();
-                var sub = Measure_AotFixtures_AbstractLeaf_Shape(tmp1, depth, slots, context);
+                var sub = Measure_AotFixtures_AbstractLeaf_Shape(tmp_AotFixtures_AbstractLeaf_Shape, depth, slots, context);
                 slots.Set(slot1, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Value
             }
-            var tmp2 = value.Name;
-            if (tmp2 != null)
+            tmp_string = value.Name;
+            if (tmp_string != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // Name
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Name
             }
             return len;
         }
@@ -297,11 +301,12 @@ partial class AbstractLeafModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Sides;
-            if (tmp1 != 0)
+            int tmp_int;
+            tmp_int = value.Sides;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Sides
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -309,8 +314,9 @@ partial class AbstractLeafModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Sides;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Sides
+            int tmp_int;
+            tmp_int = value.Sides;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Sides
             return len;
         }
 

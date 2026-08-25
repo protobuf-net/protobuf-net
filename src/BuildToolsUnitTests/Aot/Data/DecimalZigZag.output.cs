@@ -91,23 +91,25 @@ partial class DecimalZigZagModel
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.DecimalZigZag.Prices>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.DecimalZigZag.Prices value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Ignored;
-            if (tmp1 != 0m)
+            decimal tmp_decimal;
+            string tmp_string;
+            tmp_decimal = value.Ignored;
+            if (tmp_decimal != 0m)
             {
                 state.WriteFieldHeader(1, global::ProtoBuf.WireType.String);
-                global::ProtoBuf.BclHelpers.WriteDecimal(ref state, tmp1);
+                global::ProtoBuf.BclHelpers.WriteDecimal(ref state, tmp_decimal);
             }
-            var tmp2 = value.Plain;
-            if (tmp2 != 0m)
+            tmp_decimal = value.Plain;
+            if (tmp_decimal != 0m)
             {
                 state.WriteFieldHeader(2, global::ProtoBuf.WireType.String);
-                global::ProtoBuf.BclHelpers.WriteDecimal(ref state, tmp2);
+                global::ProtoBuf.BclHelpers.WriteDecimal(ref state, tmp_decimal);
             }
-            var tmp3 = value.Label;
-            if (tmp3 != null)
+            tmp_string = value.Label;
+            if (tmp_string != null)
             {
                 state.WriteRawTag((3 << 3) | 2);  // Label
-                state.WriteRawString(tmp3);
+                state.WriteRawString(tmp_string);
             }
         }
 

@@ -141,30 +141,35 @@ partial class MapKeyModel
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapKey.Keys>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.MapKey.Keys value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Bool;
-            if (tmp1 != null)
+            global::System.Collections.Generic.Dictionary<bool, int> tmp_System_Collections_Generic_Dictionary_bool__int_;
+            global::System.Collections.Generic.Dictionary<double, int> tmp_System_Collections_Generic_Dictionary_double__int_;
+            global::System.Collections.Generic.Dictionary<char, int> tmp_System_Collections_Generic_Dictionary_char__int_;
+            global::System.Collections.Generic.Dictionary<global::AotFixtures.MapKey.Payload, int> tmp_System_Collections_Generic_Dictionary_global__AotFixtures_MapKey_Payload__int_;
+            global::System.Collections.Generic.Dictionary<global::AotFixtures.MapKey.Payload, global::AotFixtures.MapKey.Payload> tmp_System_Collections_Generic_Dictionary_global__AotFixtures_MapKey_Payload__global__AotFixtures_MapKey_Payload_;
+            tmp_System_Collections_Generic_Dictionary_bool__int_ = value.Bool;
+            if (tmp_System_Collections_Generic_Dictionary_bool__int_ != null)
             {
-                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<bool, int>().WriteMap(ref state, 1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<bool, int>().WriteMap(ref state, 1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp_System_Collections_Generic_Dictionary_bool__int_, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
             }
-            var tmp2 = value.Double;
-            if (tmp2 != null)
+            tmp_System_Collections_Generic_Dictionary_double__int_ = value.Double;
+            if (tmp_System_Collections_Generic_Dictionary_double__int_ != null)
             {
-                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<double, int>().WriteMap(ref state, 2, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp2, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeFixed64, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<double, int>().WriteMap(ref state, 2, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp_System_Collections_Generic_Dictionary_double__int_, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeFixed64, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
             }
-            var tmp3 = value.Char;
-            if (tmp3 != null)
+            tmp_System_Collections_Generic_Dictionary_char__int_ = value.Char;
+            if (tmp_System_Collections_Generic_Dictionary_char__int_ != null)
             {
-                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<char, int>().WriteMap(ref state, 3, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp3, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<char, int>().WriteMap(ref state, 3, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp_System_Collections_Generic_Dictionary_char__int_, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
             }
-            var tmp4 = value.Message;
-            if (tmp4 != null)
+            tmp_System_Collections_Generic_Dictionary_global__AotFixtures_MapKey_Payload__int_ = value.Message;
+            if (tmp_System_Collections_Generic_Dictionary_global__AotFixtures_MapKey_Payload__int_ != null)
             {
-                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<global::AotFixtures.MapKey.Payload, int>().WriteMap(ref state, 4, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp4, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, this);
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<global::AotFixtures.MapKey.Payload, int>().WriteMap(ref state, 4, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp_System_Collections_Generic_Dictionary_global__AotFixtures_MapKey_Payload__int_, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, this);
             }
-            var tmp5 = value.BothMessages;
-            if (tmp5 != null)
+            tmp_System_Collections_Generic_Dictionary_global__AotFixtures_MapKey_Payload__global__AotFixtures_MapKey_Payload_ = value.BothMessages;
+            if (tmp_System_Collections_Generic_Dictionary_global__AotFixtures_MapKey_Payload__global__AotFixtures_MapKey_Payload_ != null)
             {
-                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<global::AotFixtures.MapKey.Payload, global::AotFixtures.MapKey.Payload>().WriteMap(ref state, 5, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp5, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, this, this);
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<global::AotFixtures.MapKey.Payload, global::AotFixtures.MapKey.Payload>().WriteMap(ref state, 5, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp_System_Collections_Generic_Dictionary_global__AotFixtures_MapKey_Payload__global__AotFixtures_MapKey_Payload_, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, this, this);
             }
         }
 
@@ -300,11 +305,12 @@ partial class MapKeyModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Id;
-            if (tmp1 != 0)
+            int tmp_int;
+            tmp_int = value.Id;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Id
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -312,8 +318,9 @@ partial class MapKeyModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Id;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Id
+            int tmp_int;
+            tmp_int = value.Id;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Id
             return len;
         }
 

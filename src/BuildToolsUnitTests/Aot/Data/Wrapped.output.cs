@@ -147,11 +147,12 @@ partial class WrappedModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Id;
-            if (tmp1 != 0)
+            int tmp_int;
+            tmp_int = value.Id;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Id
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -159,8 +160,9 @@ partial class WrappedModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Id;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Id
+            int tmp_int;
+            tmp_int = value.Id;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Id
             return len;
         }
 
@@ -212,80 +214,90 @@ partial class WrappedModel
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Wrapped.Wrapped>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Wrapped.Wrapped value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Value;
-            state.WriteAny<int?>(1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue, tmp1);
-            var tmp2 = value.Grouped;
-            state.WriteAny<int?>(2, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueGroup, tmp2);
-            var tmp3 = value.Text;
-            state.WriteAny<string>(3, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue, tmp3);
-            var tmp4 = value.Ids;
-            if (tmp4 != null)
+            int? tmp_int_;
+            string tmp_string;
+            global::System.Collections.Generic.List<int?> tmp_System_Collections_Generic_List_int__;
+            global::System.Collections.Generic.List<global::AotFixtures.Wrapped.Nested> tmp_System_Collections_Generic_List_global__AotFixtures_Wrapped_Nested_;
+            global::System.Collections.Generic.Dictionary<int, global::AotFixtures.Wrapped.Nested> tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_Wrapped_Nested_;
+            global::System.Collections.Generic.List<int> tmp_System_Collections_Generic_List_int_;
+            byte[] tmp_byte__;
+            global::AotFixtures.Wrapped.Shade? tmp_AotFixtures_Wrapped_Shade_;
+            global::System.Collections.Generic.Dictionary<int, int?> tmp_System_Collections_Generic_Dictionary_int__int__;
+            global::System.Collections.Generic.Dictionary<int, int> tmp_System_Collections_Generic_Dictionary_int__int_;
+            tmp_int_ = value.Value;
+            state.WriteAny<int?>(1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue, tmp_int_);
+            tmp_int_ = value.Grouped;
+            state.WriteAny<int?>(2, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueGroup, tmp_int_);
+            tmp_string = value.Text;
+            state.WriteAny<string>(3, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue, tmp_string);
+            tmp_System_Collections_Generic_List_int__ = value.Ids;
+            if (tmp_System_Collections_Generic_List_int__ != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int?>().WriteRepeated(ref state, 4, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp4);
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int?>().WriteRepeated(ref state, 4, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp_System_Collections_Generic_List_int__);
             }
-            var tmp5 = value.Items;
-            if (tmp5 != null)
+            tmp_System_Collections_Generic_List_global__AotFixtures_Wrapped_Nested_ = value.Items;
+            if (tmp_System_Collections_Generic_List_global__AotFixtures_Wrapped_Nested_ != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.Wrapped.Nested>().WriteRepeated(ref state, 5, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp5, this);
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.Wrapped.Nested>().WriteRepeated(ref state, 5, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp_System_Collections_Generic_List_global__AotFixtures_Wrapped_Nested_, this);
             }
-            var tmp6 = value.GroupedItems;
-            if (tmp6 != null)
+            tmp_System_Collections_Generic_List_global__AotFixtures_Wrapped_Nested_ = value.GroupedItems;
+            if (tmp_System_Collections_Generic_List_global__AotFixtures_Wrapped_Nested_ != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.Wrapped.Nested>().WriteRepeated(ref state, 6, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueGroup | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp6, this);
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.Wrapped.Nested>().WriteRepeated(ref state, 6, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueGroup | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp_System_Collections_Generic_List_global__AotFixtures_Wrapped_Nested_, this);
             }
-            var tmp7 = value.Keyed;
-            if (tmp7 != null)
+            tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_Wrapped_Nested_ = value.Keyed;
+            if (tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_Wrapped_Nested_ != null)
             {
-                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::AotFixtures.Wrapped.Nested>().WriteMap(ref state, 7, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp7, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue, null, this);
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::AotFixtures.Wrapped.Nested>().WriteMap(ref state, 7, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_Wrapped_Nested_, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue, null, this);
             }
-            var tmp8 = value.Numbers;
-            if (tmp8 != null)
+            tmp_System_Collections_Generic_List_int_ = value.Numbers;
+            if (tmp_System_Collections_Generic_List_int_ != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int>().WriteRepeated(ref state, 8, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedCollection, tmp8);
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int>().WriteRepeated(ref state, 8, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedCollection, tmp_System_Collections_Generic_List_int_);
             }
-            var tmp9 = value.GroupedNumbers;
-            if (tmp9 != null)
+            tmp_System_Collections_Generic_List_int_ = value.GroupedNumbers;
+            if (tmp_System_Collections_Generic_List_int_ != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int>().WriteRepeated(ref state, 9, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedCollection | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedCollectionGroup, tmp9);
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int>().WriteRepeated(ref state, 9, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedCollection | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedCollectionGroup, tmp_System_Collections_Generic_List_int_);
             }
-            var tmp10 = value.Both;
-            if (tmp10 != null)
+            tmp_System_Collections_Generic_List_global__AotFixtures_Wrapped_Nested_ = value.Both;
+            if (tmp_System_Collections_Generic_List_global__AotFixtures_Wrapped_Nested_ != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.Wrapped.Nested>().WriteRepeated(ref state, 10, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedCollection, tmp10, this);
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.Wrapped.Nested>().WriteRepeated(ref state, 10, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedCollection, tmp_System_Collections_Generic_List_global__AotFixtures_Wrapped_Nested_, this);
             }
-            var tmp11 = value.Blob;
-            state.WriteAny<byte[]>(11, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue, tmp11);
-            var tmp12 = value.Colour;
-            state.WriteAny<global::AotFixtures.Wrapped.Shade?>(12, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue, tmp12);
-            var tmp13 = value.GroupedKeyed;
-            if (tmp13 != null)
+            tmp_byte__ = value.Blob;
+            state.WriteAny<byte[]>(11, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue, tmp_byte__);
+            tmp_AotFixtures_Wrapped_Shade_ = value.Colour;
+            state.WriteAny<global::AotFixtures.Wrapped.Shade?>(12, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue, tmp_AotFixtures_Wrapped_Shade_);
+            tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_Wrapped_Nested_ = value.GroupedKeyed;
+            if (tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_Wrapped_Nested_ != null)
             {
-                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::AotFixtures.Wrapped.Nested>().WriteMap(ref state, 13, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp13, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueGroup, null, this);
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::AotFixtures.Wrapped.Nested>().WriteMap(ref state, 13, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_Wrapped_Nested_, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueGroup, null, this);
             }
-            var tmp14 = value.Scalars;
-            if (tmp14 != null)
+            tmp_System_Collections_Generic_Dictionary_int__int__ = value.Scalars;
+            if (tmp_System_Collections_Generic_Dictionary_int__int__ != null)
             {
-                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, int?>().WriteMap(ref state, 14, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp14, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue);
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, int?>().WriteMap(ref state, 14, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp_System_Collections_Generic_Dictionary_int__int__, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue);
             }
-            var tmp15 = value.Bare;
-            if (tmp15 != null)
+            tmp_System_Collections_Generic_List_int__ = value.Bare;
+            if (tmp_System_Collections_Generic_List_int__ != null)
             {
-                foreach (var item15 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp15))
+                foreach (var item15 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_int__))
                 {
                     if (item15 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<int?>();
                     state.WriteRawTag((15 << 3) | 0);  // Bare
                     state.WriteRawVarint64(unchecked((ulong)(long)item15.GetValueOrDefault()));
                 }
             }
-            var tmp16 = value.WrappedMap;
-            if (tmp16 != null)
+            tmp_System_Collections_Generic_Dictionary_int__int_ = value.WrappedMap;
+            if (tmp_System_Collections_Generic_Dictionary_int__int_ != null)
             {
-                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, int>().WriteMap(ref state, 16, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedCollection, tmp16, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, int>().WriteMap(ref state, 16, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedCollection, tmp_System_Collections_Generic_Dictionary_int__int_, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
             }
-            var tmp17 = value.MapBoth;
-            if (tmp17 != null)
+            tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_Wrapped_Nested_ = value.MapBoth;
+            if (tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_Wrapped_Nested_ != null)
             {
-                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::AotFixtures.Wrapped.Nested>().WriteMap(ref state, 17, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedCollection, tmp17, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue, null, this);
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::AotFixtures.Wrapped.Nested>().WriteMap(ref state, 17, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedCollection, tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_Wrapped_Nested_, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue, null, this);
             }
         }
 

@@ -168,11 +168,12 @@ partial class DerivedModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Label;
-            if (tmp1 != null)
+            string tmp_string;
+            tmp_string = value.Label;
+            if (tmp_string != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Label
-                state.WriteRawString(tmp1);
+                state.WriteRawString(tmp_string);
             }
         }
 
@@ -180,10 +181,11 @@ partial class DerivedModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Label;
-            if (tmp1 != null)
+            string tmp_string;
+            tmp_string = value.Label;
+            if (tmp_string != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // Label
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Label
             }
             return len;
         }
@@ -234,31 +236,35 @@ partial class DerivedModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long before = 0;
-            var tmp1 = value.List;
-            if (tmp1 != null)
+            global::AotFixtures.Derived.MyList tmp_AotFixtures_Derived_MyList;
+            global::AotFixtures.Derived.MySet tmp_AotFixtures_Derived_MySet;
+            global::AotFixtures.Derived.MyQueue tmp_AotFixtures_Derived_MyQueue;
+            global::AotFixtures.Derived.Ambiguous tmp_AotFixtures_Derived_Ambiguous;
+            tmp_AotFixtures_Derived_MyList = value.List;
+            if (tmp_AotFixtures_Derived_MyList != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.Derived.MyList, int>().WriteRepeated(ref state, 1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1);
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.Derived.MyList, int>().WriteRepeated(ref state, 1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp_AotFixtures_Derived_MyList);
             }
-            var tmp2 = value.Set;
-            if (tmp2 != null)
+            tmp_AotFixtures_Derived_MySet = value.Set;
+            if (tmp_AotFixtures_Derived_MySet != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateEnumerable<global::AotFixtures.Derived.MySet, int>().WriteRepeated(ref state, 2, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp2);
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateEnumerable<global::AotFixtures.Derived.MySet, int>().WriteRepeated(ref state, 2, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp_AotFixtures_Derived_MySet);
             }
-            var tmp3 = value.Queue;
-            if (tmp3 != null)
+            tmp_AotFixtures_Derived_MyQueue = value.Queue;
+            if (tmp_AotFixtures_Derived_MyQueue != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateQueue<global::AotFixtures.Derived.MyQueue, int>().WriteRepeated(ref state, 3, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp3);
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateQueue<global::AotFixtures.Derived.MyQueue, int>().WriteRepeated(ref state, 3, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp_AotFixtures_Derived_MyQueue);
             }
-            var tmp4 = value.Ambiguous;
-            if (tmp4 != null)
+            tmp_AotFixtures_Derived_Ambiguous = value.Ambiguous;
+            if (tmp_AotFixtures_Derived_Ambiguous != null)
             {
                 state.WriteRawTag((4 << 3) | 2);  // Ambiguous
                 var mark4 = state.RawSlots.Mark();
-                var len = Measure_AotFixtures_Derived_Ambiguous(tmp4, state.RawDepthBudget, state.RawSlots, state.Context);
+                var len = Measure_AotFixtures_Derived_Ambiguous(tmp_AotFixtures_Derived_Ambiguous, state.RawDepthBudget, state.RawSlots, state.Context);
                 state.RawSlots.SeekTo(mark4);
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWrite_AotFixtures_Derived_Ambiguous(ref state, tmp4, state.RawDepthBudget);
+                RawWrite_AotFixtures_Derived_Ambiguous(ref state, tmp_AotFixtures_Derived_Ambiguous, state.RawDepthBudget);
                 DebugAssertPosition(ref state, before + len, "Ambiguous");
             }
         }

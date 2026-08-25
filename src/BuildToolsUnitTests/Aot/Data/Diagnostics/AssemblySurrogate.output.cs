@@ -229,14 +229,15 @@ partial class AssemblySurrogateModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long before = 0;
-            var tmp1 = value.Version;
-            if (tmp1 != null)
+            global::System.Version tmp_System_Version;
+            tmp_System_Version = value.Version;
+            if (tmp_System_Version != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Version
                 var len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWrite_System_Version(ref state, tmp1, depth);
+                RawWrite_System_Version(ref state, tmp_System_Version, depth);
                 DebugAssertPosition(ref state, before + len, "Version");
             }
         }
@@ -245,11 +246,12 @@ partial class AssemblySurrogateModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Version;
-            if (tmp1 != null)
+            global::System.Version tmp_System_Version;
+            tmp_System_Version = value.Version;
+            if (tmp_System_Version != null)
             {
                 var slot1 = slots.Reserve();
-                var sub = Measure_System_Version(tmp1, depth, slots, context);
+                var sub = Measure_System_Version(tmp_System_Version, depth, slots, context);
                 slots.Set(slot1, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Version
             }
@@ -312,11 +314,12 @@ partial class AssemblySurrogateModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Value;
-            if (tmp1 != null)
+            string tmp_string;
+            tmp_string = value.Value;
+            if (tmp_string != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Value
-                state.WriteRawString(tmp1);
+                state.WriteRawString(tmp_string);
             }
         }
 
@@ -324,10 +327,11 @@ partial class AssemblySurrogateModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Value;
-            if (tmp1 != null)
+            string tmp_string;
+            tmp_string = value.Value;
+            if (tmp_string != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // Value
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Value
             }
             return len;
         }
@@ -403,11 +407,12 @@ partial class AssemblySurrogateModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             var surrogate = (global::AotFixtures.AssemblySurrogate.VersionSurrogate)value;
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(surrogate);
-            var tmp1 = surrogate.Value;
-            if (tmp1 != null)
+            string tmp_string;
+            tmp_string = surrogate.Value;
+            if (tmp_string != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Value
-                state.WriteRawString(tmp1);
+                state.WriteRawString(tmp_string);
             }
         }
 
@@ -416,10 +421,11 @@ partial class AssemblySurrogateModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             var surrogate = (global::AotFixtures.AssemblySurrogate.VersionSurrogate)value;
             long len = 0;
-            var tmp1 = surrogate.Value;
-            if (tmp1 != null)
+            string tmp_string;
+            tmp_string = surrogate.Value;
+            if (tmp_string != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // Value
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Value
             }
             return len;
         }

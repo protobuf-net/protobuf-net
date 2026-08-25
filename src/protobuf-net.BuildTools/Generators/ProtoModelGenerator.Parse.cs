@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -1397,9 +1397,14 @@ namespace ProtoBuf.BuildTools.Generators
                 // on anything else WellKnown has nothing to promote, and ref-emit simply ignores it
                 // needed for the [UnsafeAccessor] signature, as the type argument to ReadAny/WriteAny,
                 // and to spell out the default() an overwriting "bytes" read passes to AppendBytes
-                var declaredTypeName = shape.DeclaredTypeName ?? (usesAccessor || wrappedValue
-                    || (overwriteList && kind == ProtoMemberKind.Bytes)
-                    ? Qualified(compilation, memberType) : null);
+                // ALWAYS populated since gap B16. It was previously filled only where a specific
+                // emit needed it (a tuple read local, an [UnsafeAccessor] signature, ReadAny/WriteAny's
+                // type argument, the default() a bytes overwrite passes to AppendBytes) - which meant
+                // the generator could not name the type of an ordinary member at all, and so could not
+                // declare a temporary for one other than with `var`. Sharing temporaries by type needs
+                // exactly that name. Nothing reads this as a flag - every use is as a type name - so
+                // widening it changes no output on its own.
+                var declaredTypeName = shape.DeclaredTypeName ?? Qualified(compilation, memberType);
                 var isNullable = shape.IsNullable;
                 var enumTypeName = (shape.EnumType is null ? null : Qualified(compilation, shape.EnumType));
 

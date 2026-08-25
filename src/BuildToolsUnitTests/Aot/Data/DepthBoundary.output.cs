@@ -282,11 +282,12 @@ partial class DepthBoundaryModel
         public static void RawWrite_AotFixtures_DepthBoundary_Hop(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.DepthBoundary.Hop value, int depth)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            var tmp1 = value.Target;
-            if (tmp1 != null)
+            global::AotFixtures.DepthBoundary.Step tmp_AotFixtures_DepthBoundary_Step;
+            tmp_AotFixtures_DepthBoundary_Step = value.Target;
+            if (tmp_AotFixtures_DepthBoundary_Step != null)
             {
                 state.WriteRawTag((1 << 3) | 3);  // Target (start group)
-                RawWrite_AotFixtures_DepthBoundary_Step(ref state, tmp1, depth);
+                RawWrite_AotFixtures_DepthBoundary_Step(ref state, tmp_AotFixtures_DepthBoundary_Step, depth);
                 state.WriteRawTag((1 << 3) | 4);  // Target (end group)
             }
         }
@@ -295,10 +296,11 @@ partial class DepthBoundaryModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Target;
-            if (tmp1 != null)
+            global::AotFixtures.DepthBoundary.Step tmp_AotFixtures_DepthBoundary_Step;
+            tmp_AotFixtures_DepthBoundary_Step = value.Target;
+            if (tmp_AotFixtures_DepthBoundary_Step != null)
             {
-                var sub = Measure_AotFixtures_DepthBoundary_Step(tmp1, depth, slots, context);
+                var sub = Measure_AotFixtures_DepthBoundary_Step(tmp_AotFixtures_DepthBoundary_Step, depth, slots, context);
                 len += 2 + sub;  // Target (group: no length prefix)
             }
             return len;
@@ -353,14 +355,15 @@ partial class DepthBoundaryModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long before = 0;
-            var tmp1 = value.Target;
-            if (tmp1 != null)
+            global::AotFixtures.DepthBoundary.Rung tmp_AotFixtures_DepthBoundary_Rung;
+            tmp_AotFixtures_DepthBoundary_Rung = value.Target;
+            if (tmp_AotFixtures_DepthBoundary_Rung != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Target
                 var len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWrite_AotFixtures_DepthBoundary_Rung(ref state, tmp1, depth);
+                RawWrite_AotFixtures_DepthBoundary_Rung(ref state, tmp_AotFixtures_DepthBoundary_Rung, depth);
                 DebugAssertPosition(ref state, before + len, "Target");
             }
         }
@@ -369,11 +372,12 @@ partial class DepthBoundaryModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Target;
-            if (tmp1 != null)
+            global::AotFixtures.DepthBoundary.Rung tmp_AotFixtures_DepthBoundary_Rung;
+            tmp_AotFixtures_DepthBoundary_Rung = value.Target;
+            if (tmp_AotFixtures_DepthBoundary_Rung != null)
             {
                 var slot1 = slots.Reserve();
-                var sub = Measure_AotFixtures_DepthBoundary_Rung(tmp1, depth, slots, context);
+                var sub = Measure_AotFixtures_DepthBoundary_Rung(tmp_AotFixtures_DepthBoundary_Rung, depth, slots, context);
                 slots.Set(slot1, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Target
             }
@@ -415,32 +419,35 @@ partial class DepthBoundaryModel
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long before = 0;
             var rawDepth = state.SyncRawDepth(depth);
-            var tmp1 = value.Next;
-            if (tmp1 != null)
+            global::AotFixtures.DepthBoundary.Rung tmp_AotFixtures_DepthBoundary_Rung;
+            global::AotFixtures.DepthBoundary.Link? tmp_AotFixtures_DepthBoundary_Link_;
+            int tmp_int;
+            tmp_AotFixtures_DepthBoundary_Rung = value.Next;
+            if (tmp_AotFixtures_DepthBoundary_Rung != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Next
                 var len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWrite_AotFixtures_DepthBoundary_Rung(ref state, tmp1, depth);
+                RawWrite_AotFixtures_DepthBoundary_Rung(ref state, tmp_AotFixtures_DepthBoundary_Rung, depth);
                 DebugAssertPosition(ref state, before + len, "Next");
             }
-            var tmp2 = value.Side;
-            if (tmp2.HasValue)
+            tmp_AotFixtures_DepthBoundary_Link_ = value.Side;
+            if (tmp_AotFixtures_DepthBoundary_Link_.HasValue)
             {
-                state.WriteMessage<global::AotFixtures.DepthBoundary.Link>(2, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp2.GetValueOrDefault(), Self);
+                state.WriteMessage<global::AotFixtures.DepthBoundary.Link>(2, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp_AotFixtures_DepthBoundary_Link_.GetValueOrDefault(), Self);
             }
-            var tmp3 = value.Id;
-            if (tmp3 != 0)
+            tmp_int = value.Id;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((3 << 3) | 0);  // Id
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp3));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
-            var tmp4 = value.Deep;
-            if (tmp4 != null)
+            tmp_AotFixtures_DepthBoundary_Rung = value.Deep;
+            if (tmp_AotFixtures_DepthBoundary_Rung != null)
             {
                 state.WriteRawTag((4 << 3) | 3);  // Deep (start group)
-                RawWrite_AotFixtures_DepthBoundary_Rung(ref state, tmp4, depth);
+                RawWrite_AotFixtures_DepthBoundary_Rung(ref state, tmp_AotFixtures_DepthBoundary_Rung, depth);
                 state.WriteRawTag((4 << 3) | 4);  // Deep (end group)
             }
             state.SyncRawDepth(rawDepth);
@@ -451,27 +458,30 @@ partial class DepthBoundaryModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             long sub;
-            var tmp1 = value.Next;
-            if (tmp1 != null)
+            global::AotFixtures.DepthBoundary.Rung tmp_AotFixtures_DepthBoundary_Rung;
+            global::AotFixtures.DepthBoundary.Link? tmp_AotFixtures_DepthBoundary_Link_;
+            int tmp_int;
+            tmp_AotFixtures_DepthBoundary_Rung = value.Next;
+            if (tmp_AotFixtures_DepthBoundary_Rung != null)
             {
                 var slot1 = slots.Reserve();
-                sub = Measure_AotFixtures_DepthBoundary_Rung(tmp1, depth, slots, context);
+                sub = Measure_AotFixtures_DepthBoundary_Rung(tmp_AotFixtures_DepthBoundary_Rung, depth, slots, context);
                 slots.Set(slot1, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Next
             }
-            var tmp2 = value.Side;
-            if (tmp2.HasValue)
+            tmp_AotFixtures_DepthBoundary_Link_ = value.Side;
+            if (tmp_AotFixtures_DepthBoundary_Link_.HasValue)
             {
-                var val2 = tmp2.GetValueOrDefault();
+                var val2 = tmp_AotFixtures_DepthBoundary_Link_.GetValueOrDefault();
                 sub = Measure_AotFixtures_DepthBoundary_Link(val2, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Side
             }
-            var tmp3 = value.Id;
-            if (tmp3 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp3));  // Id
-            var tmp4 = value.Deep;
-            if (tmp4 != null)
+            tmp_int = value.Id;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Id
+            tmp_AotFixtures_DepthBoundary_Rung = value.Deep;
+            if (tmp_AotFixtures_DepthBoundary_Rung != null)
             {
-                sub = Measure_AotFixtures_DepthBoundary_Rung(tmp4, depth, slots, context);
+                sub = Measure_AotFixtures_DepthBoundary_Rung(tmp_AotFixtures_DepthBoundary_Rung, depth, slots, context);
                 len += 2 + sub;  // Deep (group: no length prefix)
             }
             return len;
@@ -558,23 +568,26 @@ partial class DepthBoundaryModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var rawDepth = state.SyncRawDepth(depth);
-            var tmp1 = value.Deep;
-            if (tmp1 != null)
+            global::AotFixtures.DepthBoundary.Step tmp_AotFixtures_DepthBoundary_Step;
+            global::AotFixtures.DepthBoundary.Hop? tmp_AotFixtures_DepthBoundary_Hop_;
+            int tmp_int;
+            tmp_AotFixtures_DepthBoundary_Step = value.Deep;
+            if (tmp_AotFixtures_DepthBoundary_Step != null)
             {
                 state.WriteRawTag((1 << 3) | 3);  // Deep (start group)
-                RawWrite_AotFixtures_DepthBoundary_Step(ref state, tmp1, depth);
+                RawWrite_AotFixtures_DepthBoundary_Step(ref state, tmp_AotFixtures_DepthBoundary_Step, depth);
                 state.WriteRawTag((1 << 3) | 4);  // Deep (end group)
             }
-            var tmp2 = value.Side;
-            if (tmp2.HasValue)
+            tmp_AotFixtures_DepthBoundary_Hop_ = value.Side;
+            if (tmp_AotFixtures_DepthBoundary_Hop_.HasValue)
             {
-                state.WriteMessage<global::AotFixtures.DepthBoundary.Hop>(2, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp2.GetValueOrDefault(), Self);
+                state.WriteMessage<global::AotFixtures.DepthBoundary.Hop>(2, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp_AotFixtures_DepthBoundary_Hop_.GetValueOrDefault(), Self);
             }
-            var tmp3 = value.Id;
-            if (tmp3 != 0)
+            tmp_int = value.Id;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((3 << 3) | 0);  // Id
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp3));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
             state.SyncRawDepth(rawDepth);
         }
@@ -584,21 +597,24 @@ partial class DepthBoundaryModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             long sub;
-            var tmp1 = value.Deep;
-            if (tmp1 != null)
+            global::AotFixtures.DepthBoundary.Step tmp_AotFixtures_DepthBoundary_Step;
+            global::AotFixtures.DepthBoundary.Hop? tmp_AotFixtures_DepthBoundary_Hop_;
+            int tmp_int;
+            tmp_AotFixtures_DepthBoundary_Step = value.Deep;
+            if (tmp_AotFixtures_DepthBoundary_Step != null)
             {
-                sub = Measure_AotFixtures_DepthBoundary_Step(tmp1, depth, slots, context);
+                sub = Measure_AotFixtures_DepthBoundary_Step(tmp_AotFixtures_DepthBoundary_Step, depth, slots, context);
                 len += 2 + sub;  // Deep (group: no length prefix)
             }
-            var tmp2 = value.Side;
-            if (tmp2.HasValue)
+            tmp_AotFixtures_DepthBoundary_Hop_ = value.Side;
+            if (tmp_AotFixtures_DepthBoundary_Hop_.HasValue)
             {
-                var val2 = tmp2.GetValueOrDefault();
+                var val2 = tmp_AotFixtures_DepthBoundary_Hop_.GetValueOrDefault();
                 sub = Measure_AotFixtures_DepthBoundary_Hop(val2, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Side
             }
-            var tmp3 = value.Id;
-            if (tmp3 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp3));  // Id
+            tmp_int = value.Id;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Id
             return len;
         }
 

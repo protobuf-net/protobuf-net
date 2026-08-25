@@ -281,73 +281,79 @@ partial class FormatsModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long before = 0;
-            var tmp1 = value.ZigZagInt;
-            if (tmp1 != 0)
+            int tmp_int;
+            long tmp_long;
+            string tmp_string;
+            global::AotFixtures.Formats.Inner tmp_AotFixtures_Formats_Inner;
+            int[] tmp_int__;
+            long[] tmp_long__;
+            tmp_int = value.ZigZagInt;
+            if (tmp_int != 0)
             {
                 state.WriteFieldHeader(1, global::ProtoBuf.WireType.SignedVarint);
-                state.WriteInt32(tmp1);
+                state.WriteInt32(tmp_int);
             }
-            var tmp2 = value.FixedInt;
-            if (tmp2 != 0)
+            tmp_int = value.FixedInt;
+            if (tmp_int != 0)
             {
                 state.WriteFieldHeader(2, global::ProtoBuf.WireType.Fixed32);
-                state.WriteInt32(tmp2);
+                state.WriteInt32(tmp_int);
             }
-            var tmp3 = value.ZigZagLong;
-            if (tmp3 != 0)
+            tmp_long = value.ZigZagLong;
+            if (tmp_long != 0)
             {
                 state.WriteFieldHeader(3, global::ProtoBuf.WireType.SignedVarint);
-                state.WriteInt64(tmp3);
+                state.WriteInt64(tmp_long);
             }
-            var tmp4 = value.FixedLong;
-            if (tmp4 != 0)
+            tmp_long = value.FixedLong;
+            if (tmp_long != 0)
             {
                 state.WriteFieldHeader(4, global::ProtoBuf.WireType.Fixed64);
-                state.WriteInt64(tmp4);
+                state.WriteInt64(tmp_long);
             }
-            var tmp5 = value.TwosComplement;
-            if (tmp5 != 0)
+            tmp_int = value.TwosComplement;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((5 << 3) | 0);  // TwosComplement
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp5));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
-            var tmp6 = value.RequiredInt;
+            tmp_int = value.RequiredInt;
             state.WriteRawTag((6 << 3) | 0);  // RequiredInt
-            state.WriteRawVarint64(unchecked((ulong)(long)tmp6));
-            var tmp7 = value.RequiredString;
-            if (tmp7 != null)
+            state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
+            tmp_string = value.RequiredString;
+            if (tmp_string != null)
             {
                 state.WriteRawTag((7 << 3) | 2);  // RequiredString
-                state.WriteRawString(tmp7);
+                state.WriteRawString(tmp_string);
             }
-            var tmp8 = value.Grouped;
-            if (tmp8 != null)
+            tmp_AotFixtures_Formats_Inner = value.Grouped;
+            if (tmp_AotFixtures_Formats_Inner != null)
             {
                 state.WriteRawTag((8 << 3) | 3);  // Grouped (start group)
-                RawWrite_AotFixtures_Formats_Inner(ref state, tmp8, state.RawDepthBudget);
+                RawWrite_AotFixtures_Formats_Inner(ref state, tmp_AotFixtures_Formats_Inner, state.RawDepthBudget);
                 state.WriteRawTag((8 << 3) | 4);  // Grouped (end group)
             }
-            var tmp9 = value.Plain;
-            if (tmp9 != null)
+            tmp_AotFixtures_Formats_Inner = value.Plain;
+            if (tmp_AotFixtures_Formats_Inner != null)
             {
                 state.WriteRawTag((9 << 3) | 2);  // Plain
                 var mark9 = state.RawSlots.Mark();
-                var len = Measure_AotFixtures_Formats_Inner(tmp9, state.RawDepthBudget, state.RawSlots, state.Context);
+                var len = Measure_AotFixtures_Formats_Inner(tmp_AotFixtures_Formats_Inner, state.RawDepthBudget, state.RawSlots, state.Context);
                 state.RawSlots.SeekTo(mark9);
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWrite_AotFixtures_Formats_Inner(ref state, tmp9, state.RawDepthBudget);
+                RawWrite_AotFixtures_Formats_Inner(ref state, tmp_AotFixtures_Formats_Inner, state.RawDepthBudget);
                 DebugAssertPosition(ref state, before + len, "Plain");
             }
-            var tmp10 = value.ZigZagArray;
-            if (tmp10 != null)
+            tmp_int__ = value.ZigZagArray;
+            if (tmp_int__ != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<int>().WriteRepeated(ref state, 10, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeSignedVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp10);
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<int>().WriteRepeated(ref state, 10, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeSignedVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp_int__);
             }
-            var tmp11 = value.PackedFixed;
-            if (tmp11 != null)
+            tmp_long__ = value.PackedFixed;
+            if (tmp_long__ != null)
             {
-                state.WriteRawPackedFixed64(11, global::System.Runtime.InteropServices.MemoryMarshal.Cast<long, ulong>(tmp11));  // PackedFixed
+                state.WriteRawPackedFixed64(11, global::System.Runtime.InteropServices.MemoryMarshal.Cast<long, ulong>(tmp_long__));  // PackedFixed
             }
         }
 
@@ -507,11 +513,12 @@ partial class FormatsModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Value;
-            if (tmp1 != 0)
+            int tmp_int;
+            tmp_int = value.Value;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Value
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -519,8 +526,9 @@ partial class FormatsModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Value;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
+            int tmp_int;
+            tmp_int = value.Value;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Value
             return len;
         }
 
@@ -576,54 +584,58 @@ partial class FormatsModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.ZigInt;
-            if (tmp1 != 0)
+            int tmp_int;
+            long tmp_long;
+            uint tmp_uint;
+            int? tmp_int_;
+            tmp_int = value.ZigInt;
+            if (tmp_int != 0)
             {
                 state.WriteFieldHeader(1, global::ProtoBuf.WireType.SignedVarint);
-                state.WriteInt32(tmp1);
+                state.WriteInt32(tmp_int);
             }
-            var tmp2 = value.ZigLong;
-            if (tmp2 != 0)
+            tmp_long = value.ZigLong;
+            if (tmp_long != 0)
             {
                 state.WriteFieldHeader(2, global::ProtoBuf.WireType.SignedVarint);
-                state.WriteInt64(tmp2);
+                state.WriteInt64(tmp_long);
             }
-            var tmp3 = value.FixInt;
-            if (tmp3 != 0)
+            tmp_int = value.FixInt;
+            if (tmp_int != 0)
             {
                 state.WriteFieldHeader(3, global::ProtoBuf.WireType.Fixed32);
-                state.WriteInt32(tmp3);
+                state.WriteInt32(tmp_int);
             }
-            var tmp4 = value.FixLong;
-            if (tmp4 != 0)
+            tmp_long = value.FixLong;
+            if (tmp_long != 0)
             {
                 state.WriteFieldHeader(4, global::ProtoBuf.WireType.Fixed64);
-                state.WriteInt64(tmp4);
+                state.WriteInt64(tmp_long);
             }
-            var tmp5 = value.FixUInt;
-            if (tmp5 != 0)
+            tmp_uint = value.FixUInt;
+            if (tmp_uint != 0)
             {
                 state.WriteFieldHeader(5, global::ProtoBuf.WireType.Fixed32);
-                state.WriteUInt32(tmp5);
+                state.WriteUInt32(tmp_uint);
             }
-            var tmp6 = value.NullableZig;
-            if (tmp6.HasValue)
+            tmp_int_ = value.NullableZig;
+            if (tmp_int_.HasValue)
             {
-                var val6 = tmp6.GetValueOrDefault();
+                var val6 = tmp_int_.GetValueOrDefault();
                 state.WriteFieldHeader(6, global::ProtoBuf.WireType.SignedVarint);
                 state.WriteInt32(val6);
             }
-            var tmp7 = value.Plain;
-            if (tmp7 != 0)
+            tmp_int = value.Plain;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((7 << 3) | 0);  // Plain
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp7));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
-            var tmp20 = value.FarFixed;
-            if (tmp20 != 0)
+            tmp_int = value.FarFixed;
+            if (tmp_int != 0)
             {
                 state.WriteFieldHeader(20, global::ProtoBuf.WireType.Fixed32);
-                state.WriteInt32(tmp20);
+                state.WriteInt32(tmp_int);
             }
         }
 
@@ -631,26 +643,30 @@ partial class FormatsModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.ZigInt;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32(unchecked((uint)((tmp1 << 1) ^ (tmp1 >> 31))));  // ZigInt
-            var tmp2 = value.ZigLong;
-            if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)((tmp2 << 1) ^ (tmp2 >> 63))));  // ZigLong
-            var tmp3 = value.FixInt;
-            if (tmp3 != 0) len += 5;  // FixInt
-            var tmp4 = value.FixLong;
-            if (tmp4 != 0) len += 9;  // FixLong
-            var tmp5 = value.FixUInt;
-            if (tmp5 != 0) len += 5;  // FixUInt
-            var tmp6 = value.NullableZig;
-            if (tmp6.HasValue)
+            int tmp_int;
+            long tmp_long;
+            uint tmp_uint;
+            int? tmp_int_;
+            tmp_int = value.ZigInt;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32(unchecked((uint)((tmp_int << 1) ^ (tmp_int >> 31))));  // ZigInt
+            tmp_long = value.ZigLong;
+            if (tmp_long != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)((tmp_long << 1) ^ (tmp_long >> 63))));  // ZigLong
+            tmp_int = value.FixInt;
+            if (tmp_int != 0) len += 5;  // FixInt
+            tmp_long = value.FixLong;
+            if (tmp_long != 0) len += 9;  // FixLong
+            tmp_uint = value.FixUInt;
+            if (tmp_uint != 0) len += 5;  // FixUInt
+            tmp_int_ = value.NullableZig;
+            if (tmp_int_.HasValue)
             {
-                var val6 = tmp6.GetValueOrDefault();
+                var val6 = tmp_int_.GetValueOrDefault();
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32(unchecked((uint)((val6 << 1) ^ (val6 >> 31))));  // NullableZig
             }
-            var tmp7 = value.Plain;
-            if (tmp7 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp7));  // Plain
-            var tmp20 = value.FarFixed;
-            if (tmp20 != 0) len += 6;  // FarFixed
+            tmp_int = value.Plain;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Plain
+            tmp_int = value.FarFixed;
+            if (tmp_int != 0) len += 6;  // FarFixed
             return len;
         }
 
@@ -780,21 +796,23 @@ partial class FormatsModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long before = 0;
-            var tmp1 = value.Inner;
-            if (tmp1 != null)
+            global::AotFixtures.Formats.Sized tmp_AotFixtures_Formats_Sized;
+            int tmp_int;
+            tmp_AotFixtures_Formats_Sized = value.Inner;
+            if (tmp_AotFixtures_Formats_Sized != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Inner
                 var len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWrite_AotFixtures_Formats_Sized(ref state, tmp1, depth);
+                RawWrite_AotFixtures_Formats_Sized(ref state, tmp_AotFixtures_Formats_Sized, depth);
                 DebugAssertPosition(ref state, before + len, "Inner");
             }
-            var tmp2 = value.Tag;
-            if (tmp2 != 0)
+            tmp_int = value.Tag;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((2 << 3) | 0);  // Tag
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -802,16 +820,18 @@ partial class FormatsModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Inner;
-            if (tmp1 != null)
+            global::AotFixtures.Formats.Sized tmp_AotFixtures_Formats_Sized;
+            int tmp_int;
+            tmp_AotFixtures_Formats_Sized = value.Inner;
+            if (tmp_AotFixtures_Formats_Sized != null)
             {
                 var slot1 = slots.Reserve();
-                var sub = Measure_AotFixtures_Formats_Sized(tmp1, depth, slots, context);
+                var sub = Measure_AotFixtures_Formats_Sized(tmp_AotFixtures_Formats_Sized, depth, slots, context);
                 slots.Set(slot1, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Inner
             }
-            var tmp2 = value.Tag;
-            if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // Tag
+            tmp_int = value.Tag;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Tag
             return len;
         }
 

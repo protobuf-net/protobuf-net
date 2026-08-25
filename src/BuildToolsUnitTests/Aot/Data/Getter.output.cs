@@ -229,84 +229,96 @@ partial class GetterModel
             long len;
             long before = 0;
             var rawDepth = state.SyncRawDepth(depth);
-            var tmp1 = value.Numbers;
-            if (tmp1 != null)
+            global::System.Collections.Generic.List<int> tmp_System_Collections_Generic_List_int_;
+            global::System.Collections.Generic.Dictionary<int, string> tmp_System_Collections_Generic_Dictionary_int__string_;
+            global::AotFixtures.Getter.Nested tmp_AotFixtures_Getter_Nested;
+            int tmp_int;
+            string tmp_string;
+            byte[] tmp_byte__;
+            int? tmp_int_;
+            global::AotFixtures.Getter.Shade tmp_AotFixtures_Getter_Shade;
+            global::System.DateTime tmp_System_DateTime;
+            int[] tmp_int__;
+            global::AotFixtures.Getter.Point tmp_AotFixtures_Getter_Point;
+            global::AotFixtures.Getter.Point? tmp_AotFixtures_Getter_Point_;
+            tmp_System_Collections_Generic_List_int_ = value.Numbers;
+            if (tmp_System_Collections_Generic_List_int_ != null)
             {
-                foreach (var item1 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp1))
+                foreach (var item1 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_int_))
                 {
                     state.WriteRawTag((1 << 3) | 0);  // Numbers
                     state.WriteRawVarint64(unchecked((ulong)(long)item1));
                 }
             }
-            var tmp2 = value.Map;
-            if (tmp2 != null)
+            tmp_System_Collections_Generic_Dictionary_int__string_ = value.Map;
+            if (tmp_System_Collections_Generic_Dictionary_int__string_ != null)
             {
-                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, string>().WriteMap(ref state, 2, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp2, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, string>().WriteMap(ref state, 2, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp_System_Collections_Generic_Dictionary_int__string_, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
             }
-            var tmp3 = value.Child;
-            if (tmp3 != null)
+            tmp_AotFixtures_Getter_Nested = value.Child;
+            if (tmp_AotFixtures_Getter_Nested != null)
             {
                 state.WriteRawTag((3 << 3) | 2);  // Child
                 len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWrite_AotFixtures_Getter_Nested(ref state, tmp3, depth);
+                RawWrite_AotFixtures_Getter_Nested(ref state, tmp_AotFixtures_Getter_Nested, depth);
                 DebugAssertPosition(ref state, before + len, "Child");
             }
-            var tmp4 = value.Value;
-            if (tmp4 != 0)
+            tmp_int = value.Value;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((4 << 3) | 0);  // Value
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp4));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
-            var tmp5 = value.Text;
-            if (tmp5 != null)
+            tmp_string = value.Text;
+            if (tmp_string != null)
             {
                 state.WriteRawTag((5 << 3) | 2);  // Text
-                state.WriteRawString(tmp5);
+                state.WriteRawString(tmp_string);
             }
-            var tmp6 = value.Blob;
-            if (tmp6 != null)
+            tmp_byte__ = value.Blob;
+            if (tmp_byte__ != null)
             {
                 state.WriteRawTag((6 << 3) | 2);  // Blob
-                state.WriteRawBytes(tmp6);
+                state.WriteRawBytes(tmp_byte__);
             }
-            var tmp7 = value.Maybe;
-            if (tmp7.HasValue)
+            tmp_int_ = value.Maybe;
+            if (tmp_int_.HasValue)
             {
-                var val7 = tmp7.GetValueOrDefault();
+                var val7 = tmp_int_.GetValueOrDefault();
                 state.WriteRawTag((7 << 3) | 0);  // Maybe
                 state.WriteRawVarint64(unchecked((ulong)(long)val7));
             }
-            var tmp8 = value.Colour;
-            if (tmp8 != default(global::AotFixtures.Getter.Shade))
+            tmp_AotFixtures_Getter_Shade = value.Colour;
+            if (tmp_AotFixtures_Getter_Shade != default(global::AotFixtures.Getter.Shade))
             {
                 state.WriteRawTag((8 << 3) | 0);  // Colour
-                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp8));
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp_AotFixtures_Getter_Shade));
             }
-            var tmp9 = value.When;
+            tmp_System_DateTime = value.When;
             state.WriteFieldHeader(9, global::ProtoBuf.WireType.String);
-            global::ProtoBuf.BclHelpers.WriteDateTime(ref state, tmp9);
-            var tmp10 = value.Array;
-            if (tmp10 != null)
+            global::ProtoBuf.BclHelpers.WriteDateTime(ref state, tmp_System_DateTime);
+            tmp_int__ = value.Array;
+            if (tmp_int__ != null)
             {
-                foreach (var item10 in tmp10)
+                foreach (var item10 in tmp_int__)
                 {
                     state.WriteRawTag((10 << 3) | 0);  // Array
                     state.WriteRawVarint64(unchecked((ulong)(long)item10));
                 }
             }
-            var tmp11 = value.Where;
+            tmp_AotFixtures_Getter_Point = value.Where;
             state.WriteRawTag((11 << 3) | 2);  // Where
             len = state.RawSlots.Next();
             state.WriteRawVarint64((ulong)len);
             DebugCapturePosition(ref state, ref before);
-            RawWrite_AotFixtures_Getter_Point(ref state, tmp11, depth);
+            RawWrite_AotFixtures_Getter_Point(ref state, tmp_AotFixtures_Getter_Point, depth);
             DebugAssertPosition(ref state, before + len, "Where");
-            var tmp12 = value.Maybe2;
-            if (tmp12.HasValue)
+            tmp_AotFixtures_Getter_Point_ = value.Maybe2;
+            if (tmp_AotFixtures_Getter_Point_.HasValue)
             {
-                state.WriteMessage<global::AotFixtures.Getter.Point>(12, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp12.GetValueOrDefault(), Self);
+                state.WriteMessage<global::AotFixtures.Getter.Point>(12, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp_AotFixtures_Getter_Point_.GetValueOrDefault(), Self);
             }
             state.SyncRawDepth(rawDepth);
         }
@@ -316,18 +328,30 @@ partial class GetterModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             long sub;
-            var tmp1 = value.Numbers;
-            if (tmp1 != null)
+            global::System.Collections.Generic.List<int> tmp_System_Collections_Generic_List_int_;
+            global::System.Collections.Generic.Dictionary<int, string> tmp_System_Collections_Generic_Dictionary_int__string_;
+            global::AotFixtures.Getter.Nested tmp_AotFixtures_Getter_Nested;
+            int tmp_int;
+            string tmp_string;
+            byte[] tmp_byte__;
+            int? tmp_int_;
+            global::AotFixtures.Getter.Shade tmp_AotFixtures_Getter_Shade;
+            global::System.DateTime tmp_System_DateTime;
+            int[] tmp_int__;
+            global::AotFixtures.Getter.Point tmp_AotFixtures_Getter_Point;
+            global::AotFixtures.Getter.Point? tmp_AotFixtures_Getter_Point_;
+            tmp_System_Collections_Generic_List_int_ = value.Numbers;
+            if (tmp_System_Collections_Generic_List_int_ != null)
             {
-                foreach (var item1 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp1))
+                foreach (var item1 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_int_))
                 {
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)item1));
                 }
             }
-            var tmp2 = value.Map;
-            if (tmp2 != null)
+            tmp_System_Collections_Generic_Dictionary_int__string_ = value.Map;
+            if (tmp_System_Collections_Generic_Dictionary_int__string_ != null)
             {
-                foreach (var pair2 in tmp2)
+                foreach (var pair2 in tmp_System_Collections_Generic_Dictionary_int__string_)
                 {
                     long entry2 = 0;
                     if (pair2.Key != 0) entry2 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair2.Key));
@@ -335,54 +359,54 @@ partial class GetterModel
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)entry2) + entry2;  // Map
                 }
             }
-            var tmp3 = value.Child;
-            if (tmp3 != null)
+            tmp_AotFixtures_Getter_Nested = value.Child;
+            if (tmp_AotFixtures_Getter_Nested != null)
             {
                 var slot3 = slots.Reserve();
-                sub = Measure_AotFixtures_Getter_Nested(tmp3, depth, slots, context);
+                sub = Measure_AotFixtures_Getter_Nested(tmp_AotFixtures_Getter_Nested, depth, slots, context);
                 slots.Set(slot3, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Child
             }
-            var tmp4 = value.Value;
-            if (tmp4 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp4));  // Value
-            var tmp5 = value.Text;
-            if (tmp5 != null)
+            tmp_int = value.Value;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Value
+            tmp_string = value.Text;
+            if (tmp_string != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp5);  // Text
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Text
             }
-            var tmp6 = value.Blob;
-            if (tmp6 != null)
+            tmp_byte__ = value.Blob;
+            if (tmp_byte__ != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)tmp6.Length) + tmp6.Length;  // Blob
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)tmp_byte__.Length) + tmp_byte__.Length;  // Blob
             }
-            var tmp7 = value.Maybe;
-            if (tmp7.HasValue)
+            tmp_int_ = value.Maybe;
+            if (tmp_int_.HasValue)
             {
-                var val7 = tmp7.GetValueOrDefault();
+                var val7 = tmp_int_.GetValueOrDefault();
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)val7));  // Maybe
             }
-            var tmp8 = value.Colour;
-            if (tmp8 != default(global::AotFixtures.Getter.Shade)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp8));  // Colour
-            var tmp9 = value.When;
-            var bcl9 = global::ProtoBuf.BclHelpers.MeasureDateTime(tmp9);
+            tmp_AotFixtures_Getter_Shade = value.Colour;
+            if (tmp_AotFixtures_Getter_Shade != default(global::AotFixtures.Getter.Shade)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp_AotFixtures_Getter_Shade));  // Colour
+            tmp_System_DateTime = value.When;
+            var bcl9 = global::ProtoBuf.BclHelpers.MeasureDateTime(tmp_System_DateTime);
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bcl9) + bcl9;  // When
-            var tmp10 = value.Array;
-            if (tmp10 != null)
+            tmp_int__ = value.Array;
+            if (tmp_int__ != null)
             {
-                foreach (var item10 in tmp10)
+                foreach (var item10 in tmp_int__)
                 {
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)item10));
                 }
             }
-            var tmp11 = value.Where;
+            tmp_AotFixtures_Getter_Point = value.Where;
             var slot11 = slots.Reserve();
-            sub = Measure_AotFixtures_Getter_Point(tmp11, depth, slots, context);
+            sub = Measure_AotFixtures_Getter_Point(tmp_AotFixtures_Getter_Point, depth, slots, context);
             slots.Set(slot11, sub);
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Where
-            var tmp12 = value.Maybe2;
-            if (tmp12.HasValue)
+            tmp_AotFixtures_Getter_Point_ = value.Maybe2;
+            if (tmp_AotFixtures_Getter_Point_.HasValue)
             {
-                var val12 = tmp12.GetValueOrDefault();
+                var val12 = tmp_AotFixtures_Getter_Point_.GetValueOrDefault();
                 sub = Measure_AotFixtures_Getter_Point(val12, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Maybe2
             }
@@ -581,11 +605,12 @@ partial class GetterModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Id;
-            if (tmp1 != 0)
+            int tmp_int;
+            tmp_int = value.Id;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Id
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -593,8 +618,9 @@ partial class GetterModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Id;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Id
+            int tmp_int;
+            tmp_int = value.Id;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Id
             return len;
         }
 
@@ -666,11 +692,12 @@ partial class GetterModel
         public static void RawWrite_AotFixtures_Getter_Point(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Getter.Point value, int depth)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            var tmp1 = value.X;
-            if (tmp1 != 0)
+            int tmp_int;
+            tmp_int = value.X;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // X
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -678,8 +705,9 @@ partial class GetterModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.X;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // X
+            int tmp_int;
+            tmp_int = value.X;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // X
             return len;
         }
 

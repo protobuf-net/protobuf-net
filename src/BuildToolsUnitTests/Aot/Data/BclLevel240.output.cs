@@ -93,63 +93,71 @@ partial class BclLevel240Model
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.When;
+            global::System.DateTime tmp_System_DateTime;
+            global::System.TimeSpan tmp_System_TimeSpan;
+            global::System.DateTime? tmp_System_DateTime_;
+            global::System.TimeSpan? tmp_System_TimeSpan_;
+            tmp_System_DateTime = value.When;
             state.WriteFieldHeader(1, global::ProtoBuf.WireType.String);
-            global::ProtoBuf.BclHelpers.WriteTimestamp(ref state, tmp1);
-            var tmp2 = value.Took;
-            if (tmp2 != global::System.TimeSpan.Zero)
+            global::ProtoBuf.BclHelpers.WriteTimestamp(ref state, tmp_System_DateTime);
+            tmp_System_TimeSpan = value.Took;
+            if (tmp_System_TimeSpan != global::System.TimeSpan.Zero)
             {
                 state.WriteFieldHeader(2, global::ProtoBuf.WireType.String);
-                global::ProtoBuf.BclHelpers.WriteDuration(ref state, tmp2);
+                global::ProtoBuf.BclHelpers.WriteDuration(ref state, tmp_System_TimeSpan);
             }
-            var tmp3 = value.MaybeWhen;
-            if (tmp3.HasValue)
+            tmp_System_DateTime_ = value.MaybeWhen;
+            if (tmp_System_DateTime_.HasValue)
             {
-                var val3 = tmp3.GetValueOrDefault();
+                var val3 = tmp_System_DateTime_.GetValueOrDefault();
                 state.WriteFieldHeader(3, global::ProtoBuf.WireType.String);
                 global::ProtoBuf.BclHelpers.WriteTimestamp(ref state, val3);
             }
-            var tmp4 = value.MaybeTook;
-            if (tmp4.HasValue)
+            tmp_System_TimeSpan_ = value.MaybeTook;
+            if (tmp_System_TimeSpan_.HasValue)
             {
-                var val4 = tmp4.GetValueOrDefault();
+                var val4 = tmp_System_TimeSpan_.GetValueOrDefault();
                 state.WriteFieldHeader(4, global::ProtoBuf.WireType.String);
                 global::ProtoBuf.BclHelpers.WriteDuration(ref state, val4);
             }
-            var tmp5 = value.AlwaysTook;
+            tmp_System_TimeSpan = value.AlwaysTook;
             state.WriteFieldHeader(5, global::ProtoBuf.WireType.String);
-            global::ProtoBuf.BclHelpers.WriteDuration(ref state, tmp5);
+            global::ProtoBuf.BclHelpers.WriteDuration(ref state, tmp_System_TimeSpan);
         }
 
         private static long Measure_AotFixtures_BclLevel240_Level240(global::AotFixtures.BclLevel240.Level240 value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.When;
-            var bcl1 = global::ProtoBuf.BclHelpers.MeasureTimestamp(tmp1);
+            global::System.DateTime tmp_System_DateTime;
+            global::System.TimeSpan tmp_System_TimeSpan;
+            global::System.DateTime? tmp_System_DateTime_;
+            global::System.TimeSpan? tmp_System_TimeSpan_;
+            tmp_System_DateTime = value.When;
+            var bcl1 = global::ProtoBuf.BclHelpers.MeasureTimestamp(tmp_System_DateTime);
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bcl1) + bcl1;  // When
-            var tmp2 = value.Took;
-            if (tmp2 != global::System.TimeSpan.Zero)
+            tmp_System_TimeSpan = value.Took;
+            if (tmp_System_TimeSpan != global::System.TimeSpan.Zero)
             {
-                var bcl2 = global::ProtoBuf.BclHelpers.MeasureDuration(tmp2);
+                var bcl2 = global::ProtoBuf.BclHelpers.MeasureDuration(tmp_System_TimeSpan);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bcl2) + bcl2;  // Took
             }
-            var tmp3 = value.MaybeWhen;
-            if (tmp3.HasValue)
+            tmp_System_DateTime_ = value.MaybeWhen;
+            if (tmp_System_DateTime_.HasValue)
             {
-                var val3 = tmp3.GetValueOrDefault();
+                var val3 = tmp_System_DateTime_.GetValueOrDefault();
                 var bcl3 = global::ProtoBuf.BclHelpers.MeasureTimestamp(val3);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bcl3) + bcl3;  // MaybeWhen
             }
-            var tmp4 = value.MaybeTook;
-            if (tmp4.HasValue)
+            tmp_System_TimeSpan_ = value.MaybeTook;
+            if (tmp_System_TimeSpan_.HasValue)
             {
-                var val4 = tmp4.GetValueOrDefault();
+                var val4 = tmp_System_TimeSpan_.GetValueOrDefault();
                 var bcl4 = global::ProtoBuf.BclHelpers.MeasureDuration(val4);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bcl4) + bcl4;  // MaybeTook
             }
-            var tmp5 = value.AlwaysTook;
-            var bcl5 = global::ProtoBuf.BclHelpers.MeasureDuration(tmp5);
+            tmp_System_TimeSpan = value.AlwaysTook;
+            var bcl5 = global::ProtoBuf.BclHelpers.MeasureDuration(tmp_System_TimeSpan);
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bcl5) + bcl5;  // AlwaysTook
             return len;
         }

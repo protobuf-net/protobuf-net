@@ -435,11 +435,12 @@ partial class SurrogateModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             var surrogate = (global::AotFixtures.Surrogate.CodeSurrogate)value;
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(surrogate);
-            var tmp1 = surrogate.Value;
-            if (tmp1 != 0)
+            int tmp_int;
+            tmp_int = surrogate.Value;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Value
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -448,8 +449,9 @@ partial class SurrogateModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             var surrogate = (global::AotFixtures.Surrogate.CodeSurrogate)value;
             long len = 0;
-            var tmp1 = surrogate.Value;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
+            int tmp_int;
+            tmp_int = surrogate.Value;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Value
             return len;
         }
 
@@ -477,11 +479,12 @@ partial class SurrogateModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Value;
-            if (tmp1 != 0)
+            int tmp_int;
+            tmp_int = value.Value;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Value
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -489,8 +492,9 @@ partial class SurrogateModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Value;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
+            int tmp_int;
+            tmp_int = value.Value;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Value
             return len;
         }
 
@@ -559,34 +563,39 @@ partial class SurrogateModel
             long len;
             long before = 0;
             var rawDepth = state.SyncRawDepth(depth);
-            var tmp1 = value.Amount;
+            global::AotFixtures.Surrogate.Money tmp_AotFixtures_Surrogate_Money;
+            global::AotFixtures.Surrogate.Tag tmp_AotFixtures_Surrogate_Tag;
+            global::AotFixtures.Surrogate.Code tmp_AotFixtures_Surrogate_Code;
+            global::System.Collections.Generic.List<global::AotFixtures.Surrogate.Money> tmp_System_Collections_Generic_List_global__AotFixtures_Surrogate_Money_;
+            global::System.Collections.Generic.Dictionary<int, global::AotFixtures.Surrogate.Tag> tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_Surrogate_Tag_;
+            tmp_AotFixtures_Surrogate_Money = value.Amount;
             state.WriteRawTag((1 << 3) | 2);  // Amount
             len = state.RawSlots.Next();
             state.WriteRawVarint64((ulong)len);
             DebugCapturePosition(ref state, ref before);
-            RawWrite_AotFixtures_Surrogate_Money(ref state, tmp1, depth);
+            RawWrite_AotFixtures_Surrogate_Money(ref state, tmp_AotFixtures_Surrogate_Money, depth);
             DebugAssertPosition(ref state, before + len, "Amount");
-            var tmp2 = value.Label;
-            if (tmp2 != null)
+            tmp_AotFixtures_Surrogate_Tag = value.Label;
+            if (tmp_AotFixtures_Surrogate_Tag != null)
             {
                 state.WriteRawTag((2 << 3) | 2);  // Label
                 len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWrite_AotFixtures_Surrogate_Tag(ref state, tmp2, depth);
+                RawWrite_AotFixtures_Surrogate_Tag(ref state, tmp_AotFixtures_Surrogate_Tag, depth);
                 DebugAssertPosition(ref state, before + len, "Label");
             }
-            var tmp3 = value.Code;
+            tmp_AotFixtures_Surrogate_Code = value.Code;
             state.WriteRawTag((3 << 3) | 2);  // Code
             len = state.RawSlots.Next();
             state.WriteRawVarint64((ulong)len);
             DebugCapturePosition(ref state, ref before);
-            RawWrite_AotFixtures_Surrogate_Code(ref state, tmp3, depth);
+            RawWrite_AotFixtures_Surrogate_Code(ref state, tmp_AotFixtures_Surrogate_Code, depth);
             DebugAssertPosition(ref state, before + len, "Code");
-            var tmp4 = value.Amounts;
-            if (tmp4 != null)
+            tmp_System_Collections_Generic_List_global__AotFixtures_Surrogate_Money_ = value.Amounts;
+            if (tmp_System_Collections_Generic_List_global__AotFixtures_Surrogate_Money_ != null)
             {
-                foreach (var item4 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp4))
+                foreach (var item4 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_global__AotFixtures_Surrogate_Money_))
                 {
                     state.WriteRawTag((4 << 3) | 2);  // Amounts
                     len = state.RawSlots.Next();
@@ -596,10 +605,10 @@ partial class SurrogateModel
                     DebugAssertPosition(ref state, before + len, "Amounts");
                 }
             }
-            var tmp5 = value.Tags;
-            if (tmp5 != null)
+            tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_Surrogate_Tag_ = value.Tags;
+            if (tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_Surrogate_Tag_ != null)
             {
-                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::AotFixtures.Surrogate.Tag>().WriteMap(ref state, 5, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp5, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, null, Self);
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::AotFixtures.Surrogate.Tag>().WriteMap(ref state, 5, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_Surrogate_Tag_, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, null, Self);
             }
             state.SyncRawDepth(rawDepth);
         }
@@ -609,28 +618,33 @@ partial class SurrogateModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             long sub;
-            var tmp1 = value.Amount;
+            global::AotFixtures.Surrogate.Money tmp_AotFixtures_Surrogate_Money;
+            global::AotFixtures.Surrogate.Tag tmp_AotFixtures_Surrogate_Tag;
+            global::AotFixtures.Surrogate.Code tmp_AotFixtures_Surrogate_Code;
+            global::System.Collections.Generic.List<global::AotFixtures.Surrogate.Money> tmp_System_Collections_Generic_List_global__AotFixtures_Surrogate_Money_;
+            global::System.Collections.Generic.Dictionary<int, global::AotFixtures.Surrogate.Tag> tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_Surrogate_Tag_;
+            tmp_AotFixtures_Surrogate_Money = value.Amount;
             var slot1 = slots.Reserve();
-            sub = Measure_AotFixtures_Surrogate_Money(tmp1, depth, slots, context);
+            sub = Measure_AotFixtures_Surrogate_Money(tmp_AotFixtures_Surrogate_Money, depth, slots, context);
             slots.Set(slot1, sub);
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Amount
-            var tmp2 = value.Label;
-            if (tmp2 != null)
+            tmp_AotFixtures_Surrogate_Tag = value.Label;
+            if (tmp_AotFixtures_Surrogate_Tag != null)
             {
                 var slot2 = slots.Reserve();
-                sub = Measure_AotFixtures_Surrogate_Tag(tmp2, depth, slots, context);
+                sub = Measure_AotFixtures_Surrogate_Tag(tmp_AotFixtures_Surrogate_Tag, depth, slots, context);
                 slots.Set(slot2, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Label
             }
-            var tmp3 = value.Code;
+            tmp_AotFixtures_Surrogate_Code = value.Code;
             var slot3 = slots.Reserve();
-            sub = Measure_AotFixtures_Surrogate_Code(tmp3, depth, slots, context);
+            sub = Measure_AotFixtures_Surrogate_Code(tmp_AotFixtures_Surrogate_Code, depth, slots, context);
             slots.Set(slot3, sub);
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Code
-            var tmp4 = value.Amounts;
-            if (tmp4 != null)
+            tmp_System_Collections_Generic_List_global__AotFixtures_Surrogate_Money_ = value.Amounts;
+            if (tmp_System_Collections_Generic_List_global__AotFixtures_Surrogate_Money_ != null)
             {
-                foreach (var item4 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp4))
+                foreach (var item4 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_global__AotFixtures_Surrogate_Money_))
                 {
                     var slot4 = slots.Reserve();
                     sub = Measure_AotFixtures_Surrogate_Money(item4, depth, slots, context);
@@ -638,10 +652,10 @@ partial class SurrogateModel
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
-            var tmp5 = value.Tags;
-            if (tmp5 != null)
+            tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_Surrogate_Tag_ = value.Tags;
+            if (tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_Surrogate_Tag_ != null)
             {
-                foreach (var pair5 in tmp5)
+                foreach (var pair5 in tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_Surrogate_Tag_)
                 {
                     long entry5 = 0;
                     if (pair5.Key != 0) entry5 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair5.Key));
@@ -783,11 +797,12 @@ partial class SurrogateModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             var surrogate = (global::AotFixtures.Surrogate.MoneySurrogate)value;
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(surrogate);
-            var tmp1 = surrogate.Units;
-            if (tmp1 != 0)
+            long tmp_long;
+            tmp_long = surrogate.Units;
+            if (tmp_long != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Units
-                state.WriteRawVarint64(unchecked((ulong)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)tmp_long));
             }
         }
 
@@ -796,8 +811,9 @@ partial class SurrogateModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             var surrogate = (global::AotFixtures.Surrogate.MoneySurrogate)value;
             long len = 0;
-            var tmp1 = surrogate.Units;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)tmp1));  // Units
+            long tmp_long;
+            tmp_long = surrogate.Units;
+            if (tmp_long != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)tmp_long));  // Units
             return len;
         }
 
@@ -825,11 +841,12 @@ partial class SurrogateModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Units;
-            if (tmp1 != 0)
+            long tmp_long;
+            tmp_long = value.Units;
+            if (tmp_long != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Units
-                state.WriteRawVarint64(unchecked((ulong)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)tmp_long));
             }
         }
 
@@ -837,8 +854,9 @@ partial class SurrogateModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Units;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)tmp1));  // Units
+            long tmp_long;
+            tmp_long = value.Units;
+            if (tmp_long != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)tmp_long));  // Units
             return len;
         }
 
@@ -916,11 +934,12 @@ partial class SurrogateModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             var surrogate = (global::AotFixtures.Surrogate.TagSurrogate)value;
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(surrogate);
-            var tmp1 = surrogate.Text;
-            if (tmp1 != null)
+            string tmp_string;
+            tmp_string = surrogate.Text;
+            if (tmp_string != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Text
-                state.WriteRawString(tmp1);
+                state.WriteRawString(tmp_string);
             }
         }
 
@@ -929,10 +948,11 @@ partial class SurrogateModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             var surrogate = (global::AotFixtures.Surrogate.TagSurrogate)value;
             long len = 0;
-            var tmp1 = surrogate.Text;
-            if (tmp1 != null)
+            string tmp_string;
+            tmp_string = surrogate.Text;
+            if (tmp_string != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // Text
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Text
             }
             return len;
         }
@@ -961,11 +981,12 @@ partial class SurrogateModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Text;
-            if (tmp1 != null)
+            string tmp_string;
+            tmp_string = value.Text;
+            if (tmp_string != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Text
-                state.WriteRawString(tmp1);
+                state.WriteRawString(tmp_string);
             }
         }
 
@@ -973,10 +994,11 @@ partial class SurrogateModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Text;
-            if (tmp1 != null)
+            string tmp_string;
+            tmp_string = value.Text;
+            if (tmp_string != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // Text
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Text
             }
             return len;
         }

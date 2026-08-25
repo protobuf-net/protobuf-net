@@ -101,23 +101,26 @@ partial class EnumContractModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Shade;
-            if (tmp1 != default(global::AotFixtures.EnumContract.Shade))
+            global::AotFixtures.EnumContract.Shade tmp_AotFixtures_EnumContract_Shade;
+            global::AotFixtures.EnumContract.Size tmp_AotFixtures_EnumContract_Size;
+            global::AotFixtures.EnumContract.Options tmp_AotFixtures_EnumContract_Options;
+            tmp_AotFixtures_EnumContract_Shade = value.Shade;
+            if (tmp_AotFixtures_EnumContract_Shade != default(global::AotFixtures.EnumContract.Shade))
             {
                 state.WriteRawTag((1 << 3) | 0);  // Shade
-                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp_AotFixtures_EnumContract_Shade));
             }
-            var tmp2 = value.Size;
-            if (tmp2 != default(global::AotFixtures.EnumContract.Size))
+            tmp_AotFixtures_EnumContract_Size = value.Size;
+            if (tmp_AotFixtures_EnumContract_Size != default(global::AotFixtures.EnumContract.Size))
             {
                 state.WriteRawTag((2 << 3) | 0);  // Size
-                state.WriteRawVarint32((byte)tmp2);
+                state.WriteRawVarint32((byte)tmp_AotFixtures_EnumContract_Size);
             }
-            var tmp3 = value.Options;
-            if (tmp3 != default(global::AotFixtures.EnumContract.Options))
+            tmp_AotFixtures_EnumContract_Options = value.Options;
+            if (tmp_AotFixtures_EnumContract_Options != default(global::AotFixtures.EnumContract.Options))
             {
                 state.WriteRawTag((3 << 3) | 0);  // Options
-                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp3));
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp_AotFixtures_EnumContract_Options));
             }
         }
 
@@ -125,12 +128,15 @@ partial class EnumContractModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Shade;
-            if (tmp1 != default(global::AotFixtures.EnumContract.Shade)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp1));  // Shade
-            var tmp2 = value.Size;
-            if (tmp2 != default(global::AotFixtures.EnumContract.Size)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((byte)tmp2);  // Size
-            var tmp3 = value.Options;
-            if (tmp3 != default(global::AotFixtures.EnumContract.Options)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp3));  // Options
+            global::AotFixtures.EnumContract.Shade tmp_AotFixtures_EnumContract_Shade;
+            global::AotFixtures.EnumContract.Size tmp_AotFixtures_EnumContract_Size;
+            global::AotFixtures.EnumContract.Options tmp_AotFixtures_EnumContract_Options;
+            tmp_AotFixtures_EnumContract_Shade = value.Shade;
+            if (tmp_AotFixtures_EnumContract_Shade != default(global::AotFixtures.EnumContract.Shade)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp_AotFixtures_EnumContract_Shade));  // Shade
+            tmp_AotFixtures_EnumContract_Size = value.Size;
+            if (tmp_AotFixtures_EnumContract_Size != default(global::AotFixtures.EnumContract.Size)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((byte)tmp_AotFixtures_EnumContract_Size);  // Size
+            tmp_AotFixtures_EnumContract_Options = value.Options;
+            if (tmp_AotFixtures_EnumContract_Options != default(global::AotFixtures.EnumContract.Options)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp_AotFixtures_EnumContract_Options));  // Options
             return len;
         }
 

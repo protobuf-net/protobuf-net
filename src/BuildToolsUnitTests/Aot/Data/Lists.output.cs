@@ -190,17 +190,19 @@ partial class ListsModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Value;
-            if (tmp1 != 0)
+            int tmp_int;
+            string tmp_string;
+            tmp_int = value.Value;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Value
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
-            var tmp2 = value.Label;
-            if (tmp2 != null)
+            tmp_string = value.Label;
+            if (tmp_string != null)
             {
                 state.WriteRawTag((2 << 3) | 2);  // Label
-                state.WriteRawString(tmp2);
+                state.WriteRawString(tmp_string);
             }
         }
 
@@ -208,12 +210,14 @@ partial class ListsModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Value;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
-            var tmp2 = value.Label;
-            if (tmp2 != null)
+            int tmp_int;
+            string tmp_string;
+            tmp_int = value.Value;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Value
+            tmp_string = value.Label;
+            if (tmp_string != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // Label
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Label
             }
             return len;
         }
@@ -288,75 +292,88 @@ partial class ListsModel
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long len;
             long before = 0;
-            var tmp1 = value.Int32Array;
-            if (tmp1 != null)
+            int[] tmp_int__;
+            global::System.Collections.Generic.List<int> tmp_System_Collections_Generic_List_int_;
+            double[] tmp_double__;
+            float[] tmp_float__;
+            global::System.Collections.Generic.List<bool> tmp_System_Collections_Generic_List_bool_;
+            string[] tmp_string__;
+            global::System.Collections.Generic.List<string> tmp_System_Collections_Generic_List_string_;
+            global::System.Collections.Generic.List<global::AotFixtures.Lists.Inner> tmp_System_Collections_Generic_List_global__AotFixtures_Lists_Inner_;
+            global::AotFixtures.Lists.Inner[] tmp_AotFixtures_Lists_Inner__;
+            int tmp_int;
+            global::System.Collections.Generic.List<global::AotFixtures.Lists.Colour> tmp_System_Collections_Generic_List_global__AotFixtures_Lists_Colour_;
+            global::AotFixtures.Lists.Small[] tmp_AotFixtures_Lists_Small__;
+            global::AotFixtures.Lists.Colour tmp_AotFixtures_Lists_Colour;
+            tmp_int__ = value.Int32Array;
+            if (tmp_int__ != null)
             {
-                foreach (var item1 in tmp1)
+                foreach (var item1 in tmp_int__)
                 {
                     state.WriteRawTag((1 << 3) | 0);  // Int32Array
                     state.WriteRawVarint64(unchecked((ulong)(long)item1));
                 }
             }
-            var tmp2 = value.Int32List;
-            if (tmp2 != null)
+            tmp_System_Collections_Generic_List_int_ = value.Int32List;
+            if (tmp_System_Collections_Generic_List_int_ != null)
             {
-                foreach (var item2 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp2))
+                foreach (var item2 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_int_))
                 {
                     state.WriteRawTag((2 << 3) | 0);  // Int32List
                     state.WriteRawVarint64(unchecked((ulong)(long)item2));
                 }
             }
-            var tmp3 = value.DoubleArray;
-            if (tmp3 != null)
+            tmp_double__ = value.DoubleArray;
+            if (tmp_double__ != null)
             {
-                foreach (var item3 in tmp3)
+                foreach (var item3 in tmp_double__)
                 {
                     state.WriteRawTag((3 << 3) | 1);  // DoubleArray
                     state.WriteRawDouble(item3);
                 }
             }
-            var tmp4 = value.SingleArray;
-            if (tmp4 != null)
+            tmp_float__ = value.SingleArray;
+            if (tmp_float__ != null)
             {
-                foreach (var item4 in tmp4)
+                foreach (var item4 in tmp_float__)
                 {
                     state.WriteRawTag((4 << 3) | 5);  // SingleArray
                     state.WriteRawSingle(item4);
                 }
             }
-            var tmp5 = value.BoolList;
-            if (tmp5 != null)
+            tmp_System_Collections_Generic_List_bool_ = value.BoolList;
+            if (tmp_System_Collections_Generic_List_bool_ != null)
             {
-                foreach (var item5 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp5))
+                foreach (var item5 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_bool_))
                 {
                     state.WriteRawTag((5 << 3) | 0);  // BoolList
                     state.WriteRawVarint32(item5 ? 1u : 0u);
                 }
             }
-            var tmp6 = value.StringArray;
-            if (tmp6 != null)
+            tmp_string__ = value.StringArray;
+            if (tmp_string__ != null)
             {
-                foreach (var item6 in tmp6)
+                foreach (var item6 in tmp_string__)
                 {
                     if (item6 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<string>();
                     state.WriteRawTag((6 << 3) | 2);  // StringArray
                     state.WriteRawString(item6);
                 }
             }
-            var tmp7 = value.StringList;
-            if (tmp7 != null)
+            tmp_System_Collections_Generic_List_string_ = value.StringList;
+            if (tmp_System_Collections_Generic_List_string_ != null)
             {
-                foreach (var item7 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp7))
+                foreach (var item7 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_string_))
                 {
                     if (item7 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<string>();
                     state.WriteRawTag((7 << 3) | 2);  // StringList
                     state.WriteRawString(item7);
                 }
             }
-            var tmp9 = value.Messages;
-            if (tmp9 != null)
+            tmp_System_Collections_Generic_List_global__AotFixtures_Lists_Inner_ = value.Messages;
+            if (tmp_System_Collections_Generic_List_global__AotFixtures_Lists_Inner_ != null)
             {
-                foreach (var item9 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp9))
+                foreach (var item9 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_global__AotFixtures_Lists_Inner_))
                 {
                     if (item9 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.Lists.Inner>();
                     state.WriteRawTag((9 << 3) | 2);  // Messages
@@ -367,10 +384,10 @@ partial class ListsModel
                     DebugAssertPosition(ref state, before + len, "Messages");
                 }
             }
-            var tmp10 = value.MessageArray;
-            if (tmp10 != null)
+            tmp_AotFixtures_Lists_Inner__ = value.MessageArray;
+            if (tmp_AotFixtures_Lists_Inner__ != null)
             {
-                foreach (var item10 in tmp10)
+                foreach (var item10 in tmp_AotFixtures_Lists_Inner__)
                 {
                     if (item10 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.Lists.Inner>();
                     state.WriteRawTag((10 << 3) | 2);  // MessageArray
@@ -381,35 +398,35 @@ partial class ListsModel
                     DebugAssertPosition(ref state, before + len, "MessageArray");
                 }
             }
-            var tmp11 = value.Scalar;
-            if (tmp11 != 0)
+            tmp_int = value.Scalar;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((11 << 3) | 0);  // Scalar
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp11));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
-            var tmp12 = value.Colours;
-            if (tmp12 != null)
+            tmp_System_Collections_Generic_List_global__AotFixtures_Lists_Colour_ = value.Colours;
+            if (tmp_System_Collections_Generic_List_global__AotFixtures_Lists_Colour_ != null)
             {
-                foreach (var item12 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp12))
+                foreach (var item12 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_global__AotFixtures_Lists_Colour_))
                 {
                     state.WriteRawTag((12 << 3) | 0);  // Colours
                     state.WriteRawVarint64(unchecked((ulong)(long)(int)item12));
                 }
             }
-            var tmp13 = value.Smalls;
-            if (tmp13 != null)
+            tmp_AotFixtures_Lists_Small__ = value.Smalls;
+            if (tmp_AotFixtures_Lists_Small__ != null)
             {
-                foreach (var item13 in tmp13)
+                foreach (var item13 in tmp_AotFixtures_Lists_Small__)
                 {
                     state.WriteRawTag((13 << 3) | 0);  // Smalls
                     state.WriteRawVarint32((byte)item13);
                 }
             }
-            var tmp14 = value.SingleColour;
-            if (tmp14 != default(global::AotFixtures.Lists.Colour))
+            tmp_AotFixtures_Lists_Colour = value.SingleColour;
+            if (tmp_AotFixtures_Lists_Colour != default(global::AotFixtures.Lists.Colour))
             {
                 state.WriteRawTag((14 << 3) | 0);  // SingleColour
-                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp14));
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp_AotFixtures_Lists_Colour));
             }
         }
 
@@ -418,59 +435,72 @@ partial class ListsModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             long sub;
-            var tmp1 = value.Int32Array;
-            if (tmp1 != null)
+            int[] tmp_int__;
+            global::System.Collections.Generic.List<int> tmp_System_Collections_Generic_List_int_;
+            double[] tmp_double__;
+            float[] tmp_float__;
+            global::System.Collections.Generic.List<bool> tmp_System_Collections_Generic_List_bool_;
+            string[] tmp_string__;
+            global::System.Collections.Generic.List<string> tmp_System_Collections_Generic_List_string_;
+            global::System.Collections.Generic.List<global::AotFixtures.Lists.Inner> tmp_System_Collections_Generic_List_global__AotFixtures_Lists_Inner_;
+            global::AotFixtures.Lists.Inner[] tmp_AotFixtures_Lists_Inner__;
+            int tmp_int;
+            global::System.Collections.Generic.List<global::AotFixtures.Lists.Colour> tmp_System_Collections_Generic_List_global__AotFixtures_Lists_Colour_;
+            global::AotFixtures.Lists.Small[] tmp_AotFixtures_Lists_Small__;
+            global::AotFixtures.Lists.Colour tmp_AotFixtures_Lists_Colour;
+            tmp_int__ = value.Int32Array;
+            if (tmp_int__ != null)
             {
-                foreach (var item1 in tmp1)
+                foreach (var item1 in tmp_int__)
                 {
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)item1));
                 }
             }
-            var tmp2 = value.Int32List;
-            if (tmp2 != null)
+            tmp_System_Collections_Generic_List_int_ = value.Int32List;
+            if (tmp_System_Collections_Generic_List_int_ != null)
             {
-                foreach (var item2 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp2))
+                foreach (var item2 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_int_))
                 {
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)item2));
                 }
             }
-            var tmp3 = value.DoubleArray;
-            if (tmp3 != null)
+            tmp_double__ = value.DoubleArray;
+            if (tmp_double__ != null)
             {
-                len += tmp3.Length * 9L;  // DoubleArray
+                len += tmp_double__.Length * 9L;  // DoubleArray
             }
-            var tmp4 = value.SingleArray;
-            if (tmp4 != null)
+            tmp_float__ = value.SingleArray;
+            if (tmp_float__ != null)
             {
-                len += tmp4.Length * 5L;  // SingleArray
+                len += tmp_float__.Length * 5L;  // SingleArray
             }
-            var tmp5 = value.BoolList;
-            if (tmp5 != null)
+            tmp_System_Collections_Generic_List_bool_ = value.BoolList;
+            if (tmp_System_Collections_Generic_List_bool_ != null)
             {
-                len += tmp5.Count * 2L;  // BoolList
+                len += tmp_System_Collections_Generic_List_bool_.Count * 2L;  // BoolList
             }
-            var tmp6 = value.StringArray;
-            if (tmp6 != null)
+            tmp_string__ = value.StringArray;
+            if (tmp_string__ != null)
             {
-                foreach (var item6 in tmp6)
+                foreach (var item6 in tmp_string__)
                 {
                     if (item6 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<string>();
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(item6);
                 }
             }
-            var tmp7 = value.StringList;
-            if (tmp7 != null)
+            tmp_System_Collections_Generic_List_string_ = value.StringList;
+            if (tmp_System_Collections_Generic_List_string_ != null)
             {
-                foreach (var item7 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp7))
+                foreach (var item7 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_string_))
                 {
                     if (item7 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<string>();
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(item7);
                 }
             }
-            var tmp9 = value.Messages;
-            if (tmp9 != null)
+            tmp_System_Collections_Generic_List_global__AotFixtures_Lists_Inner_ = value.Messages;
+            if (tmp_System_Collections_Generic_List_global__AotFixtures_Lists_Inner_ != null)
             {
-                foreach (var item9 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp9))
+                foreach (var item9 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_global__AotFixtures_Lists_Inner_))
                 {
                     if (item9 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.Lists.Inner>();
                     var slot9 = slots.Reserve();
@@ -479,10 +509,10 @@ partial class ListsModel
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
-            var tmp10 = value.MessageArray;
-            if (tmp10 != null)
+            tmp_AotFixtures_Lists_Inner__ = value.MessageArray;
+            if (tmp_AotFixtures_Lists_Inner__ != null)
             {
-                foreach (var item10 in tmp10)
+                foreach (var item10 in tmp_AotFixtures_Lists_Inner__)
                 {
                     if (item10 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.Lists.Inner>();
                     var slot10 = slots.Reserve();
@@ -491,26 +521,26 @@ partial class ListsModel
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
-            var tmp11 = value.Scalar;
-            if (tmp11 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp11));  // Scalar
-            var tmp12 = value.Colours;
-            if (tmp12 != null)
+            tmp_int = value.Scalar;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Scalar
+            tmp_System_Collections_Generic_List_global__AotFixtures_Lists_Colour_ = value.Colours;
+            if (tmp_System_Collections_Generic_List_global__AotFixtures_Lists_Colour_ != null)
             {
-                foreach (var item12 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp12))
+                foreach (var item12 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_global__AotFixtures_Lists_Colour_))
                 {
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)item12));
                 }
             }
-            var tmp13 = value.Smalls;
-            if (tmp13 != null)
+            tmp_AotFixtures_Lists_Small__ = value.Smalls;
+            if (tmp_AotFixtures_Lists_Small__ != null)
             {
-                foreach (var item13 in tmp13)
+                foreach (var item13 in tmp_AotFixtures_Lists_Small__)
                 {
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((byte)item13);
                 }
             }
-            var tmp14 = value.SingleColour;
-            if (tmp14 != default(global::AotFixtures.Lists.Colour)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp14));  // SingleColour
+            tmp_AotFixtures_Lists_Colour = value.SingleColour;
+            if (tmp_AotFixtures_Lists_Colour != default(global::AotFixtures.Lists.Colour)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp_AotFixtures_Lists_Colour));  // SingleColour
             return len;
         }
 

@@ -95,70 +95,81 @@ partial class ScalarsModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Bool;
-            if (tmp1)
+            bool tmp_bool;
+            sbyte tmp_sbyte;
+            byte tmp_byte;
+            short tmp_short;
+            ushort tmp_ushort;
+            int tmp_int;
+            uint tmp_uint;
+            long tmp_long;
+            ulong tmp_ulong;
+            float tmp_float;
+            double tmp_double;
+            tmp_bool = value.Bool;
+            if (tmp_bool)
             {
-                state.WriteRawTagBool((1 << 3) | 0, tmp1);  // Bool
+                state.WriteRawTagBool((1 << 3) | 0, tmp_bool);  // Bool
             }
-            var tmp2 = value.SByte;
-            if (tmp2 != 0)
+            tmp_sbyte = value.SByte;
+            if (tmp_sbyte != 0)
             {
                 state.WriteRawTag((2 << 3) | 0);  // SByte
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_sbyte));
             }
-            var tmp3 = value.Byte;
-            if (tmp3 != 0)
+            tmp_byte = value.Byte;
+            if (tmp_byte != 0)
             {
                 state.WriteRawTag((3 << 3) | 0);  // Byte
-                state.WriteRawVarint32(tmp3);
+                state.WriteRawVarint32(tmp_byte);
             }
-            var tmp4 = value.Int16;
-            if (tmp4 != 0)
+            tmp_short = value.Int16;
+            if (tmp_short != 0)
             {
                 state.WriteRawTag((4 << 3) | 0);  // Int16
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp4));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_short));
             }
-            var tmp5 = value.UInt16;
-            if (tmp5 != 0)
+            tmp_ushort = value.UInt16;
+            if (tmp_ushort != 0)
             {
                 state.WriteRawTag((5 << 3) | 0);  // UInt16
-                state.WriteRawVarint32(tmp5);
+                state.WriteRawVarint32(tmp_ushort);
             }
-            var tmp6 = value.Int32;
-            if (tmp6 != 0)
+            tmp_int = value.Int32;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((6 << 3) | 0);  // Int32
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp6));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
-            var tmp7 = value.UInt32;
-            if (tmp7 != 0)
+            tmp_uint = value.UInt32;
+            if (tmp_uint != 0)
             {
                 state.WriteRawTag((7 << 3) | 0);  // UInt32
-                state.WriteRawVarint32(tmp7);
+                state.WriteRawVarint32(tmp_uint);
             }
-            var tmp8 = value.Int64;
-            if (tmp8 != 0)
+            tmp_long = value.Int64;
+            if (tmp_long != 0)
             {
                 state.WriteRawTag((8 << 3) | 0);  // Int64
-                state.WriteRawVarint64(unchecked((ulong)tmp8));
+                state.WriteRawVarint64(unchecked((ulong)tmp_long));
             }
-            var tmp9 = value.UInt64;
-            if (tmp9 != 0)
+            tmp_ulong = value.UInt64;
+            if (tmp_ulong != 0)
             {
                 state.WriteRawTag((9 << 3) | 0);  // UInt64
-                state.WriteRawVarint64(tmp9);
+                state.WriteRawVarint64(tmp_ulong);
             }
-            var tmp10 = value.Single;
-            if (tmp10 != 0f)
+            tmp_float = value.Single;
+            if (tmp_float != 0f)
             {
                 state.WriteRawTag((10 << 3) | 5);  // Single
-                state.WriteRawSingle(tmp10);
+                state.WriteRawSingle(tmp_float);
             }
-            var tmp11 = value.Double;
-            if (tmp11 != 0d)
+            tmp_double = value.Double;
+            if (tmp_double != 0d)
             {
                 state.WriteRawTag((11 << 3) | 1);  // Double
-                state.WriteRawDouble(tmp11);
+                state.WriteRawDouble(tmp_double);
             }
         }
 
@@ -166,28 +177,39 @@ partial class ScalarsModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Bool;
-            if (tmp1) len += 2;  // Bool
-            var tmp2 = value.SByte;
-            if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // SByte
-            var tmp3 = value.Byte;
-            if (tmp3 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32(tmp3);  // Byte
-            var tmp4 = value.Int16;
-            if (tmp4 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp4));  // Int16
-            var tmp5 = value.UInt16;
-            if (tmp5 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32(tmp5);  // UInt16
-            var tmp6 = value.Int32;
-            if (tmp6 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp6));  // Int32
-            var tmp7 = value.UInt32;
-            if (tmp7 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32(tmp7);  // UInt32
-            var tmp8 = value.Int64;
-            if (tmp8 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)tmp8));  // Int64
-            var tmp9 = value.UInt64;
-            if (tmp9 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(tmp9);  // UInt64
-            var tmp10 = value.Single;
-            if (tmp10 != 0f) len += 5;  // Single
-            var tmp11 = value.Double;
-            if (tmp11 != 0d) len += 9;  // Double
+            bool tmp_bool;
+            sbyte tmp_sbyte;
+            byte tmp_byte;
+            short tmp_short;
+            ushort tmp_ushort;
+            int tmp_int;
+            uint tmp_uint;
+            long tmp_long;
+            ulong tmp_ulong;
+            float tmp_float;
+            double tmp_double;
+            tmp_bool = value.Bool;
+            if (tmp_bool) len += 2;  // Bool
+            tmp_sbyte = value.SByte;
+            if (tmp_sbyte != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_sbyte));  // SByte
+            tmp_byte = value.Byte;
+            if (tmp_byte != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32(tmp_byte);  // Byte
+            tmp_short = value.Int16;
+            if (tmp_short != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_short));  // Int16
+            tmp_ushort = value.UInt16;
+            if (tmp_ushort != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32(tmp_ushort);  // UInt16
+            tmp_int = value.Int32;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Int32
+            tmp_uint = value.UInt32;
+            if (tmp_uint != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32(tmp_uint);  // UInt32
+            tmp_long = value.Int64;
+            if (tmp_long != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)tmp_long));  // Int64
+            tmp_ulong = value.UInt64;
+            if (tmp_ulong != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(tmp_ulong);  // UInt64
+            tmp_float = value.Single;
+            if (tmp_float != 0f) len += 5;  // Single
+            tmp_double = value.Double;
+            if (tmp_double != 0d) len += 9;  // Double
             return len;
         }
 

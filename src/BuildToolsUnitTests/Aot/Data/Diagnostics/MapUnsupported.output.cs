@@ -249,10 +249,11 @@ partial class MapUnsupportedModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var rawDepth = state.SyncRawDepth(depth);
-            var tmp1 = value.Value;
-            if (tmp1 != null)
+            global::System.Collections.Generic.Dictionary<global::AotFixtures.MapUnsupported.Shade, int> tmp_System_Collections_Generic_Dictionary_global__AotFixtures_MapUnsupported_Shade__int_;
+            tmp_System_Collections_Generic_Dictionary_global__AotFixtures_MapUnsupported_Shade__int_ = value.Value;
+            if (tmp_System_Collections_Generic_Dictionary_global__AotFixtures_MapUnsupported_Shade__int_ != null)
             {
-                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<global::AotFixtures.MapUnsupported.Shade, int>().WriteMap(ref state, 1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<global::AotFixtures.MapUnsupported.Shade, int>().WriteMap(ref state, 1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp_System_Collections_Generic_Dictionary_global__AotFixtures_MapUnsupported_Shade__int_, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
             }
             state.SyncRawDepth(rawDepth);
         }
@@ -261,10 +262,11 @@ partial class MapUnsupportedModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Value;
-            if (tmp1 != null)
+            global::System.Collections.Generic.Dictionary<global::AotFixtures.MapUnsupported.Shade, int> tmp_System_Collections_Generic_Dictionary_global__AotFixtures_MapUnsupported_Shade__int_;
+            tmp_System_Collections_Generic_Dictionary_global__AotFixtures_MapUnsupported_Shade__int_ = value.Value;
+            if (tmp_System_Collections_Generic_Dictionary_global__AotFixtures_MapUnsupported_Shade__int_ != null)
             {
-                foreach (var pair1 in tmp1)
+                foreach (var pair1 in tmp_System_Collections_Generic_Dictionary_global__AotFixtures_MapUnsupported_Shade__int_)
                 {
                     long entry1 = 0;
                     entry1 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)pair1.Key));
@@ -365,10 +367,11 @@ partial class MapUnsupportedModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var rawDepth = state.SyncRawDepth(depth);
-            var tmp1 = value.Value;
-            if (tmp1 != null)
+            global::System.Collections.Generic.Dictionary<int, global::AotFixtures.MapUnsupported.Shade> tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_MapUnsupported_Shade_;
+            tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_MapUnsupported_Shade_ = value.Value;
+            if (tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_MapUnsupported_Shade_ != null)
             {
-                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::AotFixtures.MapUnsupported.Shade>().WriteMap(ref state, 1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::AotFixtures.MapUnsupported.Shade>().WriteMap(ref state, 1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_MapUnsupported_Shade_, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
             }
             state.SyncRawDepth(rawDepth);
         }
@@ -377,10 +380,11 @@ partial class MapUnsupportedModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Value;
-            if (tmp1 != null)
+            global::System.Collections.Generic.Dictionary<int, global::AotFixtures.MapUnsupported.Shade> tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_MapUnsupported_Shade_;
+            tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_MapUnsupported_Shade_ = value.Value;
+            if (tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_MapUnsupported_Shade_ != null)
             {
-                foreach (var pair1 in tmp1)
+                foreach (var pair1 in tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_MapUnsupported_Shade_)
                 {
                     long entry1 = 0;
                     if (pair1.Key != 0) entry1 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair1.Key));
@@ -476,10 +480,11 @@ partial class MapUnsupportedModel
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapUnsupported.MappedEnum>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.MapUnsupported.MappedEnum value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Value;
-            if (tmp1 != null)
+            global::System.Collections.Generic.Dictionary<global::AotFixtures.MapUnsupported.Shade, int> tmp_System_Collections_Generic_Dictionary_global__AotFixtures_MapUnsupported_Shade__int_;
+            tmp_System_Collections_Generic_Dictionary_global__AotFixtures_MapUnsupported_Shade__int_ = value.Value;
+            if (tmp_System_Collections_Generic_Dictionary_global__AotFixtures_MapUnsupported_Shade__int_ != null)
             {
-                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<global::AotFixtures.MapUnsupported.Shade, int>().WriteMap(ref state, 1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeSignedVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<global::AotFixtures.MapUnsupported.Shade, int>().WriteMap(ref state, 1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp_System_Collections_Generic_Dictionary_global__AotFixtures_MapUnsupported_Shade__int_, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeSignedVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
             }
         }
 
@@ -526,10 +531,11 @@ partial class MapUnsupportedModel
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapUnsupported.RepeatedValue>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.MapUnsupported.RepeatedValue value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Value;
-            if (tmp1 != null)
+            global::System.Collections.Generic.Dictionary<int, global::System.Collections.Generic.List<int>> tmp_System_Collections_Generic_Dictionary_int__global__System_Collections_Generic_List_int__;
+            tmp_System_Collections_Generic_Dictionary_int__global__System_Collections_Generic_List_int__ = value.Value;
+            if (tmp_System_Collections_Generic_Dictionary_int__global__System_Collections_Generic_List_int__ != null)
             {
-                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::System.Collections.Generic.List<int>>().WriteMap(ref state, 1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::System.Collections.Generic.List<int>>().WriteMap(ref state, 1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp_System_Collections_Generic_Dictionary_int__global__System_Collections_Generic_List_int__, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
             }
         }
 

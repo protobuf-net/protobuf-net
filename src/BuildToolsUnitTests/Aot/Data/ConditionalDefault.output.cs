@@ -93,42 +93,45 @@ partial class ConditionalDefaultModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            string tmp_string;
+            int tmp_int;
+            int? tmp_int_;
             if (value.ShouldSerializeText())
             {
-                var tmp1 = value.Text;
-                if (tmp1 != null)
+                tmp_string = value.Text;
+                if (tmp_string != null)
                 {
                     state.WriteRawTag((1 << 3) | 2);  // Text
-                    state.WriteRawString(tmp1);
+                    state.WriteRawString(tmp_string);
                 }
             }
             if (value.NumberSpecified)
             {
-                var tmp2 = value.Number;
+                tmp_int = value.Number;
                 state.WriteRawTag((2 << 3) | 0);  // Number
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
             if (value.WrappedSpecified)
             {
-                var tmp3 = value.Wrapped;
-                if (tmp3.HasValue)
+                tmp_int_ = value.Wrapped;
+                if (tmp_int_.HasValue)
                 {
-                    var val3 = tmp3.GetValueOrDefault();
+                    var val3 = tmp_int_.GetValueOrDefault();
                     state.WriteRawTag((3 << 3) | 0);  // Wrapped
                     state.WriteRawVarint64(unchecked((ulong)(long)val3));
                 }
             }
-            var tmp4 = value.Plain;
-            if (tmp4 != null && tmp4 != "xyz")
+            tmp_string = value.Plain;
+            if (tmp_string != null && tmp_string != "xyz")
             {
                 state.WriteRawTag((4 << 3) | 2);  // Plain
-                state.WriteRawString(tmp4);
+                state.WriteRawString(tmp_string);
             }
-            var tmp5 = value.Bare;
-            if (tmp5 != 9)
+            tmp_int = value.Bare;
+            if (tmp_int != 9)
             {
                 state.WriteRawTag((5 << 3) | 0);  // Bare
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp5));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -136,38 +139,41 @@ partial class ConditionalDefaultModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            string tmp_string;
+            int tmp_int;
+            int? tmp_int_;
             if (value.ShouldSerializeText())
             {
-                var tmp1 = value.Text;
-                if (tmp1 != null)
+                tmp_string = value.Text;
+                if (tmp_string != null)
                 {
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // Text
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Text
                 }
             }
             if (value.NumberSpecified)
             {
-                var tmp2 = value.Number;
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // Number
+                tmp_int = value.Number;
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Number
             }
             if (value.WrappedSpecified)
             {
-                var tmp3 = value.Wrapped;
-                if (tmp3.HasValue)
+                tmp_int_ = value.Wrapped;
+                if (tmp_int_.HasValue)
                 {
-                    var val3 = tmp3.GetValueOrDefault();
+                    var val3 = tmp_int_.GetValueOrDefault();
                     if (val3 != 7)
                     {
                         len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)val3));  // Wrapped
                     }
                 }
             }
-            var tmp4 = value.Plain;
-            if (tmp4 != null && tmp4 != "xyz")
+            tmp_string = value.Plain;
+            if (tmp_string != null && tmp_string != "xyz")
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp4);  // Plain
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Plain
             }
-            var tmp5 = value.Bare;
-            if (tmp5 != 9) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp5));  // Bare
+            tmp_int = value.Bare;
+            if (tmp_int != 9) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Bare
             return len;
         }
 

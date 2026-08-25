@@ -143,23 +143,24 @@ partial class ImplicitIgnoreModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Pinned;
-            if (tmp1 != 0)
+            int tmp_int;
+            tmp_int = value.Pinned;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // Pinned
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
-            var tmp4 = value.ImplicitField;
-            if (tmp4 != 0)
+            tmp_int = value.ImplicitField;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((4 << 3) | 0);  // ImplicitField
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp4));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
-            var tmp5 = value.ImplicitProperty;
-            if (tmp5 != 0)
+            tmp_int = value.ImplicitProperty;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((5 << 3) | 0);  // ImplicitProperty
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp5));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -167,12 +168,13 @@ partial class ImplicitIgnoreModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Pinned;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Pinned
-            var tmp4 = value.ImplicitField;
-            if (tmp4 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp4));  // ImplicitField
-            var tmp5 = value.ImplicitProperty;
-            if (tmp5 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp5));  // ImplicitProperty
+            int tmp_int;
+            tmp_int = value.Pinned;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Pinned
+            tmp_int = value.ImplicitField;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // ImplicitField
+            tmp_int = value.ImplicitProperty;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // ImplicitProperty
             return len;
         }
 
@@ -246,23 +248,24 @@ partial class ImplicitIgnoreModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp2 = value.Beta;
-            if (tmp2 != 0)
+            int tmp_int;
+            tmp_int = value.Beta;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((2 << 3) | 0);  // Beta
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
-            var tmp10 = value.Alpha;
-            if (tmp10 != 0)
+            tmp_int = value.Alpha;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((10 << 3) | 0);  // Alpha
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp10));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
-            var tmp11 = value.Gamma;
-            if (tmp11 != 0)
+            tmp_int = value.Gamma;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((11 << 3) | 0);  // Gamma
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp11));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
         }
 
@@ -270,12 +273,13 @@ partial class ImplicitIgnoreModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp2 = value.Beta;
-            if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // Beta
-            var tmp10 = value.Alpha;
-            if (tmp10 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp10));  // Alpha
-            var tmp11 = value.Gamma;
-            if (tmp11 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp11));  // Gamma
+            int tmp_int;
+            tmp_int = value.Beta;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Beta
+            tmp_int = value.Alpha;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Alpha
+            tmp_int = value.Gamma;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Gamma
             return len;
         }
 

@@ -163,41 +163,44 @@ partial class ListOptionsModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.PackedScalar;
-            if (tmp1 != 0)
+            int tmp_int;
+            string tmp_string;
+            byte[] tmp_byte__;
+            tmp_int = value.PackedScalar;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((1 << 3) | 0);  // PackedScalar
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
-            var tmp2 = value.OverwriteScalar;
-            if (tmp2 != 0)
+            tmp_int = value.OverwriteScalar;
+            if (tmp_int != 0)
             {
                 state.WriteRawTag((2 << 3) | 0);  // OverwriteScalar
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
             }
-            var tmp3 = value.BothOnString;
-            if (tmp3 != null)
+            tmp_string = value.BothOnString;
+            if (tmp_string != null)
             {
                 state.WriteRawTag((3 << 3) | 2);  // BothOnString
-                state.WriteRawString(tmp3);
+                state.WriteRawString(tmp_string);
             }
-            var tmp4 = value.AppendedBytes;
-            if (tmp4 != null)
+            tmp_byte__ = value.AppendedBytes;
+            if (tmp_byte__ != null)
             {
                 state.WriteRawTag((4 << 3) | 2);  // AppendedBytes
-                state.WriteRawBytes(tmp4);
+                state.WriteRawBytes(tmp_byte__);
             }
-            var tmp5 = value.OverwrittenBytes;
-            if (tmp5 != null)
+            tmp_byte__ = value.OverwrittenBytes;
+            if (tmp_byte__ != null)
             {
                 state.WriteRawTag((5 << 3) | 2);  // OverwrittenBytes
-                state.WriteRawBytes(tmp5);
+                state.WriteRawBytes(tmp_byte__);
             }
-            var tmp6 = value.PackedBytes;
-            if (tmp6 != null)
+            tmp_byte__ = value.PackedBytes;
+            if (tmp_byte__ != null)
             {
                 state.WriteRawTag((6 << 3) | 2);  // PackedBytes
-                state.WriteRawBytes(tmp6);
+                state.WriteRawBytes(tmp_byte__);
             }
         }
 
@@ -205,29 +208,32 @@ partial class ListOptionsModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.PackedScalar;
-            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // PackedScalar
-            var tmp2 = value.OverwriteScalar;
-            if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // OverwriteScalar
-            var tmp3 = value.BothOnString;
-            if (tmp3 != null)
+            int tmp_int;
+            string tmp_string;
+            byte[] tmp_byte__;
+            tmp_int = value.PackedScalar;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // PackedScalar
+            tmp_int = value.OverwriteScalar;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // OverwriteScalar
+            tmp_string = value.BothOnString;
+            if (tmp_string != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp3);  // BothOnString
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // BothOnString
             }
-            var tmp4 = value.AppendedBytes;
-            if (tmp4 != null)
+            tmp_byte__ = value.AppendedBytes;
+            if (tmp_byte__ != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)tmp4.Length) + tmp4.Length;  // AppendedBytes
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)tmp_byte__.Length) + tmp_byte__.Length;  // AppendedBytes
             }
-            var tmp5 = value.OverwrittenBytes;
-            if (tmp5 != null)
+            tmp_byte__ = value.OverwrittenBytes;
+            if (tmp_byte__ != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)tmp5.Length) + tmp5.Length;  // OverwrittenBytes
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)tmp_byte__.Length) + tmp_byte__.Length;  // OverwrittenBytes
             }
-            var tmp6 = value.PackedBytes;
-            if (tmp6 != null)
+            tmp_byte__ = value.PackedBytes;
+            if (tmp_byte__ != null)
             {
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)tmp6.Length) + tmp6.Length;  // PackedBytes
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)tmp_byte__.Length) + tmp_byte__.Length;  // PackedBytes
             }
             return len;
         }
@@ -308,47 +314,50 @@ partial class ListOptionsModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Default;
-            if (tmp1 != null)
+            int[] tmp_int__;
+            global::System.Collections.Generic.List<int> tmp_System_Collections_Generic_List_int_;
+            double[] tmp_double__;
+            tmp_int__ = value.Default;
+            if (tmp_int__ != null)
             {
-                foreach (var item1 in tmp1)
+                foreach (var item1 in tmp_int__)
                 {
                     state.WriteRawTag((1 << 3) | 0);  // Default
                     state.WriteRawVarint64(unchecked((ulong)(long)item1));
                 }
             }
-            var tmp2 = value.Packed;
-            if (tmp2 != null)
+            tmp_int__ = value.Packed;
+            if (tmp_int__ != null)
             {
-                state.WriteRawPackedVarint(2, tmp2);  // Packed
+                state.WriteRawPackedVarint(2, tmp_int__);  // Packed
             }
-            var tmp3 = value.Overwrite;
-            if (tmp3 != null)
+            tmp_System_Collections_Generic_List_int_ = value.Overwrite;
+            if (tmp_System_Collections_Generic_List_int_ != null)
             {
-                foreach (var item3 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp3))
+                foreach (var item3 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_int_))
                 {
                     state.WriteRawTag((3 << 3) | 0);  // Overwrite
                     state.WriteRawVarint64(unchecked((ulong)(long)item3));
                 }
             }
-            var tmp4 = value.PackedOverwrite;
-            if (tmp4 != null)
+            tmp_System_Collections_Generic_List_int_ = value.PackedOverwrite;
+            if (tmp_System_Collections_Generic_List_int_ != null)
             {
-                state.WriteRawPackedVarint(4, global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp4));  // PackedOverwrite
+                state.WriteRawPackedVarint(4, global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_int_));  // PackedOverwrite
             }
-            var tmp5 = value.NotPacked;
-            if (tmp5 != null)
+            tmp_int__ = value.NotPacked;
+            if (tmp_int__ != null)
             {
-                foreach (var item5 in tmp5)
+                foreach (var item5 in tmp_int__)
                 {
                     state.WriteRawTag((5 << 3) | 0);  // NotPacked
                     state.WriteRawVarint64(unchecked((ulong)(long)item5));
                 }
             }
-            var tmp6 = value.PackedDouble;
-            if (tmp6 != null)
+            tmp_double__ = value.PackedDouble;
+            if (tmp_double__ != null)
             {
-                state.WriteRawPackedFixed64(6, global::System.Runtime.InteropServices.MemoryMarshal.Cast<double, ulong>(tmp6));  // PackedDouble
+                state.WriteRawPackedFixed64(6, global::System.Runtime.InteropServices.MemoryMarshal.Cast<double, ulong>(tmp_double__));  // PackedDouble
             }
         }
 
@@ -356,44 +365,47 @@ partial class ListOptionsModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
-            var tmp1 = value.Default;
-            if (tmp1 != null)
+            int[] tmp_int__;
+            global::System.Collections.Generic.List<int> tmp_System_Collections_Generic_List_int_;
+            double[] tmp_double__;
+            tmp_int__ = value.Default;
+            if (tmp_int__ != null)
             {
-                foreach (var item1 in tmp1)
+                foreach (var item1 in tmp_int__)
                 {
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)item1));
                 }
             }
-            var tmp2 = value.Packed;
-            if (tmp2 != null)
+            tmp_int__ = value.Packed;
+            if (tmp_int__ != null)
             {
-                len += global::ProtoBuf.ProtoWriter.State.MeasureRawPackedVarint(2, tmp2);  // Packed
+                len += global::ProtoBuf.ProtoWriter.State.MeasureRawPackedVarint(2, tmp_int__);  // Packed
             }
-            var tmp3 = value.Overwrite;
-            if (tmp3 != null)
+            tmp_System_Collections_Generic_List_int_ = value.Overwrite;
+            if (tmp_System_Collections_Generic_List_int_ != null)
             {
-                foreach (var item3 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp3))
+                foreach (var item3 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_int_))
                 {
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)item3));
                 }
             }
-            var tmp4 = value.PackedOverwrite;
-            if (tmp4 != null)
+            tmp_System_Collections_Generic_List_int_ = value.PackedOverwrite;
+            if (tmp_System_Collections_Generic_List_int_ != null)
             {
-                len += global::ProtoBuf.ProtoWriter.State.MeasureRawPackedVarint(4, global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp4));  // PackedOverwrite
+                len += global::ProtoBuf.ProtoWriter.State.MeasureRawPackedVarint(4, global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_int_));  // PackedOverwrite
             }
-            var tmp5 = value.NotPacked;
-            if (tmp5 != null)
+            tmp_int__ = value.NotPacked;
+            if (tmp_int__ != null)
             {
-                foreach (var item5 in tmp5)
+                foreach (var item5 in tmp_int__)
                 {
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)item5));
                 }
             }
-            var tmp6 = value.PackedDouble;
-            if (tmp6 != null)
+            tmp_double__ = value.PackedDouble;
+            if (tmp_double__ != null)
             {
-                len += global::ProtoBuf.ProtoWriter.State.MeasureRawPackedFixed64(6, tmp6.Length);  // PackedDouble
+                len += global::ProtoBuf.ProtoWriter.State.MeasureRawPackedFixed64(6, tmp_double__.Length);  // PackedDouble
             }
             return len;
         }
