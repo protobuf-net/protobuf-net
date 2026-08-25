@@ -1021,7 +1021,32 @@ that retracted the ~1 µs figure in B1 applies to the premise here too.
 So: deferred until there is a quiet machine, at which point the first step is to *measure a
 1000-local body* rather than to start renaming.
 
-### B17. Callbacks and measure-first — **the GENERATED half is BUILT (2026-08-21/22); the classic STREAM path is what remains**
+### B17. ~~Callbacks and measure-first~~ — **CLOSED 2026-08-25: for the GENERATED path, twice is already the consistent normal on every backend**
+
+> **Closing decision (Marc, 2026-08-25):** *"I'm not concerned with what 'emit classic' does; I mean
+> that going forward, with the emitted code: twice is the consistent normal; if this only impacts
+> 'emit classic', we can mark it as complete."*
+>
+> It does only impact the classic engine, and that was **verified rather than assumed** before
+> closing — nothing had pinned it. `MeasurableContractTests.AGeneratedContractMeasuresToAStreamToo`
+> serializes a nested measure-first contract to a `MemoryStream` and gets `bs*;as;bs;as;`, character
+> for character what the `ArrayBufferWriter` case already gave: measure pass first (with
+> `IsMeasuring` answering **true**), real write second. A generated `Write` measures and then writes
+> whatever the destination is, so it has no per-backend split to fix.
+>
+> **What remains is a property of the CLASSIC engine only, and is deliberately left alone**: there, a
+> nested contract's callback fires **once** to a stream (the stream writer reserves, writes, and
+> back-fills the length, shuffling bytes when the varint width changes — so it crawls once) and
+> **twice** to an `IBufferWriter` (which computes the length first, then validates). That asymmetry
+> predates this arc, is pinned by `CallbackMeasurePassTests.NestedCallbackFiringIsPerBackend`, and
+> is now documented as a statement about the classic engine rather than about the model.
+>
+> **B14 is unblocked by this**, since the coupling recorded below was to the classic-stream half.
+>
+> The rest of this entry is the original analysis, kept as the record. Note several of its
+> statements were already history before this close — see the resolution note that follows.
+
+### B17 (original entry). Callbacks and measure-first — the GENERATED half is BUILT (2026-08-21/22)
 
 > **Resolution, read this first — the analysis below is the design argument and several of its
 > statements are now history.** A `[ProtoBeforeSerialization]` contract is measurable, and the

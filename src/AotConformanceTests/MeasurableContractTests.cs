@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Buffers;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
@@ -143,6 +144,51 @@ namespace ProtoBuf.AotConformance
 
             // the fixture writes "bs*;" when IsMeasuring answers true. Measuring pass FIRST, real
             // write second - the same order, and the same answers, as the classic backend gives.
+            Assert.Equal("bs*;as;bs;as;", (string)trace.GetValue(value)!);
+        }
+
+        /// <summary>
+        /// ...and the destination makes NO DIFFERENCE to a generated contract: a stream measures and
+        /// fires twice, exactly as a buffer-writer does. Gap B17.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// This is the half of Marc's 2026-08-14 decision - <i>"once per pass over this node, at
+        /// most twice"</i> - that applies to the generated model, and it is worth its own test
+        /// because the <b>classic</b> engine does not behave this way: there, a nested contract's
+        /// callback fires <b>once</b> to a stream and <b>twice</b> to an <c>IBufferWriter</c>, since
+        /// the stream writer reserves-and-backfills the length while the buffer-writer path computes
+        /// it first. <c>CallbackMeasurePassTests.NestedCallbackFiringIsPerBackend</c> pins that
+        /// asymmetry, and it is a statement about the classic engine only.
+        /// </para>
+        /// <para>
+        /// A generated contract has no such split: <c>Write</c> measures and then writes, whatever
+        /// the destination is. So a consumer moving a contract onto the generator gets the same
+        /// callback behaviour on every output, which is the property this asserts - and asserting it
+        /// on the <c>Watched</c> fixture rather than <c>Hooked</c> means the <c>bs*;</c> marker also
+        /// shows the measuring pass identified itself, not merely that something fired twice.
+        /// </para>
+        /// </remarks>
+        [Fact]
+        public void AGeneratedContractMeasuresToAStreamToo()
+        {
+            var modelType = Fixtures.GetType("AotFixtures.Callbacks.CallbacksModel")!;
+            var model = Assert.IsAssignableFrom<TypeModel>(
+                Activator.CreateInstance(modelType, nonPublic: true));
+            var watched = Fixtures.GetType("AotFixtures.Callbacks.Watched")!;
+            Assert.Contains(watched, DiscoverMeasurableContracts()); // else this proves nothing
+
+            var holderType = Fixtures.GetType("AotFixtures.Callbacks.WatchedHolder")!;
+            var holder = Activator.CreateInstance(holderType)!;
+            var value = Activator.CreateInstance(watched)!;
+            holderType.GetProperty("Inner")!.SetValue(holder, value);
+            var trace = watched.GetProperty("Trace")!;
+            trace.SetValue(value, "");
+
+            using var stream = new MemoryStream();
+            model.Serialize(stream, holder);
+
+            // identical to the ArrayBufferWriter expectation above - that is the whole point
             Assert.Equal("bs*;as;bs;as;", (string)trace.GetValue(value)!);
         }
 

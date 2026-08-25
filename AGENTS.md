@@ -192,10 +192,15 @@ prefix, writes for real, and then **validates** (`Length mismatch; calculated 'x
 it crawls twice. So a consumer's callback side-effect already behaves differently depending on
 which output they serialize to, with nobody having asked to measure.
 
-**A measure-first GENERATED contract is twice on both backends**, which is the alignment Marc asked
-for on 2026-08-14 arriving for one path ahead of the other. The generated `Write` measures and then
-writes whatever the destination is, so the table above is a statement about the *classic* engine and
-not about the model as a whole; `notes/gaps.md` B17 is the remaining half, the classic stream path.
+**A measure-first GENERATED contract is twice on EVERY backend** — that is the whole of the
+alignment Marc asked for on 2026-08-14, and it is **done** (B17, closed 2026-08-25). The generated
+`Write` measures and then writes whatever the destination is, so it has no per-backend split; the
+table above is a statement about the *classic* engine and not about the model. Pinned by
+`MeasurableContractTests.AGeneratedContractMeasuresToAStreamToo`, which gets the identical
+`bs*;as;bs;as;` from a `MemoryStream` that the `ArrayBufferWriter` case gives.
+
+**The classic asymmetry is deliberately left in place**, not outstanding: it predates this arc, and
+a consumer moving to the generator gets the consistent behaviour either way.
 
 Where doubling happens it is *required*, not incidental: both passes must observe the same object,
 or the measured length will not match the bytes written — which is exactly what that validation
@@ -263,8 +268,9 @@ it buys. The flag would have protected a case that does not exist.
 **Decided (Marc, 2026-08-14): twice becomes the consistent normal for both backends**, rather than
 the stream being the odd one out — stated as "**once per pass over this node, at most twice**",
 since the number of passes is a property of the path. That is also where measure-first leads
-anyway, since it *is* measure-then-write. See `notes/gaps.md` B17 for what it costs the classic
-stream path, and B14 for why the two cannot be settled independently.
+anyway, since it *is* measure-then-write. **Delivered for the generated path and closed there**
+(B17); the classic stream path keeps its single crawl, which is a statement about that engine rather
+than an outstanding item.
 
 **3. The write recursion is depth-guarded on its own, and used not to be.** It was once safe *by
 construction* — every write was preceded by a measure, and the measure carried the budget. A
