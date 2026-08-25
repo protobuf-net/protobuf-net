@@ -1,4 +1,4 @@
-﻿# Findings from the AOT generator work
+# Findings from the AOT generator work
 
 Things turned up while building `ProtoModelGenerator` that are **about protobuf-net itself**, not
 about the generator. Kept here so they can become issues rather than being lost in commit messages.
@@ -6,7 +6,79 @@ about the generator. Kept here so they can become issues rather than being lost 
 Each was found by deriving the generator's expected output from ref-emit (`src/AotRefGen`) or by the
 native-AOT smoke test (`src/AotSmoke`) — i.e. by comparison, not by reading the code and guessing.
 
-## Handover: what to validate on Windows — **all run, 2026-08-11**
+## Handover — **current as of 2026-08-25**; read this first on a cold start
+
+**Where the work is.** Everything below is on **`v4`**, which is where the whole stack lives; there
+is no branch in flight. The last two commits are `B50` (a protobuf-net.Core fix) and `B49` phase 2
+(`PBN3014` plus its fixer), both unpushed at the time of writing.
+
+**What the arc has become.** The generator no longer merely emits a serializer — it emits a
+**measure-first** one: `Measure_` computes a contract's length arithmetically, `RawWrite_` writes it
+with an exact prefix, and `RawLengthBuffer` carries the measured lengths between the two passes
+positionally. `AGENTS.md`'s "The writer's measure-first path" is the section to read before touching
+any of it; the three invariants there are the ones that break silently. The measurable census is
+**2803 contracts** across the corpus.
+
+**The gate battery, and what it reported on 2026-08-25** — all of it green, run in this order:
+
+| gate | result |
+| --- | --- |
+| `dotnet build Build.csproj -c Debug` | 0 errors |
+| `BuildToolsUnitTests` (goldens + analyzers + fixers) | 659 passed |
+| `AotConformanceTests` (differential over the fixtures) | 1841 passed |
+| `protobuf-net.Test` | 1580 (net8.0) / 1579 (net472) |
+| `AotDifferential` (the corpus, on bytes) | **3134 compared, 100% match**, exit 0 |
+| `AotSmoke` — `-c Debug` JIT run | PASSED |
+| `AotSmoke` — `publish -c Release -r win-x64` | exit 0, **5 warnings** (2 `IL2067`, 3 `IL2091`) |
+| `AotNodaTimeSmoke` | exit 0 |
+| `DownLevelSmoke` (net472) | builds; 3 `PBN3xxx` warnings, 0 errors — the documented shape |
+| `protobuf-net.BuildTools.Legacy` | builds |
+
+Those numbers are the baseline to compare against, and **the warning count tracks fixtures** — adding
+a member to `AotSmoke` moves it, so re-measure both sides when you do.
+
+**What is open.** `notes/gaps.md` is the entry point and its last entry is **B50**. The live ones:
+
+- **B48 (trim warnings)** — 23 → 5, and Marc paused it there deliberately: *"5 is a defensible
+  preview position"*. All five are design-level (`CreateInstance`'s genuinely-live fallback,
+  `SubTypeState<T>.Cast`), not annotations anyone forgot;
+- **B40 (steering call sites)** — the non-generic API bug is fixed; the analyzer/steering half is
+  still a design call;
+- **B16 (`tmpN` and frame size)**, **B17 (the classic stream path's callback count)**, and the perf
+  items — all recorded with their reasoning;
+- **B49** is done, but note *"the awkward call site"* it names is a documentation matter rather than
+  a gap: where the calling code cannot see a model, the answer is `Model.Instance`, which the fixer
+  offers.
+
+**Three operational traps that have each cost a sitting**, kept here because they are about running
+the gates rather than about the code:
+
+- **`--no-build` is a different test.** `Data/**` is *copied* to the output directory rather than
+  compiled, and the generator is an analyzer reference — so `--no-build` after editing a fixture, the
+  generator or the library re-checks a stale copy. A red gate sat unnoticed for a session this way
+  (B50); a green one is just as easy to fake.
+- **`vswhere.exe` must be on `PATH`** for a win-x64 native publish
+  (`%ProgramFiles(x86)%\Microsoft Visual Studio\Installer`), or ILC's link step fails with a mangled
+  command line that names `link.exe` and is thoroughly misleading.
+- **`AotRefGen` is net472 and Windows-only**, takes **no arguments** (`--nologo` is passed straight
+  through and it fails looking for a fixture directory called that), and `ReferenceProvenanceTests`
+  reads the reference from the **test project's output directory** — so regenerate, *rebuild*, then
+  test. A Mono run is not evidence: it regenerates every `*.reference.cs` with a diff.
+
+To read what the generator actually emitted: `-p:EmitCompilerGeneratedFiles=true`, then look under
+`obj/<config>/<tfm>/generated/…`. Without the flag nothing is written to disk at all, and the folder
+**survives a branch switch**, so a stale file reads as current.
+
+### The 2026-08-11 Windows validation log (superseded, kept for the wrinkles it recorded)
+
+Everything in this section was run and green on 2026-08-11; the numbers in it are historical and the
+table above supersedes them. It is kept because three of its findings are standing facts rather than
+one-off results: the `dotnet pack`/**NU5026** interaction (use `dotnet build -c Release`, which packs
+as a side effect), the Mono-output warning above, and the `Issue1232` static-flag intermittent and
+how it was finally made deterministic.
+
+<details>
+<summary>the original log</summary>
 
 Everything below was developed on Linux and validated on Windows on 2026-08-11. The original
 instructions are replaced by what was actually observed, because two of the six did not go quite as
@@ -95,6 +167,7 @@ inspected by eye for both new fields — `D0-03-A5-03` (field 58, `Score` = 421)
 no length prefix), confirming ILC resolved `SerializerCache<TallySerializer<int>, Tally<int>>` and
 the `Tally<string>` instantiation as scalar rather than falling back to a message framing.
 
+</details>
 ## Re-measurement: the `[ProtoDataFormat]` `Vault` member — 2026-08-13
 
 `AotSmoke` gained a `Vault` contract (`[ProtoDataFormat(typeof(Guid), DataFormat.FixedSize)]` at

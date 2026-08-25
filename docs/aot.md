@@ -1,4 +1,4 @@
-﻿# Compile-time serializers, for native AOT and trimming
+# Compile-time serializers, for native AOT and trimming
 
 > **Preview.** The attributes described here are marked `[Experimental]`, which is a compile *error*
 > until you suppress it — see [Opting in](#opting-in). The shape may still change.
@@ -299,6 +299,7 @@ fail, escalate them:
 | `PBN3004` | a contract was dropped because something it references was dropped |
 | `PBN3010` | a call site still goes through the runtime model — see below |
 | `PBN3011` | a call site takes its contract type as a value, so nothing can check it |
+| `PBN3014` | a `.proto` extension accessor needs a model for its value type — see below |
 
 `PBN3004` matters more than it looks: dropping cascades. A contract whose member type was dropped
 cannot be emitted either, so one unsupported type can take a subtree with it. Fix the ones that are
@@ -457,6 +458,42 @@ Two things differ from `[ProtoSurrogate]`, both worth knowing:
 `[ProtoSubType]` is read by the generator only: **the runtime model does not honour it**, exactly as
 it does not honour `[ProtoSurrogate]`. If you use `RuntimeTypeModel` as well, keep calling
 `AddSubType` there.
+
+### `.proto` extensions need to be told which model to use
+
+If your schema uses `extend`, protogen generates static accessors for the extension fields:
+
+``` c#
+var payload = order.GetDetailsExt();
+order.SetDetailsExt(payload);
+```
+
+Those have to resolve a serializer for the extension *value*, and with nothing passed they fall back
+to the default runtime model — which reflects, and which in an app built around a generated model has
+never had anything registered with it. For a **message- or enum-typed** extension that fails with
+*"no serializer could be resolved"*. Note this is not specific to AOT; it happens on an ordinary JIT
+run too.
+
+Pass the model:
+
+``` c#
+var payload = order.GetDetailsExt(MyModel.Instance);
+order.SetDetailsExt(payload, MyModel.Instance);
+```
+
+`PBN3014` flags the call sites that need it — a warning normally, an **error** if the project has
+asked for AOT, since there it has no working configuration at all — and the IDE offers a fix that
+fills in the model. Extensions carrying a scalar, a `string`, `bytes` or a repeated scalar are not
+flagged: those resolve an inbuilt serializer and need no model.
+
+Two things to check if the diagnostic does not appear, or the fix does not help:
+
+- **regenerate the DTOs.** The model-aware overloads are what the diagnostic recognises, and older
+  generated code does not have them. Regenerating is safe: the previous accessors are still emitted
+  with their original signatures, so nothing that already compiled against them breaks.
+- **make sure the extension's value type is reachable from the model.** An extension value is
+  invisible to the generator — nothing in your contracts refers to it — so a type used *only* as an
+  extension needs its own `[ProtoSerializable(typeof(...))]`.
 
 ### Parseable types are opt-in
 

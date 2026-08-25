@@ -1,4 +1,4 @@
-﻿# The writer arc: measure-first, hoisted from the 2023 prototype
+# The writer arc: measure-first, hoisted from the 2023 prototype
 
 The read arc is released (4.0-alpha); this is the writer's planning doc, sibling to
 `notes/nano-core.md`. Step zero, per Marc: hoist the writer shape from the old prototype
@@ -1209,9 +1209,46 @@ again, exactly as AGENTS.md describes: the link step fails naming link.exe.)
 **Handover note: this section plus "The presized buffer core: the plan" above is the
 entry point for a fresh session.**
 
-### State as of 2026-08-16 (end of day) — branch `schema-breadth` (PR #1277 → `v4`)
+### State as of 2026-08-25 — on **`v4`**, no branch in flight
 
-**Read this block first; the 2026-08-13 one below is two branches behind.** Everything is pushed
+**Read this block first; the two below it are branches behind and are kept as history.**
+
+The writer arc's ten cuts are long done; what has happened since is that **measure-first grew to
+cover the shapes it originally refused**, and the transport underneath it was replaced.
+
+- **`RawLengthBuffer` replaced the `Dictionary<object, long>`** (gap B38, 2026-08-21). Lengths are
+  carried from the measure pass to the write pass **positionally** — an append-only `long[]` consumed
+  in visit order, no hashing at all — which was worth around half of a length-prefixed serialize. The
+  correctness argument is one sentence and is worth memorising: **a slot is reserved exactly where
+  the write calls `Next()`, one for one, in the same order**, so a slot belongs to the *call site*
+  rather than to the contract, and a sub-tree the raw write will not walk is measured with
+  `RawLengthBuffer.Discard`. Widening either eligibility predicate without the other now shifts every
+  subsequent length rather than merely wasting a cache entry.
+- **Aliased objects are owed no memoisation — POLICY** (Marc, 2026-08-21), and when it was measured,
+  (a) *"live without it"* was **faster even on the aliased graph** (1.37×–1.49×). The speculative
+  opt-in flag would have protected a case that does not exist.
+- **A hierarchy measures and writes raw** (B41) — **2.99× at depth 16**. Note stage 1 of that work
+  was a *regression* (3–5% slower, +48 B) with every gate green, because a measure that nothing
+  consumes is pure cost. That is the shape to watch for when landing half of a measure-first change.
+- **Before-serialization callbacks no longer disqualify a contract** (B42): `Measure_` takes a
+  context and fires them, and the context it hands out answers `true` to `ProtoWriter.IsMeasuring`.
+  The invariant is **"at most twice"**, however deep — verified at depth 3 as two calls, not eight.
+- **The raw write recursion is depth-guarded on its own** (B44/B15), because a *grouped* sub-message
+  carries no length prefix and so is never measured; the two caps now add across a hand-back.
+
+**Gates on 2026-08-25**, all green: traversal build 0 errors; `protobuf-net.Test` 1580/1579 across
+both TFMs; `BuildToolsUnitTests` **659**; `AotConformanceTests` **1841**; **`AotDifferential` 3134 at
+100%** (exit 0); `AotSmoke` native win-x64 at **5 warnings** (down from 19 — gap B48) with both the
+native and the `-c Debug` runs passing; `AotNodaTimeSmoke`, `DownLevelSmoke` and
+`protobuf-net.BuildTools.Legacy` all clean. **The measurable census is 2803 contracts.**
+
+`notes/gaps.md` is the backlog and runs to **B50**; `notes/aot/findings.md` opens with the operational
+handover (the `--no-build` trap, `vswhere`, `AotRefGen`'s net472/Windows constraints).
+
+<details>
+<summary>State as of 2026-08-16 — branch <code>schema-breadth</code> (PR #1277 → <code>v4</code>), superseded</summary>
+
+Everything was pushed
 and green at `43030db6`: traversal clean (incl. net472), protobuf-net.Test 1543/1542 x2 TFMs,
 Examples 676/702, Reflection 556 x2, BuildToolsUnitTests **405**, AotConformanceTests **1592**,
 **AotDifferential 3051 at 100%** (exit 0), AotSmoke native win-x64 at **19 warnings** with the
@@ -1328,6 +1365,8 @@ stale; both diffs are uniform and skim quickly.
   on a quiet tree after #1277 squashes);
 - *answered, no action* — **B28** (dispatch), **B31** (external serializers), plus the long
   deferred/parked set (B2–B11, C9–C12, and C14 editions → 4.1).
+
+</details>
 
 **State as of 2026-08-13, end of session.** Everything is pushed to `raw-writer` and green on
 every gate (protobuf-net.Test 1110 x2 TFMs, Examples 679/705, Reflection 556 x2, conformance
