@@ -127,12 +127,36 @@ namespace ProtoBuf
                     TValue current = default;
                     var any = false;
                     int field;
+                    List<TValue> packed = null;
                     while ((field = state.ReadFieldHeader()) > 0)
                     {
                         if (field != tag)
                         {
                             state.SkipField();
                             continue;
+                        }
+                        // a packed run. Every conformant implementation writes repeated packable
+                        // scalars and enums this way and accepts either form on the way back in;
+                        // protoc has always done so for repeated custom options, so refusing it
+                        // here rejected data the rest of the world considers ordinary. The
+                        // repeated serializers handle this via the list they are reading into -
+                        // which the extension APIs, seeing one field at a time, do not have.
+                        if (TypeHelper<TValue>.CanBePacked && state.WireType == WireType.String)
+                        {
+                            packed ??= new List<TValue>();
+                            packed.Clear();
+                            if (state.TryReadPackedScalar<TValue>(serializer, packed))
+                            {
+                                if (packed.Count != 0)
+                                {
+                                    any = true;
+                                    // last-one-wins for the singleton merge, matching what successive
+                                    // unpacked occurrences of a scalar already do below
+                                    if (singleton) current = packed[packed.Count - 1];
+                                    else results.AddRange(packed);
+                                }
+                                continue;
+                            }
                         }
                         // singleton merges successive occurrences into one value, exactly as the
                         // reflective path does by passing the previous value back in
@@ -175,6 +199,24 @@ namespace ProtoBuf
                 var state = ProtoReader.State.Create(stream, model, ctx, ProtoReader.TO_EOF).Solidify();
                 try
                 {
+                    // packable scalars are drained in one pass: a packed run carries several values behind
+                    // a single field header, and the one-value-per-call loop below cannot straddle one
+                    if (TypeHelper.CanBePacked(type))
+                    {
+                        var all = new List<object>();
+                        model.ReadAuxValues(ref state, format, tag, type, all);
+                        if (singleton)
+                        {
+                            // last-one-wins, matching the merge the aux loop performs for repeats
+                            if (all.Count != 0) yield return all[all.Count - 1];
+                        }
+                        else
+                        {
+                            foreach (var item in all) yield return item;
+                        }
+                        yield break;
+                    }
+
                     while (model.TryDeserializeAuxiliaryType(ref state, format, tag, type, ref value, true, true, false, false, null, isRoot: false) && value is not null)
                     {
                         if (!singleton)

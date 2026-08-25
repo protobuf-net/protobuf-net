@@ -396,6 +396,76 @@ namespace ProtoBuf
                 }
             }
 
+            /// <summary>
+            /// Begins a packed run of scalar values, returning the absolute position at which it ends.
+            /// </summary>
+            /// <remarks>
+            /// The serializer-driven equivalent is <c>ReadPackedScalar</c>; this pair exists for the
+            /// reflective aux path, which holds a <see cref="Type"/> rather than an <c>ISerializer{T}</c>
+            /// and so has to drive the element loop itself.
+            /// </remarks>
+            internal long StartPackedScalar(WireType elementWireType, Type type)
+            {
+                var bytes = (int)ReadUInt32Varint(Read32VarintMode.Unsigned);
+                if (bytes < 0) ThrowInvalidLength(bytes);
+                AssertPlausibleLength(bytes);
+                switch (elementWireType)
+                {
+                    case WireType.Fixed32:
+                        if ((bytes % 4) != 0) ThrowHelper.ThrowInvalidOperationException("packed length should be multiple of 4");
+                        break;
+                    case WireType.Fixed64:
+                        if ((bytes % 8) != 0) ThrowHelper.ThrowInvalidOperationException("packed length should be multiple of 8");
+                        break;
+                    case WireType.Varint:
+                    case WireType.SignedVarint:
+                        break;
+                    default:
+                        ThrowHelper.ThrowInvalidPackedOperationException(elementWireType, type);
+                        break;
+                }
+                return GetPosition() + bytes;
+            }
+
+            /// <summary>
+            /// Advances to the next element of a packed run started by <see cref="StartPackedScalar"/>,
+            /// re-arming the wire type; returns <c>false</c> once the run is exhausted.
+            /// </summary>
+            internal bool ContinuePackedScalar(long end, WireType elementWireType)
+            {
+                var position = GetPosition();
+                if (position >= end)
+                {
+                    if (position != end) ThrowHelper.ThrowInvalidOperationException("over-read packed data");
+                    return false;
+                }
+                _reader.WireType = elementWireType;
+                return true;
+            }
+
+            /// <summary>
+            /// Reads a packed run of scalar values into <paramref name="values"/>, reporting whether
+            /// the current field was in fact a packed run of a packable scalar.
+            /// </summary>
+            /// <remarks>
+            /// The repeated serializers reach packed data through <see cref="FillBuffer"/>, which owns
+            /// the whole field sequence; the extension APIs cannot, since they see one field at a time
+            /// and have no list to read into. This is the narrow entry point for that case.
+            /// </remarks>
+            internal bool TryReadPackedScalar<T>(ISerializer<T> serializer, ICollection<T> values)
+            {
+                // the wire type is never "string" for a type that *can* be packed, so a length-delimited
+                // payload here is packed data - the same inference PrepareToReadRepeated makes
+                if (!TypeHelper<T>.CanBePacked || WireType != WireType.String) return false;
+
+                SerializerFeatures features = default;
+                features.InheritFrom(serializer.Features);
+                if (features.GetCategory() != SerializerFeatures.CategoryScalar) return false;
+
+                ReadPackedScalar<ISerializer<T>, ICollection<T>, T>(ref values, features.GetWireType(), serializer);
+                return true;
+            }
+
             internal ReadBuffer<T> FillBuffer<TSerializer, T>(SerializerFeatures features, in TSerializer serializer, T initialValue)
                 where TSerializer : ISerializer<T>
             {

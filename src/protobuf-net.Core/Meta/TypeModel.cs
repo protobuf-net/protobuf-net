@@ -1188,6 +1188,59 @@ namespace ProtoBuf.Meta
             return Activator.CreateInstance(concreteListType, nonPublic: true);
         }
 
+        /// <summary>
+        /// Reads every occurrence of <paramref name="tag"/> from the current position into
+        /// <paramref name="results"/>, accepting both the packed and the expanded encoding.
+        /// </summary>
+        /// <remarks>
+        /// The one-value-per-call shape of <see cref="TryDeserializeAuxiliaryType"/> cannot straddle a
+        /// packed run: it would return with the reader parked mid-run, and the next call would read the
+        /// remaining element bytes as a field header. Packable scalars are therefore drained in one pass.
+        /// </remarks>
+        internal void ReadAuxValues(ref ProtoReader.State state, DataFormat format, int tag,
+            [DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type, List<object> results)
+        {
+            if (type is null) ThrowHelper.ThrowArgumentNullException(nameof(type));
+            WireType wiretype = GetWireType(this, format, type);
+            if (!DynamicStub.CanSerialize(type, this, out var features))
+                ThrowHelper.ThrowInvalidOperationException("Unable to deserialize aux type: " + type.NormalizeName());
+
+            var scope = NormalizeAuxScope(features, false, type, false);
+            int fieldNumber;
+            while ((fieldNumber = state.ReadFieldHeader()) > 0)
+            {
+                if (fieldNumber != tag)
+                {
+                    state.SkipField();
+                    continue;
+                }
+
+                // a length-delimited payload for a type whose own wire type is not length-delimited is
+                // packed data - the same inference the repeated serializers make
+                if (state.WireType == WireType.String && wiretype != WireType.String)
+                {
+                    var end = state.StartPackedScalar(wiretype, type);
+                    while (state.ContinuePackedScalar(end, wiretype))
+                    {
+                        results.Add(Deserialize(scope, ref state, type, null));
+                    }
+                }
+                else
+                {
+                    state.Hint(wiretype); // handle signed data etc
+                    results.Add(Deserialize(scope, ref state, type, null));
+                }
+            }
+        }
+
+        internal void ReadAuxValues(ref ProtoReader.SolidState state, DataFormat format, int tag,
+            [DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type, List<object> results)
+        {
+            var liquid = state.Liquify();
+            ReadAuxValues(ref liquid, format, tag, type, results);
+            state = liquid.Solidify();
+        }
+
         internal bool TryDeserializeAuxiliaryType(ref ProtoReader.SolidState state, DataFormat format, int tag, Type type, ref object value, bool skipOtherFields, bool asListItem, bool autoCreate, bool insideList, object parentListOrType, bool isRoot)
         {
             var liquid = state.Liquify();
