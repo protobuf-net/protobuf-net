@@ -4836,7 +4836,7 @@ a drop rather than a fallback. Testing it needs a harness referencing a 3.x pack
 here does. The forwarder exists so previously-generated code keeps binding, so the risk is low, but
 it is not zero and it is not covered.
 
-### B48. Drive the native trim/AOT warnings to ZERO — **23 → 5 unique on 2026-08-23; the last 5 are one problem, and need restructuring**
+### B48. Drive the native trim/AOT warnings to ZERO — **23 → 5 unique, −116,224 bytes; the last 5 are ALL design-level, and 5 is a defensible preview position**
 
 **Progress, each step measured on a clean publish** (the publish is incremental, and a second run
 reports *nothing at all*, which reads exactly like success):
@@ -5043,7 +5043,14 @@ already non-null), `string` and `byte[]` are constants, and any other reference 
 That is the same residue `TypeHelper<T>.ValueChecker` was left with, and it suggests the fix is the
 same shape: a generic construction that does not go through `typeof(T)` at all.
 2. **`DeserializeRootFallback` — one.** Needs `PrepareDeserialize` restructured rather than
-   annotated, since `ref Type` erases what the caller knew.
+   annotated, since `ref Type` erases what the caller knew. **Looked at properly 2026-08-25 and it
+   is worse than "annotate the ref"**: that method *reassigns* `type` from **three** unannotated
+   sources — `value.GetType()`, `Nullable.GetUnderlyingType(type)`, and
+   `DynamicStub.GetEffectiveType(type)` — so annotating the parameter demands all three satisfy it,
+   and the only way through is a chain of suppressions, none of which is individually provable.
+   `value.GetType()` is the weakest: having an instance says the type is loaded, not that its
+   members survived trimming. **Do not silence this one with suppressions**; it needs the type to
+   stop being passed by `ref`, which is a signature change through six call sites.
 3. **`SubTypeState<T>.Cast` — one.** Needs the annotation on the class's `T`, i.e. on every consumer
    including the generated path; `AGENTS.md` records it as deliberately left.
 
