@@ -784,12 +784,10 @@ namespace ProtoBuf.Reflection
                     tw = ctx.Write("return ");
                 }
                 var defaultValue = isRepeated ? "null" : ctx.Supports(CSharp7_1) ? "default" : $"default({type})";
-                tw.Write($"obj == null ? {defaultValue} : global::ProtoBuf.Extensible.{getMethodName}<{(isRepeated ? nonNullableType : type)}>(obj, {field.Number}");
-                if (!string.IsNullOrEmpty(dataFormat))
-                {
-                    tw.Write($", global::ProtoBuf.DataFormat.{dataFormat}");
-                }
-                tw.WriteLine(");");
+                // ...and it FORWARDS rather than repeating the body: the tag, the format and the
+                // null test then exist once per accessor, in the model-aware overload below. This
+                // method is here for binary compatibility, not for logic.
+                tw.WriteLine($"Get{name}(obj, null);");
                 if (ctx.Supports(CSharp6)) ctx.Outdent().WriteLine();
                 else ctx.Outdent().WriteLine("}").WriteLine();
 
@@ -804,12 +802,7 @@ namespace ProtoBuf.Reflection
                     ctx.WriteLine("{").Indent();
                     tw = ctx.Write("");
                 }
-                tw.Write($"global::ProtoBuf.Extensible.AppendValue<{nonNullableType}>(obj, {field.Number}");
-                if (!string.IsNullOrEmpty(dataFormat))
-                {
-                    tw.Write($", global::ProtoBuf.DataFormat.{dataFormat}");
-                }
-                tw.WriteLine(", value);");
+                tw.WriteLine($"{setAccessorName}{name}(obj, value, null);");
                 if (ctx.Supports(CSharp6)) ctx.Outdent().WriteLine();
                 else ctx.Outdent().WriteLine("}").WriteLine();
 

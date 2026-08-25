@@ -5153,10 +5153,17 @@ DataFormat)`), so this is a codegen shape rather than a missing API.
 `TypeModel.DefaultModel` is a **`NullModel`** until something touches `RuntimeTypeModel.Default` —
 and an app built around a generated model never does. So:
 
-| extension value | result |
-| --- | --- |
-| **scalar** (`int`, `string`, …), default format | **works** — `ExtensibleUtil`'s typed path finds an inbuilt `ISerializer<T>` and never consults a model at all |
-| **message** | **throws**, *"Unable to append a value of type X: no serializer could be resolved for it"* |
+| extension value | no model | with a model |
+| --- | --- | --- |
+| `int32`, `string`, `bytes`, `repeated int32` | **works** — `ExtensibleUtil`'s typed path finds an inbuilt `ISerializer<T>` and never consults a model at all | works |
+| **enum** | **throws** | **works**, provided the enum is seeded into the model |
+| **message** | **throws**, *"Unable to append a value of type X: no serializer could be resolved for it"* | **works** |
+
+**The enum row was nearly recorded wrongly**, and the correction is worth keeping: a first probe had
+it failing *with* a model too, which would have made enums a separate and worse problem. The model
+simply had not been seeded with the enum type — extensions are invisible to the generator, so
+nothing pulls the enum in. Seeded, it behaves exactly like a message. **So the rule is "message or
+enum needs a model", not "message".**
 
 **Measured identically on JIT and on a native publish**, which is the finding that matters: this is
 **not** an AOT problem wearing an AOT error message. The message says *"This API resolves serializers
