@@ -415,6 +415,20 @@ namespace Google.Protobuf.Reflection
         }
 
         /// <summary>
+        /// The <see cref="TypeModel"/> this library uses for descriptors; pass it to
+        /// <see cref="Serialize(TypeModel, Stream, bool)"/>, or use it directly to read a
+        /// serialized descriptor set back via <see cref="TypeModel.Deserialize{T}(Stream, T, object)"/>
+        /// and friends.
+        /// </summary>
+        /// <remarks>
+        /// This package references protobuf-net.Core, which has no concrete <see cref="TypeModel"/>,
+        /// so without this there is no way to serialize a descriptor set without also taking a
+        /// dependency on protobuf-net itself. A <c>TypeModel</c> is a cache and is intended to be
+        /// shared, so this is a single instance rather than something to construct per use.
+        /// </remarks>
+        public static TypeModel Serializer => CustomProtogenSerializer.Instance;
+
+        /// <summary>
         /// Serializes this instance using the provided serializer (which does not need to be protobuf)
         /// </summary>
         public T Serialize<T>(Func<FileDescriptorSet,object,T> customSerializer, bool includeImports, object state = null)
