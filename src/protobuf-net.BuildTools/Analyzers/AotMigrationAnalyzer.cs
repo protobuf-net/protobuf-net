@@ -79,8 +79,21 @@ namespace ProtoBuf.BuildTools.Analyzers
             defaultSeverity: DiagnosticSeverity.Info,
             isEnabledByDefault: true);
 
+        internal static readonly DiagnosticDescriptor ExtensionNeedsModel = new(
+            id: "PBN3014",
+            title: "Extension accessor needs a model for this value type",
+            messageFormat: "'{0}' reads or writes {1} extension value, which needs a model to "
+                + "resolve a serializer; without one it goes through the default runtime model and "
+                + "throws \"no serializer could be resolved\". Pass {2}, and make sure '{3}' is "
+                + "reachable from it - an extension value is invisible to the generator, so a type "
+                + "used only here needs its own [ProtoSerializable].",
+            category: "ProtoBuf",
+            defaultSeverity: DiagnosticSeverity.Warning, // escalated to Error where AOT is asked for
+            isEnabledByDefault: true);
+
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-            = ImmutableArray.Create(UsesRuntimeModel, UnresolvableContractType, NoModelUnderAot, NoModel);
+            = ImmutableArray.Create(UsesRuntimeModel, UnresolvableContractType, NoModelUnderAot, NoModel,
+                ExtensionNeedsModel);
 
         /// <summary>Diagnostic property carrying the model type names, for the fixer.</summary>
         internal const string ModelsProperty = "Models";
@@ -234,6 +247,16 @@ namespace ProtoBuf.BuildTools.Analyzers
         {
             var operation = (IInvocationOperation)context.Operation;
             var method = operation.TargetMethod;
+
+            // gap B49: a `.proto` extension accessor, which has an arbitrary name and so cannot be
+            // matched by the Interesting set below. Checked first, and it returns whether or not it
+            // reported - either way the call is not one of the runtime-model APIs.
+            if (IsExtensionAccessor(method, out var valueType, out var modelParameter))
+            {
+                InspectExtensionAccessor(context, models, operation, method, valueType, modelParameter);
+                return;
+            }
+
             if (!Interesting.Contains(method.Name)) return;
             if (!IsRuntimeModel(operation, method)) return;
 
@@ -269,6 +292,175 @@ namespace ProtoBuf.BuildTools.Analyzers
             context.ReportDiagnostic(Diagnostic.Create(
                 UsesRuntimeModel, operation.Syntax.GetLocation(), properties, name, which,
                 models[0].Name, method.Name));
+        }
+
+        /// <summary>
+        /// Recognises a `.proto` extension accessor by SHAPE rather than by name: a static method on
+        /// a static class which either takes a <c>TypeModel</c> as a trailing optional parameter, or
+        /// has a sibling overload that does.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Shape rather than name because protogen lets the class be renamed
+        /// (<c>ExtensionTypeName</c>) and the accessor names come from the field names — there is
+        /// nothing stable to match on. The <c>TypeModel</c>-overload pair is the actual signal, and
+        /// it is what the generator emits precisely so that a model CAN be passed.
+        /// </para>
+        /// <para>
+        /// <paramref name="valueType"/> is what the extension carries: the <c>value</c> parameter
+        /// for a setter, the return type for a getter, unwrapped through
+        /// <c>IEnumerable&lt;T&gt;</c> for a repeated one.
+        /// </para>
+        /// </remarks>
+        private static bool IsExtensionAccessor(IMethodSymbol method, out ITypeSymbol? valueType, out IParameterSymbol? modelParameter)
+        {
+            valueType = null;
+            modelParameter = null;
+            if (!method.IsStatic) return false;
+
+            var container = method.ContainingType;
+            if (container is null || !container.IsStatic || container.TypeKind != TypeKind.Class) return false;
+
+            // the model parameter on this method, if it has one
+            foreach (var parameter in method.Parameters)
+            {
+                if (IsTypeModel(parameter.Type)) { modelParameter = parameter; break; }
+            }
+
+            if (modelParameter is null)
+            {
+                // ...or a sibling overload that has one; that is the legacy accessor, kept for
+                // binary compatibility, and calling it explicitly bypasses the model entirely
+                var hasModelSibling = false;
+                foreach (var candidate in container.GetMembers(method.Name))
+                {
+                    if (candidate is IMethodSymbol sibling && !SymbolEqualityComparer.Default.Equals(sibling, method))
+                    {
+                        foreach (var parameter in sibling.Parameters)
+                        {
+                            if (IsTypeModel(parameter.Type)) { hasModelSibling = true; break; }
+                        }
+                    }
+                    if (hasModelSibling) break;
+                }
+                if (!hasModelSibling) return false;
+            }
+
+            // what does it carry? a setter's `value`, or a getter's return
+            if (method.ReturnsVoid)
+            {
+                foreach (var parameter in method.Parameters)
+                {
+                    if (parameter.Name == "value") { valueType = parameter.Type; break; }
+                }
+            }
+            else
+            {
+                valueType = Unwrap(method.ReturnType);
+            }
+            return valueType is not null;
+
+            static ITypeSymbol Unwrap(ITypeSymbol type)
+                => type is INamedTypeSymbol { IsGenericType: true, TypeArguments.Length: 1 } named
+                    && named.ConstructedFrom?.ToDisplayString() == "System.Collections.Generic.IEnumerable<T>"
+                    ? named.TypeArguments[0] : type;
+        }
+
+        private static bool IsTypeModel(ITypeSymbol type)
+            => type?.ToDisplayString() == "ProtoBuf.Meta.TypeModel";
+
+        /// <summary>
+        /// Reports where an extension value needs a model and none was passed (gap B49).
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>Only MESSAGE and ENUM values are reported</b>, and that was measured rather than
+        /// assumed. A scalar, string, bytes or repeated-scalar extension works with no model at all:
+        /// <c>ExtensibleUtil</c> tries a typed path first, which resolves an inbuilt serializer and
+        /// never consults a model. An enum has no inbuilt serializer and behaves exactly like a
+        /// message — a first probe suggested otherwise and was wrong, because the test model had not
+        /// been seeded with the enum.
+        /// </para>
+        /// <para>
+        /// <b>Error where the project asks for AOT</b>, warning elsewhere. The failure is not
+        /// AOT-specific — it throws on an ordinary JIT run too, whenever nothing has touched
+        /// <c>RuntimeTypeModel.Default</c>, which is exactly the shape of a generated-model app —
+        /// but a project that has asked for AOT has no working configuration at all, so it is a
+        /// defect rather than a risk.
+        /// </para>
+        /// </remarks>
+        private static void InspectExtensionAccessor(OperationAnalysisContext context,
+            ImmutableArray<INamedTypeSymbol> models, IInvocationOperation operation, IMethodSymbol method,
+            ITypeSymbol? valueType, IParameterSymbol? modelParameter)
+        {
+            if (valueType is null) return;
+            if (!NeedsModel(valueType)) return;
+
+            // a model WAS supplied - unless the argument is defaulted, or an explicit null
+            if (modelParameter is not null)
+            {
+                foreach (var argument in operation.Arguments)
+                {
+                    if (!SymbolEqualityComparer.Default.Equals(argument.Parameter, modelParameter)) continue;
+                    var supplied = argument.ArgumentKind == ArgumentKind.Explicit
+                        && argument.Value.ConstantValue is not { HasValue: true, Value: null };
+                    if (supplied) return;
+                }
+            }
+
+            // the generated model does this legitimately, and so does anything inside it
+            if (context.ContainingSymbol.ContainingType is { } containing
+                && models.Any(m => SymbolEqualityComparer.Default.Equals(m, containing)))
+            {
+                return;
+            }
+
+            // ...and so does the ACCESSOR CLASS ITSELF. protogen's legacy overload forwards to the
+            // model-aware one with a literal null - `GetFooExt(obj) => GetFooExt(obj, null);` - which
+            // is exactly the shape reported above, so without this every generated file warns about
+            // its own body, in a place the consumer cannot fix by regenerating. Narrow deliberately:
+            // a same-named sibling in the same static class, i.e. the forwarding pair and nothing else.
+            if (SymbolEqualityComparer.Default.Equals(context.ContainingSymbol.ContainingType, method.ContainingType)
+                && context.ContainingSymbol.Name == method.Name)
+            {
+                return;
+            }
+
+            var which = models.Length == 1
+                ? "'" + models[0].Name + ".Instance'"
+                : "a model (" + string.Join(", ", models.Select(static m => "'" + m.Name + "'")) + ")";
+
+            var properties = ImmutableDictionary<string, string?>.Empty
+                .Add(ModelsProperty, string.Join(";", models.Select(static m
+                    => m.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat))));
+
+            var severity = context.Options.AnalyzerConfigOptionsProvider.AsksForAot() is null
+                ? DiagnosticSeverity.Warning : DiagnosticSeverity.Error;
+
+            context.ReportDiagnostic(Diagnostic.Create(
+                ExtensionNeedsModel, operation.Syntax.GetLocation(), severity,
+                additionalLocations: null, properties: properties,
+                method.ContainingType.Name + "." + method.Name,
+                valueType.TypeKind == TypeKind.Enum ? "an enum" : "a message",
+                which,
+                valueType.Name));
+        }
+
+        /// <summary>An extension value that cannot be serialized without a model: a message or an enum.</summary>
+        private static bool NeedsModel(ITypeSymbol type)
+        {
+            if (type.TypeKind == TypeKind.Enum) return true;
+            foreach (var attribute in type.GetAttributes())
+            {
+                switch (attribute.AttributeClass?.ToDisplayString())
+                {
+                    case ProtoContractAttribute:
+                    case "System.Runtime.Serialization.DataContractAttribute":
+                    case "System.Xml.Serialization.XmlTypeAttribute":
+                        return true;
+                }
+            }
+            return false;
         }
 
         /// <summary>

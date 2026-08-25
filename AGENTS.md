@@ -608,7 +608,7 @@ it.
 | `PBN1000+` | `ProtoFileGenerator`'s schema errors |
 | **`PBN2001`–`PBN2010`** | **`ServiceContractAnalyzer`** (the gRPC analyzers, since #735) |
 | `PBN3000`–`PBN3004` | `ProtoModelGenerator` — the language floor and the four drop reasons |
-| `PBN3010`–`PBN3013` | `AotMigrationAnalyzer` |
+| `PBN3010`–`PBN3014` | `AotMigrationAnalyzer` |
 | `PBN4000`–`PBN4014`, `PBN4018` | `GrpcProxyGenerator` — the language floor, the drop reasons, and the AOT escalation |
 | **`PBN4015`–`PBN4017`** | **`GrpcMigrationAnalyzer`** — a *different owner inside the same block* |
 

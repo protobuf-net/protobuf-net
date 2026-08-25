@@ -16,3 +16,4 @@ PBN3021  | ProtoBuf | Warning  | A `[ProtoSchema]` path matches more than one ad
 PBN3022  | ProtoBuf | Warning  | A `[ProtoSchema]` file could not be parsed
 PBN3023  | ProtoBuf | Warning  | A `[ProtoSchema]` shape is not supported by the AOT model yet
 PBN0027  | Usage    | Warning  | A `[ProtoDataFormat]` declaration whose type can never be matched
+PBN3014  | ProtoBuf | Warning  | Extension accessor needs a model for this value type

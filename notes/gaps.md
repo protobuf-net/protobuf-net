@@ -5124,7 +5124,7 @@ not what to change:
   all - and **re-measure the baseline whenever a fixture changes**, since the count tracks fixtures.
   `AotSmoke` grew a non-generic check and two collection members this session.
 
-### B49. A `.proto` `extend` of MESSAGE type cannot work with a generated model — **open; and it is not an AOT-only problem**
+### B49. A `.proto` `extend` of MESSAGE type cannot work with a generated model — **DONE (2026-08-25); and it was never an AOT-only problem**
 
 Marc asked what `.proto` emits for extension values and which `TypeModel` it uses. Read off the
 codegen and then measured, because the answer turned out to be worse than "the reflective one".
@@ -5238,3 +5238,84 @@ keeps today's semantics exactly (it should — `null` is what the model-less ove
 and what the diagnostic demands when the calling code genuinely cannot see the model, which is the
 awkwardness Marc already named.
 
+#### Built (2026-08-25) — the overload pair, and `PBN3014` to move the rest
+
+Both halves landed, in that order, and each is worth reading as a shape rather than as a fix.
+
+**Phase 1 — the codegen** (`CSharpCodeGenerator.WriteExtension`). Exactly the pencilled design: the
+existing accessor **loses its `this`** and keeps its signature; a new overload takes the `this` and a
+trailing `TypeModel model = null`. The old one now forwards (`GetFooExt(obj) => GetFooExt(obj, null)`)
+rather than duplicating the body, so there is one implementation to be wrong.
+
+Two things the probe did not predict:
+
+- **an ENUM extension needs a model exactly as a message does**, and a first probe said otherwise.
+  That probe was wrong because the test model had never been seeded with the enum — a good reminder
+  that a negative result from a hand-built model is only as good as the model. So the predicate
+  everywhere below is *message **or** enum*, not "message".
+- **a scalar, string, bytes or repeated-scalar extension is fine with no model at all**, which is
+  why "just always demand a model" would be noise. `ExtensibleUtil` tries a typed path first, which
+  finds an inbuilt serializer and never consults a model. This is what makes the diagnostic
+  narrow enough to be an error under AOT rather than a blanket nag.
+
+**Phase 2 — `PBN3014`** on `AotMigrationAnalyzer`, with `PassModelToExtensionCodeFixProvider`.
+
+- **it matches by SHAPE, not by name**, and it has to: protogen lets the class be renamed
+  (`ExtensionTypeName`) and the accessor names come from the field names, so there is nothing stable
+  to match. The signal is a static method on a static class that either takes a `TypeModel` or has a
+  same-named sibling that does — i.e. the overload pair phase 1 emits *is* the recognition key.
+- **warning by default, error where the project asks for AOT** (`Utils.AsksForAot()`, shared with
+  `PBN4016`). The failure is not AOT-specific — it throws on JIT too, whenever nothing has touched
+  `RuntimeTypeModel.Default`, which is precisely a generated-model app — but a project that asked
+  for AOT has no working configuration at all, so there it is a defect rather than a risk.
+- **the fixer appends an argument rather than replacing the trailing one**, and that distinction is
+  the only bug it could plausibly have had: a setter's last argument is the *value*, so
+  `obj.SetFooExt(null)` is an ordinary call and overwriting it would silently discard it. The model
+  parameter is located **by symbol** and only an argument genuinely bound to it is replaced;
+  `DoesNotMistakeANullValueForTheModel` and `ReplacesAnExplicitNullModel` are the same source shape
+  (`…(null)`) resolving opposite ways, which is why both tests exist.
+- **the generated file would have warned about its own body.** The legacy overload forwards with a
+  literal `null`, which is exactly the reported shape — so without a carve-out every protogen output
+  reports `PBN3014` at a line the consumer cannot fix by regenerating. Suppressed narrowly: a
+  same-named sibling call inside the same static class. Caught by the fixer tests rather than by
+  review, because the preamble they stub is the generated shape.
+- `Compile Remove`d from `protobuf-net.BuildTools.Legacy`, as `CodeFixes/**` is a glob there — the
+  trap `AGENTS.md` records against `UseAotModelCodeFixProvider`, hit again for the same reason.
+
+**What remains open is only the awkward call site**, and it is a documentation matter rather than a
+gap: where the calling code genuinely cannot see a model, the answer is to pass one down or to reach
+`Model.Instance`, which is what the fixer offers. And an explicit **static** call
+(`Ext.GetFooExt(obj)`) still binds to the legacy overload, as the probe predicted — `PBN3014` reports
+it, since recognition is by shape and the legacy method is half of the pair.
+
+### B50. ~~A hierarchy where TWO layers declare `[ProtoBeforeDeserialization]` throws on the REFERENCE model~~ — **FIXED 2026-08-25**
+
+**Found by the gate, not by review, and it had been red since B46 landed** — `Callbacks` indexes 11
+and 12 (`HookedDerived`, `HookedHolder`) failed in `AotConformanceTests` with
+*"Only one pending OnBeforeDeserialize callback is supported"*. The whole stack is ref-emit; no
+generated code is involved, so it is a **protobuf-net limitation** rather than a generator gap.
+
+`SubTypeState<T>` has **one** slot for a callback pending until the instance materialises, and every
+layer of a hierarchy registers into it: `ReadSubType` hands the root's down through the sub-state's
+constructor, and the derived layer's `InheritanceTypeSerializer.ReadSubType` then registers its own
+on top. Two layers with a before-deserialize callback is therefore all it takes.
+
+The fix is to **chain instead of refusing**. Two details:
+
+- **a wrap, not `+=`.** The inherited callback arrived through a *contravariant* conversion, so its
+  runtime delegate type is `Action<TBase, …>` while the new one is `Action<TThisLayer, …>`, and
+  `Delegate.Combine` refuses to multicast across two delegate types — *"Delegates must be of the
+  same type"*, which is what the first attempt produced. The closure costs an allocation only in the
+  multi-layer case.
+- **it changes no behaviour beyond removing the throw**, which is the half worth pinning rather than
+  assuming. Both models still fire `base-bd;base-ad;` and nothing else, so **B46's root-only rule
+  survives intact** — verified by comparing the two traces directly
+  (`TheGeneratedModelAgreesWithRefEmitOnDESERIALIZECallbacksToo`), because the byte differential
+  cannot see this at all: `Trace` is not a serialized member, so a divergence in *which* callbacks
+  run is invisible to 3134 matching contracts.
+
+**The process lesson is the more useful one.** The `HookedDerived` deserialize callbacks were added
+as fixture decoration — "these must never fire" — on the strength of a probe that had only exercised
+the *write*. The fixture then sat red through a full session because the conformance suite was run
+with `--no-build` against a stale binary more than once. `--no-build` after editing anything the
+generator or the library compiles is not a shortcut, it is a different test.

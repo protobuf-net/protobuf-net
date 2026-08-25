@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
@@ -93,7 +93,7 @@ namespace ProtoBuf.CodeFixes
         /// <summary>
         /// Names in scope at the call site that are already a <c>[ProtoModel]</c> instance.
         /// </summary>
-        private static IEnumerable<string> InScopeModels(SemanticModel model,
+        internal static IEnumerable<string> InScopeModels(SemanticModel model,
             SyntaxNode at, CancellationToken cancellationToken)
         {
             var seen = new HashSet<string>(System.StringComparer.Ordinal);
@@ -123,7 +123,7 @@ namespace ProtoBuf.CodeFixes
         /// the consumer declared their own member of that name, so this is offered after anything
         /// genuinely in scope rather than instead of it.
         /// </remarks>
-        private static IEnumerable<string> SharedInstances(Diagnostic diagnostic)
+        internal static IEnumerable<string> SharedInstances(Diagnostic diagnostic)
         {
             if (!diagnostic.Properties.TryGetValue(AotMigrationAnalyzer.ModelsProperty, out var models)
                 || string.IsNullOrEmpty(models))
