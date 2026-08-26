@@ -148,6 +148,17 @@ namespace ProtoBuf.Reflection
                 tw.Write(AdditionalSuppressionCodes);
             }
             tw.WriteLine();
+            if (UseNullableRefs(ctx))
+            {
+                ctx.WriteLine()
+                   .WriteLine("// Nullable reference types are annotated below. Where a ShouldSerializeX() answers the")
+                   .WriteLine("// null question exactly, it carries System.Diagnostics.CodeAnalysis.MemberNotNullWhen,")
+                   .WriteLine("// which is .NET 5+ - NOT netstandard2.1. On older targets either declare that attribute")
+                   .WriteLine("// yourself (the compiler matches it by NAME, so a polyfill works) or turn this emission")
+                   .WriteLine("// off: <NullableReferenceType>false</NullableReferenceType> on the AdditionalFiles item,")
+                   .WriteLine("// or protogen's +nrt=no.")
+                   .WriteLine("#nullable enable");
+            }
         }
 
         /// <inheritdoc/>
@@ -280,7 +291,7 @@ namespace ProtoBuf.Reflection
                 ctx.WriteLine("#error message_set_wire_format is not currently implemented").WriteLine();
             }
 
-            ctx.WriteLine($"private global::ProtoBuf.IExtension {FieldPrefix}extensionData;")
+            ctx.WriteLine($"private global::ProtoBuf.IExtension{(UseNullableRefs(ctx) ? "?" : "")} {FieldPrefix}extensionData;")
                 .WriteLine($"global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)");
 
             if (ctx.Supports(CSharp6))
@@ -587,7 +598,8 @@ namespace ProtoBuf.Reflection
                 }
                 else if (!ctx.RepeatedAsList && UseArray(field))
                 {
-                    ctx.WriteLine($"{GetAccess(GetAccess(field))} {typeName}[] {Escape(name)} {{ get; set; }}");
+                    // unlike the List/Dictionary forms below, an array member gets no initializer
+                    ctx.WriteLine($"{GetAccess(GetAccess(field))} {typeName}[]{(UseNullableRefs(ctx) ? "?" : "")} {Escape(name)} {{ get; set; }}");
                 }
                 else if (ctx.Supports(CSharp6))
                 {
@@ -603,7 +615,13 @@ namespace ProtoBuf.Reflection
                 var defValue = defaultValue.IsNullOrWhiteSpace() ? (ctx.Supports(CSharp7_1) ? "default" : $"default({typeName})") : (defaultValue + suffix);
                 var fieldName = GetOneOfFieldName(oneOf.OneOf);
                 var storage = oneOf.GetStorage(field.type, field.TypeName);
-                ctx.WriteLine($"{GetAccess(GetAccess(field))} {typeName} {Escape(name)}").WriteLine("{").Indent();
+                // A oneof member reads as `defValue` when a SIBLING is the one that is set, so a
+                // reference-typed member is null most of the time - UNLESS it has a declared
+                // default, which is what `defValue` then is. A proto3 `string` in a oneof has
+                // exactly that shape (`: ""`), so this is the common case rather than a corner.
+                var oneOfNull = UseNullableRefs(ctx) && defaultValue.IsNullOrWhiteSpace()
+                    && IsNullableReference(ctx, field, typeName) ? "?" : "";
+                ctx.WriteLine($"{GetAccess(GetAccess(field))} {typeName}{oneOfNull} {Escape(name)}").WriteLine("{").Indent();
 
                 switch (field.type)
                 {
@@ -623,6 +641,7 @@ namespace ProtoBuf.Reflection
                 ctx.WriteLine($"{PropSetPrefix()}{fieldName} = new global::ProtoBuf.{unionType}({field.Number}, {cast}value);{PropSuffix()}")
                     .Outdent().WriteLine("}");
 
+                if (oneOfNull.Length != 0) WriteMemberNotNullWhen(ctx, name);
                 if (ctx.Supports(CSharp6))
                 {
                     ctx.WriteLine($"{GetAccess(GetAccess(field))} bool ShouldSerialize{name}() => {fieldName}.Is({field.Number});")
@@ -658,7 +677,13 @@ namespace ProtoBuf.Reflection
                         isRef = isNullable;
                         break;
                 }
-                ctx.WriteLine($"{GetAccess(GetAccess(field))} {typeName}{(isNullable ? "?": "")} {Escape(name)}").WriteLine("{").Indent();
+                // the BACKING FIELD is null whenever the member was never set - that is the whole
+                // mechanism behind ShouldSerialize/Reset - so it is nullable regardless of what the
+                // property says. The PROPERTY is only nullable when there is no default to fall
+                // back on: `get => __pbn__X ?? ""` never returns null.
+                var nullableBacking = UseNullableRefs(ctx) && IsNullableReference(ctx, field, fieldType) ? "?" : "";
+                var nullableProperty = nullableBacking.Length != 0 && defaultValue.IsNullOrWhiteSpace() ? "?" : "";
+                ctx.WriteLine($"{GetAccess(GetAccess(field))} {typeName}{(isNullable ? "?": nullableProperty)} {Escape(name)}").WriteLine("{").Indent();
                 tw = ctx.Write(PropGetPrefix());
                 tw.Write(fieldName);
                 if (!defaultValue.IsNullOrWhiteSpace())
@@ -676,6 +701,9 @@ namespace ProtoBuf.Reflection
 
                 ctx.WriteLine($"{PropSetPrefix()}{fieldName} = value;{PropSuffix()}")
                     .Outdent().WriteLine("}");
+                // only meaningful where the property is nullable too: with a default present,
+                // ShouldSerialize means "was explicitly SET", which says nothing about null
+                if (nullableProperty.Length != 0) WriteMemberNotNullWhen(ctx, name);
                 if (ctx.Supports(CSharp6))
                 {
                     ctx.WriteLine($"{GetAccess(GetAccess(field))} bool ShouldSerialize{name}() => {fieldName} != null;")
@@ -688,12 +716,16 @@ namespace ProtoBuf.Reflection
                         .WriteLine($"{GetAccess(GetAccess(field))} void Reset{name}()").WriteLine("{").Indent()
                         .WriteLine($"{fieldName} = null;").Outdent().WriteLine("}");
                 }
-                ctx.WriteLine($"private {fieldType} {fieldName};");
+                ctx.WriteLine($"private {fieldType}{nullableBacking} {fieldName};");
             }
             else
             {
-                tw = ctx.Write($"{GetAccess(GetAccess(field))} {typeName}{(IsNullableType(ctx, field, defaultValue, isOptional) ? "?" : "")} {Escape(name)} {{ get; set; }}");
-                if (!defaultValue.IsNullOrWhiteSpace() && ctx.Supports(CSharp6)) tw.Write($" = {defaultValue}{suffix};");
+                // a declared default becomes an initializer below, which is what keeps the member
+                // non-null; without one there is nothing to stop it being null
+                var hasInitializer = !defaultValue.IsNullOrWhiteSpace() && ctx.Supports(CSharp6);
+                var plainNull = UseNullableRefs(ctx) && !hasInitializer && IsNullableReference(ctx, field, typeName) ? "?" : "";
+                tw = ctx.Write($"{GetAccess(GetAccess(field))} {typeName}{(IsNullableType(ctx, field, defaultValue, isOptional) ? "?" : plainNull)} {Escape(name)} {{ get; set; }}");
+                if (hasInitializer) tw.Write($" = {defaultValue}{suffix};");
                 tw.WriteLine();
             }
             ctx.WriteLine();
@@ -705,12 +737,57 @@ namespace ProtoBuf.Reflection
 
         private static string GetOneOfFieldName(OneofDescriptorProto obj) => FieldPrefix + obj.Name;
 
+        /// <summary>
+        /// Emits the post-condition that lets a caller's <c>if (obj.ShouldSerializeX())</c> narrow
+        /// <c>obj.X</c> to non-null.
+        /// </summary>
+        private void WriteMemberNotNullWhen(GeneratorContext ctx, string name)
+            => ctx.WriteLine($"[global::System.Diagnostics.CodeAnalysis.MemberNotNullWhen(true, nameof({Escape(name)}))]");
+
+        /// <summary>
+        /// Whether to annotate this file for nullable reference types.
+        /// </summary>
+        /// <remarks>
+        /// The language check is a VETO rather than a preference: <c>#nullable</c> is itself a C# 8
+        /// directive, so below that we emit nothing at all - not even <c>#nullable disable</c>,
+        /// which would be a compile error in the consumer's build. Today's down-level output is
+        /// fine precisely because the <c>&lt;auto-generated&gt;</c> header needs no language support.
+        /// </remarks>
+        private static bool UseNullableRefs(GeneratorContext ctx)
+            => ctx.EmitNullableReferenceTypes && ctx.Supports(CSharp8);
+
+        /// <summary>
+        /// Whether the CLR type this field is emitted as can hold null - i.e. whether it is the
+        /// kind of member that wants a <c>?</c> once the file is annotated.
+        /// </summary>
+        /// <remarks>
+        /// Deliberately keyed on the emitted TYPE NAME as well as the field kind, because the
+        /// well-known message types do not map to messages: a Timestamp is a <c>DateTime?</c> and
+        /// a bcl.Guid is a <c>Guid?</c>. Every one of those already carries its own <c>?</c> by
+        /// the time it gets here (WriteField asks for the nullable spelling), so a name ending in
+        /// <c>?</c> is the reliable signal that we are looking at a value type.
+        /// </remarks>
+        private static bool IsNullableReference(GeneratorContext ctx, FieldDescriptorProto field, string typeName)
+        {
+            if (typeName.EndsWith("?")) return false; // a Nullable<T> spelling; not a reference at all
+            return field.type switch
+            {
+                FieldDescriptorProto.Type.TypeString => true,
+                FieldDescriptorProto.Type.TypeBytes => !UseMemory(ctx), // Memory<byte> is a struct
+                // what is left of message/group after the value-type mappings above is `object`,
+                // ProtoBuf.Empty, and ordinary generated messages - all of them references
+                FieldDescriptorProto.Type.TypeMessage or FieldDescriptorProto.Type.TypeGroup => true,
+                _ => false, // scalars and enums
+            };
+        }
+
         private static readonly Version // note: only mentioning features we use
             CSharp3 = new Version(3, 0), // partial methods
             CSharp4 = new Version(4, 0), // optional parameters
             CSharp6 = new Version(6, 0), // pragma prefixes, method expressions, property initializers
             CSharp7 = new Version(7, 0), // property expressions
-            CSharp7_1 = new Version(7, 1); // default literals
+            CSharp7_1 = new Version(7, 1), // default literals
+            CSharp8 = new Version(8, 0); // nullable reference types
 
         /// <summary>
         /// Starts an extensions block

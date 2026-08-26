@@ -634,6 +634,10 @@ namespace ProtoBuf.Reflection
                 EmitListSetters = IsEnabled("listset");
 
                 EmitNullWrappers = IsEnabled("nullwrappers", true);
+                // defaulted ON: from a build, ProtoFileGenerator asks the compilation and passes
+                // the answer explicitly, so this default only governs the CLI and the website -
+                // where there is nothing to ask, and annotations are what a modern consumer wants
+                EmitNullableReferenceTypes = IsEnabled("nrt", true);
                 EmitCompatibilityLevelAttribute = IsEnabled("compatlevel", true);
                 RepeatedAsList = IsEnabled("repeatedaslist");
                 UnknownSubTypes = ParseUnknownSubTypes(GetCustomOption("subtypes"));
@@ -679,6 +683,17 @@ namespace ProtoBuf.Reflection
             /// Whether wrappers.proto should be generated as C# nullable types (int?)
             /// </summary>
             public bool EmitNullWrappers { get; }
+
+            /// <summary>
+            /// Whether nullable reference type annotations should be emitted.
+            /// </summary>
+            /// <remarks>
+            /// This is a request, not a decision: a generator whose language cannot express the
+            /// annotations ignores it, and the C# generator additionally requires C# 8 - the
+            /// <c>#nullable</c> directive is itself a C# 8 feature, so below that there is no way
+            /// to say anything at all, not even "off".
+            /// </remarks>
+            public bool EmitNullableReferenceTypes { get; }
             
             /// <summary>
             /// Whether well-known types should be marked with <see cref="CompatibilityLevel"/> instead of <see cref="DataFormat"/>

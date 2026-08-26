@@ -22,8 +22,8 @@ namespace ProtoBuf.Test.Nullables.WrappersProto
         [InlineData(".google.protobuf.Int32Value", "int?", NullWrappedValueAttributeValue)]
         [InlineData(".google.protobuf.UInt32Value", "uint?", NullWrappedValueAttributeValue)]
         [InlineData(".google.protobuf.BoolValue", "bool?", NullWrappedValueAttributeValue)]
-        [InlineData(".google.protobuf.StringValue", "string", NullWrappedValueAttributeValue)]
-        [InlineData(".google.protobuf.BytesValue", "byte[]", NullWrappedValueAttributeValue)]
+        [InlineData(".google.protobuf.StringValue", "string?", NullWrappedValueAttributeValue)]
+        [InlineData(".google.protobuf.BytesValue", "byte[]?", NullWrappedValueAttributeValue)]
         [InlineData(".google.protobuf.Timestamp", "global::System.DateTime?", CompatibilityLevel300AttributeValue)]
         [InlineData(".google.protobuf.Duration", "global::System.TimeSpan?", CompatibilityLevel300AttributeValue)]
         public void GoogleProtobufWellKnownType_ConvertsToCSharpNullable(string protoFieldType, string csharpGeneratedType, string additionalAttributeValue) 
@@ -77,10 +77,18 @@ namespace ProtoBuf.Test.Nullables.WrappersProto
 
             #region Designer generated code
             #pragma warning disable CS0612, CS0618, CS1591, CS3021, CS8981, IDE0079, IDE1006, RCS1036, RCS1057, RCS1085, RCS1192
+
+            // Nullable reference types are annotated below. Where a ShouldSerializeX() answers the
+            // null question exactly, it carries System.Diagnostics.CodeAnalysis.MemberNotNullWhen,
+            // which is .NET 5+ - NOT netstandard2.1. On older targets either declare that attribute
+            // yourself (the compiler matches it by NAME, so a polyfill works) or turn this emission
+            // off: <NullableReferenceType>false</NullableReferenceType> on the AdditionalFiles item,
+            // or protogen's +nrt=no.
+            #nullable enable
             [global::ProtoBuf.ProtoContract()]
             public partial class WrappedTest : global::ProtoBuf.IExtensible
             {{
-                private global::ProtoBuf.IExtension __pbn__extensionData;
+                private global::ProtoBuf.IExtension? __pbn__extensionData;
                 global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
                     => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
