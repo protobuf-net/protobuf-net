@@ -2930,7 +2930,8 @@ namespace Google.Protobuf.Reflection
         public partial class NamePart
         {
             /// <inheritdoc/>
-            public override string ToString() => IsExtension ? ("(" + name_part + ")") : name_part;
+            // ToString must not return null; the concat branch already handles it
+            public override string ToString() => IsExtension ? ("(" + name_part + ")") : (name_part ?? "");
             internal Token Token { get; set; }
 
             /// <summary>

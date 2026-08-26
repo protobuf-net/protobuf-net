@@ -6,13 +6,24 @@
 
 #region Designer generated code
 #pragma warning disable CS0612, CS0618, CS1591, CS3021, CS8981, IDE0079, IDE1006, RCS1036, RCS1057, RCS1085, RCS1192
+
+// Nullable reference types are annotated below, using two attributes from
+// System.Diagnostics.CodeAnalysis: MemberNotNullWhen, where a ShouldSerializeX()
+// answers the null question exactly; and AllowNull, where a getter substitutes a
+// default and so cannot return null, but assigning null is still how the member is
+// unset. MemberNotNullWhen is .NET 5+ (NOT netstandard2.1); AllowNull is
+// netstandard2.1+. On older targets, either declare them yourself - the compiler
+// matches these by NAME, so a polyfill works - or turn this emission off:
+// <NullableReferenceType>false</NullableReferenceType> on the AdditionalFiles item,
+// or protogen's +nrt=no.
+#nullable enable
 namespace Google.Protobuf.Reflection
 {
 
     [global::ProtoBuf.ProtoContract()]
     public partial class FileDescriptorSet : global::ProtoBuf.IExtensible
     {
-        private global::ProtoBuf.IExtension __pbn__extensionData;
+        private global::ProtoBuf.IExtension? __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
@@ -24,12 +35,13 @@ namespace Google.Protobuf.Reflection
     [global::ProtoBuf.ProtoContract()]
     public partial class FileDescriptorProto : global::ProtoBuf.IExtensible
     {
-        private global::ProtoBuf.IExtension __pbn__extensionData;
+        private global::ProtoBuf.IExtension? __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
         [global::ProtoBuf.ProtoMember(1, Name = @"name")]
         [global::System.ComponentModel.DefaultValue("")]
+        [global::System.Diagnostics.CodeAnalysis.AllowNull]
         public string Name
         {
             get => __pbn__Name ?? "";
@@ -37,10 +49,11 @@ namespace Google.Protobuf.Reflection
         }
         public bool ShouldSerializeName() => __pbn__Name != null;
         public void ResetName() => __pbn__Name = null;
-        private string __pbn__Name;
+        private string? __pbn__Name;
 
         [global::ProtoBuf.ProtoMember(2, Name = @"package")]
         [global::System.ComponentModel.DefaultValue("")]
+        [global::System.Diagnostics.CodeAnalysis.AllowNull]
         public string Package
         {
             get => __pbn__Package ?? "";
@@ -48,16 +61,16 @@ namespace Google.Protobuf.Reflection
         }
         public bool ShouldSerializePackage() => __pbn__Package != null;
         public void ResetPackage() => __pbn__Package = null;
-        private string __pbn__Package;
+        private string? __pbn__Package;
 
         [global::ProtoBuf.ProtoMember(3, Name = @"dependency")]
         public global::System.Collections.Generic.List<string> Dependencies { get; } = new global::System.Collections.Generic.List<string>();
 
         [global::ProtoBuf.ProtoMember(10, Name = @"public_dependency")]
-        public int[] PublicDependencies { get; set; }
+        public int[]? PublicDependencies { get; set; }
 
         [global::ProtoBuf.ProtoMember(11, Name = @"weak_dependency")]
-        public int[] WeakDependencies { get; set; }
+        public int[]? WeakDependencies { get; set; }
 
         [global::ProtoBuf.ProtoMember(15, Name = @"option_dependency")]
         public global::System.Collections.Generic.List<string> OptionDependencies { get; } = new global::System.Collections.Generic.List<string>();
@@ -75,13 +88,14 @@ namespace Google.Protobuf.Reflection
         public global::System.Collections.Generic.List<FieldDescriptorProto> Extensions { get; } = new global::System.Collections.Generic.List<FieldDescriptorProto>();
 
         [global::ProtoBuf.ProtoMember(8, Name = @"options")]
-        public FileOptions Options { get; set; }
+        public FileOptions? Options { get; set; }
 
         [global::ProtoBuf.ProtoMember(9, Name = @"source_code_info")]
-        public SourceCodeInfo SourceCodeInfo { get; set; }
+        public SourceCodeInfo? SourceCodeInfo { get; set; }
 
         [global::ProtoBuf.ProtoMember(12, Name = @"syntax")]
         [global::System.ComponentModel.DefaultValue("")]
+        [global::System.Diagnostics.CodeAnalysis.AllowNull]
         public string Syntax
         {
             get => __pbn__Syntax ?? "";
@@ -89,7 +103,7 @@ namespace Google.Protobuf.Reflection
         }
         public bool ShouldSerializeSyntax() => __pbn__Syntax != null;
         public void ResetSyntax() => __pbn__Syntax = null;
-        private string __pbn__Syntax;
+        private string? __pbn__Syntax;
 
         [global::ProtoBuf.ProtoMember(14, Name = @"edition")]
         [global::System.ComponentModel.DefaultValue(Edition.EditionUnknown)]
@@ -107,12 +121,13 @@ namespace Google.Protobuf.Reflection
     [global::ProtoBuf.ProtoContract()]
     public partial class DescriptorProto : global::ProtoBuf.IExtensible
     {
-        private global::ProtoBuf.IExtension __pbn__extensionData;
+        private global::ProtoBuf.IExtension? __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
         [global::ProtoBuf.ProtoMember(1, Name = @"name")]
         [global::System.ComponentModel.DefaultValue("")]
+        [global::System.Diagnostics.CodeAnalysis.AllowNull]
         public string Name
         {
             get => __pbn__Name ?? "";
@@ -120,7 +135,7 @@ namespace Google.Protobuf.Reflection
         }
         public bool ShouldSerializeName() => __pbn__Name != null;
         public void ResetName() => __pbn__Name = null;
-        private string __pbn__Name;
+        private string? __pbn__Name;
 
         [global::ProtoBuf.ProtoMember(2, Name = @"field")]
         public global::System.Collections.Generic.List<FieldDescriptorProto> Fields { get; } = new global::System.Collections.Generic.List<FieldDescriptorProto>();
@@ -141,7 +156,7 @@ namespace Google.Protobuf.Reflection
         public global::System.Collections.Generic.List<OneofDescriptorProto> OneofDecls { get; } = new global::System.Collections.Generic.List<OneofDescriptorProto>();
 
         [global::ProtoBuf.ProtoMember(7, Name = @"options")]
-        public MessageOptions Options { get; set; }
+        public MessageOptions? Options { get; set; }
 
         [global::ProtoBuf.ProtoMember(9, Name = @"reserved_range")]
         public global::System.Collections.Generic.List<ReservedRange> ReservedRanges { get; } = new global::System.Collections.Generic.List<ReservedRange>();
@@ -163,7 +178,7 @@ namespace Google.Protobuf.Reflection
         [global::ProtoBuf.ProtoContract()]
         public partial class ExtensionRange : global::ProtoBuf.IExtensible
         {
-            private global::ProtoBuf.IExtension __pbn__extensionData;
+            private global::ProtoBuf.IExtension? __pbn__extensionData;
             global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
                 => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
@@ -188,14 +203,14 @@ namespace Google.Protobuf.Reflection
             private int? __pbn__End;
 
             [global::ProtoBuf.ProtoMember(3, Name = @"options")]
-            public ExtensionRangeOptions Options { get; set; }
+            public ExtensionRangeOptions? Options { get; set; }
 
         }
 
         [global::ProtoBuf.ProtoContract()]
         public partial class ReservedRange : global::ProtoBuf.IExtensible
         {
-            private global::ProtoBuf.IExtension __pbn__extensionData;
+            private global::ProtoBuf.IExtension? __pbn__extensionData;
             global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
                 => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
@@ -226,7 +241,7 @@ namespace Google.Protobuf.Reflection
     [global::ProtoBuf.ProtoContract()]
     public partial class ExtensionRangeOptions : global::ProtoBuf.IExtensible
     {
-        private global::ProtoBuf.IExtension __pbn__extensionData;
+        private global::ProtoBuf.IExtension? __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
@@ -237,7 +252,7 @@ namespace Google.Protobuf.Reflection
         public global::System.Collections.Generic.List<Declaration> Declarations { get; } = new global::System.Collections.Generic.List<Declaration>();
 
         [global::ProtoBuf.ProtoMember(50, Name = @"features")]
-        public FeatureSet Features { get; set; }
+        public FeatureSet? Features { get; set; }
 
         [global::ProtoBuf.ProtoMember(3, Name = @"verification")]
         [global::System.ComponentModel.DefaultValue(VerificationState.Unverified)]
@@ -253,7 +268,7 @@ namespace Google.Protobuf.Reflection
         [global::ProtoBuf.ProtoContract()]
         public partial class Declaration : global::ProtoBuf.IExtensible
         {
-            private global::ProtoBuf.IExtension __pbn__extensionData;
+            private global::ProtoBuf.IExtension? __pbn__extensionData;
             global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
                 => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
@@ -269,6 +284,7 @@ namespace Google.Protobuf.Reflection
 
             [global::ProtoBuf.ProtoMember(2, Name = @"full_name")]
             [global::System.ComponentModel.DefaultValue("")]
+            [global::System.Diagnostics.CodeAnalysis.AllowNull]
             public string FullName
             {
                 get => __pbn__FullName ?? "";
@@ -276,10 +292,11 @@ namespace Google.Protobuf.Reflection
             }
             public bool ShouldSerializeFullName() => __pbn__FullName != null;
             public void ResetFullName() => __pbn__FullName = null;
-            private string __pbn__FullName;
+            private string? __pbn__FullName;
 
             [global::ProtoBuf.ProtoMember(3, Name = @"type")]
             [global::System.ComponentModel.DefaultValue("")]
+            [global::System.Diagnostics.CodeAnalysis.AllowNull]
             public string Type
             {
                 get => __pbn__Type ?? "";
@@ -287,7 +304,7 @@ namespace Google.Protobuf.Reflection
             }
             public bool ShouldSerializeType() => __pbn__Type != null;
             public void ResetType() => __pbn__Type = null;
-            private string __pbn__Type;
+            private string? __pbn__Type;
 
             [global::ProtoBuf.ProtoMember(5, Name = @"reserved")]
             public bool Reserved
@@ -325,12 +342,13 @@ namespace Google.Protobuf.Reflection
     [global::ProtoBuf.ProtoContract()]
     public partial class FieldDescriptorProto : global::ProtoBuf.IExtensible
     {
-        private global::ProtoBuf.IExtension __pbn__extensionData;
+        private global::ProtoBuf.IExtension? __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
         [global::ProtoBuf.ProtoMember(1, Name = @"name")]
         [global::System.ComponentModel.DefaultValue("")]
+        [global::System.Diagnostics.CodeAnalysis.AllowNull]
         public string Name
         {
             get => __pbn__Name ?? "";
@@ -338,7 +356,7 @@ namespace Google.Protobuf.Reflection
         }
         public bool ShouldSerializeName() => __pbn__Name != null;
         public void ResetName() => __pbn__Name = null;
-        private string __pbn__Name;
+        private string? __pbn__Name;
 
         [global::ProtoBuf.ProtoMember(3, Name = @"number")]
         public int Number
@@ -374,6 +392,7 @@ namespace Google.Protobuf.Reflection
 
         [global::ProtoBuf.ProtoMember(6, Name = @"type_name")]
         [global::System.ComponentModel.DefaultValue("")]
+        [global::System.Diagnostics.CodeAnalysis.AllowNull]
         public string TypeName
         {
             get => __pbn__TypeName ?? "";
@@ -381,10 +400,11 @@ namespace Google.Protobuf.Reflection
         }
         public bool ShouldSerializeTypeName() => __pbn__TypeName != null;
         public void ResetTypeName() => __pbn__TypeName = null;
-        private string __pbn__TypeName;
+        private string? __pbn__TypeName;
 
         [global::ProtoBuf.ProtoMember(2, Name = @"extendee")]
         [global::System.ComponentModel.DefaultValue("")]
+        [global::System.Diagnostics.CodeAnalysis.AllowNull]
         public string Extendee
         {
             get => __pbn__Extendee ?? "";
@@ -392,10 +412,11 @@ namespace Google.Protobuf.Reflection
         }
         public bool ShouldSerializeExtendee() => __pbn__Extendee != null;
         public void ResetExtendee() => __pbn__Extendee = null;
-        private string __pbn__Extendee;
+        private string? __pbn__Extendee;
 
         [global::ProtoBuf.ProtoMember(7, Name = @"default_value")]
         [global::System.ComponentModel.DefaultValue("")]
+        [global::System.Diagnostics.CodeAnalysis.AllowNull]
         public string DefaultValue
         {
             get => __pbn__DefaultValue ?? "";
@@ -403,7 +424,7 @@ namespace Google.Protobuf.Reflection
         }
         public bool ShouldSerializeDefaultValue() => __pbn__DefaultValue != null;
         public void ResetDefaultValue() => __pbn__DefaultValue = null;
-        private string __pbn__DefaultValue;
+        private string? __pbn__DefaultValue;
 
         [global::ProtoBuf.ProtoMember(9, Name = @"oneof_index")]
         public int OneofIndex
@@ -417,6 +438,7 @@ namespace Google.Protobuf.Reflection
 
         [global::ProtoBuf.ProtoMember(10, Name = @"json_name")]
         [global::System.ComponentModel.DefaultValue("")]
+        [global::System.Diagnostics.CodeAnalysis.AllowNull]
         public string JsonName
         {
             get => __pbn__JsonName ?? "";
@@ -424,10 +446,10 @@ namespace Google.Protobuf.Reflection
         }
         public bool ShouldSerializeJsonName() => __pbn__JsonName != null;
         public void ResetJsonName() => __pbn__JsonName = null;
-        private string __pbn__JsonName;
+        private string? __pbn__JsonName;
 
         [global::ProtoBuf.ProtoMember(8, Name = @"options")]
-        public FieldOptions Options { get; set; }
+        public FieldOptions? Options { get; set; }
 
         [global::ProtoBuf.ProtoMember(17, Name = @"proto3_optional")]
         public bool Proto3Optional
@@ -496,12 +518,13 @@ namespace Google.Protobuf.Reflection
     [global::ProtoBuf.ProtoContract()]
     public partial class OneofDescriptorProto : global::ProtoBuf.IExtensible
     {
-        private global::ProtoBuf.IExtension __pbn__extensionData;
+        private global::ProtoBuf.IExtension? __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
         [global::ProtoBuf.ProtoMember(1, Name = @"name")]
         [global::System.ComponentModel.DefaultValue("")]
+        [global::System.Diagnostics.CodeAnalysis.AllowNull]
         public string Name
         {
             get => __pbn__Name ?? "";
@@ -509,22 +532,23 @@ namespace Google.Protobuf.Reflection
         }
         public bool ShouldSerializeName() => __pbn__Name != null;
         public void ResetName() => __pbn__Name = null;
-        private string __pbn__Name;
+        private string? __pbn__Name;
 
         [global::ProtoBuf.ProtoMember(2, Name = @"options")]
-        public OneofOptions Options { get; set; }
+        public OneofOptions? Options { get; set; }
 
     }
 
     [global::ProtoBuf.ProtoContract()]
     public partial class EnumDescriptorProto : global::ProtoBuf.IExtensible
     {
-        private global::ProtoBuf.IExtension __pbn__extensionData;
+        private global::ProtoBuf.IExtension? __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
         [global::ProtoBuf.ProtoMember(1, Name = @"name")]
         [global::System.ComponentModel.DefaultValue("")]
+        [global::System.Diagnostics.CodeAnalysis.AllowNull]
         public string Name
         {
             get => __pbn__Name ?? "";
@@ -532,13 +556,13 @@ namespace Google.Protobuf.Reflection
         }
         public bool ShouldSerializeName() => __pbn__Name != null;
         public void ResetName() => __pbn__Name = null;
-        private string __pbn__Name;
+        private string? __pbn__Name;
 
         [global::ProtoBuf.ProtoMember(2, Name = @"value")]
         public global::System.Collections.Generic.List<EnumValueDescriptorProto> Values { get; } = new global::System.Collections.Generic.List<EnumValueDescriptorProto>();
 
         [global::ProtoBuf.ProtoMember(3, Name = @"options")]
-        public EnumOptions Options { get; set; }
+        public EnumOptions? Options { get; set; }
 
         [global::ProtoBuf.ProtoMember(4, Name = @"reserved_range")]
         public global::System.Collections.Generic.List<EnumReservedRange> ReservedRanges { get; } = new global::System.Collections.Generic.List<EnumReservedRange>();
@@ -560,7 +584,7 @@ namespace Google.Protobuf.Reflection
         [global::ProtoBuf.ProtoContract()]
         public partial class EnumReservedRange : global::ProtoBuf.IExtensible
         {
-            private global::ProtoBuf.IExtension __pbn__extensionData;
+            private global::ProtoBuf.IExtension? __pbn__extensionData;
             global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
                 => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
@@ -591,12 +615,13 @@ namespace Google.Protobuf.Reflection
     [global::ProtoBuf.ProtoContract()]
     public partial class EnumValueDescriptorProto : global::ProtoBuf.IExtensible
     {
-        private global::ProtoBuf.IExtension __pbn__extensionData;
+        private global::ProtoBuf.IExtension? __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
         [global::ProtoBuf.ProtoMember(1, Name = @"name")]
         [global::System.ComponentModel.DefaultValue("")]
+        [global::System.Diagnostics.CodeAnalysis.AllowNull]
         public string Name
         {
             get => __pbn__Name ?? "";
@@ -604,7 +629,7 @@ namespace Google.Protobuf.Reflection
         }
         public bool ShouldSerializeName() => __pbn__Name != null;
         public void ResetName() => __pbn__Name = null;
-        private string __pbn__Name;
+        private string? __pbn__Name;
 
         [global::ProtoBuf.ProtoMember(2, Name = @"number")]
         public int Number
@@ -617,19 +642,20 @@ namespace Google.Protobuf.Reflection
         private int? __pbn__Number;
 
         [global::ProtoBuf.ProtoMember(3, Name = @"options")]
-        public EnumValueOptions Options { get; set; }
+        public EnumValueOptions? Options { get; set; }
 
     }
 
     [global::ProtoBuf.ProtoContract()]
     public partial class ServiceDescriptorProto : global::ProtoBuf.IExtensible
     {
-        private global::ProtoBuf.IExtension __pbn__extensionData;
+        private global::ProtoBuf.IExtension? __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
         [global::ProtoBuf.ProtoMember(1, Name = @"name")]
         [global::System.ComponentModel.DefaultValue("")]
+        [global::System.Diagnostics.CodeAnalysis.AllowNull]
         public string Name
         {
             get => __pbn__Name ?? "";
@@ -637,25 +663,26 @@ namespace Google.Protobuf.Reflection
         }
         public bool ShouldSerializeName() => __pbn__Name != null;
         public void ResetName() => __pbn__Name = null;
-        private string __pbn__Name;
+        private string? __pbn__Name;
 
         [global::ProtoBuf.ProtoMember(2, Name = @"method")]
         public global::System.Collections.Generic.List<MethodDescriptorProto> Methods { get; } = new global::System.Collections.Generic.List<MethodDescriptorProto>();
 
         [global::ProtoBuf.ProtoMember(3, Name = @"options")]
-        public ServiceOptions Options { get; set; }
+        public ServiceOptions? Options { get; set; }
 
     }
 
     [global::ProtoBuf.ProtoContract()]
     public partial class MethodDescriptorProto : global::ProtoBuf.IExtensible
     {
-        private global::ProtoBuf.IExtension __pbn__extensionData;
+        private global::ProtoBuf.IExtension? __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
         [global::ProtoBuf.ProtoMember(1, Name = @"name")]
         [global::System.ComponentModel.DefaultValue("")]
+        [global::System.Diagnostics.CodeAnalysis.AllowNull]
         public string Name
         {
             get => __pbn__Name ?? "";
@@ -663,10 +690,11 @@ namespace Google.Protobuf.Reflection
         }
         public bool ShouldSerializeName() => __pbn__Name != null;
         public void ResetName() => __pbn__Name = null;
-        private string __pbn__Name;
+        private string? __pbn__Name;
 
         [global::ProtoBuf.ProtoMember(2, Name = @"input_type")]
         [global::System.ComponentModel.DefaultValue("")]
+        [global::System.Diagnostics.CodeAnalysis.AllowNull]
         public string InputType
         {
             get => __pbn__InputType ?? "";
@@ -674,10 +702,11 @@ namespace Google.Protobuf.Reflection
         }
         public bool ShouldSerializeInputType() => __pbn__InputType != null;
         public void ResetInputType() => __pbn__InputType = null;
-        private string __pbn__InputType;
+        private string? __pbn__InputType;
 
         [global::ProtoBuf.ProtoMember(3, Name = @"output_type")]
         [global::System.ComponentModel.DefaultValue("")]
+        [global::System.Diagnostics.CodeAnalysis.AllowNull]
         public string OutputType
         {
             get => __pbn__OutputType ?? "";
@@ -685,10 +714,10 @@ namespace Google.Protobuf.Reflection
         }
         public bool ShouldSerializeOutputType() => __pbn__OutputType != null;
         public void ResetOutputType() => __pbn__OutputType = null;
-        private string __pbn__OutputType;
+        private string? __pbn__OutputType;
 
         [global::ProtoBuf.ProtoMember(4, Name = @"options")]
-        public MethodOptions Options { get; set; }
+        public MethodOptions? Options { get; set; }
 
         [global::ProtoBuf.ProtoMember(5, Name = @"client_streaming")]
         [global::System.ComponentModel.DefaultValue(false)]
@@ -717,12 +746,13 @@ namespace Google.Protobuf.Reflection
     [global::ProtoBuf.ProtoContract()]
     public partial class FileOptions : global::ProtoBuf.IExtensible
     {
-        private global::ProtoBuf.IExtension __pbn__extensionData;
+        private global::ProtoBuf.IExtension? __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
         [global::ProtoBuf.ProtoMember(1, Name = @"java_package")]
         [global::System.ComponentModel.DefaultValue("")]
+        [global::System.Diagnostics.CodeAnalysis.AllowNull]
         public string JavaPackage
         {
             get => __pbn__JavaPackage ?? "";
@@ -730,10 +760,11 @@ namespace Google.Protobuf.Reflection
         }
         public bool ShouldSerializeJavaPackage() => __pbn__JavaPackage != null;
         public void ResetJavaPackage() => __pbn__JavaPackage = null;
-        private string __pbn__JavaPackage;
+        private string? __pbn__JavaPackage;
 
         [global::ProtoBuf.ProtoMember(8, Name = @"java_outer_classname")]
         [global::System.ComponentModel.DefaultValue("")]
+        [global::System.Diagnostics.CodeAnalysis.AllowNull]
         public string JavaOuterClassname
         {
             get => __pbn__JavaOuterClassname ?? "";
@@ -741,7 +772,7 @@ namespace Google.Protobuf.Reflection
         }
         public bool ShouldSerializeJavaOuterClassname() => __pbn__JavaOuterClassname != null;
         public void ResetJavaOuterClassname() => __pbn__JavaOuterClassname = null;
-        private string __pbn__JavaOuterClassname;
+        private string? __pbn__JavaOuterClassname;
 
         [global::ProtoBuf.ProtoMember(10, Name = @"java_multiple_files")]
         [global::System.ComponentModel.DefaultValue(false)]
@@ -789,6 +820,7 @@ namespace Google.Protobuf.Reflection
 
         [global::ProtoBuf.ProtoMember(11, Name = @"go_package")]
         [global::System.ComponentModel.DefaultValue("")]
+        [global::System.Diagnostics.CodeAnalysis.AllowNull]
         public string GoPackage
         {
             get => __pbn__GoPackage ?? "";
@@ -796,7 +828,7 @@ namespace Google.Protobuf.Reflection
         }
         public bool ShouldSerializeGoPackage() => __pbn__GoPackage != null;
         public void ResetGoPackage() => __pbn__GoPackage = null;
-        private string __pbn__GoPackage;
+        private string? __pbn__GoPackage;
 
         [global::ProtoBuf.ProtoMember(16, Name = @"cc_generic_services")]
         [global::System.ComponentModel.DefaultValue(false)]
@@ -855,6 +887,7 @@ namespace Google.Protobuf.Reflection
 
         [global::ProtoBuf.ProtoMember(36, Name = @"objc_class_prefix")]
         [global::System.ComponentModel.DefaultValue("")]
+        [global::System.Diagnostics.CodeAnalysis.AllowNull]
         public string ObjcClassPrefix
         {
             get => __pbn__ObjcClassPrefix ?? "";
@@ -862,10 +895,11 @@ namespace Google.Protobuf.Reflection
         }
         public bool ShouldSerializeObjcClassPrefix() => __pbn__ObjcClassPrefix != null;
         public void ResetObjcClassPrefix() => __pbn__ObjcClassPrefix = null;
-        private string __pbn__ObjcClassPrefix;
+        private string? __pbn__ObjcClassPrefix;
 
         [global::ProtoBuf.ProtoMember(37, Name = @"csharp_namespace")]
         [global::System.ComponentModel.DefaultValue("")]
+        [global::System.Diagnostics.CodeAnalysis.AllowNull]
         public string CsharpNamespace
         {
             get => __pbn__CsharpNamespace ?? "";
@@ -873,10 +907,11 @@ namespace Google.Protobuf.Reflection
         }
         public bool ShouldSerializeCsharpNamespace() => __pbn__CsharpNamespace != null;
         public void ResetCsharpNamespace() => __pbn__CsharpNamespace = null;
-        private string __pbn__CsharpNamespace;
+        private string? __pbn__CsharpNamespace;
 
         [global::ProtoBuf.ProtoMember(39, Name = @"swift_prefix")]
         [global::System.ComponentModel.DefaultValue("")]
+        [global::System.Diagnostics.CodeAnalysis.AllowNull]
         public string SwiftPrefix
         {
             get => __pbn__SwiftPrefix ?? "";
@@ -884,10 +919,11 @@ namespace Google.Protobuf.Reflection
         }
         public bool ShouldSerializeSwiftPrefix() => __pbn__SwiftPrefix != null;
         public void ResetSwiftPrefix() => __pbn__SwiftPrefix = null;
-        private string __pbn__SwiftPrefix;
+        private string? __pbn__SwiftPrefix;
 
         [global::ProtoBuf.ProtoMember(40, Name = @"php_class_prefix")]
         [global::System.ComponentModel.DefaultValue("")]
+        [global::System.Diagnostics.CodeAnalysis.AllowNull]
         public string PhpClassPrefix
         {
             get => __pbn__PhpClassPrefix ?? "";
@@ -895,10 +931,11 @@ namespace Google.Protobuf.Reflection
         }
         public bool ShouldSerializePhpClassPrefix() => __pbn__PhpClassPrefix != null;
         public void ResetPhpClassPrefix() => __pbn__PhpClassPrefix = null;
-        private string __pbn__PhpClassPrefix;
+        private string? __pbn__PhpClassPrefix;
 
         [global::ProtoBuf.ProtoMember(41, Name = @"php_namespace")]
         [global::System.ComponentModel.DefaultValue("")]
+        [global::System.Diagnostics.CodeAnalysis.AllowNull]
         public string PhpNamespace
         {
             get => __pbn__PhpNamespace ?? "";
@@ -906,10 +943,11 @@ namespace Google.Protobuf.Reflection
         }
         public bool ShouldSerializePhpNamespace() => __pbn__PhpNamespace != null;
         public void ResetPhpNamespace() => __pbn__PhpNamespace = null;
-        private string __pbn__PhpNamespace;
+        private string? __pbn__PhpNamespace;
 
         [global::ProtoBuf.ProtoMember(44, Name = @"php_metadata_namespace")]
         [global::System.ComponentModel.DefaultValue("")]
+        [global::System.Diagnostics.CodeAnalysis.AllowNull]
         public string PhpMetadataNamespace
         {
             get => __pbn__PhpMetadataNamespace ?? "";
@@ -917,10 +955,11 @@ namespace Google.Protobuf.Reflection
         }
         public bool ShouldSerializePhpMetadataNamespace() => __pbn__PhpMetadataNamespace != null;
         public void ResetPhpMetadataNamespace() => __pbn__PhpMetadataNamespace = null;
-        private string __pbn__PhpMetadataNamespace;
+        private string? __pbn__PhpMetadataNamespace;
 
         [global::ProtoBuf.ProtoMember(45, Name = @"ruby_package")]
         [global::System.ComponentModel.DefaultValue("")]
+        [global::System.Diagnostics.CodeAnalysis.AllowNull]
         public string RubyPackage
         {
             get => __pbn__RubyPackage ?? "";
@@ -928,10 +967,10 @@ namespace Google.Protobuf.Reflection
         }
         public bool ShouldSerializeRubyPackage() => __pbn__RubyPackage != null;
         public void ResetRubyPackage() => __pbn__RubyPackage = null;
-        private string __pbn__RubyPackage;
+        private string? __pbn__RubyPackage;
 
         [global::ProtoBuf.ProtoMember(50, Name = @"features")]
-        public FeatureSet Features { get; set; }
+        public FeatureSet? Features { get; set; }
 
         [global::ProtoBuf.ProtoMember(999, Name = @"uninterpreted_option")]
         public global::System.Collections.Generic.List<UninterpretedOption> UninterpretedOptions { get; } = new global::System.Collections.Generic.List<UninterpretedOption>();
@@ -952,7 +991,7 @@ namespace Google.Protobuf.Reflection
     [global::ProtoBuf.ProtoContract()]
     public partial class MessageOptions : global::ProtoBuf.IExtensible
     {
-        private global::ProtoBuf.IExtension __pbn__extensionData;
+        private global::ProtoBuf.IExtension? __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
@@ -1011,7 +1050,7 @@ namespace Google.Protobuf.Reflection
         private bool? __pbn__DeprecatedLegacyJsonFieldConflicts;
 
         [global::ProtoBuf.ProtoMember(12, Name = @"features")]
-        public FeatureSet Features { get; set; }
+        public FeatureSet? Features { get; set; }
 
         [global::ProtoBuf.ProtoMember(999, Name = @"uninterpreted_option")]
         public global::System.Collections.Generic.List<UninterpretedOption> UninterpretedOptions { get; } = new global::System.Collections.Generic.List<UninterpretedOption>();
@@ -1021,7 +1060,7 @@ namespace Google.Protobuf.Reflection
     [global::ProtoBuf.ProtoContract()]
     public partial class FieldOptions : global::ProtoBuf.IExtensible
     {
-        private global::ProtoBuf.IExtension __pbn__extensionData;
+        private global::ProtoBuf.IExtension? __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
@@ -1131,10 +1170,10 @@ namespace Google.Protobuf.Reflection
         public global::System.Collections.Generic.List<EditionDefault> EditionDefaults { get; } = new global::System.Collections.Generic.List<EditionDefault>();
 
         [global::ProtoBuf.ProtoMember(21, Name = @"features")]
-        public FeatureSet Features { get; set; }
+        public FeatureSet? Features { get; set; }
 
         [global::ProtoBuf.ProtoMember(22)]
-        public FeatureSupport feature_support { get; set; }
+        public FeatureSupport? feature_support { get; set; }
 
         [global::ProtoBuf.ProtoMember(999, Name = @"uninterpreted_option")]
         public global::System.Collections.Generic.List<UninterpretedOption> UninterpretedOptions { get; } = new global::System.Collections.Generic.List<UninterpretedOption>();
@@ -1142,7 +1181,7 @@ namespace Google.Protobuf.Reflection
         [global::ProtoBuf.ProtoContract()]
         public partial class EditionDefault : global::ProtoBuf.IExtensible
         {
-            private global::ProtoBuf.IExtension __pbn__extensionData;
+            private global::ProtoBuf.IExtension? __pbn__extensionData;
             global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
                 => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
@@ -1159,6 +1198,7 @@ namespace Google.Protobuf.Reflection
 
             [global::ProtoBuf.ProtoMember(2, Name = @"value")]
             [global::System.ComponentModel.DefaultValue("")]
+            [global::System.Diagnostics.CodeAnalysis.AllowNull]
             public string Value
             {
                 get => __pbn__Value ?? "";
@@ -1166,14 +1206,14 @@ namespace Google.Protobuf.Reflection
             }
             public bool ShouldSerializeValue() => __pbn__Value != null;
             public void ResetValue() => __pbn__Value = null;
-            private string __pbn__Value;
+            private string? __pbn__Value;
 
         }
 
         [global::ProtoBuf.ProtoContract()]
         public partial class FeatureSupport : global::ProtoBuf.IExtensible
         {
-            private global::ProtoBuf.IExtension __pbn__extensionData;
+            private global::ProtoBuf.IExtension? __pbn__extensionData;
             global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
                 => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
@@ -1201,6 +1241,7 @@ namespace Google.Protobuf.Reflection
 
             [global::ProtoBuf.ProtoMember(3, Name = @"deprecation_warning")]
             [global::System.ComponentModel.DefaultValue("")]
+            [global::System.Diagnostics.CodeAnalysis.AllowNull]
             public string DeprecationWarning
             {
                 get => __pbn__DeprecationWarning ?? "";
@@ -1208,7 +1249,7 @@ namespace Google.Protobuf.Reflection
             }
             public bool ShouldSerializeDeprecationWarning() => __pbn__DeprecationWarning != null;
             public void ResetDeprecationWarning() => __pbn__DeprecationWarning = null;
-            private string __pbn__DeprecationWarning;
+            private string? __pbn__DeprecationWarning;
 
             [global::ProtoBuf.ProtoMember(4, Name = @"edition_removed")]
             [global::System.ComponentModel.DefaultValue(Edition.EditionUnknown)]
@@ -1223,6 +1264,7 @@ namespace Google.Protobuf.Reflection
 
             [global::ProtoBuf.ProtoMember(5, Name = @"removal_error")]
             [global::System.ComponentModel.DefaultValue("")]
+            [global::System.Diagnostics.CodeAnalysis.AllowNull]
             public string RemovalError
             {
                 get => __pbn__RemovalError ?? "";
@@ -1230,7 +1272,7 @@ namespace Google.Protobuf.Reflection
             }
             public bool ShouldSerializeRemovalError() => __pbn__RemovalError != null;
             public void ResetRemovalError() => __pbn__RemovalError = null;
-            private string __pbn__RemovalError;
+            private string? __pbn__RemovalError;
 
         }
 
@@ -1297,12 +1339,12 @@ namespace Google.Protobuf.Reflection
     [global::ProtoBuf.ProtoContract()]
     public partial class OneofOptions : global::ProtoBuf.IExtensible
     {
-        private global::ProtoBuf.IExtension __pbn__extensionData;
+        private global::ProtoBuf.IExtension? __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
         [global::ProtoBuf.ProtoMember(1, Name = @"features")]
-        public FeatureSet Features { get; set; }
+        public FeatureSet? Features { get; set; }
 
         [global::ProtoBuf.ProtoMember(999, Name = @"uninterpreted_option")]
         public global::System.Collections.Generic.List<UninterpretedOption> UninterpretedOptions { get; } = new global::System.Collections.Generic.List<UninterpretedOption>();
@@ -1312,7 +1354,7 @@ namespace Google.Protobuf.Reflection
     [global::ProtoBuf.ProtoContract()]
     public partial class EnumOptions : global::ProtoBuf.IExtensible
     {
-        private global::ProtoBuf.IExtension __pbn__extensionData;
+        private global::ProtoBuf.IExtension? __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
@@ -1349,7 +1391,7 @@ namespace Google.Protobuf.Reflection
         private bool? __pbn__DeprecatedLegacyJsonFieldConflicts;
 
         [global::ProtoBuf.ProtoMember(7, Name = @"features")]
-        public FeatureSet Features { get; set; }
+        public FeatureSet? Features { get; set; }
 
         [global::ProtoBuf.ProtoMember(999, Name = @"uninterpreted_option")]
         public global::System.Collections.Generic.List<UninterpretedOption> UninterpretedOptions { get; } = new global::System.Collections.Generic.List<UninterpretedOption>();
@@ -1359,7 +1401,7 @@ namespace Google.Protobuf.Reflection
     [global::ProtoBuf.ProtoContract()]
     public partial class EnumValueOptions : global::ProtoBuf.IExtensible
     {
-        private global::ProtoBuf.IExtension __pbn__extensionData;
+        private global::ProtoBuf.IExtension? __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
@@ -1375,7 +1417,7 @@ namespace Google.Protobuf.Reflection
         private bool? __pbn__Deprecated;
 
         [global::ProtoBuf.ProtoMember(2, Name = @"features")]
-        public FeatureSet Features { get; set; }
+        public FeatureSet? Features { get; set; }
 
         [global::ProtoBuf.ProtoMember(3, Name = @"debug_redact")]
         [global::System.ComponentModel.DefaultValue(false)]
@@ -1389,7 +1431,7 @@ namespace Google.Protobuf.Reflection
         private bool? __pbn__DebugRedact;
 
         [global::ProtoBuf.ProtoMember(4, Name = @"feature_support")]
-        public FieldOptions.FeatureSupport FeatureSupport { get; set; }
+        public FieldOptions.FeatureSupport? FeatureSupport { get; set; }
 
         [global::ProtoBuf.ProtoMember(999, Name = @"uninterpreted_option")]
         public global::System.Collections.Generic.List<UninterpretedOption> UninterpretedOptions { get; } = new global::System.Collections.Generic.List<UninterpretedOption>();
@@ -1399,12 +1441,12 @@ namespace Google.Protobuf.Reflection
     [global::ProtoBuf.ProtoContract()]
     public partial class ServiceOptions : global::ProtoBuf.IExtensible
     {
-        private global::ProtoBuf.IExtension __pbn__extensionData;
+        private global::ProtoBuf.IExtension? __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
         [global::ProtoBuf.ProtoMember(34, Name = @"features")]
-        public FeatureSet Features { get; set; }
+        public FeatureSet? Features { get; set; }
 
         [global::ProtoBuf.ProtoMember(33, Name = @"deprecated")]
         [global::System.ComponentModel.DefaultValue(false)]
@@ -1425,7 +1467,7 @@ namespace Google.Protobuf.Reflection
     [global::ProtoBuf.ProtoContract()]
     public partial class MethodOptions : global::ProtoBuf.IExtensible
     {
-        private global::ProtoBuf.IExtension __pbn__extensionData;
+        private global::ProtoBuf.IExtension? __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
@@ -1452,7 +1494,7 @@ namespace Google.Protobuf.Reflection
         private IdempotencyLevel? __pbn__idempotency_level;
 
         [global::ProtoBuf.ProtoMember(35, Name = @"features")]
-        public FeatureSet Features { get; set; }
+        public FeatureSet? Features { get; set; }
 
         [global::ProtoBuf.ProtoMember(999, Name = @"uninterpreted_option")]
         public global::System.Collections.Generic.List<UninterpretedOption> UninterpretedOptions { get; } = new global::System.Collections.Generic.List<UninterpretedOption>();
@@ -1473,7 +1515,7 @@ namespace Google.Protobuf.Reflection
     [global::ProtoBuf.ProtoContract()]
     public partial class UninterpretedOption : global::ProtoBuf.IExtensible
     {
-        private global::ProtoBuf.IExtension __pbn__extensionData;
+        private global::ProtoBuf.IExtension? __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
@@ -1482,6 +1524,7 @@ namespace Google.Protobuf.Reflection
 
         [global::ProtoBuf.ProtoMember(3, Name = @"identifier_value")]
         [global::System.ComponentModel.DefaultValue("")]
+        [global::System.Diagnostics.CodeAnalysis.AllowNull]
         public string IdentifierValue
         {
             get => __pbn__IdentifierValue ?? "";
@@ -1489,7 +1532,7 @@ namespace Google.Protobuf.Reflection
         }
         public bool ShouldSerializeIdentifierValue() => __pbn__IdentifierValue != null;
         public void ResetIdentifierValue() => __pbn__IdentifierValue = null;
-        private string __pbn__IdentifierValue;
+        private string? __pbn__IdentifierValue;
 
         [global::ProtoBuf.ProtoMember(4, Name = @"positive_int_value")]
         public ulong PositiveIntValue
@@ -1522,17 +1565,19 @@ namespace Google.Protobuf.Reflection
         private double? __pbn__DoubleValue;
 
         [global::ProtoBuf.ProtoMember(7, Name = @"string_value")]
-        public byte[] StringValue
+        public byte[]? StringValue
         {
             get => __pbn__StringValue;
             set => __pbn__StringValue = value;
         }
+        [global::System.Diagnostics.CodeAnalysis.MemberNotNullWhen(true, nameof(StringValue))]
         public bool ShouldSerializeStringValue() => __pbn__StringValue != null;
         public void ResetStringValue() => __pbn__StringValue = null;
-        private byte[] __pbn__StringValue;
+        private byte[]? __pbn__StringValue;
 
         [global::ProtoBuf.ProtoMember(8, Name = @"aggregate_value")]
         [global::System.ComponentModel.DefaultValue("")]
+        [global::System.Diagnostics.CodeAnalysis.AllowNull]
         public string AggregateValue
         {
             get => __pbn__AggregateValue ?? "";
@@ -1540,17 +1585,17 @@ namespace Google.Protobuf.Reflection
         }
         public bool ShouldSerializeAggregateValue() => __pbn__AggregateValue != null;
         public void ResetAggregateValue() => __pbn__AggregateValue = null;
-        private string __pbn__AggregateValue;
+        private string? __pbn__AggregateValue;
 
         [global::ProtoBuf.ProtoContract()]
         public partial class NamePart : global::ProtoBuf.IExtensible
         {
-            private global::ProtoBuf.IExtension __pbn__extensionData;
+            private global::ProtoBuf.IExtension? __pbn__extensionData;
             global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
                 => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
             [global::ProtoBuf.ProtoMember(1, IsRequired = true)]
-            public string name_part { get; set; }
+            public string? name_part { get; set; }
 
             [global::ProtoBuf.ProtoMember(2, Name = @"is_extension", IsRequired = true)]
             public bool IsExtension { get; set; }
@@ -1562,7 +1607,7 @@ namespace Google.Protobuf.Reflection
     [global::ProtoBuf.ProtoContract()]
     public partial class FeatureSet : global::ProtoBuf.IExtensible
     {
-        private global::ProtoBuf.IExtension __pbn__extensionData;
+        private global::ProtoBuf.IExtension? __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
@@ -1657,7 +1702,7 @@ namespace Google.Protobuf.Reflection
         [global::ProtoBuf.ProtoContract()]
         public partial class VisibilityFeature : global::ProtoBuf.IExtensible
         {
-            private global::ProtoBuf.IExtension __pbn__extensionData;
+            private global::ProtoBuf.IExtension? __pbn__extensionData;
             global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
                 => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
@@ -1764,7 +1809,7 @@ namespace Google.Protobuf.Reflection
     [global::ProtoBuf.ProtoContract()]
     public partial class FeatureSetDefaults : global::ProtoBuf.IExtensible
     {
-        private global::ProtoBuf.IExtension __pbn__extensionData;
+        private global::ProtoBuf.IExtension? __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
@@ -1796,7 +1841,7 @@ namespace Google.Protobuf.Reflection
         [global::ProtoBuf.ProtoContract()]
         public partial class FeatureSetEditionDefault : global::ProtoBuf.IExtensible
         {
-            private global::ProtoBuf.IExtension __pbn__extensionData;
+            private global::ProtoBuf.IExtension? __pbn__extensionData;
             global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
                 => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
@@ -1812,10 +1857,10 @@ namespace Google.Protobuf.Reflection
             private Edition? __pbn__Edition;
 
             [global::ProtoBuf.ProtoMember(4, Name = @"overridable_features")]
-            public FeatureSet OverridableFeatures { get; set; }
+            public FeatureSet? OverridableFeatures { get; set; }
 
             [global::ProtoBuf.ProtoMember(5, Name = @"fixed_features")]
-            public FeatureSet FixedFeatures { get; set; }
+            public FeatureSet? FixedFeatures { get; set; }
 
         }
 
@@ -1824,7 +1869,7 @@ namespace Google.Protobuf.Reflection
     [global::ProtoBuf.ProtoContract()]
     public partial class SourceCodeInfo : global::ProtoBuf.IExtensible
     {
-        private global::ProtoBuf.IExtension __pbn__extensionData;
+        private global::ProtoBuf.IExtension? __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
@@ -1834,18 +1879,19 @@ namespace Google.Protobuf.Reflection
         [global::ProtoBuf.ProtoContract()]
         public partial class Location : global::ProtoBuf.IExtensible
         {
-            private global::ProtoBuf.IExtension __pbn__extensionData;
+            private global::ProtoBuf.IExtension? __pbn__extensionData;
             global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
                 => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
             [global::ProtoBuf.ProtoMember(1, Name = @"path", IsPacked = true)]
-            public int[] Paths { get; set; }
+            public int[]? Paths { get; set; }
 
             [global::ProtoBuf.ProtoMember(2, Name = @"span", IsPacked = true)]
-            public int[] Spans { get; set; }
+            public int[]? Spans { get; set; }
 
             [global::ProtoBuf.ProtoMember(3, Name = @"leading_comments")]
             [global::System.ComponentModel.DefaultValue("")]
+            [global::System.Diagnostics.CodeAnalysis.AllowNull]
             public string LeadingComments
             {
                 get => __pbn__LeadingComments ?? "";
@@ -1853,10 +1899,11 @@ namespace Google.Protobuf.Reflection
             }
             public bool ShouldSerializeLeadingComments() => __pbn__LeadingComments != null;
             public void ResetLeadingComments() => __pbn__LeadingComments = null;
-            private string __pbn__LeadingComments;
+            private string? __pbn__LeadingComments;
 
             [global::ProtoBuf.ProtoMember(4, Name = @"trailing_comments")]
             [global::System.ComponentModel.DefaultValue("")]
+            [global::System.Diagnostics.CodeAnalysis.AllowNull]
             public string TrailingComments
             {
                 get => __pbn__TrailingComments ?? "";
@@ -1864,7 +1911,7 @@ namespace Google.Protobuf.Reflection
             }
             public bool ShouldSerializeTrailingComments() => __pbn__TrailingComments != null;
             public void ResetTrailingComments() => __pbn__TrailingComments = null;
-            private string __pbn__TrailingComments;
+            private string? __pbn__TrailingComments;
 
             [global::ProtoBuf.ProtoMember(6, Name = @"leading_detached_comments")]
             public global::System.Collections.Generic.List<string> LeadingDetachedComments { get; } = new global::System.Collections.Generic.List<string>();
@@ -1876,7 +1923,7 @@ namespace Google.Protobuf.Reflection
     [global::ProtoBuf.ProtoContract()]
     public partial class GeneratedCodeInfo : global::ProtoBuf.IExtensible
     {
-        private global::ProtoBuf.IExtension __pbn__extensionData;
+        private global::ProtoBuf.IExtension? __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
@@ -1886,15 +1933,16 @@ namespace Google.Protobuf.Reflection
         [global::ProtoBuf.ProtoContract()]
         public partial class Annotation : global::ProtoBuf.IExtensible
         {
-            private global::ProtoBuf.IExtension __pbn__extensionData;
+            private global::ProtoBuf.IExtension? __pbn__extensionData;
             global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
                 => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
             [global::ProtoBuf.ProtoMember(1, Name = @"path", IsPacked = true)]
-            public int[] Paths { get; set; }
+            public int[]? Paths { get; set; }
 
             [global::ProtoBuf.ProtoMember(2, Name = @"source_file")]
             [global::System.ComponentModel.DefaultValue("")]
+            [global::System.Diagnostics.CodeAnalysis.AllowNull]
             public string SourceFile
             {
                 get => __pbn__SourceFile ?? "";
@@ -1902,7 +1950,7 @@ namespace Google.Protobuf.Reflection
             }
             public bool ShouldSerializeSourceFile() => __pbn__SourceFile != null;
             public void ResetSourceFile() => __pbn__SourceFile = null;
-            private string __pbn__SourceFile;
+            private string? __pbn__SourceFile;
 
             [global::ProtoBuf.ProtoMember(3, Name = @"begin")]
             public int Begin

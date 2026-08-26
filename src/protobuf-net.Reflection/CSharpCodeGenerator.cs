@@ -151,11 +151,14 @@ namespace ProtoBuf.Reflection
             if (UseNullableRefs(ctx))
             {
                 ctx.WriteLine()
-                   .WriteLine("// Nullable reference types are annotated below. Where a ShouldSerializeX() answers the")
-                   .WriteLine("// null question exactly, it carries System.Diagnostics.CodeAnalysis.MemberNotNullWhen,")
-                   .WriteLine("// which is .NET 5+ - NOT netstandard2.1. On older targets either declare that attribute")
-                   .WriteLine("// yourself (the compiler matches it by NAME, so a polyfill works) or turn this emission")
-                   .WriteLine("// off: <NullableReferenceType>false</NullableReferenceType> on the AdditionalFiles item,")
+                   .WriteLine("// Nullable reference types are annotated below, using two attributes from")
+                   .WriteLine("// System.Diagnostics.CodeAnalysis: MemberNotNullWhen, where a ShouldSerializeX()")
+                   .WriteLine("// answers the null question exactly; and AllowNull, where a getter substitutes a")
+                   .WriteLine("// default and so cannot return null, but assigning null is still how the member is")
+                   .WriteLine("// unset. MemberNotNullWhen is .NET 5+ (NOT netstandard2.1); AllowNull is")
+                   .WriteLine("// netstandard2.1+. On older targets, either declare them yourself - the compiler")
+                   .WriteLine("// matches these by NAME, so a polyfill works - or turn this emission off:")
+                   .WriteLine("// <NullableReferenceType>false</NullableReferenceType> on the AdditionalFiles item,")
                    .WriteLine("// or protogen's +nrt=no.")
                    .WriteLine("#nullable enable");
             }
@@ -683,6 +686,13 @@ namespace ProtoBuf.Reflection
                 // back on: `get => __pbn__X ?? ""` never returns null.
                 var nullableBacking = UseNullableRefs(ctx) && IsNullableReference(ctx, field, fieldType) ? "?" : "";
                 var nullableProperty = nullableBacking.Length != 0 && defaultValue.IsNullOrWhiteSpace() ? "?" : "";
+                // ...but the two halves differ where there IS a default: the getter cannot return
+                // null, while assigning null is exactly how the member is unset. [AllowNull] is
+                // the only way to say that, since a property has one type for both accessors.
+                if (nullableBacking.Length != 0 && nullableProperty.Length == 0)
+                {
+                    ctx.WriteLine("[global::System.Diagnostics.CodeAnalysis.AllowNull]");
+                }
                 ctx.WriteLine($"{GetAccess(GetAccess(field))} {typeName}{(isNullable ? "?": nullableProperty)} {Escape(name)}").WriteLine("{").Indent();
                 tw = ctx.Write(PropGetPrefix());
                 tw.Write(fieldName);
