@@ -1,4 +1,4 @@
-using ProtoBuf.Internal;
+﻿using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 using System;
 using System.Collections.Generic;
@@ -16,17 +16,20 @@ namespace ProtoBuf.Serializers
         /// <summary>Create a map serializer that operates on dictionaries</summary>
         [MethodImpl(ProtoReader.HotPath)]
         public static MapSerializer<Dictionary<TKey, TValue>, TKey, TValue> CreateDictionary<TKey, TValue>()
+            where TKey : notnull
             => SerializerCache<DictionarySerializer<TKey, TValue>>.InstanceField;
 
         /// <summary>Create a map serializer that operates on dictionaries</summary>
         [MethodImpl(ProtoReader.HotPath)]
         public static MapSerializer<TCollection, TKey, TValue> CreateDictionary<[DynamicallyAccessedMembers(DynamicAccess.Activated)] TCollection, TKey, TValue>()
             where TCollection : IDictionary<TKey, TValue>
+            where TKey : notnull
             => SerializerCache<DictionarySerializer<TCollection, TKey, TValue>>.InstanceField;
 
         /// <summary>Create a map serializer that operates on dictionaries</summary>
         [MethodImpl(ProtoReader.HotPath)]
         public static MapSerializer<IReadOnlyDictionary<TKey, TValue>, TKey, TValue> CreateIReadOnlyDictionary<TKey, TValue>()
+            where TKey : notnull
             => SerializerCache<DictionaryOfIReadOnlyDictionarySerializer<TKey, TValue>>.InstanceField;
     }
 
@@ -41,6 +44,10 @@ namespace ProtoBuf.Serializers
     /// <see cref="TypeModel.ResolveSerializer"/> confines that demand to the arm ILC removes.
     /// </remarks>
     public abstract class MapSerializer<TCollection, TKey, TValue> : IRepeatedSerializer<TCollection>, IFactory<TCollection>
+        // a protobuf map key has no null representation on the wire: writing one emitted an
+        // ABSENT key field, which read back as the type default ("" for string) - a silent data
+        // change rather than an error. Stated as a constraint in 4.0; see gap B51.
+        where TKey : notnull
     {
         SerializerFeatures ISerializer<TCollection>.Features => SerializerFeatures.CategoryRepeated;
 
@@ -77,7 +84,7 @@ namespace ProtoBuf.Serializers
         /// Deserializes a sequence of values from the supplied reader
         /// </summary>
         public void WriteMap(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures features, TCollection values,
-            SerializerFeatures keyFeatures, SerializerFeatures valueFeatures, ISerializer<TKey> keySerializer = null, ISerializer<TValue> valueSerializer = null)
+            SerializerFeatures keyFeatures, SerializerFeatures valueFeatures, ISerializer<TKey>? keySerializer = null, ISerializer<TValue>? valueSerializer = null)
         {
             if (features.HasAny(SerializerFeatures.OptionWrappedCollection))
             {
@@ -139,7 +146,7 @@ namespace ProtoBuf.Serializers
         /// Deserializes a sequence of values from the supplied reader
         /// </summary>
         public TCollection ReadMap(ref ProtoReader.State state, SerializerFeatures features, TCollection values,
-            SerializerFeatures keyFeatures, SerializerFeatures valueFeatures, ISerializer<TKey> keySerializer = null, ISerializer<TValue> valueSerializer = null)
+            SerializerFeatures keyFeatures, SerializerFeatures valueFeatures, ISerializer<TKey>? keySerializer = null, ISerializer<TValue>? valueSerializer = null)
         {
             if (features.HasAny(SerializerFeatures.OptionWrappedCollection))
             {
@@ -192,6 +199,7 @@ namespace ProtoBuf.Serializers
     }
 
     sealed class DictionarySerializer<TKey, TValue> : MapSerializer<Dictionary<TKey, TValue>, TKey, TValue>
+        where TKey : notnull
     {
         protected override Dictionary<TKey, TValue> Initialize(Dictionary<TKey, TValue> values, ISerializationContext context)
             => values ?? new Dictionary<TKey, TValue>();
@@ -223,6 +231,7 @@ namespace ProtoBuf.Serializers
         }
     }
     class DictionarySerializer<[DynamicallyAccessedMembers(DynamicAccess.Activated)] TCollection, TKey, TValue> : MapSerializer<TCollection, TKey, TValue>
+        where TKey : notnull
         where TCollection : IDictionary<TKey, TValue>
     {
         protected override TCollection Initialize(TCollection values, ISerializationContext context)
@@ -264,6 +273,7 @@ namespace ProtoBuf.Serializers
     }
 
     sealed class DictionaryOfIReadOnlyDictionarySerializer<TKey, TValue> : MapSerializer<IReadOnlyDictionary<TKey, TValue>, TKey, TValue>
+        where TKey : notnull
     {
         protected override IReadOnlyDictionary<TKey, TValue> Initialize(IReadOnlyDictionary<TKey, TValue> values, ISerializationContext context)
             => values ?? new Dictionary<TKey, TValue>();

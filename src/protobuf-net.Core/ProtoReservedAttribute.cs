@@ -23,11 +23,11 @@ namespace ProtoBuf
         /// <summary>
         /// Creates a new instance of a single number field reservation
         /// </summary>
-        public ProtoReservedAttribute(int field, string comment = null) : this(field, field, comment) { }
+        public ProtoReservedAttribute(int field, string? comment = null) : this(field, field, comment) { }
         /// <summary>
         /// Creates a new instance of a range number field reservation
         /// </summary>
-        public ProtoReservedAttribute(int from, int to, string comment = null)
+        public ProtoReservedAttribute(int from, int to, string? comment = null)
         {
             From = from;
             To = to;
@@ -40,7 +40,7 @@ namespace ProtoBuf
         /// <summary>
         /// Creates a new instance of a named field reservation
         /// </summary>
-        public ProtoReservedAttribute(string field, string comment = null)
+        public ProtoReservedAttribute(string field, string? comment = null)
         {
             Name = field;
             Comment = comment;

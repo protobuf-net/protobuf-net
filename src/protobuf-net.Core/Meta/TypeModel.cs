@@ -1,4 +1,4 @@
-
+﻿
 ﻿using ProtoBuf.Internal;
 using ProtoBuf.Serializers;
 using System;
@@ -294,7 +294,7 @@ namespace ProtoBuf.Meta
         /// <param name="value">The existing instance to be serialized (cannot be null).</param>
         /// <param name="dest">The destination stream to write to.</param>
         /// <param name="userState">Additional information about this serialization operation.</param>
-        public void Serialize(IBufferWriter<byte> dest, object value, object userState = default)
+        public void Serialize(IBufferWriter<byte> dest, object value, object? userState = default)
         {
             var state = ProtoWriter.State.Create(dest, this, userState);
             try
@@ -337,7 +337,7 @@ namespace ProtoBuf.Meta
         /// <param name="value">The existing instance to be serialized (cannot be null).</param>
         /// <param name="dest">The destination stream to write to.</param>
         /// <param name="userState">Additional information about this serialization operation.</param>
-        public long Serialize<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(Stream dest, T value, object userState = null)
+        public long Serialize<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(Stream dest, T value, object? userState = null)
         {
             var state = ProtoWriter.State.Create(dest, this, userState);
             try
@@ -356,7 +356,7 @@ namespace ProtoBuf.Meta
         /// <param name="value">The existing instance to be serialized (cannot be null).</param>
         /// <param name="dest">The destination stream to write to.</param>
         /// <param name="userState">Additional information about this serialization operation.</param>
-        public long Serialize<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(IBufferWriter<byte> dest, T value, object userState = null)
+        public long Serialize<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(IBufferWriter<byte> dest, T value, object? userState = null)
         {
             var state = ProtoWriter.State.Create(dest, this, userState);
             try
@@ -372,7 +372,7 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Calculates the length of a protocol-buffer payload for an item
         /// </summary>
-        public MeasureState<T> Measure<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(T value, object userState = null, long abortAfter = -1)
+        public MeasureState<T> Measure<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(T value, object? userState = null, long abortAfter = -1)
             => new MeasureState<T>(this, value, userState, abortAfter);
 
         /// <summary>
@@ -777,7 +777,7 @@ namespace ProtoBuf.Meta
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
-        public T Deserialize<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(Stream source, T value = default, object userState = null)
+        public T Deserialize<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(Stream source, T? value = default, object? userState = null)
         {
             using var state = ProtoReader.State.Create(source, this, userState);
             return state.DeserializeRootImpl<T>(value);
@@ -793,7 +793,7 @@ namespace ProtoBuf.Meta
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
-        public T Deserialize<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(ReadOnlyMemory<byte> source, T value = default, object userState = null)
+        public T Deserialize<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(ReadOnlyMemory<byte> source, T? value = default, object? userState = null)
         {
             using var state = ProtoReader.State.Create(source, this, userState);
             return state.DeserializeRootImpl<T>(value);
@@ -809,7 +809,7 @@ namespace ProtoBuf.Meta
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
-        public unsafe T Deserialize<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(ReadOnlySpan<byte> source, T value = default, object userState = null)
+        public unsafe T Deserialize<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(ReadOnlySpan<byte> source, T? value = default, object? userState = null)
         {
             // as an implementation detail, we sometimes need to be able to use iterator blocks etc - which
             // means we need to be able to persist the span as a memory; the only way to do this
@@ -843,7 +843,7 @@ namespace ProtoBuf.Meta
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
-        public T Deserialize<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(ReadOnlySequence<byte> source, T value = default, object userState = null)
+        public T Deserialize<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(ReadOnlySequence<byte> source, T? value = default, object? userState = null)
         {
             using var state = ProtoReader.State.Create(source, this, userState);
             return state.DeserializeRootImpl<T>(value);
@@ -860,7 +860,7 @@ namespace ProtoBuf.Meta
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
-        public object Deserialize([DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type, Stream source, object value = default, object userState = null, long length = ProtoReader.TO_EOF)
+        public object Deserialize([DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type, Stream source, object? value = default, object? userState = null, long length = ProtoReader.TO_EOF)
         {
             using var state = ProtoReader.State.Create(source, this, userState, length);
             return state.DeserializeRootFallback(value, type);
@@ -876,7 +876,7 @@ namespace ProtoBuf.Meta
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
-        public object Deserialize([DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type, ReadOnlyMemory<byte> source, object value = default, object userState = null)
+        public object Deserialize([DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type, ReadOnlyMemory<byte> source, object? value = default, object? userState = null)
         {
             using var state = ProtoReader.State.Create(source, this, userState);
             return state.DeserializeRootFallback(value, type);
@@ -892,7 +892,7 @@ namespace ProtoBuf.Meta
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
-        public unsafe object Deserialize([DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type, ReadOnlySpan<byte> source, object value = default, object userState = null)
+        public unsafe object Deserialize([DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type, ReadOnlySpan<byte> source, object? value = default, object? userState = null)
         {
             // as an implementation detail, we sometimes need to be able to use iterator blocks etc - which
             // means we need to be able to persist the span as a memory; the only way to do this
@@ -926,7 +926,7 @@ namespace ProtoBuf.Meta
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
-        public object Deserialize([DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type, ReadOnlySequence<byte> source, object value = default, object userState = null)
+        public object Deserialize([DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type, ReadOnlySequence<byte> source, object? value = default, object? userState = null)
         {
             using var state = ProtoReader.State.Create(source, this, userState);
             return state.DeserializeRootFallback(value, type);
@@ -1037,7 +1037,7 @@ namespace ProtoBuf.Meta
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
         /// <param name="userState">Additional information about this serialization operation.</param>
-        public object Deserialize(ReadOnlyMemory<byte> source, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type, object value = default, object userState = default)
+        public object Deserialize(ReadOnlyMemory<byte> source, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type, object? value = default, object? userState = default)
         {
             var state = ProtoReader.State.Create(source, this, userState);
             try
@@ -1065,7 +1065,7 @@ namespace ProtoBuf.Meta
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
         /// <param name="userState">Additional information about this serialization operation.</param>
-        public object Deserialize(ReadOnlySequence<byte> source, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type, object value = default, object userState = default)
+        public object Deserialize(ReadOnlySequence<byte> source, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type, object? value = default, object? userState = default)
         {
             var state = ProtoReader.State.Create(source, this, userState);
             try
@@ -1491,7 +1491,7 @@ namespace ProtoBuf.Meta
         /// <see cref="ActivatorCreate{T}"/> really does construct - and that one is load-bearing
         /// under AOT rather than removable (see item 4b in notes/aot/findings.md).
         /// </remarks>
-        internal static T CreateInstance<[DynamicallyAccessedMembers(DynamicAccess.Activated)] T>(ISerializationContext context, ISerializer<T> serializer = null)
+        internal static T CreateInstance<[DynamicallyAccessedMembers(DynamicAccess.Activated)] T>(ISerializationContext context, ISerializer<T>? serializer = null)
         {
             if (TypeHelper<T>.IsReferenceType)
             {
@@ -1761,7 +1761,7 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Create a deep clone of the supplied instance; any sub-items are also cloned.
         /// </summary>
-        public T DeepClone<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(T value, object userState = null)
+        public T DeepClone<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(T value, object? userState = null)
         {
 #if PLAT_ISREF
             if (!System.Runtime.CompilerServices.RuntimeHelpers.IsReferenceOrContainsReferences<T>())
@@ -1920,7 +1920,7 @@ namespace ProtoBuf.Meta
         /// Indicates that the given type cannot be constructed; it may still be possible to 
         /// deserialize into existing instances.
         /// </summary>
-        public static void ThrowCannotCreateInstance(Type type, Exception inner = null)
+        public static void ThrowCannotCreateInstance(Type type, Exception? inner = null)
         {
             ThrowHelper.ThrowProtoException("No parameterless constructor found for " + (type?.FullName ?? "(null)"), inner);
         }

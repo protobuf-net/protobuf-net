@@ -710,10 +710,10 @@ namespace ProtoBuf
         // internal, exactly as the pre-swap shape: the public museum overload takes
         // SerializationContext (see ProtoReader.Stream.cs), so adding a public object-taking
         // sibling would make historical call sites ambiguous
-        internal static ProtoReader Create(Stream source, TypeModel model, object userState, long length)
+        internal static ProtoReader Create(Stream source, TypeModel model, object? userState, long length)
             => new SnapshotProtoReader(State.Create(source, model, userState, length).Snapshot());
 
-        internal static ProtoReader Create(ReadOnlyMemory<byte> source, TypeModel model, object userState = null)
+        internal static ProtoReader Create(ReadOnlyMemory<byte> source, TypeModel model, object? userState = null)
             => new SnapshotProtoReader(State.Create(source, model, userState).Snapshot());
     }
 }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
@@ -1424,7 +1424,7 @@ internal readonly struct ReaderSnapshot
         int effectiveEnd, bool leased, long positionBase, long remaining, long scope,
         object source, System.SequencePosition nextPosition, int depth, int fieldNumber,
         WireType wireType, uint pendingTag, global::ProtoBuf.Meta.TypeModel model,
-        object userState, bool internStrings,
+        object? userState, bool internStrings,
         System.Collections.Generic.Dictionary<string, string> interner)
     {
         Buffer = buffer; SegmentStart = segmentStart; Offset = offset; Count = count;

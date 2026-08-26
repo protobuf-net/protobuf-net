@@ -17,6 +17,6 @@ namespace ProtoBuf
         /// <summary>
         /// Deserialize a value from the input
         /// </summary>
-        T Deserialize<T>(TInput source, T value = default, object userState = null);
+        T Deserialize<T>(TInput source, T? value = default, object? userState = null);
     }
 }

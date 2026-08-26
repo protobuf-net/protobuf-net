@@ -49,6 +49,11 @@
     <Compile Remove="../protobuf-net.Core/obj/**/*.cs" />
     <Compile Include="../protobuf-net.Reflection/**/*.cs" Link="protobuf-net.Reflection" />
     <Compile Remove="../protobuf-net.Reflection/obj/**/*.cs" />
+    <!-- protobuf-net.Core and protobuf-net.Reflection each carry their own copy of the
+         nullability attribute polyfills - they have to, see the header of either file - so
+         compiling both source trees in here means two declarations of the same type.
+         Keep Core's; anything below net5.0 needs exactly one. -->
+    <Compile Remove="../protobuf-net.Reflection/Internal/NullableAttributes.cs" />
   </ItemGroup>
 
   <ItemGroup>

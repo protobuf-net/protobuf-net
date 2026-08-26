@@ -43,7 +43,7 @@ namespace ProtoBuf.Internal
 
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowInvalidOperationException(string message = null, Exception innerException = null)
+        internal static void ThrowInvalidOperationException(string? message = null, Exception? innerException = null)
         {
             if (string.IsNullOrWhiteSpace(message))
             {
@@ -82,7 +82,7 @@ namespace ProtoBuf.Internal
             => throw new NotSupportedException(message);
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowProtoException(string message, Exception inner = null)
+        internal static void ThrowProtoException(string message, Exception? inner = null)
             => throw (inner is null ? new ProtoException(message) : new ProtoException(message, inner));
 
         [MethodImpl(MethodImplOptions.NoInlining)]
@@ -90,7 +90,7 @@ namespace ProtoBuf.Internal
             => throw new OverflowException();
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowNotImplementedException([CallerMemberName] string message = null)
+        internal static void ThrowNotImplementedException([CallerMemberName] string? message = null)
             => throw new NotImplementedException(message);
 
         [MethodImpl(MethodImplOptions.NoInlining)]

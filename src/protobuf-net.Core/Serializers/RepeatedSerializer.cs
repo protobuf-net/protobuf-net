@@ -150,7 +150,7 @@ namespace ProtoBuf.Serializers
         /// <summary>
         /// Serialize a sequence of values to the supplied writer
         /// </summary>
-        public void WriteRepeated(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures features, TCollection values, ISerializer<TItem> serializer = null)
+        public void WriteRepeated(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures features, TCollection values, ISerializer<TItem>? serializer = null)
         {
             if (features.HasAny(SerializerFeatures.OptionWrappedCollection))
             {
@@ -355,7 +355,7 @@ namespace ProtoBuf.Serializers
         /// <summary>
         /// Deserializes a sequence of values from the supplied reader
         /// </summary>
-        public TCollection ReadRepeated(ref ProtoReader.State state, SerializerFeatures features, TCollection values, ISerializer<TItem> serializer = null)
+        public TCollection ReadRepeated(ref ProtoReader.State state, SerializerFeatures features, TCollection values, ISerializer<TItem>? serializer = null)
         {
             if (features.HasAny(SerializerFeatures.OptionWrappedCollection))
             {

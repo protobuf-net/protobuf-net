@@ -16,7 +16,7 @@ namespace ProtoBuf
             /// <summary>
             /// Writes a string to the stream
             /// </summary>
-            public void WriteString(int fieldNumber, string value, StringMap map = null)
+            public void WriteString(int fieldNumber, string value, StringMap? map = null)
             {
                 if (value is not null)
                 {
@@ -46,7 +46,7 @@ namespace ProtoBuf
             /// <summary>
             /// Writes a string to the stream; supported wire-types: String
             /// </summary>
-            public void WriteString(string value, StringMap map = null)
+            public void WriteString(string value, StringMap? map = null)
             {
                 switch (_writer.WireType)
                 {
@@ -339,14 +339,14 @@ namespace ProtoBuf
             /// Writes a sub-item to the writer
             /// </summary>
             [MethodImpl(ProtoReader.HotPath)]
-            public void WriteMessage<T>(SerializerFeatures features, T value, ISerializer<T> serializer = null)
+            public void WriteMessage<T>(SerializerFeatures features, T value, ISerializer<T>? serializer = null)
                 => _writer.WriteMessage<T>(ref this, value, serializer, PrefixStyle.Base128, features.ApplyRecursionCheck());
 
             /// <summary>
             /// Writes a sub-item to the writer
             /// </summary>
             [MethodImpl(ProtoReader.HotPath)]
-            public void WriteMessage<T>(int fieldNumber, SerializerFeatures features, T value, ISerializer<T> serializer = null)
+            public void WriteMessage<T>(int fieldNumber, SerializerFeatures features, T value, ISerializer<T>? serializer = null)
             {
                 Debug.Assert(!features.HasAny(SerializerFeatures.OptionWrappedValue), "wrapped value handling has not been processed correctly");
                 if (!(TypeHelper<T>.CanBeNull && TypeHelper<T>.ValueChecker.IsNull(value)))
@@ -359,7 +359,7 @@ namespace ProtoBuf
             /// <summary>
             /// Writes a sub-item to the writer
             /// </summary>
-            public void WriteGroup<T>(int fieldNumber, SerializerFeatures features, T value, ISerializer<T> serializer = null)
+            public void WriteGroup<T>(int fieldNumber, SerializerFeatures features, T value, ISerializer<T>? serializer = null)
             {
                 if (!(TypeHelper<T>.CanBeNull && TypeHelper<T>.ValueChecker.IsNull(value)))
                 {
@@ -371,7 +371,7 @@ namespace ProtoBuf
             /// <summary>
             /// Writes a value or sub-item to the writer
             /// </summary>
-            public void WriteAny<T>(int fieldNumber, T value, ISerializer<T> serializer = null)
+            public void WriteAny<T>(int fieldNumber, T value, ISerializer<T>? serializer = null)
             {
                 serializer ??= TypeModel.ResolveSerializer<T>(Model);
                 WriteAny<T>(fieldNumber, serializer.Features, value, serializer);
@@ -404,7 +404,7 @@ namespace ProtoBuf
             /// <summary>
             /// Write a value or sub-item with an additional level of message wrapping, that can be used to express <c>null</c> values of arbitrary types (as field 1)
             /// </summary>
-            public void WriteWrapped<T>(int fieldNumber, SerializerFeatures features, T value, ISerializer<T> serializer = null)
+            public void WriteWrapped<T>(int fieldNumber, SerializerFeatures features, T value, ISerializer<T>? serializer = null)
             {
                 serializer ??= TypeModel.ResolveSerializer<T>(Model);
                 features.InheritFrom(serializer.Features);
@@ -435,7 +435,7 @@ namespace ProtoBuf
             /// <summary>
             /// Writes a value or sub-item to the writer
             /// </summary>
-            public void WriteAny<T>(int fieldNumber, SerializerFeatures features, T value, ISerializer<T> serializer = null)
+            public void WriteAny<T>(int fieldNumber, SerializerFeatures features, T value, ISerializer<T>? serializer = null)
             {
                 serializer ??= TypeModel.ResolveSerializer<T>(Model);
                 features.InheritFrom(serializer.Features);
@@ -472,7 +472,7 @@ namespace ProtoBuf
             /// <summary>
             /// Writes a sub-type to the input writer
             /// </summary>
-            public void WriteSubType<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(T value, ISubTypeSerializer<T> serializer = null) where T : class
+            public void WriteSubType<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(T value, ISubTypeSerializer<T>? serializer = null) where T : class
             {
                 _writer.WriteSubType<T>(ref this, value, serializer ?? TypeModel.GetSubTypeSerializer<T>(Model));
             }
@@ -480,7 +480,7 @@ namespace ProtoBuf
             /// <summary>
             /// Writes a sub-type to the input writer
             /// </summary>
-            public void WriteSubType<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(int fieldNumber, T value, ISubTypeSerializer<T> serializer = null) where T : class
+            public void WriteSubType<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(int fieldNumber, T value, ISubTypeSerializer<T>? serializer = null) where T : class
             {
                 WriteFieldHeader(fieldNumber, WireType.String);
                 _writer.WriteSubType<T>(ref this, value, serializer ?? TypeModel.GetSubTypeSerializer<T>(Model));
@@ -491,7 +491,7 @@ namespace ProtoBuf
             /// </summary>
             // the annotation belongs on the generic parameter, not on 'value': applied to a parameter
             // whose type is neither Type nor string it does nothing at all, and reports IL2098
-            public void WriteBaseType<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(T value, ISubTypeSerializer<T> serializer = null) where T : class
+            public void WriteBaseType<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(T value, ISubTypeSerializer<T>? serializer = null) where T : class
                 => (serializer ?? TypeModel.GetSubTypeSerializer<T>(Model)).WriteSubType(ref this, value);
 
             internal readonly TypeModel Model => _writer?.Model;
@@ -574,7 +574,7 @@ namespace ProtoBuf
             /// Writes a binary chunk to the stream; supported wire-types: String
             /// </summary>
             [MethodImpl(HotPath)]
-            public void WriteBytes<TStorage>(TStorage value, IMemoryConverter<TStorage, byte> converter = null)
+            public void WriteBytes<TStorage>(TStorage value, IMemoryConverter<TStorage, byte>? converter = null)
                 => WriteBytes((ReadOnlyMemory<byte>)(
                     converter ?? DefaultMemoryConverter<byte>.GetFor<TStorage>(Model)
                     ).GetMemory(value));
@@ -628,7 +628,7 @@ namespace ProtoBuf
             /// object is determined to be a scalar, it is written as though it were
             /// part of a message with field-number 1
             /// </summary>
-            public long SerializeRoot<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(T value, ISerializer<T> serializer = null)
+            public long SerializeRoot<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(T value, ISerializer<T>? serializer = null)
             {
                 try
                 {

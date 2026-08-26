@@ -50,7 +50,7 @@ namespace ProtoBuf.Serializers
         //    => SerializerSingleton<TSerializer, T>.InstanceField;
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        static void ThrowInvalidSerializer<T>(ISerializer<T> serializer, string message, Exception innerException = null)
+        static void ThrowInvalidSerializer<T>(ISerializer<T> serializer, string message, Exception? innerException = null)
         {
             var tName = typeof(T).NormalizeName();
             var sName = serializer.GetType().NormalizeName();

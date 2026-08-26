@@ -17,13 +17,13 @@ namespace ProtoBuf
             /// <summary>
             /// Create a new ProtoWriter that targets a buffer writer
             /// </summary>
-            public static State Create(IBufferWriter<byte> writer, TypeModel model, object userState = null)
+            public static State Create(IBufferWriter<byte> writer, TypeModel model, object? userState = null)
                 => BufferWriterProtoWriter.CreateBufferWriterProtoWriter(writer, model, userState);
         }
 
         private sealed class BufferWriterProtoWriter : ProtoWriter
         {
-            internal static State CreateBufferWriterProtoWriter(IBufferWriter<byte> writer, TypeModel model, object userState)
+            internal static State CreateBufferWriterProtoWriter(IBufferWriter<byte> writer, TypeModel model, object? userState)
             {
                 if (writer is null) ThrowHelper.ThrowArgumentNullException(nameof(writer));
                 var obj = Pool<BufferWriterProtoWriter>.TryGet() ?? new BufferWriterProtoWriter();
@@ -32,7 +32,7 @@ namespace ProtoBuf
                 return new State(obj);
             }
 
-            internal override void Init(TypeModel model, object userState, bool impactCount)
+            internal override void Init(TypeModel model, object? userState, bool impactCount)
             {
                 base.Init(model, userState, impactCount);
                 _nullWriter.Init(model, userState, impactCount: false);
