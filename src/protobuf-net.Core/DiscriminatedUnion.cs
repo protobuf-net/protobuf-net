@@ -15,9 +15,14 @@ namespace ProtoBuf
         public bool Is(int discriminator) => Discriminator == discriminator;
 
         /// <summary>Create a new discriminated union value</summary>
+        /// <remarks>Assigning a null value clears the discriminator, i.e. it deselects rather
+        /// than selecting-with-nothing: a null has no representation on the wire, so "set, to
+        /// null" and "not set" cannot be told apart by a reader. The three sibling unions
+        /// (32/64/128) have always done this; this one had not, which made the same assignment
+        /// behave differently depending only on which union the generator happened to pick.</remarks>
         public DiscriminatedUnionObject(int discriminator, object value)
         {
-            Discriminator = discriminator;
+            Discriminator = value is not null ? discriminator : 0;
             Object = value;
         }
 
