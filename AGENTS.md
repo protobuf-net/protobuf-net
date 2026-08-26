@@ -50,13 +50,17 @@ belongs here.
 | `notes/aot/grpc.md` | the gRPC proxy generator (from `main`) |
 | `notes/editions/feature-analysis.md` | the editions arc (from `main`) |
 | `docs/aot.md` | the consumer-facing AOT guide, incl. the throughput table |
+| `tools/` | repo scripts that are not part of a build — currently `annotate-public-api.py`, which rewrites `PublicAPI.*.txt` baselines from the analyzer's own `RS0036` output (gap B51) |
 
 Two rules that keep this honest, both learned the hard way here:
 
 - **`notes/gaps.md` is the entry point for "what is missing"**, and the parked/owed index in
   `notes/nano-writer.md` for "what is deferred and why" — not a commit log. Anything
   deferred goes there with its reason, because a commit message is not a backlog and does not
-  survive a squash;
+  survive a squash. **Starting cold, read `notes/aot/findings.md`'s Handover section first**: it
+  carries the branch, the gate battery with the numbers it last reported, the live items in priority
+  order, and — deliberately — what recently CLOSED, so a fresh session does not go hunting for work
+  in a finished entry;
 - **a change big enough to appear in a handover is big enough to have its own commit.** A gate once
   landed as an unmentioned passenger in an unrelated commit, and the handover — assembled from
   commit messages — recorded it as never having landed. That cost a later session most of a
