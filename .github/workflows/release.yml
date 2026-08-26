@@ -10,6 +10,26 @@
 # height - the tag name does not set it. Create release tags with `nbgv tag` (or tag the commit
 # whose computed version matches); the guard step below fails the run on any mismatch rather than
 # publishing a package that disagrees with its release.
+#
+# CUTTING A RELEASE (verified 2026-08-26, on v4 / 4.0-alpha):
+#
+#   1. optional but worth it the first time on a new line: run this workflow via
+#      workflow_dispatch. That builds, tests, runs the AOT differential, packs, and uploads the
+#      .nupkg files as a run artifact - and CANNOT reach nuget.org, since the login and push steps
+#      are gated on github.event_name == 'release'. Inspect the packages before cutting anything.
+#   2. on an up-to-date release branch, run ./get-version.ps1 (or .sh). It prints the exact tag
+#      string, which is NuGetPackageVersion - the same variable the guard below compares against.
+#      It refuses to hand out a tag off a release branch, because nbgv appends a commit id there.
+#   3. tag THAT COMMIT with THAT STRING and push the tag. `nbgv tag` produces the identical string
+#      (checked with `nbgv tag --what-if`, which includes the prerelease label), so either it or a
+#      plain `git tag` works. Tags here are bare - 3.3.21, 3.4.19 - and the guard strips a leading
+#      `v`, so both spellings pass.
+#   4. draft a GitHub Release against that EXISTING tag and publish it. Tick "Set as a pre-release"
+#      whenever the version carries a label; get-version says so when it does.
+#
+# Step 3 before step 4 is deliberate. The Release UI can create the tag for you by targeting a
+# branch, but it then tags whatever the tip is at publish time - so anything pushed since you ran
+# get-version shifts the height and the guard fails. (Which is the intended failure: it is loud.)
 
 # Actions are pinned by commit SHA rather than by tag. A tag is mutable: whoever controls the
 # action repository can repoint v4 at different code, and this workflow holds id-token: write and
