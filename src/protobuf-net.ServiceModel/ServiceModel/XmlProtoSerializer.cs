@@ -31,7 +31,7 @@ namespace ProtoBuf.ServiceModel
         /// Attempt to create a new serializer for the given model and type
         /// </summary>
         /// <returns>A new serializer instance if the type is recognised by the model; null otherwise</returns>
-        public static XmlProtoSerializer TryCreate(TypeModel model, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type)
+        public static XmlProtoSerializer? TryCreate(TypeModel model, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type)
         {
             if (model is null) throw new ArgumentNullException(nameof(model));
             if (type is null) throw new ArgumentNullException(nameof(type));
@@ -85,7 +85,7 @@ namespace ProtoBuf.ServiceModel
         /// <summary>
         /// Begins an object in the output
         /// </summary>
-        public override void WriteStartObject(XmlDictionaryWriter writer, object graph)
+        public override void WriteStartObject(XmlDictionaryWriter writer, object? graph)
         {
             if (writer is null) throw new ArgumentNullException(nameof(writer));
             writer.WriteStartElement(PROTO_ELEMENT);
@@ -96,7 +96,7 @@ namespace ProtoBuf.ServiceModel
         /// <summary>
         /// Writes the body of an object in the output
         /// </summary>
-        public override void WriteObjectContent(XmlDictionaryWriter writer, object graph)
+        public override void WriteObjectContent(XmlDictionaryWriter writer, object? graph)
         {
             if (writer is null) throw new ArgumentNullException(nameof(writer));
             if (graph is null)
@@ -123,7 +123,7 @@ namespace ProtoBuf.ServiceModel
                     state.Dispose();
                 }
                 Helpers.GetBuffer(ms, out var segment);
-                writer.WriteBase64(segment.Array, segment.Offset, segment.Count);
+                writer.WriteBase64(segment.Array ?? Array.Empty<byte>(), segment.Offset, segment.Count);
 
             }
         }
@@ -141,7 +141,7 @@ namespace ProtoBuf.ServiceModel
         /// <summary>
         /// Reads the body of an object
         /// </summary>
-        public override object ReadObject(XmlDictionaryReader reader, bool verifyObjectName)
+        public override object? ReadObject(XmlDictionaryReader reader, bool verifyObjectName)
         {
             if (reader is null) throw new ArgumentNullException(nameof(reader));
             reader.MoveToContent();
@@ -154,12 +154,12 @@ namespace ProtoBuf.ServiceModel
                 if (!isSelfClosed) reader.ReadEndElement();
                 return null;
             }
-            object ReadFrom(ReadOnlyMemory<byte> payload)
+            object? ReadFrom(ReadOnlyMemory<byte> payload)
             {
                 var state = ProtoReader.State.Create(payload, model, null);
                 try
                 {
-                    object result = null;
+                    object? result = null;
                     if (!DynamicStub.TryDeserializeRoot(type, model, ref state, ref result, autoCreate))
                         TypeModel.ThrowUnexpectedType(type, model);
                     return result;

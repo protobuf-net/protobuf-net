@@ -5498,3 +5498,91 @@ as fixture decoration — "these must never fire" — on the strength of a probe
 the *write*. The fixture then sat red through a full session because the conformance suite was run
 with `--no-build` against a stale binary more than once. `--no-build` after editing anything the
 generator or the library compiles is not a shortcut, it is a different test.
+
+### B51. The shipping libraries are not NRT-enabled — **agreed for the next major (Marc, 2026-08-25); PILOTED on ServiceModel, sized at ~5,125 sites**
+
+**Marc:** *"I believe the libraries are not currently NRT enabled. we should fix that, mostly by just
+turning it on and dealing with any build warnings. as a follow-up step after, we should fix the
+generated code, but libraries first."*
+
+Correct: every shipping library except `protobuf-net.HybridCache` has no `<Nullable>` at all, and
+there is none in `src/Directory.Build.props` either, so they all compile oblivious.
+
+#### Sized before starting, because "just turn it on" understates it about twofold
+
+Measured by building each project with `-p:Nullable=enable` and deduping by file/line/column/code.
+Note that switch is a **global** property and flows into project references, so a naive per-project
+count double-counts Core; these are attributed to the file's own project:
+
+| project | unique sites |
+| --- | ---: |
+| `protobuf-net.Core` | 1952 |
+| `protobuf-net` | 1876 |
+| `protobuf-net.BuildTools` | 717 |
+| `protobuf-net.Reflection` | 493 |
+| ServiceModel / Protogen / protogen / AspNetCore / NodaTime | 8–32 each |
+| **total** | **5125** |
+
+Top codes: `CS8625` (1438), `CS8603` (809), `CS8604` (792), `CS8600` (580), `CS8618` (512).
+
+**Plus the public-API baselines, which are invisible in that number.** They are oblivious today — 10
+annotated entries across the whole repo — so `RS0037` fires (692 times) saying *"PublicAPI.txt is
+missing '#nullable enable', so the nullability annotations of API isn't recorded"*. Core (881+137),
+`protobuf-net` (935+95) and Reflection (1065+5) all need re-recording. Suppressing `RS0037` would
+build, and would silently stop tracking nullability on the public surface — which is most of the
+point.
+
+#### The pilot (ServiceModel, 2026-08-25) — and the finding that makes this tractable
+
+Done end-to-end as the smallest shipping library: 7 real code sites, `#nullable enable` in both
+baselines, clean.
+
+**`RS0036` emits the exact annotated signature it wants**, e.g. *"Symbol 'static
+…TryCreate(TypeModel! model, System.Type! type) -> …XmlProtoSerializer?' is missing nullability
+annotations"*. So the baseline rewrite is **driven by the analyzer's own output rather than by hand**:
+strip the `!`/`?` back off to find the un-annotated entry, and replace it. That turns ~3,000 lines of
+baseline from manual work into a transform. The script used is in the session scratchpad; **it is
+worth committing to the repo before stage 2**, since Core and `protobuf-net` are where it pays.
+
+Every annotation in the pilot was a real contract, not an appeasement — which is the standard to
+hold, per Marc's standing rule that `!` is a reading cost and the compiler should be convinced
+instead. There is **no `!` in the pilot**:
+
+- `TryCreate` → `XmlProtoSerializer?`: its doc comment already said *"null otherwise"*;
+- `WriteStartObject`/`WriteObjectContent`/`ReadObject` → `object?`: `XmlObjectSerializer` declares
+  them nullable, and `CS8765`/`CS8603` were the base disagreeing;
+- `ArraySegment<byte>.Array` is `byte[]?`, so `segment.Array ?? Array.Empty<byte>()` — provably
+  equivalent, because a segment with a null array carries `Offset`/`Count` of 0.
+
+#### The ApiCompat question is NOT resolved, and the reason is worse than expected
+
+The plan was to check whether nullability metadata trips package validation against the 3.4.0
+baseline. It produced **no `CP000x` diagnostics** — but that is not evidence, because **the gate does
+not appear to run at all**. Verified the way this file insists on: making a public type `internal`
+(a straightforward removal from the surface) *also* produced no diagnostic, on `dotnet pack -c
+Release`, with `EnablePackageValidation=true` and `PackageValidationBaselineVersion=3.4.0` both
+confirmed resolved via `-getProperty`, and no baseline package in the NuGet cache.
+
+So there are two items here, and the second is not about NRT at all:
+
+- whether nullability annotations trip ApiCompat — **still open**, and worth settling before Core;
+- **whether the ApiCompat gate works** — `src/Directory.Build.props` describes it as failing the
+  build on a removed member, and it did not. Either it only runs from the traversal pack with
+  `Packing=true` (the shape `release.yml` uses, so possibly fine in CI and misleading locally), or it
+  is inert. Not investigated further; recorded rather than assumed.
+
+#### Sequencing
+
+1. ~~pilot on a small library~~ — **done**, ServiceModel;
+2. commit the `RS0036`-driven baseline transform into the repo;
+3. `protobuf-net.Reflection` (493) — self-contained, and what protogen and BuildTools consume;
+4. `protobuf-net.Core` (1952) — note `protobuf-net.BuildTools` **compiles Core's sources in**, so it
+   moves at the same time whether or not that is wanted;
+5. `protobuf-net` (1876);
+6. then the generated code, which is the follow-up Marc named.
+
+Each stage lands green and reviewable; a single 5,000-site diff would not be.
+
+**One option named and NOT recommended as a destination:** `<Nullable>annotations</Nullable>` gets
+consumers the annotations without flow analysis, for a fraction of the work — but nothing then checks
+the annotations are correct, so wrong ones ship silently. Acceptable as a per-project staging post.
