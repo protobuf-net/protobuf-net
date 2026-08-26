@@ -1,4 +1,4 @@
-using ProtoBuf.Meta;
+﻿using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
 using System;
 using System.Collections;
@@ -25,7 +25,7 @@ namespace ProtoBuf.Internal
         };
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static bool TryDeserializeRoot(Type type, TypeModel model, ref ProtoReader.State state, ref object value, bool autoCreate)
+        internal static bool TryDeserializeRoot(Type type, TypeModel model, ref ProtoReader.State state, ref object? value, bool autoCreate)
             => Get(type).TryDeserializeRoot(model, ref state, ref value, autoCreate);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

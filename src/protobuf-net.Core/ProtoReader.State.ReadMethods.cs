@@ -1272,7 +1272,7 @@ namespace ProtoBuf
                 }
             }
 
-            internal object DeserializeRootFallbackWithModel(object value, Type type, TypeModel overrideModel)
+            internal object? DeserializeRootFallbackWithModel(object? value, Type? type, TypeModel overrideModel)
             {
                 var oldModel = _model;
                 try
@@ -1286,7 +1286,7 @@ namespace ProtoBuf
                 }
             }
 
-            internal object DeserializeRootFallback(object value, Type type)
+            internal object? DeserializeRootFallback(object? value, Type? type)
             {
                 bool autoCreate = TypeModel.PrepareDeserialize(value, ref type);
                 object obj = Model.DeserializeRootAny(ref this, type, value, autoCreate);

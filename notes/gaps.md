@@ -5660,6 +5660,63 @@ Also note **`IsNullableType` is about `Nullable<T>` on VALUE types only**, gated
 Separately, and independent of codegen: the library own `TryGet`-shaped APIs want
 `[NotNullWhen(true)]` on their `out` parameters when Core goes NRT. Real quality win, easy to miss.
 
+#### Stage 4 (`protobuf-net.Core`) — IN FLIGHT on `nrt-core`, and re-sized (2026-08-26)
+
+**The sizing in this entry was ~4x too high, and that matters for planning.** Measured properly —
+`<Nullable>enable</Nullable>` on the project, one full traversal build, deduped by
+file/line/column/code across every TFM:
+
+| project | recorded above | measured |
+| --- | ---: | ---: |
+| `protobuf-net.Core` | 1952 | **573** |
+| `protobuf-net` | 1876 | **622** (measured with Core already annotated) |
+| cascade into `protobuf-net.Reflection` (already NRT) | — | **50** |
+| cascade into `protobuf-net.ServiceModel` (already NRT) | — | **5** |
+
+The old figures were almost certainly counted once per *consuming project's* build without deduping
+across those builds; the ratio matches the number of consumers. The whole remaining rollout is about
+the size of the Reflection stage, not four times it.
+
+**What is done on the branch** (573 -> ~486, solution green):
+
+- Core has its **own** copy of the polyfills - it cannot share Reflection's, see above - so
+  BuildTools and BuildTools.Legacy each `Compile Remove` the Reflection copy or they see `CS0101`;
+- `where TKey : notnull` on the MapSerializer family, **as a declared break**; see below;
+- the `object userState` family; `X name = null` parameter defaults; `T value = default` on the
+  generic entry points; the Deserialize `object value` / `Type type` / `TypeResolver` families; and
+  the internal aux/`DynamicStub` plumbing they call into.
+
+**What is left** is per-site body work, concentrated in `Meta/TypeModel.cs`,
+`Internal/PrimaryTypeProvider.Primitives.cs`, `ProtoWriter*`, `ProtoReader*`, `DynamicStub`,
+`Extensible*` and `DiscriminatedUnion.Serializable.cs`. Nothing structural is known to remain.
+
+**Three things about running this stage, each of which cost time:**
+
+- **the warning count goes UP before it goes down, and that is correct.** Annotating a declaration
+  honestly moves the work into the bodies that use it: the Deserialize parameter pass took Core from
+  477 to 497. Do not read the count as progress until the declaration layers are settled;
+- **an incremental build reports nothing for a project that did not recompile**, which looks exactly
+  like a clean project. Measure with `--no-incremental`. This produced a "Core = 0" reading twice;
+- **build the whole traversal, not just the project.** `dotnet build` on Core alone misses ApiCompat
+  (it fires from `GeneratePackageOnBuild`, in Debug as well as Release) and misses the cascade into
+  Reflection/ServiceModel. A narrower loop declared success while the solution had 82 errors.
+
+**The map-key break, decided with evidence (Marc, 2026-08-26).** `where TKey : notnull` is the only
+way to clear the 44 `CS8714`s in that family, and ApiCompat rejects it as **`CP0021`** (72 errors
+across the TFMs). What a null map key does *today*, probed rather than assumed:
+
+- reading can never produce one - `TypeHelper<T>.Default` is `""` for string and `0` for integrals,
+  so an entry whose key field is absent deserializes to `""`;
+- `Dictionary<,>` refuses one outright (`ArgumentNullException` from `Add`);
+- a custom `IDictionary` that *does* hold one is accepted and written as an **absent key field**
+  (`0A-02-10-07`, byte-identical to "no key"), which reads back as `""`.
+
+So a null key is neither rejected nor preserved: it is **silently coerced**. The constraint therefore
+replaces a silent data change with a compile error, for the one shape that could reach it. Taken -
+*"I don't think anyone will be bitten by this"* - and recorded in
+`src/protobuf-net.Core/CompatibilitySuppressions.xml`, which explains itself and warns against
+regenerating it wholesale to make a build pass.
+
 #### Sequencing
 
 1. ~~pilot on a small library~~ — **done**, ServiceModel;
