@@ -37,18 +37,34 @@ any of it; the three invariants there are the ones that break silently. The meas
 Those numbers are the baseline to compare against, and **the warning count tracks fixtures** — adding
 a member to `AotSmoke` moves it, so re-measure both sides when you do.
 
-**What is open.** `notes/gaps.md` is the entry point and its last entry is **B50**. The live ones:
+**What is open.** `notes/gaps.md` is the entry point and its last entry is **B52**. The live ones,
+current to 2026-08-26:
 
-- **B48 (trim warnings)** — 23 → 5, and Marc paused it there deliberately: *"5 is a defensible
-  preview position"*. All five are design-level (`CreateInstance`'s genuinely-live fallback,
-  `SubTypeState<T>.Cast`), not annotations anyone forgot;
-- **B40 (steering call sites)** — the non-generic API bug is fixed; the analyzer/steering half is
+- **B52 (ApiCompat may not run)** - **check this before leaning on it for the release.** Making a
+  public type `internal` produced no `CP` diagnostic from a single-project `dotnet pack -c Release`,
+  with the properties confirmed resolved. Possibly only engages from the traversal pack with
+  `Packing=true`, which is what `release.yml` uses - but unproven, and a 4.0 preview would be the
+  first thing this pipeline has ever published;
+- **B51 (NRT)** - agreed for the next major, sized at ~5,125 code sites plus ~3,000 lines of
+  public-API baseline. ServiceModel is piloted and landed; `tools/annotate-public-api.py` drives the
+  baseline rewrite from the analyzer own RS0036 output. **Next slice is `protobuf-net.Reflection`
+  (493 sites), and it needs no codegen work** - generated files are outside the nullable context
+  entirely, which the entry proves by metadata rather than by warnings. The codegen half is designed
+  but unbuilt;
+- **B48 (trim warnings)** - 23 -> 5, paused there deliberately: *"5 is a defensible preview
+  position"*. All five are design-level, not annotations anyone forgot;
+- **B40 (steering call sites)** - the non-generic API bug is fixed; the analyzer/steering half is
   still a design call;
-- **B16 (`tmpN` and frame size)**, **B17 (the classic stream path's callback count)**, and the perf
-  items — all recorded with their reasoning;
-- **B49** is done, but note *"the awkward call site"* it names is a documentation matter rather than
-  a gap: where the calling code cannot see a model, the answer is `Model.Instance`, which the fixer
-  offers.
+- **B16 (locals)** - write and measure bodies now share one local per member type (400 -> 5 on a wide
+  contract). The **`RawRead_` body is untouched**, and the `foreach` variables cannot be shared at
+  all, which is a floor rather than an omission;
+- **B21 tier 3** (vectorised LEB128, research-shaped, modern-TFM only) and **B12** (an intermittent
+  net472 flake) round it out.
+
+**Closed on 2026-08-25/26**, so do not go looking for work in them: B17 (measure-first is twice on
+every backend for generated code; the classic stream asymmetry is deliberate), B18b (**retracted** -
+the raw path has block-copied fixed-width packed columns all along; the entry described the classic
+engine), B23 (derived lists admitted to the raw packed path), B49 + `PBN3014`, B50.
 
 **Three operational traps that have each cost a sitting**, kept here because they are about running
 the gates rather than about the code:

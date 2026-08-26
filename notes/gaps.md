@@ -5682,3 +5682,48 @@ Each stage lands green and reviewable; a single 5,000-site diff would not be.
 **One option named and NOT recommended as a destination:** `<Nullable>annotations</Nullable>` gets
 consumers the annotations without flow analysis, for a fraction of the work — but nothing then checks
 the annotations are correct, so wrong ones ship silently. Acceptable as a per-project staging post.
+
+### B52. The ApiCompat / package-validation gate may not actually run - **OPEN, and it matters for the release**
+
+Found while checking something else (whether NRT annotations trip package validation, gap B51), and
+split out because it is not an NRT question and nobody looking for "is our public-API gate working"
+would find it filed under one.
+
+`src/Directory.Build.props` describes the gate plainly:
+
+> ApiCompat, as built into the SDK: at pack time it downloads this version of the package from
+> nuget.org and diffs the surface, so a removed member or a narrowed signature fails the build
+> (CP0001/CP0002/CP0003) instead of shipping.
+
+**It did not.** On `protobuf-net.ServiceModel`, making a public type `internal` - an unambiguous
+removal from the surface - produced **no diagnostic at all** from
+`dotnet pack -c Release`. Checked the obvious explanations first:
+
+- `EnablePackageValidation` is `true` and `PackageValidationBaselineVersion` is `3.4.0`, both
+  confirmed resolved via `dotnet msbuild -getProperty:` rather than by reading the props file;
+- no `CP` diagnostic of any severity appeared, so it is not a severity/NoWarn question;
+- the baseline package is **not in the NuGet cache**, which is consistent with it never having been
+  fetched - i.e. the diff never happened rather than happening and passing.
+
+**Verified the way this file insists on** - by making the gate fail, not by observing it pass. That
+distinction is the whole point here: "no CP warnings" had looked like evidence the surface was
+clean.
+
+#### What has NOT been ruled out
+
+The most likely benign explanation is that validation only engages from the **traversal** pack with
+`Packing=true` - `dotnet pack Build.csproj --no-build -c Release -p:Packing=true`, which is the shape
+`release.yml` actually uses - and simply no-ops for a single-project pack. If so the gate works in CI
+and is merely misleading locally, which is worth knowing but not urgent.
+
+The way to settle it is the same experiment on the traversal: break a public surface deliberately,
+pack the way `release.yml` does, and see whether `CP0002` appears. **Do that before leaning on the
+gate for a release** - a 4.0 preview is the first thing this pipeline has ever published, so nothing
+has exercised the baseline diff in anger.
+
+#### Why it is worth a real answer rather than a shrug
+
+The 4.x line is a major, so the surface is *expected* to move; the gate exists to make the moves
+deliberate rather than accidental. And gap B51 will annotate several thousand public API entries
+across Core, `protobuf-net` and Reflection - exactly the kind of wide, mechanical surface change a
+working ApiCompat is for, and exactly the kind that a silently-inert one would wave through.
