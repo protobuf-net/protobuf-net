@@ -1,4 +1,4 @@
-# protobuf-net — notes for agents
+﻿# protobuf-net — notes for agents
 
 Only non-obvious things live here; the code is the reference for everything else.
 
@@ -19,10 +19,12 @@ The notes are deliberately versioned **with the code**, not in one central place
 and a note on a branch correctly describes *that branch*. The cost is that you have to know where
 to look while a stack is in flight, which is what this section is for.
 
-The stack collapsed onto `v4` again on 2026-08-20, when `schema-breadth` (PR #1277) merged and
-was pruned. **There is no "current on" column below, and that absence is a statement**: every note
-is current on `v4`. Restore the column the moment a branch is cut — two wrong-branch claims were
-shipped last time it was left off while a stack was in flight, one of them in this very table.
+**A branch IS in flight as of 2026-08-26** — `nrt-reflection`, carrying gap B51's Reflection stage
+(NRT across the hand-written sources, protogen emitting annotations, `Descriptor.cs` regenerated,
+the PublicAPI baseline recorded) and gap B52's closure. The "current on" column below is therefore
+restored, per the rule that follows; drop it again when the branch merges and `v4` is once more the
+only answer. Two wrong-branch claims were shipped last time it was left off while a stack was in
+flight, one of them in this very table.
 
 `notes/readme.md` states the `docs/` vs `notes/` split and why it matters; read it before adding a
 file to either. The short form is that `docs/` is the published site, so "it is obviously internal"
@@ -36,21 +38,21 @@ battery, who owns which diagnostic id — as against what it can look up once it
 about how one shape is emitted belongs in the reference; a new way to get something silently wrong
 belongs here.
 
-| document | covers |
-| --- | --- |
-| `AGENTS.md` (this file) | conventions, traps, gate battery |
-| **`notes/gaps.md`** | **every known gap with its DECISION — start here for "what is missing?"** |
-| **`notes/aot/generator-reference.md`** | **what the generator emits for each shape, and why — the per-feature reference, carved out of this file on 2026-08-25** |
-| `notes/nano-core.md` | the reader arc: design and the cuts |
-| `notes/nano-writer.md` | the writer arc, **plus an index of everything parked or owed** |
-| `notes/packed-writes.md` | the packed matrix, **and the raw packed surface that came out of it** |
-| `notes/aot-schema-model.md` | `[ProtoSchema]`: design and open items |
-| `notes/aot/findings.md` | numbered findings from the AOT generator work, and the ranked next-steps list |
-| `notes/aot/coverage.md`, `notes/aot/differential.md` | the two corpus sweeps' last snapshots (tool output — regenerated, not maintained) |
-| `notes/aot/grpc.md` | the gRPC proxy generator (from `main`) |
-| `notes/editions/feature-analysis.md` | the editions arc (from `main`) |
-| `docs/aot.md` | the consumer-facing AOT guide, incl. the throughput table |
-| `tools/` | repo scripts that are not part of a build — currently `annotate-public-api.py`, which rewrites `PublicAPI.*.txt` baselines from the analyzer's own `RS0036` output (gap B51) |
+| document | covers | current on |
+| --- | --- | --- |
+| `AGENTS.md` (this file) | conventions, traps, gate battery | `v4` |
+| **`notes/gaps.md`** | **every known gap with its DECISION — start here for "what is missing?"** | `nrt-reflection` |
+| **`notes/aot/generator-reference.md`** | **what the generator emits for each shape, and why — the per-feature reference, carved out of this file on 2026-08-25** | `v4` |
+| `notes/nano-core.md` | the reader arc: design and the cuts | `v4` |
+| `notes/nano-writer.md` | the writer arc, **plus an index of everything parked or owed** | `v4` |
+| `notes/packed-writes.md` | the packed matrix, **and the raw packed surface that came out of it** | `v4` |
+| `notes/aot-schema-model.md` | `[ProtoSchema]`: design and open items | `v4` |
+| `notes/aot/findings.md` | numbered findings from the AOT generator work, and the ranked next-steps list | `nrt-reflection` |
+| `notes/aot/coverage.md`, `notes/aot/differential.md` | the two corpus sweeps' last snapshots (tool output — regenerated, not maintained) | `v4` |
+| `notes/aot/grpc.md` | the gRPC proxy generator (from `main`) | `v4` |
+| `notes/editions/feature-analysis.md` | the editions arc (from `main`) | `v4` |
+| `docs/aot.md` | the consumer-facing AOT guide, incl. the throughput table | `v4` |
+| `tools/` | repo scripts that are not part of a build — currently `annotate-public-api.py`, which rewrites `PublicAPI.*.txt` baselines from the analyzer's own `RS0036` output (gap B51) | `v4` |
 
 Two rules that keep this honest, both learned the hard way here:
 
@@ -92,6 +94,42 @@ are painful.
 
 Consequence worth knowing in tests: `typeof(TypeModel).Assembly` resolves to the **BuildTools**
 assembly, not protobuf-net. That is deliberate and is what `MetadataReferenceHelpers` relies on.
+
+## Nullable reference types: four ways to get this wrong (gap B51)
+
+The rollout is partway through — `protobuf-net.ServiceModel` and `protobuf-net.Reflection` are
+NRT-enabled, `protobuf-net.Core` and `protobuf-net` are not, and **protogen emits annotations** into
+its C# output. Sequencing and history are in `notes/gaps.md` B51; these four are the traps.
+
+**1. A polyfilled nullability attribute MUST live in the assembly that uses it.** net462 and
+netstandard2.0 have no `NotNullWhen`; nothing below net5.0 has `MemberNotNullWhen`. Putting the
+polyfill in one assembly and sharing it by `[InternalsVisibleTo]` compiles, tests green, and **fails
+at runtime**: protobuf-net.Reflection has no net8.0 target, so a net8.0 app loads its
+*netstandard2.0* build against Core's *net8.0* build — where the polyfill is compiled out — and the
+first thing to reflect over the annotated members throws `TypeLoadException`. It surfaces inside
+`RuntimeTypeModel.FindOrAddAuto`, i.e. on a consumer's first serialize. The copy that exists lives in
+`protobuf-net.Reflection/Internal/NullableAttributes.cs`; when Core needs its own, it needs a
+*separate* copy, and then one of the two must be `Compile Remove`d from **both**
+`protobuf-net.BuildTools` and `protobuf-net.BuildTools.Legacy`, which compile both projects' sources
+in and would otherwise see `CS0101`.
+
+**2. `string.IsNullOrEmpty` does not narrow here, and is worse than that.** These TFMs' reference
+assemblies are *oblivious*, so the BCL methods declare nothing — and **null-testing an oblivious
+value moves it to maybe-null**, so the BCL call manufactures warnings rather than merely failing to
+remove them. Use `ProtoBuf.Reflection.Internal.StringNullability`'s `IsNullOrEmpty()` /
+`IsNullOrWhiteSpace()` extensions, which carry `[NotNullWhen(false)]`. Reaching for `!` instead is
+against standing policy: every `!` is a reading cost, so convince the compiler.
+
+**3. The two analyzer assemblies need a `CS8632` `NoWarn` until stage 4.** They compile Core's and
+Reflection's sources in while their own compilations have NRT off, which is `CS8632` once per `?`.
+Both carry the `NoWarn` with the reason; enabling NRT on Core is what removes them.
+
+**4. The generated-code half is C# only.** VB has no nullable reference types, so `VBCodeGenerator`
+emits nothing for this (its own C# source is annotated, which is a different thing). What the C#
+generator emits per member shape — and why a `ShouldSerializeX()` sometimes carries
+`[MemberNotNullWhen]`, sometimes `[AllowNull]`, and sometimes neither — is in `notes/gaps.md` B51.
+Note the compiler does **not** verify `[MemberNotNullWhen]` on the shape we emit (an expression body
+returning a computed bool), so the claim has to be true by construction; nothing will catch it.
 
 ## Persist-to-dll is .NET Framework only
 

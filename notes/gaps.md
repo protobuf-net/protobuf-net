@@ -1,4 +1,4 @@
-# Gaps and their decisions
+﻿# Gaps and their decisions
 
 **One reviewable place.** Every known gap, with a *decision* against it rather than just an
 absence — an unrecorded gap reads as an oversight, and gets re-discovered and re-argued.
@@ -5499,7 +5499,7 @@ the *write*. The fixture then sat red through a full session because the conform
 with `--no-build` against a stale binary more than once. `--no-build` after editing anything the
 generator or the library compiles is not a shortcut, it is a different test.
 
-### B51. The shipping libraries are not NRT-enabled — **agreed for the next major (Marc, 2026-08-25); PILOTED on ServiceModel, sized at ~5,125 sites**
+### B51. The shipping libraries are not NRT-enabled — **agreed for the next major (Marc, 2026-08-25). ServiceModel and Reflection DONE, and protogen now EMITS annotations; Core and protobuf-net remain**
 
 **Marc:** *"I believe the libraries are not currently NRT enabled. we should fix that, mostly by just
 turning it on and dealing with any build warnings. as a follow-up step after, we should fix the
@@ -5554,23 +5554,16 @@ instead. There is **no `!` in the pilot**:
 - `ArraySegment<byte>.Array` is `byte[]?`, so `segment.Array ?? Array.Empty<byte>()` — provably
   equivalent, because a segment with a null array carries `Offset`/`Count` of 0.
 
-#### The ApiCompat question is NOT resolved, and the reason is worse than expected
+#### The ApiCompat question is RESOLVED (2026-08-26): annotations are invisible to it, and the gate works
 
 The plan was to check whether nullability metadata trips package validation against the 3.4.0
-baseline. It produced **no `CP000x` diagnostics** — but that is not evidence, because **the gate does
-not appear to run at all**. Verified the way this file insists on: making a public type `internal`
-(a straightforward removal from the surface) *also* produced no diagnostic, on `dotnet pack -c
-Release`, with `EnablePackageValidation=true` and `PackageValidationBaselineVersion=3.4.0` both
-confirmed resolved via `-getProperty`, and no baseline package in the NuGet cache.
+baseline. It produced no `CP000x` diagnostics - and the first reading of that was that it proved
+nothing, because the gate appeared not to run at all. **That was wrong on both counts**; see gap
+B52, which was split out for it and is now closed. The gate runs, it fails the build on a removed
+type, and the fully-annotated ServiceModel validates clean against its oblivious 3.4.0 baseline.
 
-So there are two items here, and the second is not about NRT at all:
-
-- whether nullability annotations trip ApiCompat — **still open**, and worth settling before Core;
-- **whether the ApiCompat gate works** — `src/Directory.Build.props` describes it as failing the
-  build on a removed member, and it did not. Either it only runs from the traversal pack with
-  `Packing=true` (the shape `release.yml` uses, so possibly fine in CI and misleading locally), or it
-  is inert. Not investigated further; recorded rather than assumed.
-
+So annotating several thousand public entries across Core, `protobuf-net` and Reflection is a
+no-op for package validation, and a genuine break landing in the same diff will still be caught.
 
 #### The generated-code half - settled by measurement, and it is NOT what it looked like
 
@@ -5670,20 +5663,78 @@ Separately, and independent of codegen: the library own `TryGet`-shaped APIs wan
 #### Sequencing
 
 1. ~~pilot on a small library~~ — **done**, ServiceModel;
-2. commit the `RS0036`-driven baseline transform into the repo;
-3. `protobuf-net.Reflection` (493) — self-contained, and what protogen and BuildTools consume;
+2. ~~commit the `RS0036`-driven baseline transform into the repo~~ — **done**, `tools/annotate-public-api.py`;
+3. ~~`protobuf-net.Reflection`~~ — **done 2026-08-26**, together with 5 and 6 for this library, since
+   the three turned out to be one job rather than three (see below);
 4. `protobuf-net.Core` (1952) — note `protobuf-net.BuildTools` **compiles Core's sources in**, so it
-   moves at the same time whether or not that is wanted;
+   moves at the same time whether or not that is wanted. It also already carries a `NoWarn` for
+   `CS8632` to tolerate Reflection's annotations; that `NoWarn` is what stage 4 removes;
 5. `protobuf-net` (1876);
-6. then the generated code, which is the follow-up Marc named.
+6. ~~then the generated code~~ — **done for the C# generator**, which is what Reflection needed. VB is
+   deliberately excluded: **VB has no NRT**, so `VBCodeGenerator`'s own C# source is annotated but it
+   emits nothing (Marc, 2026-08-26). The AOT/`TypeModel` generator is a separate later tranche, also
+   Marc's call.
 
 Each stage lands green and reviewable; a single 5,000-site diff would not be.
+
+#### The Reflection stage, and why it could not be done in the order above (2026-08-26)
+
+**"Reflection can be NRT-enabled with zero codegen work" is true of the CODE and false of the
+BASELINE**, and only measuring showed it. The hand-written half is 236 sites and settles cleanly with
+the generated files left oblivious — but `PublicAPI.Shipped.txt` is dominated by generated descriptor
+members, so adding `#nullable enable` to it produced **406 `RS0036` + 848 `RS0041`**, and **212 of the
+406 could not be annotated at all**: they name members of `Descriptor.cs`, which is oblivious by
+virtue of its `<auto-generated>` header. Recording those as oblivious (`~` prefix) and rewriting them
+later would have been two passes over ~1,000 lines to reach the same place.
+
+So the order for a library that *contains* protogen output is: hand-written code, then teach the
+generator, then regenerate, then record the baseline. Done that way, `RS0041` goes to **zero** and
+`tools/annotate-public-api.py` settles the remaining 326 signatures in **one pass**.
+
+**Three things the bootstrap forced that the design above did not predict:**
+
+- **`[AllowNull]` is required, and was not in the plan.** The table further up has a row saying a
+  `trackPresence`-with-default member needs *no* attribute, because `ShouldSerializeX()` there means
+  "was explicitly SET" rather than "non-null". That is right about `MemberNotNullWhen` and incomplete
+  about the property: `get => __pbn__X ?? ""` cannot return null, but assigning null is exactly how
+  the member is UNSET, so the accessors genuinely disagree and a property has one type for both.
+  `[AllowNull]` is the only way to say it. Without it, nine sites in `Parsers.cs` alone warn — and
+  every consumer clearing such a member would warn too, which would read as our bug;
+- **a polyfill must live in the assembly that USES it.** The attributes were first put in
+  protobuf-net.Core and shared by `[InternalsVisibleTo]`. That compiles, and the Reflection project's
+  own tests pass — and it **fails at runtime**: Reflection has no net8.0 target, so a net8.0 app loads
+  its *netstandard2.0* build against Core's *net8.0* build, where the polyfill is compiled out. Every
+  attribute usage baked into Reflection then names a type that does not exist, and the first thing to
+  reflect over those members throws `TypeLoadException: Could not load type
+  'System.Diagnostics.CodeAnalysis.MemberNotNullWhenAttribute' from assembly 'protobuf-net.Core'` —
+  from `RuntimeTypeModel.FindOrAddAuto`, i.e. a consumer's first serialize. They live in
+  `protobuf-net.Reflection/Internal/NullableAttributes.cs` now, and the file says why at length.
+  **This is a trap for stage 4 as well**: Core will want its own copy, and BuildTools/Legacy compile
+  both projects' sources, so one of the two must be `Compile Remove`d there or it is `CS0101`;
+- **the compiler does not verify `[MemberNotNullWhen]` on the shape we emit.** Probed both ways: a
+  literal `return true;` gets `CS8775`, an expression body returning a computed bool gets nothing. So
+  `=> __pbn__pick.Is(11)` is silent in a consumer's build. That is what makes the attribute worth
+  emitting rather than noisy — and it also means the claim has to be true **by construction**, since
+  nothing will catch it if it is not. It was not, in one case: see the `DiscriminatedUnionObject`
+  entry below.
+
+**Related Core fix, found by asking whether the annotation was honest.**
+`DiscriminatedUnion32Object`/`64Object`/`128Object` all construct as
+`: this(value is not null ? discriminator : 0)`, so assigning null to a `oneof` member deselects it.
+**`DiscriminatedUnionObject` — the one the generator picks when every member of the oneof is a
+reference type — did not**, so `X = null` left `ShouldSerializeX()` answering true with `X` null, and
+the emitted `[MemberNotNullWhen]` would have been a lie for exactly those oneofs. Aligned with its
+three siblings; `DiscriminatedUnionNullTests` pins all four and was verified to fail without the fix.
+
+**Also settled here:** the CodeDom-based codegen tests, the wrappers expectations and the
+`Issue647`/`Issue855` expectation files all move with the emission; they are the only in-repo
+consumers of protogen output that assert on its text.
 
 **One option named and NOT recommended as a destination:** `<Nullable>annotations</Nullable>` gets
 consumers the annotations without flow analysis, for a fraction of the work — but nothing then checks
 the annotations are correct, so wrong ones ship silently. Acceptable as a per-project staging post.
 
-### B52. The ApiCompat / package-validation gate may not actually run - **OPEN, and it matters for the release**
+### B52. The ApiCompat / package-validation gate may not actually run - **CLOSED 2026-08-26: it runs, and it fails the build. The earlier negative was a measurement artefact**
 
 Found while checking something else (whether NRT annotations trip package validation, gap B51), and
 split out because it is not an NRT question and nobody looking for "is our public-API gate working"
@@ -5695,35 +5746,58 @@ would find it filed under one.
 > nuget.org and diffs the surface, so a removed member or a narrowed signature fails the build
 > (CP0001/CP0002/CP0003) instead of shipping.
 
-**It did not.** On `protobuf-net.ServiceModel`, making a public type `internal` - an unambiguous
-removal from the surface - produced **no diagnostic at all** from
-`dotnet pack -c Release`. Checked the obvious explanations first:
+**It does.** Re-run on 2026-08-26 the way this file insists on - by making the gate fail, not by
+observing it pass. `ProtoBuf.ServiceModel.ProtoEndpointBehavior` made `internal`, then
+`dotnet build src/protobuf-net.ServiceModel -c Release`:
 
-- `EnablePackageValidation` is `true` and `PackageValidationBaselineVersion` is `3.4.0`, both
-  confirmed resolved via `dotnet msbuild -getProperty:` rather than by reading the props file;
-- no `CP` diagnostic of any severity appeared, so it is not a severity/NoWarn question;
-- the baseline package is **not in the NuGet cache**, which is consistent with it never having been
-  fetched - i.e. the diff never happened rather than happening and passing.
+```
+error CP0001: Type 'ProtoBuf.ServiceModel.ProtoEndpointBehavior' exists on
+  [Baseline] lib/net462/protobuf-net.ServiceModel.dll but not on lib/net462/protobuf-net.ServiceModel.dll
+error CP0001: ... the same for lib/net8.0 ...
+error : API breaking changes found. If those are intentional, the APICompat suppression file can be
+  updated by rebuilding with '/p:ApiCompatGenerateSuppressionFile=true'
+    5 Error(s)
+```
 
-**Verified the way this file insists on** - by making the gate fail, not by observing it pass. That
-distinction is the whole point here: "no CP warnings" had looked like evidence the surface was
-clean.
+Reverted, rebuilt, `0 Warning(s) 0 Error(s)` - **and the validation task confirmed to have run on
+that clean build**, not merely to have been silent (`-v:d`, one
+`Using "Microsoft.DotNet.ApiCompat.Task.ValidatePackageTask" task`). A green gate that did not run
+is exactly the thing this entry existed to catch, so it is checked in both directions.
 
-#### What has NOT been ruled out
+#### The two reasons the first attempt saw nothing, because both will catch the next person
 
-The most likely benign explanation is that validation only engages from the **traversal** pack with
-`Packing=true` - `dotnet pack Build.csproj --no-build -c Release -p:Packing=true`, which is the shape
-`release.yml` actually uses - and simply no-ops for a single-project pack. If so the gate works in CI
-and is merely misleading locally, which is worth knowing but not urgent.
+**1. `dotnet pack` never reaches the gate on this repo.** `RunPackageValidation` is
+`AfterTargets="Pack"`, and `notes/aot/findings.md` already records that `dotnet pack` here *skips
+the build entirely* and dies with **NU5026** (an interaction with `GeneratePackageOnBuild=True`).
+So Pack fails before the hook fires, and no `CP` diagnostic can appear however broken the surface
+is. **`dotnet build -c Release` is the command** - it builds, packs as a side effect, and validates.
+Not `dotnet pack`, and the traversal/`Packing=true` shape was a red herring: nothing about the gate
+is traversal-specific.
 
-The way to settle it is the same experiment on the traversal: break a public surface deliberately,
-pack the way `release.yml` does, and see whether `CP0002` appears. **Do that before leaning on the
-gate for a release** - a 4.0 preview is the first thing this pipeline has ever published, so nothing
-has exercised the baseline diff in anger.
+**2. `NuGetPackageRoot` on this machine is `C:\Code\NugetPackageCache`, not `~/.nuget/packages`.**
+The earlier check looked in the default location, found no `protobuf-net.servicemodel`, and read
+that as "the baseline was never fetched". All ten 3.4.0 baselines are in the real cache -
+`protobuf-net`, `.core`, `.reflection`, `.servicemodel`, `.nodatime`, `.aspnetcore`, `.hybridcache`,
+`.fsharp`, `protogen`. Ask MSBuild rather than assuming the path:
+`dotnet msbuild <proj> -getProperty:NuGetPackageRoot`.
 
-#### Why it is worth a real answer rather than a shrug
+For the record, the wiring is worth knowing since neither half is guessable from the props file:
+the baseline arrives as a **`PackageDownload`** item that `Microsoft.NET.ApiCompat.targets` adds at
+*evaluation* time (so `dotnet restore` fetches it), and `RunPackageValidation` then looks for the
+`.nupkg` at a computed path under `NuGetPackageRoot` - there is no download inside the target.
+Confirm both with `-getItem:PackageDownload`.
 
-The 4.x line is a major, so the surface is *expected* to move; the gate exists to make the moves
-deliberate rather than accidental. And gap B51 will annotate several thousand public API entries
-across Core, `protobuf-net` and Reflection - exactly the kind of wide, mechanical surface change a
-working ApiCompat is for, and exactly the kind that a silently-inert one would wave through.
+**A third trap that did not bite here but will:** the target is incremental against
+`obj/<config>/Microsoft.NET.ApiCompat.ValidatePackage.semaphore`, with the built dll as its input.
+So a build that recompiles nothing validates nothing, silently. That is the same shape as the
+`--no-build` trap in the handover, and the same answer: touch a source file if you need the gate to
+speak.
+
+#### What this settles for B51
+
+**Nullability annotations do NOT trip ApiCompat.** `protobuf-net.ServiceModel` is fully NRT-annotated
+since the pilot and its 3.4.0 baseline is oblivious; the clean run above validated that pair and
+reported nothing. That was the question B51 could not answer while the gate's own status was unknown,
+and it is the reassuring answer: the several thousand annotations coming to Core, `protobuf-net` and
+Reflection are invisible to package validation, so a real break in the same diff will not be lost in
+noise.

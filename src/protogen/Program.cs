@@ -1,4 +1,4 @@
-using Google.Protobuf.Reflection;
+﻿using Google.Protobuf.Reflection;
 using ProtoBuf;
 using ProtoBuf.Reflection;
 using System;
@@ -350,6 +350,10 @@ Parse PROTO_FILES and generate output based on the options given:
   +compatlevel={yes|no}       Specify whether well-known types should be marked 
                               with CompatibilityLevel instead of DataFormat.
   +nullablevaluetype={yes|no} Use nullable primitives when possible.
+  +nrt={yes|no}               Emit nullable reference type annotations
+                              (C# 8 and above; on by default). The
+                              MemberNotNullWhen attribute this uses is .NET
+                              5+, so pre-.NET 5 targets need a polyfill.
   +repeatedaslist={yes|no}    Use List for all repeated fields.
   +OPTION=VALUE               Specify a custom OPTION/VALUE pair for the
                               selected code generator.

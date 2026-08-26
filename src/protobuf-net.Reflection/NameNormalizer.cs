@@ -15,7 +15,7 @@ namespace ProtoBuf.Reflection
         public string LineContents { get; }
         public bool IsError { get; }
         internal ErrorCode ErrorCode { get; }
-        internal ParserException(Token token, string message, bool isError, ErrorCode errorCode)
+        internal ParserException(Token token, string? message, bool isError, ErrorCode errorCode)
             : base(message ?? "error")
         {
             ColumnNumber = token.ColumnNumber;
@@ -61,7 +61,7 @@ namespace ProtoBuf.Reflection
         /// </summary>
         protected static string AutoCapitalize(string identifier)
         {
-            if (string.IsNullOrEmpty(identifier)) return identifier;
+            if (identifier.IsNullOrEmpty()) return identifier;
             // if all upper-case, make proper-case
             if (Regex.IsMatch(identifier, "^[_A-Z0-9]*$"))
             {
@@ -84,7 +84,7 @@ namespace ProtoBuf.Reflection
         {
             // horribly Anglo-centric and only covers common cases; but: is swappable
 
-            if (string.IsNullOrEmpty(identifier) || identifier.Length == 1) return identifier;
+            if (identifier.IsNullOrEmpty() || identifier.Length == 1) return identifier;
 
             if (identifier.EndsWith("ss") || identifier.EndsWith("o")) return identifier + "es";
             if (identifier.EndsWith("is") && identifier.Length > 2) return identifier.Substring(0, identifier.Length - 2) + "es";
@@ -131,16 +131,16 @@ namespace ProtoBuf.Reflection
         /// <summary>
         /// Suggest a normalized identifier
         /// </summary>
-        public virtual string GetName(FileDescriptorProto definition)
+        public virtual string? GetName(FileDescriptorProto definition)
         {
-            var ns = definition?.Options?.GetOptions()?.Namespace;
-            if (!string.IsNullOrWhiteSpace(ns)) return ns;
-            ns = definition?.Options?.CsharpNamespace;
-            if (string.IsNullOrWhiteSpace(ns)) ns = GetName(definition?.Package);
+            var ns = definition.Options?.GetOptions()?.Namespace;
+            if (!ns.IsNullOrWhiteSpace()) return ns;
+            ns = definition.Options?.CsharpNamespace;
+            if (ns.IsNullOrWhiteSpace()) ns = GetName(definition.Package);
 
-            if (string.IsNullOrEmpty(ns)) ns = definition?.DefaultPackage;
+            if (ns.IsNullOrEmpty()) ns = definition.DefaultPackage;
 
-            return string.IsNullOrWhiteSpace(ns) ? null : ns;
+            return ns.IsNullOrWhiteSpace() ? null : ns;
         }
 
         /// <summary>
@@ -148,8 +148,8 @@ namespace ProtoBuf.Reflection
         /// </summary>
         public virtual string GetName(OneofDescriptorProto definition)
         {
-            var name = definition?.Options?.GetOptions()?.Name;
-            if (!string.IsNullOrWhiteSpace(name)) return name;
+            var name = definition.Options?.GetOptions()?.Name;
+            if (!name.IsNullOrWhiteSpace()) return name;
             return GetName(definition.Parent as DescriptorProto, GetName(definition.Name), definition.Name, false);
         }
 
@@ -158,8 +158,8 @@ namespace ProtoBuf.Reflection
         /// </summary>
         public virtual string GetName(DescriptorProto definition)
         {
-            var name = definition?.Options?.GetOptions()?.Name;
-            if (!string.IsNullOrWhiteSpace(name)) return name;
+            var name = definition.Options?.GetOptions()?.Name;
+            if (!name.IsNullOrWhiteSpace()) return name;
             return GetName(definition.Parent as DescriptorProto, GetName(definition.Name), definition.Name, false);
         }
         /// <summary>
@@ -167,8 +167,8 @@ namespace ProtoBuf.Reflection
         /// </summary>
         public virtual string GetName(EnumDescriptorProto definition)
         {
-            var name = definition?.Options?.GetOptions()?.Name;
-            if (!string.IsNullOrWhiteSpace(name)) return name;
+            var name = definition.Options?.GetOptions()?.Name;
+            if (!name.IsNullOrWhiteSpace()) return name;
             return GetName(definition.Parent as DescriptorProto, GetName(definition.Name), definition.Name, false);
         }
         /// <summary>
@@ -176,8 +176,8 @@ namespace ProtoBuf.Reflection
         /// </summary>
         public virtual string GetName(EnumValueDescriptorProto definition)
         {
-            var name = definition?.Options?.GetOptions()?.Name;
-            if (!string.IsNullOrWhiteSpace(name)) return name;
+            var name = definition.Options?.GetOptions()?.Name;
+            if (!name.IsNullOrWhiteSpace()) return name;
             return GetName(definition.Name);
         }
         /// <summary>
@@ -185,8 +185,8 @@ namespace ProtoBuf.Reflection
         /// </summary>
         public virtual string GetName(FieldDescriptorProto definition)
         {
-            var name = definition?.Options?.GetOptions()?.Name;
-            if (!string.IsNullOrWhiteSpace(name)) return name;
+            var name = definition.Options?.GetOptions()?.Name;
+            if (!name.IsNullOrWhiteSpace()) return name;
             var preferred = GetName(definition.Name);
             if (definition.label == FieldDescriptorProto.Label.LabelRepeated)
             {
@@ -200,8 +200,8 @@ namespace ProtoBuf.Reflection
         /// </summary>
         public virtual string GetName(ServiceDescriptorProto definition)
         {
-            var name = definition?.Options?.GetOptions()?.Name;
-            if (!string.IsNullOrWhiteSpace(name)) return name;
+            var name = definition.Options?.GetOptions()?.Name;
+            if (!name.IsNullOrWhiteSpace()) return name;
             return "I" + GetName(definition.Name); // .NET convention
         }
 
@@ -210,8 +210,8 @@ namespace ProtoBuf.Reflection
         /// </summary>
         public virtual string GetName(MethodDescriptorProto definition)
         {
-            var name = definition?.Options?.GetOptions()?.Name;
-            if (!string.IsNullOrWhiteSpace(name)) return name;
+            var name = definition.Options?.GetOptions()?.Name;
+            if (!name.IsNullOrWhiteSpace()) return name;
             return GetName(definition.Name);
         }
 
@@ -220,7 +220,7 @@ namespace ProtoBuf.Reflection
         /// <summary>
         /// Obtain a set of all names defined for a message
         /// </summary>
-        protected HashSet<string> BuildConflicts(DescriptorProto parent, bool includeDescendents)
+        protected HashSet<string> BuildConflicts(DescriptorProto? parent, bool includeDescendents)
         {
             var conflicts = new HashSet<string>(
                 IsCaseSensitive ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase);
@@ -244,7 +244,7 @@ namespace ProtoBuf.Reflection
         /// <summary>
         /// Get the preferred name for an element
         /// </summary>
-        protected virtual string GetName(DescriptorProto parent, string preferred, string fallback, bool includeDescendents)
+        protected virtual string GetName(DescriptorProto? parent, string preferred, string fallback, bool includeDescendents)
         {
             var conflicts = BuildConflicts(parent, includeDescendents);
 

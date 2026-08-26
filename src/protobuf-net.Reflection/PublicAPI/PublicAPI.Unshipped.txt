@@ -1,4 +1,5 @@
-﻿ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext.UnknownSubTypes.get -> ProtoBuf.Reflection.UnknownSubTypeHandling
+﻿ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext.EmitNullableReferenceTypes.get -> bool
+ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext.UnknownSubTypes.get -> ProtoBuf.Reflection.UnknownSubTypeHandling
 ProtoBuf.Reflection.UnknownSubTypeHandling
 ProtoBuf.Reflection.UnknownSubTypeHandling.Default = 0 -> ProtoBuf.Reflection.UnknownSubTypeHandling
 ProtoBuf.Reflection.UnknownSubTypeHandling.Ignore = 2 -> ProtoBuf.Reflection.UnknownSubTypeHandling

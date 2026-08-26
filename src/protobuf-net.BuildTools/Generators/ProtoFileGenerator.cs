@@ -258,6 +258,20 @@ namespace ProtoBuf.BuildTools.Generators
                         var options = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
                         if (langver is not null) options.Add("langver", langver);
 
+                        // Follow the CONSUMING COMPILATION for nullable reference types: emitting
+                        // annotations into a project that has NRT off is noise at best, and the
+                        // MemberNotNullWhen we lean on does not exist before .NET 5 - so a project
+                        // that never asked for any of it should not have to polyfill anything.
+                        // The generator's own default is ON, which is what the CLI and the website
+                        // get; here there is a compilation to ask, so we ask it. An explicit
+                        // NullableReferenceType on the AdditionalFiles item overrides this below.
+                        if (context.Compilation.Options is CSharpCompilationOptions csCompilationOptions)
+                        {
+                            var annotated = csCompilationOptions.NullableContextOptions
+                                is NullableContextOptions.Enable or NullableContextOptions.Annotations;
+                            options.Add("nrt", annotated ? "true" : "false");
+                        }
+
                         var services = pbnetGrpcVersion switch
                         {   // automatically generate services *if* the consumer is referencing either the WCF or gRPC bits
                             not null when wcfVersion is not null => "grpc;wcf",
@@ -288,6 +302,7 @@ namespace ProtoBuf.BuildTools.Generators
                             AddOption(Literals.AdditionalFileMetadataPrefix + "NullWrappers", "nullwrappers", Bools);
                             AddOption(Literals.AdditionalFileMetadataPrefix + "CompatLevel", "compatlevel", Bools);
                             AddOption(Literals.AdditionalFileMetadataPrefix + "NullableValueType", "nullablevaluetype", Bools);
+                            AddOption(Literals.AdditionalFileMetadataPrefix + "NullableReferenceType", "nrt", Bools);
                             AddOption(Literals.AdditionalFileMetadataPrefix + "RepeatedAsList", "repeatedaslist", Bools);
 
                             void AddOption(string readKey, string writeKey, params string[] valid)

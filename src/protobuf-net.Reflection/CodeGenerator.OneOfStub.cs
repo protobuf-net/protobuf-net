@@ -116,7 +116,7 @@ namespace ProtoBuf.Reflection
                         return "Object";
                 }
             }
-            internal static OneOfStub[] Build(DescriptorProto message)
+            internal static OneOfStub[]? Build(DescriptorProto message)
             {
                 if (message.OneofDecls.Count == 0) return null;
                 var stubs = new OneOfStub[message.OneofDecls.Count];
