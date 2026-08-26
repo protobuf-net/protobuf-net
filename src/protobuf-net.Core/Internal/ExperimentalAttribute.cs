@@ -1,4 +1,4 @@
-#if !NET8_0_OR_GREATER
+﻿#if !NET8_0_OR_GREATER
 // ExperimentalAttribute arrived in .NET 8; below that we declare our own so that the public API can
 // be annotated uniformly across every target. It is internal, so it never collides with the real one
 // and never becomes part of our surface — the compiler only honours it on net8.0+ anyway, which is
@@ -16,7 +16,7 @@ namespace System.Diagnostics.CodeAnalysis
 
         public string DiagnosticId { get; }
 
-        public string UrlFormat { get; set; }
+        public string? UrlFormat { get; set; }
     }
 }
 #endif

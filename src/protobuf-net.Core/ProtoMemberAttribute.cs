@@ -53,8 +53,8 @@ namespace ProtoBuf
         /// Gets or sets the original name defined in the .proto; not used
         /// during serialization.
         /// </summary>
-        public string Name { get { return name; } set { name = value; } }
-        private string name;
+        public string? Name { get { return name; } set { name = value; } }
+        private string? name;
 
         /// <summary>
         /// Gets or sets the data-format to be used when encoding this value.

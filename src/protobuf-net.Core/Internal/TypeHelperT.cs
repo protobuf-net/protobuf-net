@@ -1,4 +1,4 @@
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
 using System;
@@ -91,7 +91,7 @@ namespace ProtoBuf.Internal
         [Obsolete("Prefer list provider")]
         internal static bool ResolveUniqueEnumerableT(Type type, out Type t)
         {
-            static bool IsEnumerableT(Type type, out Type t)
+            static bool IsEnumerableT(Type type, out Type? t)
             {
                 if (type.IsInterface && type.IsGenericType
                     && type.GetGenericTypeDefinition() == typeof(IEnumerable<>))
@@ -162,7 +162,7 @@ namespace ProtoBuf.Internal
             return false;
         }
 
-        internal static object CreateNonTrivialDefault(Type type)
+        internal static object? CreateNonTrivialDefault(Type type)
         {
             if (type.IsValueType) return Activator.CreateInstance(Nullable.GetUnderlyingType(type) ?? type);
             if (type == typeof(string)) return "";
@@ -248,13 +248,13 @@ namespace ProtoBuf.Internal
 
         public static readonly bool CanBePacked = !IsReferenceType && TypeHelper.CanBePacked(typeof(T));
 
-        public static readonly T Default = typeof(T) == typeof(string) ? (T)(object)"" : default;
+        public static readonly T? Default = typeof(T) == typeof(string) ? (T)(object)"" : default;
 
         // NonTrivialDefault and Factory moved to TypeHelperConstruct<T> - see the note there.
 
         // make sure we don't cast null value-types to NREs
         [MethodImpl(ProtoReader.HotPath)]
-        public static T FromObject(object value) => value is null ? default : (T)value;
+        public static T? FromObject(object? value) => value is null ? default : (T)value;
 
 
     }

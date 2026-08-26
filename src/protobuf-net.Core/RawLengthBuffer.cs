@@ -1,4 +1,4 @@
-using ProtoBuf.Internal;
+﻿using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 using System;
 using System.Collections.Generic;
@@ -83,7 +83,7 @@ namespace ProtoBuf
         private int _read;      // consume cursor: the next slot Next() will return
         // object -> its slot index, populated ONLY where a raw walk is entered from the classic
         // engine; null until that first happens, which for a fully-raw model is never
-        private Dictionary<object, int> _boundary;
+        private Dictionary<object, int>? _boundary;
 
         /// <summary>Claims the next slot and returns its index; fill it with <see cref="Set"/>.</summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -180,7 +180,7 @@ namespace ProtoBuf
             return measuring;
         }
 
-        private MeasuringContext _measuring;
+        private MeasuringContext? _measuring;
 
         private sealed class MeasuringContext : ISerializationContext, IMeasuringPassContext
         {

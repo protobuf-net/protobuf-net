@@ -15,13 +15,13 @@ namespace ProtoBuf
     /// </summary>
     internal static class Helpers
     {
-        internal static MethodInfo GetInstanceMethod(Type declaringType, string name)
+        internal static MethodInfo? GetInstanceMethod(Type declaringType, string name)
             => declaringType.GetMethod(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
 
-        internal static MethodInfo GetStaticMethod(Type declaringType, string name)
+        internal static MethodInfo? GetStaticMethod(Type declaringType, string name)
             => declaringType.GetMethod(name, BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
 
-        internal static MethodInfo GetInstanceMethod(Type declaringType, string name, Type[] types)
+        internal static MethodInfo? GetInstanceMethod(Type declaringType, string name, Type[] types)
         {
             types ??= Type.EmptyTypes;
             return declaringType.GetMethod(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
@@ -72,7 +72,7 @@ namespace ProtoBuf
             return ProtoTypeCode.Unknown;
         }
 
-        internal static MethodInfo GetGetMethod(PropertyInfo property, bool nonPublic, bool allowInternal)
+        internal static MethodInfo? GetGetMethod(PropertyInfo? property, bool nonPublic, bool allowInternal)
         {
             if (property is null) return null;
             var method = property.GetGetMethod(nonPublic);
@@ -87,7 +87,7 @@ namespace ProtoBuf
             return method;
         }
 
-        internal static MethodInfo GetSetMethod(PropertyInfo property, bool nonPublic, bool allowInternal)
+        internal static MethodInfo? GetSetMethod(PropertyInfo? property, bool nonPublic, bool allowInternal)
         {
             if (property is null) return null;
 
@@ -103,7 +103,7 @@ namespace ProtoBuf
             return method;
         }
 
-        internal static ConstructorInfo GetConstructor(Type type, Type[] parameterTypes, bool nonPublic)
+        internal static ConstructorInfo? GetConstructor(Type type, Type[] parameterTypes, bool nonPublic)
         {
             return type.GetConstructor(
                 nonPublic ? BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic
@@ -127,7 +127,7 @@ namespace ProtoBuf
 
         }
 
-        internal static PropertyInfo GetProperty(Type type, string name, bool nonPublic)
+        internal static PropertyInfo? GetProperty(Type type, string name, bool nonPublic)
         {
             return type.GetProperty(name,
                 nonPublic ? BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic
@@ -145,7 +145,7 @@ namespace ProtoBuf
             return members;
         }
 
-        internal static Type GetMemberType(MemberInfo member)
+        internal static Type? GetMemberType(MemberInfo member)
         {
             return member.MemberType switch
             {

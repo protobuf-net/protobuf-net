@@ -9,7 +9,7 @@ namespace ProtoBuf
     public readonly partial struct DiscriminatedUnionObject
     {
         /// <summary>The value typed as Object</summary>
-        public readonly object Object;
+        public readonly object? Object;
 
         /// <summary>Indicates whether the specified discriminator is assigned</summary>
         public bool Is(int discriminator) => Discriminator == discriminator;
@@ -20,7 +20,7 @@ namespace ProtoBuf
         /// null" and "not set" cannot be told apart by a reader. The three sibling unions
         /// (32/64/128) have always done this; this one had not, which made the same assignment
         /// behave differently depending only on which union the generator happened to pick.</remarks>
-        public DiscriminatedUnionObject(int discriminator, object value)
+        public DiscriminatedUnionObject(int discriminator, object? value)
         {
             Discriminator = value is not null ? discriminator : 0;
             Object = value;
@@ -126,7 +126,7 @@ namespace ProtoBuf
         /// <summary>The value typed as Guid</summary>
         [FieldOffset(8)] public readonly Guid Guid;
         /// <summary>The value typed as Object</summary>
-        [FieldOffset(24)] public readonly object Object;
+        [FieldOffset(24)] public readonly object? Object;
 
         private DiscriminatedUnion128Object(int discriminator) : this()
         {
@@ -151,7 +151,7 @@ namespace ProtoBuf
         /// <summary>Create a new discriminated union value</summary>
         public DiscriminatedUnion128Object(int discriminator, bool value) : this(discriminator) { Boolean = value; }
         /// <summary>Create a new discriminated union value</summary>
-        public DiscriminatedUnion128Object(int discriminator, object value) : this(value is not null ? discriminator : 0) { Object = value; }
+        public DiscriminatedUnion128Object(int discriminator, object? value) : this(value is not null ? discriminator : 0) { Object = value; }
         /// <summary>Create a new discriminated union value</summary>
         public DiscriminatedUnion128Object(int discriminator, DateTime? value) : this(value.HasValue ? discriminator: 0) { DateTime = value.GetValueOrDefault(); }
         /// <summary>Create a new discriminated union value</summary>
@@ -260,7 +260,7 @@ namespace ProtoBuf
         /// <summary>The value typed as TimeSpan</summary>
         [FieldOffset(8)] public readonly TimeSpan TimeSpan;
         /// <summary>The value typed as Object</summary>
-        [FieldOffset(16)] public readonly object Object;
+        [FieldOffset(16)] public readonly object? Object;
 
         private DiscriminatedUnion64Object(int discriminator) : this()
         {
@@ -285,7 +285,7 @@ namespace ProtoBuf
         /// <summary>Create a new discriminated union value</summary>
         public DiscriminatedUnion64Object(int discriminator, bool value) : this(discriminator) { Boolean = value; }
         /// <summary>Create a new discriminated union value</summary>
-        public DiscriminatedUnion64Object(int discriminator, object value) : this(value is not null ? discriminator : 0) { Object = value; }
+        public DiscriminatedUnion64Object(int discriminator, object? value) : this(value is not null ? discriminator : 0) { Object = value; }
         /// <summary>Create a new discriminated union value</summary>
         public DiscriminatedUnion64Object(int discriminator, DateTime? value) : this(value.HasValue ? discriminator: 0) { DateTime = value.GetValueOrDefault(); }
         /// <summary>Create a new discriminated union value</summary>
@@ -358,7 +358,7 @@ namespace ProtoBuf
         /// <summary>The value typed as Single</summary>
         [FieldOffset(4)] public readonly float Single;
         /// <summary>The value typed as Object</summary>
-        [FieldOffset(8)] public readonly object Object;
+        [FieldOffset(8)] public readonly object? Object;
 
         private DiscriminatedUnion32Object(int discriminator) : this()
         {
@@ -377,7 +377,7 @@ namespace ProtoBuf
         /// <summary>Create a new discriminated union value</summary>
         public DiscriminatedUnion32Object(int discriminator, bool value) : this(discriminator) { Boolean = value; }
         /// <summary>Create a new discriminated union value</summary>
-        public DiscriminatedUnion32Object(int discriminator, object value) : this(value is not null ? discriminator : 0) { Object = value; }
+        public DiscriminatedUnion32Object(int discriminator, object? value) : this(value is not null ? discriminator : 0) { Object = value; }
 
         /// <summary>Reset a value if the specified discriminator is assigned</summary>
         public static void Reset(ref DiscriminatedUnion32Object value, int discriminator)

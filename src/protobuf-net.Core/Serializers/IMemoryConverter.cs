@@ -52,12 +52,12 @@ namespace ProtoBuf.Serializers
         IMemoryConverter<ReadOnlyMemory<T>, T>
     {
         [MethodImpl(ProtoReader.HotPath)]
-        internal static IMemoryConverter<TStorage, T> GetFor<TStorage>(TypeModel model)
+        internal static IMemoryConverter<TStorage, T> GetFor<TStorage>(TypeModel? model)
             => model?.GetSerializerCore<TStorage>(default) as IMemoryConverter<TStorage, T>
             ?? Instance as IMemoryConverter<TStorage, T> ?? NotSupported<TStorage>();
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static IMemoryConverter<TStorage, T> NotSupported<TStorage>()
+        private static IMemoryConverter<TStorage, T>? NotSupported<TStorage>()
         {
             ThrowHelper.ThrowInvalidOperationException(
                 $"No memory-converter is available for storage {typeof(TStorage).NormalizeName()} with element-type {typeof(T).NormalizeName()}.");

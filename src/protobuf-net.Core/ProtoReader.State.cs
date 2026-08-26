@@ -27,7 +27,7 @@ namespace ProtoBuf
             /// <summary>
             /// Creates a reader over the supplied buffer
             /// </summary>
-            public static State Create(ReadOnlyMemory<byte> source, TypeModel model, object? userState = null)
+            public static State Create(ReadOnlyMemory<byte> source, TypeModel? model, object? userState = null)
             {
                 var state = new State(source);
                 state._model = model;
@@ -38,7 +38,7 @@ namespace ProtoBuf
             /// <summary>
             /// Creates a reader over the supplied buffer
             /// </summary>
-            public static State Create(ReadOnlySequence<byte> source, TypeModel model, object? userState = null)
+            public static State Create(ReadOnlySequence<byte> source, TypeModel? model, object? userState = null)
             {
                 var state = new State(in source);
                 state._model = model;
@@ -50,7 +50,7 @@ namespace ProtoBuf
             /// Creates a reader over the supplied stream; length of TO_EOF (-1) consumes to the
             /// end of the stream, otherwise exactly that many bytes are the document
             /// </summary>
-            public static State Create(Stream source, TypeModel model, object? userState = null, long length = ProtoReader.TO_EOF)
+            public static State Create(Stream source, TypeModel? model, object? userState = null, long length = ProtoReader.TO_EOF)
             {
                 // the MemoryStream unwrap, with full legacy parity: reflection fallback for
                 // non-exposable buffers, position respected, length cap applied, and the source

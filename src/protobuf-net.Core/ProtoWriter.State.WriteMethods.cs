@@ -494,7 +494,7 @@ namespace ProtoBuf
             public void WriteBaseType<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(T value, ISubTypeSerializer<T>? serializer = null) where T : class
                 => (serializer ?? TypeModel.GetSubTypeSerializer<T>(Model)).WriteSubType(ref this, value);
 
-            internal readonly TypeModel Model => _writer?.Model;
+            internal readonly TypeModel? Model => _writer?.Model;
 
             /// <summary>
             /// Gets the serializer associated with a specific type

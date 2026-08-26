@@ -23,7 +23,7 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// The package to use for generation (<c>null</c> to try to infer)
         /// </summary>
-        public string Package { get; set; }
+        public string? Package { get; set; }
 
         /// <summary>
         /// The services to consider as part of this operation.
@@ -35,8 +35,8 @@ namespace ProtoBuf.Meta
         /// </summary>
         public List<Type> Types => _types ??= new List<Type>();
 
-        private List<Service> _services;
-        private List<Type> _types;
+        private List<Service>? _services;
+        private List<Type>? _types;
 
         internal bool HasServices => (_services?.Count ?? 0) != 0;
         internal bool HasTypes => (_types?.Count ?? 0) != 0;
@@ -45,7 +45,7 @@ namespace ProtoBuf.Meta
         /// The file that defines this type (as used with <c>import</c> in .proto); when non-empty, only
         /// types in the same <c>Origin</c> are included; this option is inferred if <c>null</c>.
         /// </summary>
-        public string Origin { get; set; }
+        public string? Origin { get; set; }
     }
 
     /// <summary>

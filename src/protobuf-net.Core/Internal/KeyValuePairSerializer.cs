@@ -1,4 +1,4 @@
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
 using System;

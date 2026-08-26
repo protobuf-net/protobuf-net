@@ -6,7 +6,7 @@ namespace ProtoBuf.Internal
     internal static class Pool<T> where T : class
     {
         [ThreadStatic]
-        private static T ts_local;
+        private static T? ts_local;
 
         internal static T TryGet()
         {
@@ -34,7 +34,7 @@ namespace ProtoBuf.Internal
         const int POOL_SIZE = 20;
         private static readonly Queue<T> s_pool = new Queue<T>(POOL_SIZE);
 
-        private static T GetShared()
+        private static T? GetShared()
         {
             var pool = s_pool;
             lock (pool)

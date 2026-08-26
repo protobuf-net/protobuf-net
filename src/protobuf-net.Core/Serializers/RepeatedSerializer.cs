@@ -20,7 +20,7 @@ namespace ProtoBuf.Serializers
         /// <summary>Create a serializer that indicates that a scenario is not supported</summary>
         [MethodImpl(MethodImplOptions.NoInlining)]
         [Obsolete("Since this isn't supported, you probably shouldn't be doing it...", false)]
-        public static RepeatedSerializer<TCollection, T> CreateNestedDataNotSupported<TCollection, T>()
+        public static RepeatedSerializer<TCollection, T>? CreateNestedDataNotSupported<TCollection, T>()
         {
             ThrowHelper.ThrowNestedDataNotSupported(typeof(TCollection));
             return default;
@@ -29,7 +29,7 @@ namespace ProtoBuf.Serializers
         /// <summary>Create a serializer that indicates that a scenario is not supported</summary>
         [MethodImpl(MethodImplOptions.NoInlining)]
         [Obsolete("Since this isn't supported, you probably shouldn't be doing it...", false)]
-        public static RepeatedSerializer<TCollection, T> CreateNotSupported<TCollection, T>()
+        public static RepeatedSerializer<TCollection, T>? CreateNotSupported<TCollection, T>()
         {
             ThrowHelper.ThrowNotSupportedException($"Repeated data of type {typeof(TCollection)} is not supported");
             return default;
@@ -100,7 +100,7 @@ namespace ProtoBuf.Serializers
         [MethodImpl(ProtoReader.HotPath)] // note: not "in" because ArraySegment<T> isn't "readonly" on all TFMs
         internal static void ReverseInPlace<T>(this ref ArraySegment<T> values) => Array.Reverse(values.Array, values.Offset, values.Count);
         [MethodImpl(ProtoReader.HotPath)]
-        internal static ref T Singleton<T>(this ref ArraySegment<T> values) => ref values.Array[values.Offset];
+        internal static ref T? Singleton<T>(this ref ArraySegment<T> values) => ref values.Array[values.Offset];
     }
 
 

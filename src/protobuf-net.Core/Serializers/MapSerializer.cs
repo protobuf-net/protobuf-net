@@ -69,7 +69,7 @@ namespace ProtoBuf.Serializers
             => ReadMap(ref state, features, values, default, default, default, default);
 
         static KeyValuePairSerializer<TKey, TValue> GetSerializer(
-            TypeModel model, SerializerFeatures keyFeatures, SerializerFeatures valueFeatures, ISerializer<TKey> keySerializer, ISerializer<TValue> valueSerializer)
+            TypeModel? model, SerializerFeatures keyFeatures, SerializerFeatures valueFeatures, ISerializer<TKey> keySerializer, ISerializer<TValue> valueSerializer)
         {
             keySerializer ??= TypeModel.ResolveSerializer<TKey>(model);
             valueSerializer ??= TypeModel.ResolveSerializer<TValue>(model);

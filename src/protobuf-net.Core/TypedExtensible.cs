@@ -24,7 +24,7 @@ namespace ProtoBuf
         /// <param name="format">The data-format to use when decoding the value.</param>
         /// <param name="type">The <see cref="Type"/> that holds the fields, in terms of the inheritance model; the same <c>tag</c> key can appear against different <c>type</c> levels for the same <c>instance</c>, with different values.</param>
         /// <returns>True if data for the field was present, false otherwise.</returns>
-        public static bool TryGetValue<TValue>(this ITypedExtensible instance, int tag, out TValue value, Type? type = null, DataFormat format = DataFormat.Default, TypeModel? model = default)
+        public static bool TryGetValue<TValue>(this ITypedExtensible instance, int tag, out TValue? value, Type? type = null, DataFormat format = DataFormat.Default, TypeModel? model = default)
         {
             var extn = GetExtension(instance, type, false, ref model);
             value = default;
@@ -54,8 +54,8 @@ namespace ProtoBuf
         /// <param name="format">The data-format to use when decoding the value.</param>
         /// <param name="type">The <see cref="Type"/> that holds the fields, in terms of the inheritance model; the same <c>tag</c> key can appear against different <c>type</c> levels for the same <c>instance</c>, with different values.</param>
         /// <returns>The effective value of the field, or the default value if not found.</returns>
-        public static TValue GetValue<TValue>(this ITypedExtensible instance, int tag, Type? type = null, DataFormat format = DataFormat.Default, TypeModel? model = default)
-            => TryGetValue<TValue>(instance, tag, out TValue value, type, format, model) ? value : default;
+        public static TValue? GetValue<TValue>(this ITypedExtensible instance, int tag, Type? type = null, DataFormat format = DataFormat.Default, TypeModel? model = default)
+            => TryGetValue<TValue>(instance, tag, out TValue? value, type, format, model) ? value : default;
 
         /// <summary>
         /// Queries an extensible object for an additional (unexpected) data-field for the instance.
@@ -95,12 +95,12 @@ namespace ProtoBuf
         /// <param name="type">The <see cref="Type"/> that holds the fields, in terms of the inheritance model; the same <c>tag</c> key can appear against different <c>type</c> levels for the same <c>instance</c>, with different values.</param>
         public static void AppendValue<TValue>(this ITypedExtensible instance, int tag, TValue value, Type? type = null, DataFormat format = DataFormat.Default, TypeModel? model = default)
         {
-            object valueObject = value;
+            object? valueObject = value;
             if (valueObject is null) ThrowHelper.ThrowArgumentNullException(nameof(value));
             ExtensibleUtil.AppendExtendValue(model, GetExtension(instance, type, true, ref model), tag, format, valueObject);
         }
 
-        private static IExtension GetExtension(ITypedExtensible instance, Type type, bool createIfMissing, ref TypeModel model)
+        private static IExtension GetExtension(ITypedExtensible instance, Type type, bool createIfMissing, ref TypeModel? model)
         {
             if (instance is null) ThrowHelper.ThrowArgumentNullException(nameof(instance));
 

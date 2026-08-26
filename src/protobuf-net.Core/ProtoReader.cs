@@ -107,7 +107,7 @@ namespace ProtoBuf
         /// <summary>
         /// Additional information about this deserialization operation.
         /// </summary>
-        public object UserState => _snapshot.UserState;
+        public object? UserState => _snapshot.UserState;
 
         /// <summary>
         /// Additional information about this deserialization operation.
@@ -675,7 +675,7 @@ namespace ProtoBuf
         /// Merge two objects using the details from the current reader; this is used to change the type
         /// of objects when an inheritance relationship is discovered later than usual during deserilazation.
         /// </summary>
-        public static object Merge(ProtoReader parent, object from, object to)
+        public static object? Merge(ProtoReader parent, object from, object to)
         {
             if (parent is null) ThrowHelper.ThrowArgumentNullException(nameof(parent));
             TypeModel model = parent.Model;
@@ -710,10 +710,10 @@ namespace ProtoBuf
         // internal, exactly as the pre-swap shape: the public museum overload takes
         // SerializationContext (see ProtoReader.Stream.cs), so adding a public object-taking
         // sibling would make historical call sites ambiguous
-        internal static ProtoReader Create(Stream source, TypeModel model, object? userState, long length)
+        internal static ProtoReader Create(Stream source, TypeModel? model, object? userState, long length)
             => new SnapshotProtoReader(State.Create(source, model, userState, length).Snapshot());
 
-        internal static ProtoReader Create(ReadOnlyMemory<byte> source, TypeModel model, object? userState = null)
+        internal static ProtoReader Create(ReadOnlyMemory<byte> source, TypeModel? model, object? userState = null)
             => new SnapshotProtoReader(State.Create(source, model, userState).Snapshot());
     }
 }

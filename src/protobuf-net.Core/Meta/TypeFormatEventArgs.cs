@@ -9,8 +9,8 @@ namespace ProtoBuf.Meta
     /// </summary>
     public class TypeFormatEventArgs : EventArgs
     {
-        private Type type;
-        private string formattedName;
+        private Type? type;
+        private string? formattedName;
         private readonly bool typeFixed;
         /// <summary>
         /// The type involved in this map; if this is initially null, a Type is expected to be provided for the string in FormattedName.

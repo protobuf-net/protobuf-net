@@ -20,7 +20,7 @@ namespace ProtoBuf
         /// <param name="context">Additional context about this serialization operation</param>
         /// <param name="length">The number of bytes to read, or -1 to read until the end of the stream</param>
         [Obsolete(PreferStateAPI, false)]
-        public static ProtoReader Create(Stream source, TypeModel model, SerializationContext? context = null, long length = TO_EOF)
+        public static ProtoReader Create(Stream source, TypeModel? model, SerializationContext? context = null, long length = TO_EOF)
             => Create(source, model, (object)context, length);
 
         private static readonly FieldInfo s_origin = typeof(MemoryStream).GetField("_origin", BindingFlags.NonPublic | BindingFlags.Instance),
@@ -32,7 +32,7 @@ namespace ProtoBuf
                 try
                 {
                     int offset = (int)s_origin.GetValue(ms);
-                    byte[] arr = (byte[])s_buffer.GetValue(ms);
+                    byte[]? arr = (byte[])s_buffer.GetValue(ms);
                     buffer = new ArraySegment<byte>(arr, offset, checked((int)ms.Length));
                     return true;
                 }

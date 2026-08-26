@@ -78,7 +78,7 @@ public ref partial struct State
     /// <see cref="ReadOnlySequence{T}"/> (one allocation per multi-segment reader, walked via
     /// <see cref="_nextPosition"/>), or null when the current segment is the last.
     /// </summary>
-    private object _source; // Stream, boxed ReadOnlySequence<byte>, or null (resident buffer)
+    private object? _source; // Stream, boxed ReadOnlySequence<byte>, or null (resident buffer)
 
     /// <summary>The walk cursor within a multi-segment sequence.</summary>
     private SequencePosition _nextPosition;
@@ -145,12 +145,12 @@ public ref partial struct State
     // ref, so mutations flow, and struct copies share the class-typed instances.
 
     internal global::ProtoBuf.Meta.TypeModel _model;
-    internal ISerializationContext _contextShim;
-    internal object _userState;
+    internal ISerializationContext? _contextShim;
+    internal object? _userState;
     internal bool _internStrings;
-    private System.Collections.Generic.Dictionary<string, string> _stringInterner;
+    private System.Collections.Generic.Dictionary<string, string>? _stringInterner;
 
-    internal string Intern(string value)
+    internal string? Intern(string value)
     {
         if (value is null) return null;
         if (value.Length == 0) return "";
@@ -1416,14 +1416,14 @@ internal readonly struct ReaderSnapshot
     internal readonly WireType WireTypeValue;
     internal readonly uint PendingTag;
     internal readonly global::ProtoBuf.Meta.TypeModel Model;
-    internal readonly object UserState;
+    internal readonly object? UserState;
     internal readonly bool InternStringsValue;
     internal readonly System.Collections.Generic.Dictionary<string, string> Interner;
 
     internal ReaderSnapshot(byte[] buffer, int segmentStart, int offset, int count,
         int effectiveEnd, bool leased, long positionBase, long remaining, long scope,
         object source, System.SequencePosition nextPosition, int depth, int fieldNumber,
-        WireType wireType, uint pendingTag, global::ProtoBuf.Meta.TypeModel model,
+        WireType wireType, uint pendingTag, global::ProtoBuf.Meta.TypeModel? model,
         object? userState, bool internStrings,
         System.Collections.Generic.Dictionary<string, string> interner)
     {

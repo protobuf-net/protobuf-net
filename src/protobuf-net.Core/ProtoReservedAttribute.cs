@@ -19,7 +19,7 @@ namespace ProtoBuf
         /// <summary>
         /// A named field reservation
         /// </summary>
-        public string Name { get; }
+        public string? Name { get; }
         /// <summary>
         /// Creates a new instance of a single number field reservation
         /// </summary>
@@ -36,7 +36,7 @@ namespace ProtoBuf
         /// <summary>
         /// Records a comment explaining this reservation
         /// </summary>
-        public string Comment { get; }
+        public string? Comment { get; }
         /// <summary>
         /// Creates a new instance of a named field reservation
         /// </summary>

@@ -1,4 +1,4 @@
-using ProtoBuf.Internal;
+﻿using ProtoBuf.Internal;
 using System;
 using System.Diagnostics.CodeAnalysis;
 
@@ -15,12 +15,12 @@ namespace ProtoBuf
         /// <summary>
         /// Gets or sets the defined name of the type. This can be fully qualified , for example <c>.foo.bar.someType</c> if required.
         /// </summary>
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         /// <summary>
         /// Gets or sets the file that defines this type (as used with <c>import</c> in .proto)
         /// </summary>
-        public string Origin { get; set; }
+        public string? Origin { get; set; }
 
         /// <summary>
         /// Gets or sets the fist offset to use with implicit field tags;
@@ -186,13 +186,13 @@ namespace ProtoBuf
         /// <summary>
         /// Defines a surrogate type used for serialization/deserialization purpose.
         /// </summary>
-        public Type Surrogate { get; set; }
+        public Type? Surrogate { get; set; }
 
         /// <summary>
         /// Defines a serializer to use for this type; the serializer must implement ISerializer-T for this type
         /// </summary>
         [DynamicallyAccessedMembers(DynamicAccess.Serializer)]
-        public Type Serializer { get; set; }
+        public Type? Serializer { get; set; }
 
         /// <summary>
         /// States that the <see cref="Serializer"/> presents this type as a <em>scalar</em> rather

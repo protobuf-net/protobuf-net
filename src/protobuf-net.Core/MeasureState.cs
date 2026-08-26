@@ -17,10 +17,10 @@ namespace ProtoBuf
     {
         private readonly TypeModel _model;
         private readonly T _value;
-        private readonly object _userState;
+        private readonly object? _userState;
         private ProtoWriter _writer;
 
-        internal MeasureState(TypeModel model, in T value, object? userState, long abortAfter)
+        internal MeasureState(TypeModel? model, in T value, object? userState, long abortAfter)
         {
             _model = model;
             _value = value;

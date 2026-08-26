@@ -34,6 +34,6 @@ namespace ProtoBuf
         /// Gets or sets the defined name of the enum, as used in .proto
         /// (this name is not used during serialization).
         /// </summary>
-        public string Name { get; set; }
+        public string? Name { get; set; }
     }
 }

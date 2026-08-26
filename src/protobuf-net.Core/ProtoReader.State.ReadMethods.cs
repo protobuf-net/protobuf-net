@@ -575,7 +575,7 @@ namespace ProtoBuf
             /// </summary>
             [MethodImpl(HotPath)]
 #pragma warning disable IDE0060 // map isn't implemented yet, but we definitely want it
-            public string ReadString(StringMap? map = null)
+            public string? ReadString(StringMap? map = null)
 #pragma warning restore IDE0060
             {
                 if (_wireType == WireType.String)
@@ -653,7 +653,7 @@ namespace ProtoBuf
             public ArraySegment<byte> AppendRawBytes(ArraySegment<byte> value)
                 => AppendRawBytesCore(value, DefaultMemoryConverter<byte>.Instance);
 
-            private TStorage AppendBytesImpl<TStorage>(TStorage value, IMemoryConverter<TStorage, byte> converter)
+            private TStorage? AppendBytesImpl<TStorage>(TStorage value, IMemoryConverter<TStorage, byte> converter)
             {
                 switch (_wireType)
                 {
@@ -674,7 +674,7 @@ namespace ProtoBuf
                 if (len == 0) return converter.NonNull(value);
                 if (len < 0) ThrowInvalidLength(len);
 
-                byte[] oversized = CanAllocate(len) ? null : ReadBytesOversized(len);
+                byte[]? oversized = CanAllocate(len) ? null : ReadBytesOversized(len);
                 try
                 {
 #if DEBUG
@@ -1020,7 +1020,7 @@ namespace ProtoBuf
             internal object ReadObject(object value, Type type) => ReadTypedObject(value, type);
 
             [MethodImpl(MethodImplOptions.NoInlining)]
-            internal object ReadTypedObject(object value, Type type)
+            internal object? ReadTypedObject(object value, Type type)
             {
                 var model = Model;
                 if (model is null) ThrowInvalidOperationException("Cannot deserialize sub-objects unless a model is provided");
@@ -1119,7 +1119,7 @@ namespace ProtoBuf
             /// Reads a value or sub-item from the input reader
             /// </summary>
             [MethodImpl(HotPath)]
-            public T ReadAny<T>(SerializerFeatures features, T? value = default, ISerializer<T>? serializer = null)
+            public T? ReadAny<T>(SerializerFeatures features, T? value = default, ISerializer<T>? serializer = null)
             {
                 serializer ??= TypeModel.ResolveSerializer<T>(Model);
                 var serializerFeatures = serializer.Features;
@@ -1272,7 +1272,7 @@ namespace ProtoBuf
                 }
             }
 
-            internal object? DeserializeRootFallbackWithModel(object? value, Type? type, TypeModel overrideModel)
+            internal object? DeserializeRootFallbackWithModel(object? value, Type? type, TypeModel? overrideModel)
             {
                 var oldModel = _model;
                 try
@@ -1375,11 +1375,11 @@ namespace ProtoBuf
             [MethodImpl(MethodImplOptions.NoInlining)]
             public void ThrowEnumException(Type type, int value)
             {
-                string desc = type is null ? "<null>" : type.FullName;
+                string? desc = type is null ? "<null>" : type.FullName;
                 throw AddErrorData(new ProtoException("No " + desc + " enum is mapped to the wire-value " + value.ToString()), ref this);
             }
 
-            internal static Exception AddErrorData(Exception exception, ref State state)
+            internal static Exception? AddErrorData(Exception exception, ref State state)
             {
                 if (exception is not null && !exception.Data.Contains("protoSource"))
                 {
@@ -1397,8 +1397,8 @@ namespace ProtoBuf
         internal sealed class StateContext : ISerializationContext
         {
             private readonly TypeModel _model;
-            private readonly object _userState;
-            internal StateContext(TypeModel model, object? userState)
+            private readonly object? _userState;
+            internal StateContext(TypeModel? model, object? userState)
             {
                 _model = model;
                 _userState = userState;

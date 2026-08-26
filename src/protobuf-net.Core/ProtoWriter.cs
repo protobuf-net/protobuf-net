@@ -27,7 +27,7 @@ namespace ProtoBuf
 
         internal const string PreferWriteMessage = "If possible, please use the WriteMessage API; this API may not work correctly with all writers";
 
-        private TypeModel model;
+        private TypeModel? model;
         private int packedFieldNumber;
 
 #pragma warning disable CA1816 // Dispose methods should call SuppressFinalize - no intention of supporting finalizers here
@@ -122,7 +122,7 @@ namespace ProtoBuf
             if (packedFieldNumber != 0) ThrowHelper.ThrowInvalidOperationException("Cannot begin a sub-item while performing packed encoding");
         }
 
-        private List<object> recursionStack;
+        private List<object>? recursionStack;
         private void CheckRecursionStackAndPush(object instance)
         {
             if (recursionStack is null) { recursionStack = new List<object>(); }
@@ -179,7 +179,7 @@ namespace ProtoBuf
         /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to serialize sub-objects</param>
         /// <param name="userState">Additional context about this serialization operation</param>
         /// <param name="impactCount">Whether this initialization should impact usage counters (to check for double-usage)</param>
-        internal virtual void Init(TypeModel model, object? userState, bool impactCount)
+        internal virtual void Init(TypeModel? model, object? userState, bool impactCount)
         {
             OnInit(impactCount);
             _position64 = 0;
@@ -285,7 +285,7 @@ namespace ProtoBuf
         /// <summary>
         /// Additional information about this serialization operation.
         /// </summary>
-        public object UserState { get; private set; }
+        public object? UserState { get; private set; }
 
 #if DEBUG || TRACK_USAGE
         int _usageCount;
@@ -839,7 +839,7 @@ namespace ProtoBuf
         internal static long MeasureRepeated<TCollection, TItem>(NullProtoWriter writer, int fieldNumber, SerializerFeatures features, TCollection values, RepeatedSerializer<TCollection, TItem> serializer, ISerializer<TItem> valueSerializer)
         {
             long length;
-            object obj = default;
+            object? obj = default;
             if (TypeHelper<TCollection>.IsReferenceType)
             {
                 obj = values;
@@ -866,7 +866,7 @@ namespace ProtoBuf
         internal static long MeasureMap<TCollection, TKey, TValue>(NullProtoWriter writer, int fieldNumber, SerializerFeatures features, TCollection values, MapSerializer<TCollection, TKey,TValue> serializer, SerializerFeatures keyFeatures, SerializerFeatures valueFeatures, ISerializer<TKey> keySerializer, ISerializer<TValue> valueSerializer)
         {
             long length;
-            object obj = default;
+            object? obj = default;
             if (TypeHelper<TCollection>.IsReferenceType)
             {
                 obj = values;
@@ -907,7 +907,7 @@ namespace ProtoBuf
         internal static long Measure<T>(NullProtoWriter writer, T value, ISerializer<T> serializer)
         {
             long length;
-            object obj = default;
+            object? obj = default;
             if (TypeHelper<T>.IsReferenceType)
             {
                 obj = value;

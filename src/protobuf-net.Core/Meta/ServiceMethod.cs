@@ -10,12 +10,12 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// The name of the method.
         /// </summary>
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         /// <summary>
         /// The description of the method.
         /// </summary>
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         /// <summary>
         /// The type sent by the client.

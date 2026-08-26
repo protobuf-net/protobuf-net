@@ -70,7 +70,7 @@ namespace ProtoBuf.Serializers
         }
 
         // check a few things that should be true for valid serializers
-        internal static ISerializer<T> Verify<T>(ISerializer<T> serializer)
+        internal static ISerializer<T>? Verify<T>(ISerializer<T> serializer)
         {
             if (serializer is null) return null;
 
@@ -159,7 +159,7 @@ namespace ProtoBuf.Serializers
             => SerializerCache<TProvider, T>.InstanceField;
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static object GetInstance(Type providerType, Type type)
+        internal static object? GetInstance(Type providerType, Type type)
             => typeof(SerializerCache<,>).MakeGenericType(providerType, type)
                     .GetField(nameof(SerializerCache<PrimaryTypeProvider, string>.InstanceField),
                         BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)

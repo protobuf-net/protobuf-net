@@ -19,7 +19,7 @@ namespace ProtoBuf
         /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to serialize sub-objects</param>
         /// <param name="context">Additional context about this serialization operation</param>
         [Obsolete(ProtoReader.PreferStateAPI, false)]
-        public static ProtoWriter Create(Stream dest, TypeModel model, SerializationContext? context = null)
+        public static ProtoWriter Create(Stream dest, TypeModel? model, SerializationContext? context = null)
             => StreamProtoWriter.CreateStreamProtoWriter(dest, model, context);
 
         partial struct State
@@ -30,7 +30,7 @@ namespace ProtoBuf
             /// <param name="dest">The destination stream</param>
             /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to serialize sub-objects</param>
             /// <param name="userState">Additional context about this serialization operation</param>
-            public static State Create(Stream dest, TypeModel model, object? userState = null)
+            public static State Create(Stream dest, TypeModel? model, object? userState = null)
             {
                 var writer = StreamProtoWriter.CreateStreamProtoWriter(dest, model, userState);
                 return new State(writer);
@@ -39,7 +39,7 @@ namespace ProtoBuf
 
         private class StreamProtoWriter : ProtoWriter
         {
-            private Stream dest;
+            private Stream? dest;
             private int flushLock;
 
             private protected override bool ImplDemandFlushOnDispose => true;
@@ -92,7 +92,7 @@ namespace ProtoBuf
                         return;
                 }
             }
-            internal static StreamProtoWriter CreateStreamProtoWriter(Stream dest, TypeModel model, object? userState)
+            internal static StreamProtoWriter CreateStreamProtoWriter(Stream dest, TypeModel? model, object? userState)
             {
                 var obj = Pool<StreamProtoWriter>.TryGet() ?? new StreamProtoWriter();
                 obj.Init(model, userState, true);
@@ -104,7 +104,7 @@ namespace ProtoBuf
                 return obj;
             }
 
-            internal override void Init(TypeModel model, object? userState, bool impactCount)
+            internal override void Init(TypeModel? model, object? userState, bool impactCount)
             {
                 base.Init(model, userState, impactCount);
                 _nullWriter.Init(model, userState, impactCount: false);
@@ -147,7 +147,7 @@ namespace ProtoBuf
             // active over the buffer, which is the museum API's world (one State per call, see
             // the bridge on ProtoWriter). Everything else asks Pending.
 
-            private byte[] ioBuffer;
+            private byte[]? ioBuffer;
             private int ioIndex;
 
             /// <summary>

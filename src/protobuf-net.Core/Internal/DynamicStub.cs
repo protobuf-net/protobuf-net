@@ -25,11 +25,11 @@ namespace ProtoBuf.Internal
         };
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static bool TryDeserializeRoot(Type type, TypeModel model, ref ProtoReader.State state, ref object? value, bool autoCreate)
+        internal static bool TryDeserializeRoot(Type type, TypeModel? model, ref ProtoReader.State state, ref object? value, bool autoCreate)
             => Get(type).TryDeserializeRoot(model, ref state, ref value, autoCreate);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static bool TrySerializeRoot(Type type, TypeModel model, ref ProtoWriter.State state, object value)
+        internal static bool TrySerializeRoot(Type type, TypeModel? model, ref ProtoWriter.State state, object value)
         {
             do
             {
@@ -44,11 +44,11 @@ namespace ProtoBuf.Internal
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static bool TryDeserialize(ObjectScope scope, Type type, TypeModel model, ref ProtoReader.State state, ref object value)
+        internal static bool TryDeserialize(ObjectScope scope, Type type, TypeModel? model, ref ProtoReader.State state, ref object value)
             => Get(type).TryDeserialize(scope, model, ref state, ref value);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static bool TrySerializeAny(int fieldNumber, SerializerFeatures features, Type type, TypeModel model, ref ProtoWriter.State state, object value)
+        internal static bool TrySerializeAny(int fieldNumber, SerializerFeatures features, Type type, TypeModel? model, ref ProtoWriter.State state, object value)
         {
             do
             {
@@ -63,7 +63,7 @@ namespace ProtoBuf.Internal
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static bool TryDeepClone(Type type, TypeModel model, ref object value)
+        internal static bool TryDeepClone(Type type, TypeModel? model, ref object value)
         {
             do
             {
@@ -79,10 +79,10 @@ namespace ProtoBuf.Internal
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static bool IsKnownType(Type type, TypeModel model, CompatibilityLevel ambient)
+        internal static bool IsKnownType(Type type, TypeModel? model, CompatibilityLevel ambient)
             => Get(type).IsKnownType(model, ambient);
 
-        internal static bool CanSerialize(Type type, TypeModel model, out SerializerFeatures features)
+        internal static bool CanSerialize(Type type, TypeModel? model, out SerializerFeatures features)
             => Get(type).CanSerialize(model, out features);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -129,7 +129,7 @@ namespace ProtoBuf.Internal
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static DynamicStub SlowGet(Type type)
+        private static DynamicStub? SlowGet(Type type)
         {
             
             if (type is null) return NilStub.Instance;
@@ -153,8 +153,8 @@ namespace ProtoBuf.Internal
             if (!RuntimeFeature.IsDynamicCodeSupported) return Seed(type, NilStub.Instance);
 #endif
             
-            DynamicStub obj = null;
-            Type alt = null;
+            DynamicStub? obj = null;
+            Type? alt = null;
             if (type.IsGenericParameter)
             {
                 obj = NilStub.Instance; // can't do a lot with that!
@@ -195,7 +195,7 @@ namespace ProtoBuf.Internal
                 if (type.IsGenericParameter) return null;
 
                 // EF POCO
-                string fullName = type.FullName;
+                string? fullName = type.FullName;
                 if (fullName is not null && fullName.StartsWith("System.Data.Entity.DynamicProxies."))
                 {
                     return type.BaseType;
@@ -217,45 +217,45 @@ namespace ProtoBuf.Internal
             }
         }
 
-        protected abstract bool TryDeserializeRoot(TypeModel model, ref ProtoReader.State state, ref object value, bool autoCreate);
-        protected abstract bool TryDeserialize(ObjectScope scope, TypeModel model, ref ProtoReader.State state, ref object value);
+        protected abstract bool TryDeserializeRoot(TypeModel? model, ref ProtoReader.State state, ref object value, bool autoCreate);
+        protected abstract bool TryDeserialize(ObjectScope scope, TypeModel? model, ref ProtoReader.State state, ref object value);
 
-        protected abstract bool TrySerializeRoot(TypeModel model, ref ProtoWriter.State state, object value);
-        protected abstract bool TrySerializeAny(int fieldNumber, SerializerFeatures features, TypeModel model, ref ProtoWriter.State state, object value);
+        protected abstract bool TrySerializeRoot(TypeModel? model, ref ProtoWriter.State state, object value);
+        protected abstract bool TrySerializeAny(int fieldNumber, SerializerFeatures features, TypeModel? model, ref ProtoWriter.State state, object value);
 
-        protected abstract bool TryDeepClone(TypeModel model, ref object value);
+        protected abstract bool TryDeepClone(TypeModel? model, ref object value);
 
-        protected abstract bool IsKnownType(TypeModel model, CompatibilityLevel ambient);
+        protected abstract bool IsKnownType(TypeModel? model, CompatibilityLevel ambient);
 
-        protected abstract bool CanSerialize(TypeModel model, out SerializerFeatures features);
+        protected abstract bool CanSerialize(TypeModel? model, out SerializerFeatures features);
 
         private class NilStub : DynamicStub
         {
             protected NilStub() { }
             public static readonly NilStub Instance = new NilStub();
 
-            protected override bool TryDeserializeRoot(TypeModel model, ref ProtoReader.State state, ref object value, bool autoCreate)
+            protected override bool TryDeserializeRoot(TypeModel? model, ref ProtoReader.State state, ref object value, bool autoCreate)
                 => false;
-            protected override bool TryDeserialize(ObjectScope scope, TypeModel model, ref ProtoReader.State state, ref object value)
+            protected override bool TryDeserialize(ObjectScope scope, TypeModel? model, ref ProtoReader.State state, ref object value)
                 => false;
-            protected override bool TrySerializeRoot(TypeModel model, ref ProtoWriter.State state, object value)
+            protected override bool TrySerializeRoot(TypeModel? model, ref ProtoWriter.State state, object value)
                 => false;
-            protected override bool TrySerializeAny(int fieldNumber, SerializerFeatures features, TypeModel model, ref ProtoWriter.State state, object value)
-                => false;
-
-            protected override bool TryDeepClone(TypeModel model, ref object value)
+            protected override bool TrySerializeAny(int fieldNumber, SerializerFeatures features, TypeModel? model, ref ProtoWriter.State state, object value)
                 => false;
 
-            protected override bool IsKnownType(TypeModel model, CompatibilityLevel ambient)
+            protected override bool TryDeepClone(TypeModel? model, ref object value)
                 => false;
 
-            protected override bool CanSerialize(TypeModel model, out SerializerFeatures features)
+            protected override bool IsKnownType(TypeModel? model, CompatibilityLevel ambient)
+                => false;
+
+            protected override bool CanSerialize(TypeModel? model, out SerializerFeatures features)
             {
                 features = default;
                 return false;
             }
 
-            protected override Type GetEffectiveType() => null;
+            protected override Type? GetEffectiveType() => null;
         }
 
         private sealed class ConcreteStub<T> : DynamicStub
@@ -267,7 +267,7 @@ namespace ProtoBuf.Internal
             // unreachable from here, and the demand it carries is not ours to satisfy.
             [UnconditionalSuppressMessage("Trimming", "IL2091",
                 Justification = "The serializer is always supplied, so the annotated resolution inside SerializeRoot/DeserializeRoot is not reached; see gap B48.")]
-            protected override bool TryDeserializeRoot(TypeModel model, ref ProtoReader.State state, ref object value, bool autoCreate)
+            protected override bool TryDeserializeRoot(TypeModel? model, ref ProtoReader.State state, ref object value, bool autoCreate)
             {
                 var serializer = TypeModel.TryResolveSerializer<T>(model);
                 if (serializer is null) return false;
@@ -286,12 +286,12 @@ namespace ProtoBuf.Internal
             // unreachable from here, and the demand it carries is not ours to satisfy.
             [UnconditionalSuppressMessage("Trimming", "IL2091",
                 Justification = "The serializer is always supplied, so the annotated resolution inside SerializeRoot/DeserializeRoot is not reached; see gap B48.")]
-            protected override bool TryDeserialize(ObjectScope scope, TypeModel model, ref ProtoReader.State state, ref object value)
+            protected override bool TryDeserialize(ObjectScope scope, TypeModel? model, ref ProtoReader.State state, ref object value)
             {
                 var serializer = TypeModel.TryResolveSerializer<T>(model);
                 if (serializer is null) return false;
                 // note this null-check is non-trivial; for value-type T it promotes the null to a default
-                T typed = TypeHelper<T>.FromObject(value);
+                T? typed = TypeHelper<T>.FromObject(value);
                 switch(scope)
                 {
                     case ObjectScope.LikeRoot:
@@ -313,9 +313,9 @@ namespace ProtoBuf.Internal
 
             // note: in IsKnownType and CanSerialize we want to avoid asking for the serializer from
             // the model unless we actually need it, as that can cause re-entrancy loops
-            protected override bool IsKnownType(TypeModel model, CompatibilityLevel ambient) => model is not null && model.IsKnownType<T>(ambient);
+            protected override bool IsKnownType(TypeModel? model, CompatibilityLevel ambient) => model is not null && model.IsKnownType<T>(ambient);
 
-            protected override bool CanSerialize(TypeModel model, out SerializerFeatures features)
+            protected override bool CanSerialize(TypeModel? model, out SerializerFeatures features)
             {
                 ISerializer<T> ser;
                 try
@@ -342,7 +342,7 @@ namespace ProtoBuf.Internal
             // unreachable from here, and the demand it carries is not ours to satisfy.
             [UnconditionalSuppressMessage("Trimming", "IL2091",
                 Justification = "The serializer is always supplied, so the annotated resolution inside SerializeRoot/DeserializeRoot is not reached; see gap B48.")]
-            protected override bool TrySerializeRoot(TypeModel model, ref ProtoWriter.State state, object value)
+            protected override bool TrySerializeRoot(TypeModel? model, ref ProtoWriter.State state, object value)
             {
                 var serializer = TypeModel.TryResolveSerializer<T>(model);
                 if (serializer is null) return false;
@@ -357,12 +357,12 @@ namespace ProtoBuf.Internal
             // unreachable from here, and the demand it carries is not ours to satisfy.
             [UnconditionalSuppressMessage("Trimming", "IL2091",
                 Justification = "The serializer is always supplied, so the annotated resolution inside SerializeRoot/DeserializeRoot is not reached; see gap B48.")]
-            protected override bool TrySerializeAny(int fieldNumber, SerializerFeatures features, TypeModel model, ref ProtoWriter.State state, object value)
+            protected override bool TrySerializeAny(int fieldNumber, SerializerFeatures features, TypeModel? model, ref ProtoWriter.State state, object value)
             {
                 var serializer = TypeModel.TryResolveSerializer<T>(model);
                 if (serializer is null) return false;
                 // note this null-check is non-trivial; for value-type T it promotes the null to a default
-                T typed = TypeHelper<T>.FromObject(value);
+                T? typed = TypeHelper<T>.FromObject(value);
                 CheckAnyAuxFlow(features, serializer);
                 if ((features & SerializerFeatures.CategoryMessageWrappedAtRoot) == SerializerFeatures.CategoryMessageWrappedAtRoot)
                 {
@@ -384,7 +384,7 @@ namespace ProtoBuf.Internal
                 }
             }
 
-            protected override bool TryDeepClone(TypeModel model, ref object value)
+            protected override bool TryDeepClone(TypeModel? model, ref object value)
             {
                 // check feasability first (required because of sub-type skipping)
                 if (TypeModel.TryResolveSerializer<T>(model) is null) return false;
@@ -398,7 +398,7 @@ namespace ProtoBuf.Internal
             => ReferenceEquals(expected, actual) // since SlowGet checks for proxies etc, we can
             || ReferenceEquals(Get(expected), Get(actual)); // just compare the results
 
-        internal static Type GetEffectiveType(Type type)
+        internal static Type? GetEffectiveType(Type type)
             => type is null ? null : Get(type).GetEffectiveType() ?? type;
 
         protected abstract Type GetEffectiveType();

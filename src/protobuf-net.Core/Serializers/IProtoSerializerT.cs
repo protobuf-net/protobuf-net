@@ -203,7 +203,7 @@ namespace ProtoBuf.Serializers
             => (features & values) != 0;
 
         [MethodImpl(ProtoReader.HotPath)]
-        public static T DefaultFor<T>(this SerializerFeatures features)
+        public static T? DefaultFor<T>(this SerializerFeatures features)
             // prefer true nunll when wrapped
             => features.HasAny(SerializerFeatures.OptionWrappedValue) ? default(T) : TypeHelper<T>.Default;
 

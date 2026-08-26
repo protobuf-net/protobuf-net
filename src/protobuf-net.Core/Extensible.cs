@@ -21,7 +21,7 @@ namespace ProtoBuf
         // note: not marked ProtoContract - no local state, and can't 
         // predict sub-classes
 
-        private IExtension extensionObject;
+        private IExtension? extensionObject;
 
 #pragma warning disable CS0618 // access to deprecated GetExtensionObject API
         IExtension IExtensible.GetExtensionObject(bool createIfMissing)
@@ -43,7 +43,7 @@ namespace ProtoBuf
         /// <remarks>The <c>createIfMissing</c> argument is false during serialization,
         /// and true during deserialization upon encountering unexpected fields.</remarks>
         [Obsolete("This API is considered, and may no longer be used in all scenarios (in particular when inheritance is involved); it is not recommended to rely on this API")]
-        protected virtual IExtension GetExtensionObject(bool createIfMissing)
+        protected virtual IExtension? GetExtensionObject(bool createIfMissing)
             => GetExtensionObject(ref extensionObject, GetType(), createIfMissing);
 
         /// <summary>
@@ -59,12 +59,12 @@ namespace ProtoBuf
         /// if the extension object does not exist or is not available.</returns>
         /// <remarks>The <c>createIfMissing</c> argument is false during serialization,
         /// and true during deserialization upon encountering unexpected fields.</remarks>
-        public static IExtension GetExtensionObject(ref IExtension extensionObject, Type type, bool createIfMissing)
+        public static IExtension? GetExtensionObject(ref IExtension? extensionObject, Type type, bool createIfMissing)
         {
             if (type is null) ThrowHelper.ThrowArgumentNullException(nameof(type));
 
             // look for a pre-existing node that represents the specified type
-            BufferExtension root = extensionObject as BufferExtension, current = root;
+            BufferExtension? root = extensionObject as BufferExtension, current = root;
             if (root is null)
             {
                 if (extensionObject is not null) ThrowHelper.ThrowNotSupportedException($"Custom extension implementations should not be passed to {nameof(GetExtensionObject)}");
@@ -103,7 +103,7 @@ namespace ProtoBuf
         /// if the extension object does not exist or is not available.</returns>
         /// <remarks>The <c>createIfMissing</c> argument is false during serialization,
         /// and true during deserialization upon encountering unexpected fields.</remarks>
-        public static IExtension GetExtensionObject(ref IExtension extensionObject, bool createIfMissing)
+        public static IExtension? GetExtensionObject(ref IExtension? extensionObject, bool createIfMissing)
         {
             if (extensionObject is null)
             {
@@ -164,7 +164,7 @@ namespace ProtoBuf
         /// <param name="instance">The extensible object to append the value to.</param>
         /// <param name="tag">The field identifier; the tag should not be defined as a known data-field for the instance.</param>
         /// <param name="value">The value to append.</param>
-        public static void AppendValue<TValue>(TypeModel model, IExtensible instance, int tag, TValue value, DataFormat format = DataFormat.Default)
+        public static void AppendValue<TValue>(TypeModel? model, IExtensible instance, int tag, TValue value, DataFormat format = DataFormat.Default)
             => ExtensibleUtil.AppendExtendValue<TValue>(model, instance, tag, format, value);
 
         /// <summary>
@@ -176,7 +176,7 @@ namespace ProtoBuf
         /// <param name="instance">The extensible object to obtain the value from.</param>
         /// <param name="tag">The field identifier; the tag should not be defined as a known data-field for the instance.</param>
         /// <returns>The effective value of the field, or the default value if not found.</returns>
-        public static TValue GetValue<TValue>(IExtensible instance, int tag)
+        public static TValue? GetValue<TValue>(IExtensible instance, int tag)
             => GetValue<TValue>(default, instance, tag, DataFormat.Default);
 
         /// <summary>
@@ -189,7 +189,7 @@ namespace ProtoBuf
         /// <param name="tag">The field identifier; the tag should not be defined as a known data-field for the instance.</param>
         /// <param name="format">The data-format to use when decoding the value.</param>
         /// <returns>The effective value of the field, or the default value if not found.</returns>
-        public static TValue GetValue<TValue>(IExtensible instance, int tag, DataFormat format)
+        public static TValue? GetValue<TValue>(IExtensible instance, int tag, DataFormat format)
             => GetValue<TValue>(default, instance, tag, format);
 
         /// <summary>
@@ -203,8 +203,8 @@ namespace ProtoBuf
         /// <param name="tag">The field identifier; the tag should not be defined as a known data-field for the instance.</param>
         /// <param name="format">The data-format to use when decoding the value.</param>
         /// <returns>The effective value of the field, or the default value if not found.</returns>
-        public static TValue GetValue<TValue>(TypeModel model, IExtensible instance, int tag, DataFormat format = DataFormat.Default)
-            => TryGetValue<TValue>(model, instance, tag, out TValue value, format, false) ? value : default;
+        public static TValue? GetValue<TValue>(TypeModel? model, IExtensible instance, int tag, DataFormat format = DataFormat.Default)
+            => TryGetValue<TValue>(model, instance, tag, out TValue? value, format, false) ? value : default;
 
         /// <summary>
         /// Queries an extensible object for an additional (unexpected) data-field for the instance.
@@ -216,7 +216,7 @@ namespace ProtoBuf
         /// <param name="instance">The extensible object to obtain the value from.</param>
         /// <param name="tag">The field identifier; the tag should not be defined as a known data-field for the instance.</param>
         /// <returns>True if data for the field was present, false otherwise.</returns>
-        public static bool TryGetValue<TValue>(IExtensible instance, int tag, out TValue value)
+        public static bool TryGetValue<TValue>(IExtensible instance, int tag, out TValue? value)
             => TryGetValue<TValue>(default, instance, tag, out value, DataFormat.Default, false);
 
         /// <summary>
@@ -230,7 +230,7 @@ namespace ProtoBuf
         /// <param name="tag">The field identifier; the tag should not be defined as a known data-field for the instance.</param>
         /// <param name="format">The data-format to use when decoding the value.</param>
         /// <returns>True if data for the field was present, false otherwise.</returns>
-        public static bool TryGetValue<TValue>(IExtensible instance, int tag, DataFormat format, out TValue value)
+        public static bool TryGetValue<TValue>(IExtensible instance, int tag, DataFormat format, out TValue? value)
             => TryGetValue<TValue>(default, instance, tag, out value, format, false);
 
         /// <summary>
@@ -245,7 +245,7 @@ namespace ProtoBuf
         /// <param name="format">The data-format to use when decoding the value.</param>
         /// <param name="allowDefinedTag">Allow tags that are present as part of the definition; for example, to query unknown enum values.</param>
         /// <returns>True if data for the field was present, false otherwise.</returns>
-        public static bool TryGetValue<TValue>(IExtensible instance, int tag, DataFormat format, bool allowDefinedTag, out TValue value)
+        public static bool TryGetValue<TValue>(IExtensible instance, int tag, DataFormat format, bool allowDefinedTag, out TValue? value)
             => TryGetValue<TValue>(default, instance, tag, out value, format, allowDefinedTag);
 
         /// <summary>
@@ -261,7 +261,7 @@ namespace ProtoBuf
         /// <param name="format">The data-format to use when decoding the value.</param>
         /// <param name="allowDefinedTag">Allow tags that are present as part of the definition; for example, to query unknown enum values.</param>
         /// <returns>True if data for the field was present, false otherwise.</returns>
-        public static bool TryGetValue<TValue>(TypeModel model, IExtensible instance, int tag, out TValue value, DataFormat format = DataFormat.Default, bool allowDefinedTag = false)
+        public static bool TryGetValue<TValue>(TypeModel? model, IExtensible instance, int tag, out TValue? value, DataFormat format = DataFormat.Default, bool allowDefinedTag = false)
         {
             value = default;
             bool set = false;
@@ -315,7 +315,7 @@ namespace ProtoBuf
         /// <param name="tag">The field identifier; the tag should not be defined as a known data-field for the instance.</param>
         /// <param name="format">The data-format to use when decoding the value.</param>
         /// <returns>An enumerator that yields each occurrence of the field.</returns>
-        public static IEnumerable<TValue> GetValues<TValue>(TypeModel model, IExtensible instance, int tag, DataFormat format = DataFormat.Default)
+        public static IEnumerable<TValue> GetValues<TValue>(TypeModel? model, IExtensible instance, int tag, DataFormat format = DataFormat.Default)
             => ExtensibleUtil.GetExtendedValues<TValue>(model, instance, tag, format, false, false);
 
         /// <summary>
@@ -331,7 +331,7 @@ namespace ProtoBuf
         /// <param name="format">The data-format to use when decoding the value.</param>
         /// <param name="allowDefinedTag">Allow tags that are present as part of the definition; for example, to query unknown enum values.</param>
         /// <returns>True if data for the field was present, false otherwise.</returns>
-        public static bool TryGetValue(TypeModel model, Type type, IExtensible instance, int tag, DataFormat format, bool allowDefinedTag, out object value)
+        public static bool TryGetValue(TypeModel? model, Type type, IExtensible instance, int tag, DataFormat format, bool allowDefinedTag, out object? value)
         {
             value = null;
             bool set = false;
@@ -358,7 +358,7 @@ namespace ProtoBuf
         /// <param name="tag">The field identifier; the tag should not be defined as a known data-field for the instance.</param>
         /// <param name="format">The data-format to use when decoding the value.</param>
         /// <returns>An enumerator that yields each occurrence of the field.</returns>
-        public static IEnumerable GetValues(TypeModel model, Type type, IExtensible instance, int tag, DataFormat format = DataFormat.Default)
+        public static IEnumerable GetValues(TypeModel? model, Type type, IExtensible instance, int tag, DataFormat format = DataFormat.Default)
             => ExtensibleUtil.GetExtendedValues(model, type, instance, tag, format, false, false);
 
         /// <summary>
@@ -374,7 +374,7 @@ namespace ProtoBuf
         /// <param name="instance">The extensible object to append the value to.</param>
         /// <param name="tag">The field identifier; the tag should not be defined as a known data-field for the instance.</param>
         /// <param name="value">The value to append.</param>
-        public static void AppendValue(TypeModel model, IExtensible instance, int tag, DataFormat format, object value)
+        public static void AppendValue(TypeModel? model, IExtensible instance, int tag, DataFormat format, object value)
             // genuinely untyped - this overload never knew the type - so it takes the reflective path
             // and, under AOT, reports rather than losing the value. Prefer the generic overloads.
             => ExtensibleUtil.AppendExtendValue<object>(model, instance, tag, format, value);

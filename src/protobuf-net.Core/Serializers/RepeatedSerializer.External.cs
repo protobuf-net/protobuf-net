@@ -16,7 +16,7 @@ namespace ProtoBuf.Serializers
     {
         internal override long Measure(TCollection values, IMeasuringSerializer<T> serializer, ISerializationContext context, WireType wireType)
         {
-            IEnumerator<T> iter = null;
+            IEnumerator<T>? iter = null;
             try
             {
                 iter = values.GetEnumerator();
@@ -30,7 +30,7 @@ namespace ProtoBuf.Serializers
         }
         internal override void WritePacked(ref ProtoWriter.State state, TCollection values, IMeasuringSerializer<T> serializer, WireType wireType)
         {
-            IEnumerator<T> iter = null;
+            IEnumerator<T>? iter = null;
             try
             {
                 iter = values.GetEnumerator();
@@ -45,7 +45,7 @@ namespace ProtoBuf.Serializers
 
         internal override void Write(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures category, WireType wireType, TCollection values, ISerializer<T> serializer, SerializerFeatures features)
         {
-            IEnumerator<T> iter = null;
+            IEnumerator<T>? iter = null;
             try
             {
                 iter = values.GetEnumerator();
