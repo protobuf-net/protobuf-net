@@ -5624,7 +5624,7 @@ Note the third row is most of `Descriptor.cs`. It is the same trap the AOT side 
 Also note **`IsNullableType` is about `Nullable<T>` on VALUE types only**, gated on the existing
 `nullablevaluetype` option. Reference nullability is a new axis and must not be conflated with it.
 
-**Three independent gates, not a toggle** (Marc, 2026-08-26). The emission decision is:
+**Two gates and a documented assumption** (Marc, 2026-08-26). The emission decision is:
 
 1. **language version >= C# 8** - and this one is a *veto*, because `#nullable` is itself a C# 8
    directive. Below it, emit **no directive at all**, not even `#nullable disable`: that would be a
@@ -5635,11 +5635,34 @@ Also note **`IsNullableType` is about `Nullable<T>` on VALUE types only**, gated
 2. **NRT on/off** - taken from the **compilation** where there is one (`ProtoFileGenerator` sees it,
    the same way `ProtoModelGenerator` probes for `UnsafeAccessorAttribute` and `CollectionsMarshal`),
    and **defaulted to true** from the CLI and the website, where there is no compilation to ask;
-3. **`MemberNotNullWhenAttribute` availability** - .NET 5+, so probe for it and degrade to a plain
-   `?` when absent rather than break a down-level build. Independent of (2). A polyfill is possible
-   in principle (the compiler matches these by name, and Core already ships an internal
-   `DynamicallyAccessedMembersAttribute` copy) but is wrong *here*, since emitting one into consumer
-   DTO files risks collisions across generated files.
+3. ~~**`MemberNotNullWhenAttribute` availability**~~ - **not a gate. DECIDED (Marc, 2026-08-26): emit
+   assuming the attributes are there, and let callers polyfill.**
+
+   > *"IMO we emit assuming they are there, and callers can add polyfills if needed; I think that is
+   > the only sensible route; at best we would add a comment near the top."*
+
+   I had proposed probing for it and degrading to a plain `?`. Overruled, and the simpler rule is
+   better: one output shape rather than two, no framework probe in a generator that may have no
+   compilation to probe, and the compiler matches these attributes **by name**, so a consumer
+   polyfill genuinely works.
+
+   **What it costs, measured rather than assumed**, because the decision should be on the record with
+   its price:
+
+   | attribute | net472 | netstandard2.0 | netstandard2.1 | net8.0 |
+   | --- | :-: | :-: | :-: | :-: |
+   | `NotNullWhen` | no | no | **yes** | yes |
+   | `MemberNotNullWhen` | no | no | **no** | yes |
+
+   `MemberNotNullWhen` is **.NET 5+ only - not even netstandard2.1**, which is wider than "old
+   frameworks". Combined with gate 1 vetoing below C# 8, the exposed population is exactly
+   {langver >= 8} INTERSECT {framework < net5.0}: net4x with a modern `LangVersion`, netstandard2.0,
+   and netstandard2.1. A regenerate there is `CS0246` until they add the polyfill.
+
+   **The real mitigation is gate 2, not the polyfill**: a down-level consumer turns NRT emission off
+   and gets exactly today output. So the polyfill is only for someone who wants annotations *and* is
+   pre-.NET 5 - narrow, and self-selecting. The comment Marc mentions should say that, and name both
+   attributes, so the fix is obvious from the file rather than requiring a search.
 
 Separately, and independent of codegen: the library own `TryGet`-shaped APIs want
 `[NotNullWhen(true)]` on their `out` parameters when Core goes NRT. Real quality win, easy to miss.
