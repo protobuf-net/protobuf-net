@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>ProtoBuf.BuildTools</RootNamespace>
@@ -6,6 +6,10 @@
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <NoWarn>$(NoWarn);RS2007;NU5128</NoWarn>
+    <!-- same reason as protobuf-net.BuildTools: this project compiles protobuf-net.Core's and
+         protobuf-net.Reflection's sources in, so it also compiles their nullable annotations
+         while its own compilation has NRT off - which is CS8632, once per `?`. Gap B51. -->
+    <NoWarn>$(NoWarn);CS8632</NoWarn>
     <Title>protobuf-net.BuildTools.Legacy</Title>
     <Description>Analyzer and Generator support for protobuf-net, using build SDK 3</Description>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>

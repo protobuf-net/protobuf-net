@@ -7,10 +7,10 @@ namespace ProtoBuf.Reflection
     {
         public override string ToString()
         {
-            return Peek(out T val) ? (val?.ToString() ?? "(null)") : "(EOF)";
+            return Peek(out var val) ? (val?.ToString() ?? "(null)") : "(EOF)";
         }
         private readonly IEnumerator<T> _iter;
-        private T _peek, _prev;
+        private T? _peek, _prev;
         private bool _havePeek, _eof;
         public List<Error> Errors { get; }
         public Peekable(IEnumerable<T> sequence, List<Error> errors)
@@ -18,15 +18,15 @@ namespace ProtoBuf.Reflection
             _iter = sequence.GetEnumerator();
             Errors = errors;
         }
-        public T Previous => _prev;
+        public T? Previous => _prev;
         public bool Consume()
         {
-            bool haveData = _havePeek || Peek(out T _);
+            bool haveData = _havePeek || Peek(out _);
             _prev = _peek;
             _havePeek = false;
             return haveData;
         }
-        public bool Peek(out T next)
+        public bool Peek(out T? next)
         {
             if (!_havePeek)
             {

@@ -6,6 +6,7 @@
     <TargetFrameworks>net462;netstandard2.0</TargetFrameworks>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Nullable>enable</Nullable>
     <Configurations>Debug;Release;VS</Configurations>
     <!-- the descriptor model (CustomProtogenSerializer) is produced by the protobuf-net source
          generator, and the output is EMITTED TO DISK and committed: protobuf-net.BuildTools

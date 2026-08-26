@@ -44,8 +44,16 @@ namespace BuildToolsUnitTests
             private readonly ImmutableDictionary<string, string> _values;
             public InMemoryConfigOptions(ImmutableDictionary<string, string> values)
                 => _values = values;
-            public override bool TryGetValue(string key, [NotNullWhen(true)] out string? value)
+            // The base declares [NotNullWhen(true)] on `value` and this override cannot restate it:
+            // protobuf-net.BuildTools compiles in protobuf-net.Core's INTERNAL polyfill of that
+            // attribute (netstandard2.0 has none, see Core's Internal/NullableAttributes.cs), and
+            // this project sees BuildTools' internals - so naming the attribute here is CS0433
+            // against System.Runtime's own copy. Dropping it is CS8765 instead, which is what is
+            // suppressed: callers go through AnalyzerConfigOptions, which still carries it.
+#pragma warning disable CS8765 // nullability of parameter doesn't match overridden member
+            public override bool TryGetValue(string key, out string? value)
                 => _values.TryGetValue(key, out value);
+#pragma warning restore CS8765
         }
     }
 
@@ -92,6 +100,9 @@ namespace BuildToolsUnitTests
             _backing = properties;
         }
 
-        public override bool TryGetValue(string key, [NotNullWhen(true)] out string? value) => _backing.TryGetValue(key, out value);
+        // see the note on InMemoryConfigOptions.TryGetValue above
+#pragma warning disable CS8765 // nullability of parameter doesn't match overridden member
+        public override bool TryGetValue(string key, out string? value) => _backing.TryGetValue(key, out value);
+#pragma warning restore CS8765
     }
 }

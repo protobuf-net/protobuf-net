@@ -1,4 +1,4 @@
-using ProtoBuf.Reflection;
+﻿using ProtoBuf.Reflection;
 using ProtoBuf.Reflection.Internal;
 using System;
 using System.Collections.Generic;
@@ -49,7 +49,7 @@ namespace Google.Protobuf.Reflection
                     CheckName(ctx, methodFeatures, method.Name, NameStyle.TitleCase, "method", FirstToken);
                 }
             }
-            if (!string.IsNullOrEmpty(Package))
+            if (!Package.IsNullOrEmpty())
             {
                 foreach (var part in Package.Split('.'))
                 {
@@ -183,7 +183,7 @@ namespace Google.Protobuf.Reflection
             }
         }
 
-        private void CheckFeatureUse(ParserContext ctx, FeatureSet features, FeatureTarget target, string where, Token token)
+        private void CheckFeatureUse(ParserContext ctx, FeatureSet? features, FeatureTarget target, string where, Token token)
         {
             if (features is null) return;
 
@@ -222,7 +222,7 @@ namespace Google.Protobuf.Reflection
         private void CheckName(ParserContext ctx, in ParsedFeatures features, string name, NameStyle style, string kind, Token token)
         {
             if (features.EnforceNamingStyle != FeatureSet.EnforceNamingStyle.Style2024) return;
-            if (string.IsNullOrEmpty(name)) return;
+            if (name.IsNullOrEmpty()) return;
 
             bool ok;
             string expected;

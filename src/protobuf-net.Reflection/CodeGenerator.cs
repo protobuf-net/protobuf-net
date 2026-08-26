@@ -56,12 +56,12 @@ namespace ProtoBuf.Reflection
         /// <summary>
         /// Execute the code generator against a FileDescriptorSet, yielding a sequence of files
         /// </summary>
-        public IEnumerable<CodeFile> Generate(FileDescriptorSet set, NameNormalizer normalizer) => Generate(set, normalizer, null);
+        public IEnumerable<CodeFile> Generate(FileDescriptorSet set, NameNormalizer? normalizer) => Generate(set, normalizer, null);
 
         /// <summary>
         /// Execute the code generator against a FileDescriptorSet, yielding a sequence of files
         /// </summary>
-        public abstract IEnumerable<CodeFile> Generate(FileDescriptorSet set, NameNormalizer normalizer = null, Dictionary<string, string> options = null);
+        public abstract IEnumerable<CodeFile> Generate(FileDescriptorSet set, NameNormalizer? normalizer = null, Dictionary<string, string>? options = null);
 
         /// <summary>
         /// Eexecute this code generator against a code file
@@ -103,7 +103,7 @@ namespace ProtoBuf.Reflection
     /// </summary>
     public abstract partial class CommonCodeGenerator : CodeGenerator
     {
-        private Access? GetAccess(IType parent)
+        private Access? GetAccess(IType? parent)
         {
             if (parent is DescriptorProto message)
                 return GetAccess(message);
@@ -116,32 +116,32 @@ namespace ProtoBuf.Reflection
         /// <summary>
         /// Obtain the access of an item, accounting for the model's hierarchy
         /// </summary>
-        protected Access GetAccess(FileDescriptorProto obj)
+        protected Access GetAccess(FileDescriptorProto? obj)
             => NullIfInherit(obj?.Options?.GetOptions()?.Access) ?? Access.Public;
 
         /// <summary>
         /// Get the language version for this language from a schema
         /// </summary>
-        protected virtual string GetLanguageVersion(FileDescriptorProto obj) => null;
+        protected virtual string? GetLanguageVersion(FileDescriptorProto obj) => null;
 
         private static Access? NullIfInherit(Access? access)
             => access == Access.Inherit ? null : access;
         /// <summary>
         /// Obtain the access of an item, accounting for the model's hierarchy
         /// </summary>
-        protected Access GetAccess(DescriptorProto obj)
+        protected Access GetAccess(DescriptorProto? obj)
             => NullIfInherit(obj?.Options?.GetOptions()?.Access)
             ?? NullIfInherit(GetAccess(obj?.Parent)) ?? Access.Public;
         /// <summary>
         /// Obtain the access of an item, accounting for the model's hierarchy
         /// </summary>
-        protected Access GetAccess(FieldDescriptorProto obj)
+        protected Access GetAccess(FieldDescriptorProto? obj)
             => NullIfInherit(obj?.Options?.GetOptions()?.Access)
             ?? NullIfInherit(GetAccess(obj?.Parent as IType)) ?? Access.Public;
         /// <summary>
         /// Obtain the access of an item, accounting for the model's hierarchy
         /// </summary>
-        protected Access GetAccess(EnumDescriptorProto obj)
+        protected Access GetAccess(EnumDescriptorProto? obj)
             => NullIfInherit(obj?.Options?.GetOptions()?.Access)
                 ?? NullIfInherit(GetAccess(obj?.Parent)) ?? Access.Public;
         /// <summary>
@@ -178,7 +178,7 @@ namespace ProtoBuf.Reflection
         /// <summary>
         /// Execute the code generator against a FileDescriptorSet, yielding a sequence of files
         /// </summary>
-        public override IEnumerable<CodeFile> Generate(FileDescriptorSet set, NameNormalizer normalizer = null, Dictionary<string, string> options = null)
+        public override IEnumerable<CodeFile> Generate(FileDescriptorSet set, NameNormalizer? normalizer = null, Dictionary<string, string>? options = null)
         {
             foreach (var file in set.Files)
             {
@@ -208,12 +208,12 @@ namespace ProtoBuf.Reflection
         static string GetNamespace(DescriptorProto message, string defaultNamespace)
         {
             var ns = message.Options?.GetOptions()?.Namespace;
-            return string.IsNullOrWhiteSpace(ns) ? defaultNamespace : ns;
+            return ns.IsNullOrWhiteSpace() ? defaultNamespace : ns;
         }
         static string GetNamespace(EnumDescriptorProto @enum, string defaultNamespace)
         {
             var ns = @enum.Options?.GetOptions()?.Namespace;
-            return string.IsNullOrWhiteSpace(ns) ? defaultNamespace : ns;
+            return ns.IsNullOrWhiteSpace() ? defaultNamespace : ns;
         }
 
         /// <summary>
@@ -221,12 +221,12 @@ namespace ProtoBuf.Reflection
         /// </summary>
         protected virtual void WriteFile(GeneratorContext ctx, FileDescriptorProto file)
         {
-            object state = null;
+            object? state = null;
             WriteFileHeader(ctx, file, ref state);
 
             var @namespace = ctx.NameNormalizer.GetName(file) ?? "";
 
-            if (!string.IsNullOrWhiteSpace(@namespace))
+            if (!@namespace.IsNullOrWhiteSpace())
                 WriteNamespaceHeader(ctx, @namespace);
 
             var messagesByNamespace = file.MessageTypes.ToLookup(x => GetNamespace(x, @namespace));
@@ -253,7 +253,7 @@ namespace ProtoBuf.Reflection
             }
             if (file.Extensions.Count != 0)
             {
-                object extState = null;
+                object? extState = null;
                 WriteExtensionsHeader(ctx, file, ref extState);
                 foreach (var ext in file.Extensions)
                 {
@@ -262,7 +262,7 @@ namespace ProtoBuf.Reflection
                 WriteExtensionsFooter(ctx, file, ref extState);
             }
 
-            if (!string.IsNullOrWhiteSpace(@namespace))
+            if (!@namespace.IsNullOrWhiteSpace())
                 WriteNamespaceFooter(ctx, @namespace);
 
 
@@ -293,19 +293,19 @@ namespace ProtoBuf.Reflection
         /// <summary>
         /// Emit code preceeding a set of extension fields
         /// </summary>
-        protected virtual void WriteExtensionsHeader(GeneratorContext ctx, FileDescriptorProto file, ref object state) { }
+        protected virtual void WriteExtensionsHeader(GeneratorContext ctx, FileDescriptorProto file, ref object? state) { }
         /// <summary>
         /// Emit code following a set of extension fields
         /// </summary>
-        protected virtual void WriteExtensionsFooter(GeneratorContext ctx, FileDescriptorProto file, ref object state) { }
+        protected virtual void WriteExtensionsFooter(GeneratorContext ctx, FileDescriptorProto file, ref object? state) { }
         /// <summary>
         /// Emit code preceeding a set of extension fields
         /// </summary>
-        protected virtual void WriteExtensionsHeader(GeneratorContext ctx, DescriptorProto message, ref object state) { }
+        protected virtual void WriteExtensionsHeader(GeneratorContext ctx, DescriptorProto message, ref object? state) { }
         /// <summary>
         /// Emit code following a set of extension fields
         /// </summary>
-        protected virtual void WriteExtensionsFooter(GeneratorContext ctx, DescriptorProto message, ref object state) { }
+        protected virtual void WriteExtensionsFooter(GeneratorContext ctx, DescriptorProto message, ref object? state) { }
         /// <summary>
         /// Emit code representing a service
         /// </summary>
@@ -313,7 +313,7 @@ namespace ProtoBuf.Reflection
         {
             if (ctx.EmitServices)
             {
-                object state = null;
+                object? state = null;
                 WriteServiceHeader(ctx, service, ref state);
                 foreach (var inner in service.Methods)
                 {
@@ -325,20 +325,20 @@ namespace ProtoBuf.Reflection
         /// <summary>
         /// Emit code following a set of service methods
         /// </summary>
-        protected virtual void WriteServiceFooter(GeneratorContext ctx, ServiceDescriptorProto service, ref object state) { }
+        protected virtual void WriteServiceFooter(GeneratorContext ctx, ServiceDescriptorProto service, ref object? state) { }
 
         /// <summary>
         /// Emit code representing a service method
         /// </summary>
-        protected virtual void WriteServiceMethod(GeneratorContext ctx, MethodDescriptorProto method, ref object state) { }
+        protected virtual void WriteServiceMethod(GeneratorContext ctx, MethodDescriptorProto method, ref object? state) { }
         /// <summary>
         /// Emit code preceeding a set of service methods
         /// </summary>
-        protected virtual void WriteServiceHeader(GeneratorContext ctx, ServiceDescriptorProto service, ref object state) { }
+        protected virtual void WriteServiceHeader(GeneratorContext ctx, ServiceDescriptorProto service, ref object? state) { }
         /// <summary>
         /// Check whether a particular message should be suppressed - for example because it represents a map
         /// </summary>
-        protected virtual bool ShouldOmitMessage(GeneratorContext ctx, DescriptorProto message, ref object state)
+        protected virtual bool ShouldOmitMessage(GeneratorContext ctx, DescriptorProto message, ref object? state)
             => message.Options?.MapEntry ?? false; // don't write this type - use a dictionary instead
 
         /// <summary>
@@ -346,7 +346,7 @@ namespace ProtoBuf.Reflection
         /// </summary>
         protected virtual void WriteMessage(GeneratorContext ctx, DescriptorProto message)
         {
-            object state = null;
+            object? state = null;
             if (ShouldOmitMessage(ctx, message, ref state)) return;
 
             WriteMessageHeader(ctx, message, ref state);
@@ -383,7 +383,7 @@ namespace ProtoBuf.Reflection
             }
             if (message.Extensions.Count != 0)
             {
-                object extState = null;
+                object? extState = null;
                 WriteExtensionsHeader(ctx, message, ref extState);
                 foreach (var ext in message.Extensions)
                 {
@@ -397,32 +397,32 @@ namespace ProtoBuf.Reflection
         /// <summary>
         /// Emit code terminating a constructor, if one is required
         /// </summary>
-        protected virtual void WriteConstructorFooter(GeneratorContext ctx, DescriptorProto message, ref object state) { }
+        protected virtual void WriteConstructorFooter(GeneratorContext ctx, DescriptorProto message, ref object? state) { }
 
         /// <summary>
         /// Emit code initializing field values inside a constructor, if one is required
         /// </summary>
-        protected virtual void WriteInitField(GeneratorContext ctx, FieldDescriptorProto field, ref object state, OneOfStub[] oneOfs) { }
+        protected virtual void WriteInitField(GeneratorContext ctx, FieldDescriptorProto field, ref object? state, OneOfStub[]? oneOfs) { }
 
         /// <summary>
         /// Emit code beginning a constructor, if one is required
         /// </summary>
         /// <returns>true if a constructor is required</returns>
-        protected virtual bool WriteContructorHeader(GeneratorContext ctx, DescriptorProto message, ref object state) => false;
+        protected virtual bool WriteContructorHeader(GeneratorContext ctx, DescriptorProto message, ref object? state) => false;
 
         /// <summary>
         /// Emit code representing a message field
         /// </summary>
-        protected abstract void WriteField(GeneratorContext ctx, FieldDescriptorProto field, ref object state, OneOfStub[] oneOfs);
+        protected abstract void WriteField(GeneratorContext ctx, FieldDescriptorProto field, ref object? state, OneOfStub[]? oneOfs);
 
         /// <summary>
         /// Indicates whether field presence tracking is suggested for this field
         /// </summary>
-        protected bool TrackFieldPresence(GeneratorContext ctx, FieldDescriptorProto field, OneOfStub[] oneOfs, out OneOfStub oneOf)
+        protected bool TrackFieldPresence(GeneratorContext ctx, FieldDescriptorProto field, OneOfStub[]? oneOfs, out OneOfStub? oneOf)
         {
             // get the oneof, ignoring 'synthetic' oneofs from proto3-optional
             // (the CountTotal check would *also* work for this, but: let's be explicit and intentional)
-            oneOf = (field.ShouldSerializeOneofIndex() && !field.Proto3Optional) ? oneOfs[field.OneofIndex] : null;
+            oneOf = (oneOfs is not null && field.ShouldSerializeOneofIndex() && !field.Proto3Optional) ? oneOfs[field.OneofIndex] : null;
             if (oneOf is not null && !ctx.OneOfEnums && oneOf.CountTotal == 1)
             {
                 oneOf = null; // not really a one-of, then!
@@ -440,19 +440,19 @@ namespace ProtoBuf.Reflection
         /// <summary>
         /// Emit code following a set of message fields
         /// </summary>
-        protected abstract void WriteMessageFooter(GeneratorContext ctx, DescriptorProto message, ref object state);
+        protected abstract void WriteMessageFooter(GeneratorContext ctx, DescriptorProto message, ref object? state);
 
         /// <summary>
         /// Emit code preceeding a set of message fields
         /// </summary>
-        protected abstract void WriteMessageHeader(GeneratorContext ctx, DescriptorProto message, ref object state);
+        protected abstract void WriteMessageHeader(GeneratorContext ctx, DescriptorProto message, ref object? state);
 
         /// <summary>
         /// Emit code representing an enum type
         /// </summary>
         protected virtual void WriteEnum(GeneratorContext ctx, EnumDescriptorProto obj)
         {
-            object state = null;
+            object? state = null;
             WriteEnumHeader(ctx, obj, ref state);
             foreach (var inner in obj.Values)
             {
@@ -470,11 +470,11 @@ namespace ProtoBuf.Reflection
             {
                 int index = stub.Index;
                 var obj = stub.OneOf;
-                object state = null;
+                object? state = null;
                 WriteOneOfDiscriminator(ctx, obj, ref state);
 
                 WriteOneOfEnumHeader(ctx, obj, ref state);
-                foreach (var field in obj.Parent.Fields)
+                foreach (var field in obj.Parent?.Fields ?? Enumerable.Empty<FieldDescriptorProto>())
                 {
                     if (field.ShouldSerializeOneofIndex() && field.OneofIndex == index)
                     {
@@ -488,47 +488,47 @@ namespace ProtoBuf.Reflection
         /// <summary>
         /// Emit code preceeding a set of enum values
         /// </summary>
-        protected abstract void WriteEnumHeader(GeneratorContext ctx, EnumDescriptorProto @enum, ref object state);
+        protected abstract void WriteEnumHeader(GeneratorContext ctx, EnumDescriptorProto @enum, ref object? state);
 
         /// <summary>
         /// Emit code representing an enum value
         /// </summary>
-        protected abstract void WriteEnumValue(GeneratorContext ctx, EnumValueDescriptorProto @enum, ref object state);
+        protected abstract void WriteEnumValue(GeneratorContext ctx, EnumValueDescriptorProto @enum, ref object? state);
 
         /// <summary>
         /// Emit code following a set of enum values
         /// </summary>
-        protected abstract void WriteEnumFooter(GeneratorContext ctx, EnumDescriptorProto @enum, ref object state);
+        protected abstract void WriteEnumFooter(GeneratorContext ctx, EnumDescriptorProto @enum, ref object? state);
 
         /// <summary>
         /// Emit code at the start of a file
         /// </summary>
-        protected virtual void WriteFileHeader(GeneratorContext ctx, FileDescriptorProto file, ref object state) { }
+        protected virtual void WriteFileHeader(GeneratorContext ctx, FileDescriptorProto file, ref object? state) { }
 
         /// <summary>
         /// Emit code at the end of a file
         /// </summary>
-        protected virtual void WriteFileFooter(GeneratorContext ctx, FileDescriptorProto file, ref object state) { }
+        protected virtual void WriteFileFooter(GeneratorContext ctx, FileDescriptorProto file, ref object? state) { }
 
         /// <summary>
         /// Emit the start of an enum declaration for 'oneof' groups, including the 0/None element
         /// </summary>
-        protected virtual void WriteOneOfEnumHeader(GeneratorContext ctx, OneofDescriptorProto oneof, ref object state) { }
+        protected virtual void WriteOneOfEnumHeader(GeneratorContext ctx, OneofDescriptorProto oneof, ref object? state) { }
 
         /// <summary>
         /// Emit a field-based entry for a 'oneof' groups's enum
         /// </summary>
-        protected virtual void WriteOneOfEnumValue(GeneratorContext ctx, FieldDescriptorProto field, ref object state) { }
+        protected virtual void WriteOneOfEnumValue(GeneratorContext ctx, FieldDescriptorProto field, ref object? state) { }
 
         /// <summary>
         /// Emit the end of an enum declaration for 'oneof' groups
         /// </summary>
-        protected virtual void WriteOneOfEnumFooter(GeneratorContext ctx, OneofDescriptorProto oneof, ref object state) { }
+        protected virtual void WriteOneOfEnumFooter(GeneratorContext ctx, OneofDescriptorProto oneof, ref object? state) { }
 
         /// <summary>
         /// Emit  the discriminator accessor for 'oneof' groups
         /// </summary>
-        protected virtual void WriteOneOfDiscriminator(GeneratorContext ctx, OneofDescriptorProto oneof, ref object state) { }
+        protected virtual void WriteOneOfDiscriminator(GeneratorContext ctx, OneofDescriptorProto oneof, ref object? state) { }
 
         /// <summary>
         /// Convention-based suffix for 'oneof' enums
@@ -589,7 +589,7 @@ namespace ProtoBuf.Reflection
             /// <summary>
             /// The effective syntax of this code-generation cycle, defaulting to "proto2" if not explicity specified
             /// </summary>
-            public string Syntax => string.IsNullOrWhiteSpace(File.Syntax) ? FileDescriptorProto.SyntaxProto2 : File.Syntax;
+            public string Syntax => File.Syntax.IsNullOrWhiteSpace() ? FileDescriptorProto.SyntaxProto2 : File.Syntax;
 
             /// <summary>
             /// Whether to emit enums and discriminators for oneof groups
@@ -599,11 +599,11 @@ namespace ProtoBuf.Reflection
             /// <summary>
             /// Create a new GeneratorContext instance
             /// </summary>
-            internal GeneratorContext(CommonCodeGenerator generator, FileDescriptorProto file, NameNormalizer nameNormalizer, TextWriter output, string indentToken, Dictionary<string, string> options)
+            internal GeneratorContext(CommonCodeGenerator generator, FileDescriptorProto file, NameNormalizer? nameNormalizer, TextWriter output, string indentToken, Dictionary<string, string>? options)
             {
                 if (nameNormalizer == null)
                 {
-                    string nn = null;
+                    string? nn = null;
                     if (options != null) options.TryGetValue("names", out nn);
                     // todo: support getting from a .proto extension?
 
@@ -613,9 +613,9 @@ namespace ProtoBuf.Reflection
                     else if (string.Equals(nn, "noplural", StringComparison.OrdinalIgnoreCase)) nameNormalizer = NameNormalizer.NoPlural;
                 }
 
-                string langver = null;
+                string? langver = null;
                 if (options != null) options.TryGetValue("langver", out langver); // explicit option first
-                if (string.IsNullOrWhiteSpace(langver)) langver = generator?.GetLanguageVersion(file); // then from file
+                if (langver.IsNullOrWhiteSpace()) langver = generator.GetLanguageVersion(file); // then from file
 
                 nameNormalizer ??= NameNormalizer.Default;
                 nameNormalizer.IsCaseSensitive = generator.IsCaseSensitive;
@@ -639,10 +639,10 @@ namespace ProtoBuf.Reflection
                 UnknownSubTypes = ParseUnknownSubTypes(GetCustomOption("subtypes"));
 
                 var s = GetCustomOption("services");
-                void AddServices(string value)
+                void AddServices(string? value)
                 {
                     value = value?.Trim();
-                    if (string.IsNullOrWhiteSpace(value)) return;
+                    if (value.IsNullOrWhiteSpace()) return;
 
                     if (!Enum.TryParse(value, true, out ServiceKinds parsed))
                     {   // for backwards-compatibility of what "services" meant in the past
@@ -713,10 +713,10 @@ namespace ProtoBuf.Reflection
             /// </remarks>
             public UnknownSubTypeHandling UnknownSubTypes { get; }
 
-            private static UnknownSubTypeHandling ParseUnknownSubTypes(string value)
+            private static UnknownSubTypeHandling ParseUnknownSubTypes(string? value)
             {
                 value = value?.Trim();
-                if (string.IsNullOrEmpty(value)) return UnknownSubTypeHandling.Default;
+                if (value.IsNullOrEmpty()) return UnknownSubTypeHandling.Default;
                 if (string.Equals("sealed", value, StringComparison.OrdinalIgnoreCase))
                     return UnknownSubTypeHandling.Sealed;
                 if (string.Equals("ignore", value, StringComparison.OrdinalIgnoreCase))
@@ -729,9 +729,9 @@ namespace ProtoBuf.Reflection
             internal bool IsEnabled(string key, bool defaultIfMissing = false)
                 => IsEnabledValue(GetCustomOption(key), defaultIfMissing);
 
-            internal bool IsEnabledValue(string option, bool defaultIfMissing = false)
+            internal bool IsEnabledValue(string? option, bool defaultIfMissing = false)
             {
-                if (string.IsNullOrWhiteSpace(option)) return defaultIfMissing;
+                if (option.IsNullOrWhiteSpace()) return defaultIfMissing;
                 option = option.Trim();
                 if (option == "1") return true;
                 if (string.Equals("yes", option, StringComparison.OrdinalIgnoreCase)) return true;
@@ -740,20 +740,20 @@ namespace ProtoBuf.Reflection
                 return false;
             }
 
-            private readonly Dictionary<string, string> _options;
+            private readonly Dictionary<string, string>? _options;
             /// <summary>
             /// Gets the value of an OPTION/VALUE pair provided to the system
             /// </summary>
-            public string GetCustomOption(string key)
+            public string? GetCustomOption(string key)
             {
-                string value = null;
+                string? value = null;
                 _options?.TryGetValue(key, out value);
                 return value;
             }
 
-            private static Version ParseVersion(string version)
+            private static Version? ParseVersion(string? version)
             {
-                if (string.IsNullOrWhiteSpace(version)) return null;
+                if (version.IsNullOrWhiteSpace()) return null;
                 version = version.Trim();
 
                 if (Version.TryParse(version, out Version v)) return v;
@@ -769,7 +769,7 @@ namespace ProtoBuf.Reflection
             /// </summary>
             internal bool EmitRequiredDefaults { get; set; }
 
-            internal bool Supports(Version version)
+            internal bool Supports(Version? version)
             {
                 if (version == null) return true;
                 var langver = LanguageVersion;
@@ -780,7 +780,7 @@ namespace ProtoBuf.Reflection
             /// <summary>
             /// The specified language version (null if not specified)
             /// </summary>
-            public Version LanguageVersion { get; }
+            public Version? LanguageVersion { get; }
 
             /// <summary>
             /// Ends the current line
@@ -838,7 +838,7 @@ namespace ProtoBuf.Reflection
             /// <summary>
             /// Try to find a descriptor of the type specified by T with the given full name
             /// </summary>
-            public T TryFind<T>(string typeName) where T : class
+            public T? TryFind<T>(string typeName) where T : class
             {
                 if (!_knownTypes.TryGetValue(typeName, out var obj) || obj == null)
                 {
@@ -851,12 +851,17 @@ namespace ProtoBuf.Reflection
 
             internal void BuildTypeIndex()
             {
+                void Index(string? fullyQualifiedName, object type)
+                {
+                    if (fullyQualifiedName is not null) _knownTypes[fullyQualifiedName] = type;
+                }
+
                 void AddMessage(DescriptorProto message)
                 {
-                    _knownTypes[message.FullyQualifiedName] = message;
+                    Index(message.FullyQualifiedName, message);
                     foreach (var @enum in message.EnumTypes)
                     {
-                        _knownTypes[@enum.FullyQualifiedName] = @enum;
+                        Index(@enum.FullyQualifiedName, @enum);
                     }
                     foreach (var msg in message.NestedTypes)
                     {
@@ -877,7 +882,7 @@ namespace ProtoBuf.Reflection
 
                         foreach (var @enum in file.EnumTypes)
                         {
-                            _knownTypes[@enum.FullyQualifiedName] = @enum;
+                            Index(@enum.FullyQualifiedName, @enum);
                         }
                         foreach (var msg in file.MessageTypes)
                         {
@@ -890,7 +895,7 @@ namespace ProtoBuf.Reflection
                             {
                                 if (processedFiles.Add(import.Path))
                                 {
-                                    var importFile = file.Parent.GetFile(file, import.Path);
+                                    var importFile = file.Parent?.GetFile(file, import.Path);
                                     if (importFile != null) pendingFiles.Enqueue(importFile);
                                 }
                             }

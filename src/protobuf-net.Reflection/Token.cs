@@ -15,7 +15,7 @@ namespace ProtoBuf.Reflection
             return x.TokenIndex != y.TokenIndex || x.File != y.File;
         }
         public override int GetHashCode() => TokenIndex;
-        public override bool Equals(object obj) => obj is Token other && other.TokenIndex == this.TokenIndex && other.File == this.File;
+        public override bool Equals(object? obj) => obj is Token other && other.TokenIndex == this.TokenIndex && other.File == this.File;
         public bool Equals(in Token other) => other.TokenIndex == this.TokenIndex && other.File == this.File;
         bool IEquatable<Token>.Equals(Token other) => Equals(in other);
 
@@ -38,10 +38,10 @@ namespace ProtoBuf.Reflection
         }
         public override string ToString() => $"({LineNumber},{ColumnNumber}) '{Value}'";
 
-        internal Exception Throw(ErrorCode errorCode, string error = null, bool isError = true) =>
-            throw new ParserException(this, string.IsNullOrWhiteSpace(error) ? $"syntax error: '{Value}'" : error, isError, errorCode);
+        internal Exception Throw(ErrorCode errorCode, string? error = null, bool isError = true) =>
+            throw new ParserException(this, error.IsNullOrWhiteSpace() ? $"syntax error: '{Value}'" : error, isError, errorCode);
 
-        internal void Assert(TokenType type, string value = null)
+        internal void Assert(TokenType type, string? value = null)
         {
             if (value != null)
             {
@@ -59,7 +59,7 @@ namespace ProtoBuf.Reflection
             }
         }
 
-        internal bool Is(TokenType type, string value = null)
+        internal bool Is(TokenType type, string? value = null)
         {
             if (type != Type) return false;
             if (value != null && value != Value) return false;
@@ -92,7 +92,7 @@ namespace ProtoBuf.Reflection
             }
         }
 
-        internal Error TypeNotFound(string typeName = null) => new Error(this,
-            $"type not found: '{(string.IsNullOrWhiteSpace(typeName) ? Value : typeName)}'", true, ErrorCode.TypeNotFound);
+        internal Error TypeNotFound(string? typeName = null) => new Error(this,
+            $"type not found: '{(typeName.IsNullOrWhiteSpace() ? Value : typeName)}'", true, ErrorCode.TypeNotFound);
     }
 }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace Google.Protobuf.Reflection
 {
@@ -67,7 +67,7 @@ namespace Google.Protobuf.Reflection
         /// <summary>
         /// Merges explicitly-stated features over this set; unstated fields inherit.
         /// </summary>
-        public ParsedFeatures Apply(FeatureSet features)
+        public ParsedFeatures Apply(FeatureSet? features)
         {
             if (features is null) return this;
             return new(

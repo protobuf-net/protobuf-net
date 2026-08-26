@@ -12,7 +12,7 @@ namespace ProtoBuf.Reflection
 {
     internal static class TokenExtensions
     {
-        public static bool Is(this Peekable<Token> tokens, TokenType type, string value = null)
+        public static bool Is(this Peekable<Token> tokens, TokenType type, string? value = null)
             => tokens.Peek(out var val) && val.Is(type, value);
 
         public static void Consume(this Peekable<Token> tokens, TokenType type, string value)
@@ -108,8 +108,8 @@ namespace ProtoBuf.Reflection
                 foreach (var field in fields)
                 {
                     string name = field.Name;
-                    var attrib = (ProtoEnumAttribute)field.GetCustomAttributes(false).FirstOrDefault();
-                    if (!string.IsNullOrWhiteSpace(attrib?.Name)) name = attrib.Name;
+                    var attrib = (ProtoEnumAttribute?)field.GetCustomAttributes(false).FirstOrDefault();
+                    if (attrib is not null && !attrib.Name.IsNullOrWhiteSpace()) name = attrib.Name;
                     var val = (T)field.GetValue(null);
                     tmp.Add(name, val);
                 }
@@ -126,12 +126,18 @@ namespace ProtoBuf.Reflection
             return val;
         }
 
-        internal static bool TryParseUInt32(string token, out uint val, uint? max = null)
+        internal static bool TryParseUInt32(string? token, out uint val, uint? max = null)
         {
             if (max.HasValue && token == "max")
             {
                 val = max.GetValueOrDefault();
                 return true;
+            }
+
+            if (token is null)
+            {
+                val = 0;
+                return false;
             }
 
             if (token.StartsWith("0x", StringComparison.OrdinalIgnoreCase) && uint.TryParse(token.Substring(2), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out val))
@@ -141,12 +147,18 @@ namespace ProtoBuf.Reflection
 
             return uint.TryParse(token, NumberStyles.Integer | NumberStyles.AllowExponent, CultureInfo.InvariantCulture, out val);
         }
-        internal static bool TryParseUInt64(string token, out ulong val, ulong? max = null)
+        internal static bool TryParseUInt64(string? token, out ulong val, ulong? max = null)
         {
             if (max.HasValue && token == "max")
             {
                 val = max.GetValueOrDefault();
                 return true;
+            }
+
+            if (token is null)
+            {
+                val = 0;
+                return false;
             }
 
             if (token.StartsWith("0x", StringComparison.OrdinalIgnoreCase) && ulong.TryParse(token.Substring(2), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out val))
@@ -156,12 +168,18 @@ namespace ProtoBuf.Reflection
 
             return ulong.TryParse(token, NumberStyles.Integer | NumberStyles.AllowExponent, CultureInfo.InvariantCulture, out val);
         }
-        internal static bool TryParseInt32(string token, out int val, int? max = null)
+        internal static bool TryParseInt32(string? token, out int val, int? max = null)
         {
             if (max.HasValue && token == "max")
             {
                 val = max.GetValueOrDefault();
                 return true;
+            }
+
+            if (token is null)
+            {
+                val = 0;
+                return false;
             }
 
             if (token.StartsWith("-0x", StringComparison.OrdinalIgnoreCase) && int.TryParse(token.Substring(3), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out val))
@@ -177,12 +195,18 @@ namespace ProtoBuf.Reflection
 
             return int.TryParse(token, NumberStyles.Integer | NumberStyles.AllowLeadingSign | NumberStyles.AllowExponent, CultureInfo.InvariantCulture, out val);
         }
-        internal static bool TryParseInt64(string token, out long val, long? max = null)
+        internal static bool TryParseInt64(string? token, out long val, long? max = null)
         {
             if (max.HasValue && token == "max")
             {
                 val = max.GetValueOrDefault();
                 return true;
+            }
+
+            if (token is null)
+            {
+                val = 0;
+                return false;
             }
 
             if (token.StartsWith("-0x", StringComparison.OrdinalIgnoreCase) && long.TryParse(token.Substring(3), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out val))
@@ -214,7 +238,7 @@ namespace ProtoBuf.Reflection
             switch (token.Type)
             {
                 case TokenType.StringLiteral:
-                    MemoryStream ms = null;
+                    MemoryStream? ms = null;
                     do
                     {
                         ReadStringBytes(ref ms, in token, tokens.Errors, !asBytes);
@@ -268,7 +292,7 @@ namespace ProtoBuf.Reflection
 
         // the normalized output *includes* the slashes, but expands octal to 3 places;
         // it is the job of codegen to change this normalized form to the target language form
-        internal static void ReadStringBytes(ref MemoryStream ms, in Token token, List<Error> errors, bool validateUnicode)
+        internal static void ReadStringBytes(ref MemoryStream? ms, in Token token, List<Error> errors, bool validateUnicode)
         {
             static void AppendAscii(MemoryStream target, string ascii)
             {
@@ -343,7 +367,7 @@ namespace ProtoBuf.Reflection
 
             bool haveRawUnicode = false;
             var value = token.Value;
-            if (string.IsNullOrEmpty(value)) return;
+            if (value.IsNullOrEmpty()) return;
 
             ms ??= new MemoryStream(value.Length);
             uint escapedCodePoint = 0;
@@ -692,7 +716,7 @@ namespace ProtoBuf.Reflection
                 }
             }
         }
-        internal static bool TryParseSingle(string token, out float val)
+        internal static bool TryParseSingle(string? token, out float val)
         {
             if (token == "nan")
             {
@@ -711,7 +735,7 @@ namespace ProtoBuf.Reflection
             }
             return float.TryParse(token, NumberStyles.Number | NumberStyles.AllowExponent, CultureInfo.InvariantCulture, out val);
         }
-        internal static bool TryParseDouble(string token, out double val)
+        internal static bool TryParseDouble(string? token, out double val)
         {
             if (token == "nan")
             {
