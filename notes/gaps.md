@@ -5554,23 +5554,16 @@ instead. There is **no `!` in the pilot**:
 - `ArraySegment<byte>.Array` is `byte[]?`, so `segment.Array ?? Array.Empty<byte>()` — provably
   equivalent, because a segment with a null array carries `Offset`/`Count` of 0.
 
-#### The ApiCompat question is NOT resolved, and the reason is worse than expected
+#### The ApiCompat question is RESOLVED (2026-08-26): annotations are invisible to it, and the gate works
 
 The plan was to check whether nullability metadata trips package validation against the 3.4.0
-baseline. It produced **no `CP000x` diagnostics** — but that is not evidence, because **the gate does
-not appear to run at all**. Verified the way this file insists on: making a public type `internal`
-(a straightforward removal from the surface) *also* produced no diagnostic, on `dotnet pack -c
-Release`, with `EnablePackageValidation=true` and `PackageValidationBaselineVersion=3.4.0` both
-confirmed resolved via `-getProperty`, and no baseline package in the NuGet cache.
+baseline. It produced no `CP000x` diagnostics - and the first reading of that was that it proved
+nothing, because the gate appeared not to run at all. **That was wrong on both counts**; see gap
+B52, which was split out for it and is now closed. The gate runs, it fails the build on a removed
+type, and the fully-annotated ServiceModel validates clean against its oblivious 3.4.0 baseline.
 
-So there are two items here, and the second is not about NRT at all:
-
-- whether nullability annotations trip ApiCompat — **still open**, and worth settling before Core;
-- **whether the ApiCompat gate works** — `src/Directory.Build.props` describes it as failing the
-  build on a removed member, and it did not. Either it only runs from the traversal pack with
-  `Packing=true` (the shape `release.yml` uses, so possibly fine in CI and misleading locally), or it
-  is inert. Not investigated further; recorded rather than assumed.
-
+So annotating several thousand public entries across Core, `protobuf-net` and Reflection is a
+no-op for package validation, and a genuine break landing in the same diff will still be caught.
 
 #### The generated-code half - settled by measurement, and it is NOT what it looked like
 
@@ -5683,7 +5676,7 @@ Each stage lands green and reviewable; a single 5,000-site diff would not be.
 consumers the annotations without flow analysis, for a fraction of the work — but nothing then checks
 the annotations are correct, so wrong ones ship silently. Acceptable as a per-project staging post.
 
-### B52. The ApiCompat / package-validation gate may not actually run - **OPEN, and it matters for the release**
+### B52. The ApiCompat / package-validation gate may not actually run - **CLOSED 2026-08-26: it runs, and it fails the build. The earlier negative was a measurement artefact**
 
 Found while checking something else (whether NRT annotations trip package validation, gap B51), and
 split out because it is not an NRT question and nobody looking for "is our public-API gate working"
@@ -5695,35 +5688,58 @@ would find it filed under one.
 > nuget.org and diffs the surface, so a removed member or a narrowed signature fails the build
 > (CP0001/CP0002/CP0003) instead of shipping.
 
-**It did not.** On `protobuf-net.ServiceModel`, making a public type `internal` - an unambiguous
-removal from the surface - produced **no diagnostic at all** from
-`dotnet pack -c Release`. Checked the obvious explanations first:
+**It does.** Re-run on 2026-08-26 the way this file insists on - by making the gate fail, not by
+observing it pass. `ProtoBuf.ServiceModel.ProtoEndpointBehavior` made `internal`, then
+`dotnet build src/protobuf-net.ServiceModel -c Release`:
 
-- `EnablePackageValidation` is `true` and `PackageValidationBaselineVersion` is `3.4.0`, both
-  confirmed resolved via `dotnet msbuild -getProperty:` rather than by reading the props file;
-- no `CP` diagnostic of any severity appeared, so it is not a severity/NoWarn question;
-- the baseline package is **not in the NuGet cache**, which is consistent with it never having been
-  fetched - i.e. the diff never happened rather than happening and passing.
+```
+error CP0001: Type 'ProtoBuf.ServiceModel.ProtoEndpointBehavior' exists on
+  [Baseline] lib/net462/protobuf-net.ServiceModel.dll but not on lib/net462/protobuf-net.ServiceModel.dll
+error CP0001: ... the same for lib/net8.0 ...
+error : API breaking changes found. If those are intentional, the APICompat suppression file can be
+  updated by rebuilding with '/p:ApiCompatGenerateSuppressionFile=true'
+    5 Error(s)
+```
 
-**Verified the way this file insists on** - by making the gate fail, not by observing it pass. That
-distinction is the whole point here: "no CP warnings" had looked like evidence the surface was
-clean.
+Reverted, rebuilt, `0 Warning(s) 0 Error(s)` - **and the validation task confirmed to have run on
+that clean build**, not merely to have been silent (`-v:d`, one
+`Using "Microsoft.DotNet.ApiCompat.Task.ValidatePackageTask" task`). A green gate that did not run
+is exactly the thing this entry existed to catch, so it is checked in both directions.
 
-#### What has NOT been ruled out
+#### The two reasons the first attempt saw nothing, because both will catch the next person
 
-The most likely benign explanation is that validation only engages from the **traversal** pack with
-`Packing=true` - `dotnet pack Build.csproj --no-build -c Release -p:Packing=true`, which is the shape
-`release.yml` actually uses - and simply no-ops for a single-project pack. If so the gate works in CI
-and is merely misleading locally, which is worth knowing but not urgent.
+**1. `dotnet pack` never reaches the gate on this repo.** `RunPackageValidation` is
+`AfterTargets="Pack"`, and `notes/aot/findings.md` already records that `dotnet pack` here *skips
+the build entirely* and dies with **NU5026** (an interaction with `GeneratePackageOnBuild=True`).
+So Pack fails before the hook fires, and no `CP` diagnostic can appear however broken the surface
+is. **`dotnet build -c Release` is the command** - it builds, packs as a side effect, and validates.
+Not `dotnet pack`, and the traversal/`Packing=true` shape was a red herring: nothing about the gate
+is traversal-specific.
 
-The way to settle it is the same experiment on the traversal: break a public surface deliberately,
-pack the way `release.yml` does, and see whether `CP0002` appears. **Do that before leaning on the
-gate for a release** - a 4.0 preview is the first thing this pipeline has ever published, so nothing
-has exercised the baseline diff in anger.
+**2. `NuGetPackageRoot` on this machine is `C:\Code\NugetPackageCache`, not `~/.nuget/packages`.**
+The earlier check looked in the default location, found no `protobuf-net.servicemodel`, and read
+that as "the baseline was never fetched". All ten 3.4.0 baselines are in the real cache -
+`protobuf-net`, `.core`, `.reflection`, `.servicemodel`, `.nodatime`, `.aspnetcore`, `.hybridcache`,
+`.fsharp`, `protogen`. Ask MSBuild rather than assuming the path:
+`dotnet msbuild <proj> -getProperty:NuGetPackageRoot`.
 
-#### Why it is worth a real answer rather than a shrug
+For the record, the wiring is worth knowing since neither half is guessable from the props file:
+the baseline arrives as a **`PackageDownload`** item that `Microsoft.NET.ApiCompat.targets` adds at
+*evaluation* time (so `dotnet restore` fetches it), and `RunPackageValidation` then looks for the
+`.nupkg` at a computed path under `NuGetPackageRoot` - there is no download inside the target.
+Confirm both with `-getItem:PackageDownload`.
 
-The 4.x line is a major, so the surface is *expected* to move; the gate exists to make the moves
-deliberate rather than accidental. And gap B51 will annotate several thousand public API entries
-across Core, `protobuf-net` and Reflection - exactly the kind of wide, mechanical surface change a
-working ApiCompat is for, and exactly the kind that a silently-inert one would wave through.
+**A third trap that did not bite here but will:** the target is incremental against
+`obj/<config>/Microsoft.NET.ApiCompat.ValidatePackage.semaphore`, with the built dll as its input.
+So a build that recompiles nothing validates nothing, silently. That is the same shape as the
+`--no-build` trap in the handover, and the same answer: touch a source file if you need the gate to
+speak.
+
+#### What this settles for B51
+
+**Nullability annotations do NOT trip ApiCompat.** `protobuf-net.ServiceModel` is fully NRT-annotated
+since the pilot and its 3.4.0 baseline is oblivious; the clean run above validated that pair and
+reported nothing. That was the question B51 could not answer while the gate's own status was unknown,
+and it is the reassuring answer: the several thousand annotations coming to Core, `protobuf-net` and
+Reflection are invisible to package validation, so a real break in the same diff will not be lost in
+noise.
