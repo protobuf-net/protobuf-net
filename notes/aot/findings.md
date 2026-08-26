@@ -1,4 +1,4 @@
-# Findings from the AOT generator work
+﻿# Findings from the AOT generator work
 
 Things turned up while building `ProtoModelGenerator` that are **about protobuf-net itself**, not
 about the generator. Kept here so they can become issues rather than being lost in commit messages.
@@ -6,11 +6,13 @@ about the generator. Kept here so they can become issues rather than being lost 
 Each was found by deriving the generator's expected output from ref-emit (`src/AotRefGen`) or by the
 native-AOT smoke test (`src/AotSmoke`) — i.e. by comparison, not by reading the code and guessing.
 
-## Handover — **current as of 2026-08-25**; read this first on a cold start
+## Handover — **current as of 2026-08-26**; read this first on a cold start
 
-**Where the work is.** Everything below is on **`v4`**, which is where the whole stack lives; there
-is no branch in flight. The last two commits are `B50` (a protobuf-net.Core fix) and `B49` phase 2
-(`PBN3014` plus its fixer), both unpushed at the time of writing.
+**Where the work is.** The stack lives on **`v4`**, and there IS a branch in flight:
+**`nrt-reflection`**, carrying gap B51's Reflection stage and gap B52's closure. `AGENTS.md`'s notes
+table has its "current on" column restored for the duration. Five commits, unpushed at the time of
+writing: B52 closed; NRT on Reflection's hand-written sources; the `DiscriminatedUnionObject` fix;
+protogen emitting NRT; and the regeneration + baseline.
 
 **What the arc has become.** The generator no longer merely emits a serializer — it emits a
 **measure-first** one: `Measure_` computes a contract's length arithmetically, `RawWrite_` writes it
@@ -19,18 +21,20 @@ positionally. `AGENTS.md`'s "The writer's measure-first path" is the section to 
 any of it; the three invariants there are the ones that break silently. The measurable census is
 **2803 contracts** across the corpus.
 
-**The gate battery, and what it reported on 2026-08-25** — all of it green, run in this order:
+**The gate battery, and what it reported on 2026-08-26** — all of it green, run in this order:
 
 | gate | result |
 | --- | --- |
 | `dotnet build Build.csproj -c Debug` | 0 errors |
 | `BuildToolsUnitTests` (goldens + analyzers + fixers) | 659 passed |
-| `AotConformanceTests` (differential over the fixtures) | 1841 passed |
-| `protobuf-net.Test` | 1580 (net8.0) / 1579 (net472) |
+| `AotConformanceTests` (differential over the fixtures) | 1842 passed |
+| `protobuf-net.Test` | **1584** (net8.0) / **1583** (net472) — +4, the new `DiscriminatedUnionNullTests` |
+| `protobuf-net.Reflection.Test` | 616 / 616 |
+| `Examples` | 679 (net8.0) / 705 (net472) |
 | `AotDifferential` (the corpus, on bytes) | **3134 compared, 100% match**, exit 0 |
 | `AotSmoke` — `-c Debug` JIT run | PASSED |
-| `AotSmoke` — `publish -c Release -r win-x64` | exit 0, **5 warnings** (2 `IL2067`, 3 `IL2091`) |
-| `AotNodaTimeSmoke` | exit 0 |
+| `AotSmoke` — `publish -c Release -r win-x64` | not re-run on this branch; nothing here touches ILC's inputs |
+| `AotNodaTimeSmoke` | PASSED |
 | `DownLevelSmoke` (net472) | builds; 3 `PBN3xxx` warnings, 0 errors — the documented shape |
 | `protobuf-net.BuildTools.Legacy` | builds |
 
@@ -40,17 +44,13 @@ a member to `AotSmoke` moves it, so re-measure both sides when you do.
 **What is open.** `notes/gaps.md` is the entry point and its last entry is **B52**. The live ones,
 current to 2026-08-26:
 
-- **B52 (ApiCompat may not run)** - **check this before leaning on it for the release.** Making a
-  public type `internal` produced no `CP` diagnostic from a single-project `dotnet pack -c Release`,
-  with the properties confirmed resolved. Possibly only engages from the traversal pack with
-  `Packing=true`, which is what `release.yml` uses - but unproven, and a 4.0 preview would be the
-  first thing this pipeline has ever published;
-- **B51 (NRT)** - agreed for the next major, sized at ~5,125 code sites plus ~3,000 lines of
-  public-API baseline. ServiceModel is piloted and landed; `tools/annotate-public-api.py` drives the
-  baseline rewrite from the analyzer own RS0036 output. **Next slice is `protobuf-net.Reflection`
-  (493 sites), and it needs no codegen work** - generated files are outside the nullable context
-  entirely, which the entry proves by metadata rather than by warnings. The codegen half is designed
-  but unbuilt;
+- **B51 (NRT)** - ServiceModel and **`protobuf-net.Reflection` are done**, and protogen now EMITS
+  annotations (C# only; VB has no NRT). **Next slice is `protobuf-net.Core` (1952 sites)**, which
+  drags `protobuf-net.BuildTools` with it because BuildTools compiles Core's sources in - the
+  `CS8632` `NoWarn` now in BuildTools and BuildTools.Legacy is exactly what that stage removes. Read
+  the entry's "The Reflection stage" section first: the order that works is code -> generator ->
+  regenerate -> baseline, and a polyfilled attribute **must live in the assembly that uses it** or it
+  is a runtime `TypeLoadException` that no build catches;
 - **B48 (trim warnings)** - 23 -> 5, paused there deliberately: *"5 is a defensible preview
   position"*. All five are design-level, not annotations anyone forgot;
 - **B40 (steering call sites)** - the non-generic API bug is fixed; the analyzer/steering half is
@@ -64,7 +64,10 @@ current to 2026-08-26:
 **Closed on 2026-08-25/26**, so do not go looking for work in them: B17 (measure-first is twice on
 every backend for generated code; the classic stream asymmetry is deliberate), B18b (**retracted** -
 the raw path has block-copied fixed-width packed columns all along; the entry described the classic
-engine), B23 (derived lists admitted to the raw packed path), B49 + `PBN3014`, B50.
+engine), B23 (derived lists admitted to the raw packed path), B49 + `PBN3014`, B50, and **B52 - the
+ApiCompat gate DOES run and DOES fail the build; the earlier negative was a measurement artefact
+(`dotnet pack` never reaches the hook here, and `NuGetPackageRoot` is not the default path on this
+machine). That also settles the NRT half: annotations are invisible to package validation.**
 
 **Three operational traps that have each cost a sitting**, kept here because they are about running
 the gates rather than about the code:
