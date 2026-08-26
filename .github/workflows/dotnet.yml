@@ -5,7 +5,10 @@ name: .NET
 
 on:
   push:
-    branches: [ "main", "v4" ]
+    # "v*" rather than the specific branch: a release line lives on vN (see src/version.json's
+    # publicReleaseRefSpec, which treats those as public releases), and naming them one at a time
+    # means the first push to a newly cut line silently gets no CI.
+    branches: [ "main", "v*" ]
   # deliberately NOT filtered by branch: the filter matches the PR's BASE, so any PR
   # targeting a branch missing from the list gets zero checks - and a PR with no checks
   # looks clean rather than broken, which is the wrong failure mode. Every PR is a
