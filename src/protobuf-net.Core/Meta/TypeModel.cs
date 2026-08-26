@@ -1407,10 +1407,17 @@ namespace ProtoBuf.Meta
         /// optimal performance.
         /// </summary>
         [Obsolete("Use RuntimeTypeModel.Create", true)]
-        public static TypeModel? Create()
+        // the null-return below is unreachable: the helper above always throws. It is written as a
+        // void helper + explicit return DELIBERATELY - see the note in TypeModel.cs on gap B48: that
+        // shape terminates in IL, which is what lets ILC drop the rest of the method, and
+        // [DoesNotReturn] does NOT (it is flow analysis only, and measured 12 warnings / 3.89MB
+        // against 8 / 3.84MB). So the annotation is asserted here rather than changed.
+        public static TypeModel Create()
         {
             ThrowHelper.ThrowNotSupportedException();
+            #pragma warning disable CS8603 // possible null reference return
             return default;
+            #pragma warning restore CS8603
         }
 
         /// <summary>
@@ -1418,10 +1425,12 @@ namespace ProtoBuf.Meta
         /// assembly specified by type
         /// </summary>
         [Obsolete("Use RuntimeTypeModel.CreateForAssembly", true)]
-        public static TypeModel? CreateForAssembly<T>()
+        public static TypeModel CreateForAssembly<T>()
         {
             ThrowHelper.ThrowNotSupportedException();
+            #pragma warning disable CS8603 // possible null reference return
             return default;
+            #pragma warning restore CS8603
         }
 
         /// <summary>
@@ -1429,20 +1438,24 @@ namespace ProtoBuf.Meta
         /// assembly specified by type
         /// </summary>
         [Obsolete("Use RuntimeTypeModel.CreateForAssembly", true)]
-        public static TypeModel? CreateForAssembly(Type type)
+        public static TypeModel CreateForAssembly(Type type)
         {
             ThrowHelper.ThrowNotSupportedException();
+            #pragma warning disable CS8603 // possible null reference return
             return default;
+            #pragma warning restore CS8603
         }
 
         /// <summary>
         /// Create a model that serializes all types from an assembly
         /// </summary>
         [Obsolete("Use RuntimeTypeModel.CreateForAssembly", true)]
-        public static TypeModel? CreateForAssembly(Assembly assembly)
+        public static TypeModel CreateForAssembly(Assembly assembly)
         {
             ThrowHelper.ThrowNotSupportedException();
+            #pragma warning disable CS8603 // possible null reference return
             return default;
+            #pragma warning restore CS8603
         }
 
         /// <summary>
@@ -1465,7 +1478,7 @@ namespace ProtoBuf.Meta
             => GetSerializer<T>();
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static ISerializer<T>? NoSerializer<T>(TypeModel? model)
+        private static ISerializer<T> NoSerializer<T>(TypeModel? model)
         {
             string? suffix = null;
             if (model is NullModel)
@@ -1473,14 +1486,18 @@ namespace ProtoBuf.Meta
                 suffix = "; you may need to ensure that RuntimeTypeModel.Initialize has been invoked";
             }
             ThrowHelper.ThrowInvalidOperationException($"No serializer for type {typeof(T).NormalizeName()} is available for model {model?.ToString() ?? "(none)"}{suffix}");
+            #pragma warning disable CS8603 // possible null reference return
             return default;
+            #pragma warning restore CS8603
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static ISubTypeSerializer<T>? NoSubTypeSerializer<T>(TypeModel? model) where T : class
+        private static ISubTypeSerializer<T> NoSubTypeSerializer<T>(TypeModel? model) where T : class
         {
             ThrowHelper.ThrowInvalidOperationException($"No sub-type serializer for type {typeof(T).NormalizeName()} is available for model {model?.ToString() ?? "(none)"}");
+            #pragma warning disable CS8603 // possible null reference return
             return default;
+            #pragma warning restore CS8603
         }
 
         /// <remarks>
@@ -1940,7 +1957,7 @@ namespace ProtoBuf.Meta
             return type.AssemblyQualifiedName;
         }
 
-        internal static Type? DeserializeType(TypeModel? model, string value)
+        internal static Type DeserializeType(TypeModel? model, string value)
         {
             if (model is not null)
             {
@@ -1962,7 +1979,9 @@ namespace ProtoBuf.Meta
             if (!RuntimeFeature.IsDynamicCodeSupported)
             {
                 ThrowTypeByNameNotSupported(value);
+                #pragma warning disable CS8603 // possible null reference return
                 return default;
+                #pragma warning restore CS8603
             }
 #endif
             return Type.GetType(value);
@@ -2075,10 +2094,12 @@ namespace ProtoBuf.Meta
         /// </summary>
         /// <returns>The .proto definition as a string</returns>
         /// <param name="options">Options for schema generation</param>
-        public virtual string? GetSchema(SchemaGenerationOptions options)
+        public virtual string GetSchema(SchemaGenerationOptions options)
         {
             ThrowHelper.ThrowNotSupportedException();
+            #pragma warning disable CS8603 // possible null reference return
             return default;
+            #pragma warning restore CS8603
         }
 
         /// <summary>

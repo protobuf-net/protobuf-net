@@ -57,11 +57,18 @@ namespace ProtoBuf.Serializers
             ?? Instance as IMemoryConverter<TStorage, T> ?? NotSupported<TStorage>();
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static IMemoryConverter<TStorage, T>? NotSupported<TStorage>()
+        // the null-return below is unreachable: the helper above always throws. It is written as a
+        // void helper + explicit return DELIBERATELY - see the note in TypeModel.cs on gap B48: that
+        // shape terminates in IL, which is what lets ILC drop the rest of the method, and
+        // [DoesNotReturn] does NOT (it is flow analysis only, and measured 12 warnings / 3.89MB
+        // against 8 / 3.84MB). So the annotation is asserted here rather than changed.
+        private static IMemoryConverter<TStorage, T> NotSupported<TStorage>()
         {
             ThrowHelper.ThrowInvalidOperationException(
                 $"No memory-converter is available for storage {typeof(TStorage).NormalizeName()} with element-type {typeof(T).NormalizeName()}.");
+            #pragma warning disable CS8603 // possible null reference return
             return default;
+            #pragma warning restore CS8603
         }
 
 

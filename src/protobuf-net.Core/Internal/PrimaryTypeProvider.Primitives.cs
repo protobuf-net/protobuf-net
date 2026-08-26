@@ -298,6 +298,11 @@ namespace ProtoBuf.Internal
 
         byte[] IFactory<byte[]>.Create(ISerializationContext context) => Array.Empty<byte>();
 
+        // The nullable-scalar Write overloads below are only reached when the value is PRESENT -
+        // the writer skips a member whose HasValue is false - so `.Value` throwing is the right
+        // answer for a case that cannot arise. Asserted rather than changed to
+        // GetValueOrDefault(), which would silently write a zero instead.
+#pragma warning disable CS8629 // nullable value type may be null
         SerializerFeatures ISerializer<int?>.Features => ((ISerializer<int>)this).Features;
         void ISerializer<int?>.Write(ref ProtoWriter.State state, int? value) => ((ISerializer<int>)this).Write(ref state, value.Value);
         int? ISerializer<int?>.Read(ref ProtoReader.State state, int? value) => ((ISerializer<int>)this).Read(ref state, value.GetValueOrDefault());
@@ -332,6 +337,7 @@ namespace ProtoBuf.Internal
 
         SerializerFeatures ISerializer<char?>.Features => ((ISerializer<char>)this).Features;
         void ISerializer<char?>.Write(ref ProtoWriter.State state, char? value) => ((ISerializer<char>)this).Write(ref state, value.Value);
+#pragma warning restore CS8629
         char? ISerializer<char?>.Read(ref ProtoReader.State state, char? value) => ((ISerializer<char>)this).Read(ref state, value.GetValueOrDefault());
 
         SerializerFeatures ISerializer<bool?>.Features => ((ISerializer<bool>)this).Features;

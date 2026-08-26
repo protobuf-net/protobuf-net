@@ -20,19 +20,28 @@ namespace ProtoBuf.Serializers
         /// <summary>Create a serializer that indicates that a scenario is not supported</summary>
         [MethodImpl(MethodImplOptions.NoInlining)]
         [Obsolete("Since this isn't supported, you probably shouldn't be doing it...", false)]
-        public static RepeatedSerializer<TCollection, T>? CreateNestedDataNotSupported<TCollection, T>()
+        // the null-return below is unreachable: the helper above always throws. It is written as a
+        // void helper + explicit return DELIBERATELY - see the note in TypeModel.cs on gap B48: that
+        // shape terminates in IL, which is what lets ILC drop the rest of the method, and
+        // [DoesNotReturn] does NOT (it is flow analysis only, and measured 12 warnings / 3.89MB
+        // against 8 / 3.84MB). So the annotation is asserted here rather than changed.
+        public static RepeatedSerializer<TCollection, T> CreateNestedDataNotSupported<TCollection, T>()
         {
             ThrowHelper.ThrowNestedDataNotSupported(typeof(TCollection));
+            #pragma warning disable CS8603 // possible null reference return
             return default;
+            #pragma warning restore CS8603
         }
 
         /// <summary>Create a serializer that indicates that a scenario is not supported</summary>
         [MethodImpl(MethodImplOptions.NoInlining)]
         [Obsolete("Since this isn't supported, you probably shouldn't be doing it...", false)]
-        public static RepeatedSerializer<TCollection, T>? CreateNotSupported<TCollection, T>()
+        public static RepeatedSerializer<TCollection, T> CreateNotSupported<TCollection, T>()
         {
             ThrowHelper.ThrowNotSupportedException($"Repeated data of type {typeof(TCollection)} is not supported");
+            #pragma warning disable CS8603 // possible null reference return
             return default;
+            #pragma warning restore CS8603
         }
 
         /// <summary>Create a serializer that operates on lists</summary>
