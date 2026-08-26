@@ -8,11 +8,17 @@ native-AOT smoke test (`src/AotSmoke`) — i.e. by comparison, not by reading th
 
 ## Handover — **current as of 2026-08-26**; read this first on a cold start
 
-**Where the work is.** The stack lives on **`v4`**, and there IS a branch in flight:
-**`nrt-reflection`**, carrying gap B51's Reflection stage and gap B52's closure. `AGENTS.md`'s notes
-table has its "current on" column restored for the duration. Five commits, unpushed at the time of
-writing: B52 closed; NRT on Reflection's hand-written sources; the `DiscriminatedUnionObject` fix;
-protogen emitting NRT; and the regeneration + baseline.
+**Where the work is.** The stack lives on **`v4`**. `nrt-reflection` **merged as PR #1332** (gap
+B51's Reflection stage, protogen emitting NRT, and gap B52's closure).
+
+**A branch IS in flight: `nrt-core`**, carrying gap B51 **stage 4** - NRT on `protobuf-net.Core`.
+Five commits, pushed, **unfinished but green**: the solution builds with 0 errors and every gate
+passes, but Core still reports **369 NRT warnings**. It is committed in that state deliberately, so
+the structural decisions are reviewable apart from the per-site grind. **`notes/gaps.md` B51's
+"Stage 4" section is the working document** - read it before touching Core; it has the file-by-file
+breakdown, the sweep technique, and three traps that have already produced wrong annotations.
+
+`AGENTS.md`'s notes table has its "current on" column restored for the duration.
 
 **What the arc has become.** The generator no longer merely emits a serializer — it emits a
 **measure-first** one: `Measure_` computes a contract's length arithmetically, `RawWrite_` writes it
@@ -21,7 +27,8 @@ positionally. `AGENTS.md`'s "The writer's measure-first path" is the section to 
 any of it; the three invariants there are the ones that break silently. The measurable census is
 **2803 contracts** across the corpus.
 
-**The gate battery, and what it reported on 2026-08-26** — all of it green, run in this order:
+**The gate battery, and what it reported on 2026-08-26** — all green, on **`nrt-core`**, run in
+this order:
 
 | gate | result |
 | --- | --- |
@@ -33,7 +40,7 @@ any of it; the three invariants there are the ones that break silently. The meas
 | `Examples` | 679 (net8.0) / 705 (net472) |
 | `AotDifferential` (the corpus, on bytes) | **3134 compared, 100% match**, exit 0 |
 | `AotSmoke` — `-c Debug` JIT run | PASSED |
-| `AotSmoke` — `publish -c Release -r win-x64` | not re-run on this branch; nothing here touches ILC's inputs |
+| `AotSmoke` — `publish -c Release -r win-x64` | **not re-run since `nrt-reflection`.** Worth doing before `nrt-core` merges: nothing in it should touch ILC's inputs, but gap B48's measured shape (a void throw-helper plus an explicit return) is *exactly* what the NRT work is tempted to rewrite, so the size/warning numbers are the check |
 | `AotNodaTimeSmoke` | PASSED |
 | `DownLevelSmoke` (net472) | builds; 3 `PBN3xxx` warnings, 0 errors — the documented shape |
 | `protobuf-net.BuildTools.Legacy` | builds |
@@ -44,13 +51,16 @@ a member to `AotSmoke` moves it, so re-measure both sides when you do.
 **What is open.** `notes/gaps.md` is the entry point and its last entry is **B52**. The live ones,
 current to 2026-08-26:
 
-- **B51 (NRT)** - ServiceModel and **`protobuf-net.Reflection` are done**, and protogen now EMITS
-  annotations (C# only; VB has no NRT). **Next slice is `protobuf-net.Core` (1952 sites)**, which
-  drags `protobuf-net.BuildTools` with it because BuildTools compiles Core's sources in - the
-  `CS8632` `NoWarn` now in BuildTools and BuildTools.Legacy is exactly what that stage removes. Read
-  the entry's "The Reflection stage" section first: the order that works is code -> generator ->
-  regenerate -> baseline, and a polyfilled attribute **must live in the assembly that uses it** or it
-  is a runtime `TypeLoadException` that no build catches;
+- **B51 (NRT)** - ServiceModel and `protobuf-net.Reflection` are **done and merged**, and protogen
+  now EMITS annotations (C# only; VB has no NRT). **Stage 4, `protobuf-net.Core`, is IN FLIGHT on
+  `nrt-core` and is the live task: 573 -> 369 sites.** The recorded sizing in that entry was ~4x too
+  high and has been corrected by measurement - the whole remaining rollout is ~1,250 sites, not
+  5,125. What is left is per-site and semantic; the sweepable phase is over. Two things to carry:
+  a polyfilled attribute **must live in the assembly that uses it** (a shared one is a runtime
+  `TypeLoadException` no build catches), and a method whose only null-return follows a **throw
+  helper** never returns null - annotating it nullable is a false claim that also no gate catches.
+  After Core: `protobuf-net` (~622), then `protobuf-net.BuildTools`, which is what removes the
+  `CS8632` `NoWarn` now carried by BuildTools and BuildTools.Legacy;
 - **B48 (trim warnings)** - 23 -> 5, paused there deliberately: *"5 is a defensible preview
   position"*. All five are design-level, not annotations anyone forgot;
 - **B40 (steering call sites)** - the non-generic API bug is fixed; the analyzer/steering half is

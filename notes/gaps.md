@@ -5499,7 +5499,7 @@ the *write*. The fixture then sat red through a full session because the conform
 with `--no-build` against a stale binary more than once. `--no-build` after editing anything the
 generator or the library compiles is not a shortcut, it is a different test.
 
-### B51. The shipping libraries are not NRT-enabled — **agreed for the next major (Marc, 2026-08-25). ServiceModel and Reflection DONE, and protogen now EMITS annotations; Core and protobuf-net remain**
+### B51. The shipping libraries are not NRT-enabled — **agreed for the next major (Marc, 2026-08-25). ServiceModel and Reflection DONE (PR #1332) and protogen now EMITS annotations; `protobuf-net.Core` is IN FLIGHT on `nrt-core` (573 -> 369); `protobuf-net` and BuildTools remain**
 
 **Marc:** *"I believe the libraries are not currently NRT enabled. we should fix that, mostly by just
 turning it on and dealing with any build warnings. as a follow-up step after, we should fix the
@@ -5677,7 +5677,14 @@ The old figures were almost certainly counted once per *consuming project's* bui
 across those builds; the ratio matches the number of consumers. The whole remaining rollout is about
 the size of the Reflection stage, not four times it.
 
-**What is done on the branch** (573 -> ~486, solution green):
+**Gates on `nrt-core` as it stands** (2026-08-26): `dotnet build Build.csproj -c Debug` 0 errors;
+`protobuf-net.Test` 1584/1583; `protobuf-net.Reflection.Test` 616/616; `BuildToolsUnitTests` 659;
+`AotConformanceTests` 1842; `AotDifferential` **3134 compared, 100% match**, exit 0. So the branch is
+safe to build on - it is unfinished, not broken. `AotSmoke`'s native publish has NOT been re-run
+since `nrt-reflection`; do that before merging, because gap B48's measured throw-helper shape is
+exactly what this work is tempted to rewrite.
+
+**What is done on the branch** (573 -> 369, solution green):
 
 - Core has its **own** copy of the polyfills - it cannot share Reflection's, see above - so
   BuildTools and BuildTools.Legacy each `Compile Remove` the Reflection copy or they see `CS0101`;

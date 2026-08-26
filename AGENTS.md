@@ -19,11 +19,11 @@ The notes are deliberately versioned **with the code**, not in one central place
 and a note on a branch correctly describes *that branch*. The cost is that you have to know where
 to look while a stack is in flight, which is what this section is for.
 
-**A branch IS in flight as of 2026-08-26** — `nrt-reflection`, carrying gap B51's Reflection stage
-(NRT across the hand-written sources, protogen emitting annotations, `Descriptor.cs` regenerated,
-the PublicAPI baseline recorded) and gap B52's closure. The "current on" column below is therefore
-restored, per the rule that follows; drop it again when the branch merges and `v4` is once more the
-only answer. Two wrong-branch claims were shipped last time it was left off while a stack was in
+**A branch IS in flight as of 2026-08-26** — `nrt-core`, carrying gap B51 **stage 4**: NRT on
+`protobuf-net.Core`. It is pushed, green and **unfinished** (573 -> 369 sites); `notes/gaps.md`
+B51's "Stage 4" section is the working document. Its predecessor `nrt-reflection` merged as
+PR #1332. The "current on" column below is therefore restored, per the rule that follows; drop it
+again when the branch merges and `v4` is once more the only answer. Two wrong-branch claims were shipped last time it was left off while a stack was in
 flight, one of them in this very table.
 
 `notes/readme.md` states the `docs/` vs `notes/` split and why it matters; read it before adding a
@@ -41,13 +41,13 @@ belongs here.
 | document | covers | current on |
 | --- | --- | --- |
 | `AGENTS.md` (this file) | conventions, traps, gate battery | `v4` |
-| **`notes/gaps.md`** | **every known gap with its DECISION — start here for "what is missing?"** | `nrt-reflection` |
+| **`notes/gaps.md`** | **every known gap with its DECISION — start here for "what is missing?"** | `nrt-core` |
 | **`notes/aot/generator-reference.md`** | **what the generator emits for each shape, and why — the per-feature reference, carved out of this file on 2026-08-25** | `v4` |
 | `notes/nano-core.md` | the reader arc: design and the cuts | `v4` |
 | `notes/nano-writer.md` | the writer arc, **plus an index of everything parked or owed** | `v4` |
 | `notes/packed-writes.md` | the packed matrix, **and the raw packed surface that came out of it** | `v4` |
 | `notes/aot-schema-model.md` | `[ProtoSchema]`: design and open items | `v4` |
-| `notes/aot/findings.md` | numbered findings from the AOT generator work, and the ranked next-steps list | `nrt-reflection` |
+| `notes/aot/findings.md` | numbered findings from the AOT generator work, and the ranked next-steps list | `nrt-core` |
 | `notes/aot/coverage.md`, `notes/aot/differential.md` | the two corpus sweeps' last snapshots (tool output — regenerated, not maintained) | `v4` |
 | `notes/aot/grpc.md` | the gRPC proxy generator (from `main`) | `v4` |
 | `notes/editions/feature-analysis.md` | the editions arc (from `main`) | `v4` |
