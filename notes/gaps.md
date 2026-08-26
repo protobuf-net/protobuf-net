@@ -5686,9 +5686,35 @@ the size of the Reflection stage, not four times it.
   generic entry points; the Deserialize `object value` / `Type type` / `TypeResolver` families; and
   the internal aux/`DynamicStub` plumbing they call into.
 
-**What is left** is per-site body work, concentrated in `Meta/TypeModel.cs`,
-`Internal/PrimaryTypeProvider.Primitives.cs`, `ProtoWriter*`, `ProtoReader*`, `DynamicStub`,
-`Extensible*` and `DiscriminatedUnion.Serializable.cs`. Nothing structural is known to remain.
+**What is left: 369 sites**, and the sweepable phase is over - `CS8604` is now the largest code and
+is spread over **101 distinct callee/parameter pairs**. It concentrates in `Meta/TypeModel.cs` (64),
+`ProtoReader.State.ReadMethods.cs` (34), `ProtoWriter.Stream.cs` (30), `Internal/DynamicStub.cs`
+(25), `ProtoWriter.cs` (23) and `Internal/PrimaryTypeProvider.Primitives.cs` (21). Most of what
+remains is one question asked many times - *is this reader/writer state active here?* - which is
+semantic, not mechanical, and wants a fresh head rather than a bigger regex.
+
+**Position-driven sweeps are the fast route while they last.** The compiler already knows every
+site, so drive the edit from the warning coordinates rather than reading files: local declarations
+(28), uninitialised fields and properties (55) and return types (55) each went in a single pass.
+Two guards that a return-type sweep needs and mine lacked: **skip value types** (`IsDefined` briefly
+became `bool?`) and **skip interface-bound returns** (`KeyValuePairSerializer.Read` cannot be
+`KeyValuePair<,>?` and still implement `ISerializer<T>`). Both were caught by the build.
+
+**The one it got wrong that the build could NOT catch, and the rule that comes out of it:** a method
+whose only null-return sits *after a throw helper* never returns null, so making it nullable is a
+false annotation that propagates to every consumer. `ProtoReader.State.ReadString` became `string?`
+on exactly that basis. Fourteen members were restored, with the unreachable return asserted in
+place - and that shape must NOT be "fixed" with `[DoesNotReturn]`: the note on gap B48 in
+`TypeModel.cs` records that a void helper plus an explicit return **terminates in IL**, which is
+what lets ILC drop the rest of the method, while `[DoesNotReturn]` is flow analysis only and
+measured **12 warnings / 3.89 MB against 8 / 3.84 MB**. A `#pragma` is IL-neutral; changing the
+shape is not.
+
+The same "the impossible case should throw" reasoning covers two other assertions, both documented
+where they sit: the `ISerializable` constructors in `DiscriminatedUnion.Serializable.cs` (a null
+`SerializationInfo` entry means a corrupt payload) and the nullable-scalar `Write` overloads in
+`PrimaryTypeProvider` (only reached when the value is present; `GetValueOrDefault()` would silently
+write a zero instead).
 
 **Three things about running this stage, each of which cost time:**
 
