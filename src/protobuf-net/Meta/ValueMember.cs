@@ -448,6 +448,18 @@ namespace ProtoBuf.Meta
             valueFeatures |= features & (SerializerFeatures.OptionWrappedValue | SerializerFeatures.OptionWrappedValueGroup);
             features &= ~(SerializerFeatures.OptionWrappedValue | SerializerFeatures.OptionWrappedValueGroup);
 
+            // v2 semantics (Level200 / Level240) preserve null for reference-type map values:
+            // the writer already distinguishes null (value tag omitted) from empty (value tag
+            // length 0) on the wire via HasNonTrivialValue, but on read v3's default behaviour
+            // coerces a missing value to the proto default (e.g. "" for string), discarding
+            // the distinction. Opt-in to null-preservation on the value side so Dictionary
+            // round-trips like-for-like under the default compat level. Level300 keeps the
+            // proto3-style "" coercion unchanged.
+            if (valueCompatibilityLevel < CompatibilityLevel.Level300)
+            {
+                valueFeatures |= SerializerFeatures.OptionMapValuePreservesNull;
+            }
+
             return MapDecorator.Create(repeated, keyType, valueType, fieldNumber, features,
                 keyWireType.AsFeatures(), keyCompatibilityLevel, keyFormat, valueFeatures, valueCompatibilityLevel, valueFormat);
         }
