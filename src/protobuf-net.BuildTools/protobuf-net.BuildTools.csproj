@@ -30,8 +30,11 @@
     <!-- build time deps -->
     <!-- turns on the RS2000-family release-tracking rules, so an unrecorded diagnostic id is a
          build failure rather than a convention nobody enforces -->
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" VersionOverride="10.0.11" />
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" PrivateAssets="all" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Pack="false" PrivateAssets="all" />
+    <PackageReference Include="System.IO.Pipelines" VersionOverride="10.0.11" />
+    <PackageReference Include="System.Reflection.Metadata" VersionOverride="10.0.11" />
 
     <None Include="$(OutputPath)/$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
     <None Include="protobuf-net.BuildTools.props" Pack="true" PackagePath="build" />
