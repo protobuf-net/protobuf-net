@@ -1196,8 +1196,9 @@ that warning's text is boilerplate from the attribute and is aimed at callers; t
 at all — protobuf-net contains no `Enum.GetValues` call in any shipped assembly. The lever is always
 the annotation that demanded the metadata.
 
-The count is now **19**, measured with the `.proto` DTO tree in the fixture (it was 21 before that was
-added, and the two are not comparable — the count tracks fixtures). What is left looks structural: 6
+The count is now **20** on win-x64 (it was 19 before the `Dictionary<int, List<Customer>>` member
+went in for #1337, and 21 before the `.proto` DTO tree was added — none of these are comparable with
+each other, since the count tracks fixtures). What is left looks structural: 7
 `IL2067` and 3 `IL2070` on the runtime-model, `DynamicStub` and auxiliary paths, 5 `IL3050`
 (`MakeGenericType`/`MakeArrayType`, same paths), 1 `IL2057`, 1 `IL2055`, and the spent `IL2091` trio —
 `CreateInstance` ×2 (whose fallback is genuinely live) and `SubTypeState<T>.Cast` (which would need

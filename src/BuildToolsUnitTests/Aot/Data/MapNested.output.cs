@@ -24,7 +24,104 @@ partial class MapNestedModel
     /// </remarks>
     protected sealed override void RegisterRootTypes()
     {
+        RegisterRootType<(int, string)>();
+        RegisterRootType<global::AotFixtures.MapNested.Leaf>();
         RegisterRootType<global::AotFixtures.MapNested.Nested>();
+        RegisterRootType<global::System.Tuple<int, string>>();
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.IO.Stream destination, (int, string) value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            long before = state.Position64;
+            GetSerializer<(int, string)>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.Buffers.IBufferWriter<byte> destination, (int, string) value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            long before = state.Position64;
+            GetSerializer<(int, string)>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.IO.Stream destination, global::AotFixtures.MapNested.Leaf value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.MapNested.Leaf>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.Buffers.IBufferWriter<byte> destination, global::AotFixtures.MapNested.Leaf value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.MapNested.Leaf>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
+        }
+        finally
+        {
+            state.Dispose();
+        }
     }
 
     /// <summary>Serializes the supplied value.</summary>
@@ -75,15 +172,221 @@ partial class MapNestedModel
         }
     }
 
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.IO.Stream destination, global::System.Tuple<int, string> value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::System.Tuple<int, string>>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.Buffers.IBufferWriter<byte> destination, global::System.Tuple<int, string> value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::System.Tuple<int, string>>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapNested.Nested>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<(int, string)>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.MapNested.Leaf>
+        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapNested.Nested>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::System.Tuple<int, string>>
+        , global::ProtoBuf.Serializers.ISerializerProxy<global::System.Collections.Generic.Dictionary<int, global::AotFixtures.MapNested.Leaf>>
         , global::ProtoBuf.Serializers.ISerializerProxy<global::System.Collections.Generic.Dictionary<string, string>>
+        , global::ProtoBuf.Serializers.ISerializerProxy<global::System.Collections.Generic.List<(int, string)>>
+        , global::ProtoBuf.Serializers.ISerializerProxy<global::System.Collections.Generic.List<global::AotFixtures.MapNested.Leaf>>
+        , global::ProtoBuf.Serializers.ISerializerProxy<global::System.Collections.Generic.List<global::System.DateTime>>
+        , global::ProtoBuf.Serializers.ISerializerProxy<global::System.Collections.Generic.List<global::System.Tuple<int, string>>>
         , global::ProtoBuf.Serializers.ISerializerProxy<global::System.Collections.Generic.List<int>>
         , global::ProtoBuf.Serializers.ISerializerProxy<long[]>
     {
         private static readonly ProtoBufGeneratedServices Self = new();
 
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+
+        global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<(int, string)>.Features
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
+
+        (int, string) global::ProtoBuf.Serializers.ISerializer<(int, string)>.Read(ref global::ProtoBuf.ProtoReader.State state, (int, string) value)
+        {
+            int arg1 = default;
+            string arg2 = default;
+            arg1 = value.Item1;
+            arg2 = value.Item2;
+            int field;
+            while ((field = state.ReadFieldHeader()) > 0)
+            {
+                switch (field)
+                {
+                    case 1:
+                    {
+                        arg1 = state.ReadInt32();
+                        break;
+                    }
+                    case 2:
+                    {
+                        var tmp2 = state.ReadString();
+                        if (tmp2 != null) arg2 = tmp2;
+                        break;
+                    }
+                    default:
+                        state.SkipField();
+                        break;
+                }
+            }
+            value = (arg1, arg2);
+            return value;
+        }
+
+        void global::ProtoBuf.Serializers.ISerializer<(int, string)>.Write(ref global::ProtoBuf.ProtoWriter.State state, (int, string) value)
+            => RawWrite__int__string_(ref state, value, state.RawDepthBudget);
+
+        public static void RawWrite__int__string_(ref global::ProtoBuf.ProtoWriter.State state, (int, string) value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int tmp_int;
+            string tmp_string;
+            tmp_int = value.Item1;
+            state.WriteRawTag((1 << 3) | 0);  // Item1
+            state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
+            tmp_string = value.Item2;
+            if (tmp_string != null)
+            {
+                state.WriteRawTag((2 << 3) | 2);  // Item2
+                state.WriteRawString(tmp_string);
+            }
+        }
+
+        private static long Measure__int__string_((int, string) value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            int tmp_int;
+            string tmp_string;
+            tmp_int = value.Item1;
+            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Item1
+            tmp_string = value.Item2;
+            if (tmp_string != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Item2
+            }
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<(int, string)>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, (int, string) value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure__int__string_(value, depth, slots, context);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
+
+        // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
+
+        global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapNested.Leaf>.Features
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
+
+        global::AotFixtures.MapNested.Leaf global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapNested.Leaf>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MapNested.Leaf value)
+            => RawRead_AotFixtures_MapNested_Leaf(ref state, value);
+
+        void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapNested.Leaf>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.MapNested.Leaf value)
+            => RawWrite_AotFixtures_MapNested_Leaf(ref state, value, state.RawDepthBudget);
+
+        public static void RawWrite_AotFixtures_MapNested_Leaf(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.MapNested.Leaf value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            int tmp_int;
+            tmp_int = value.Id;
+            if (tmp_int != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Id
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
+            }
+        }
+
+        private static long Measure_AotFixtures_MapNested_Leaf(global::AotFixtures.MapNested.Leaf value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            int tmp_int;
+            tmp_int = value.Id;
+            if (tmp_int != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Id
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.MapNested.Leaf>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.MapNested.Leaf value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_MapNested_Leaf(value, depth, slots, context);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
+
+        private static global::AotFixtures.MapNested.Leaf RawRead_AotFixtures_MapNested_Leaf(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MapNested.Leaf value)
+        {
+            value ??= new global::AotFixtures.MapNested.Leaf();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 0:  // Id, field 1, varint
+                        value.Id = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (1 << 3) | 5:  // Id, field 1, fixed32
+                        value.Id = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (1 << 3) | 1:  // Id, field 1, fixed64
+                        value.Id = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1;
+        }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapNested.Nested>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -98,6 +401,11 @@ partial class MapNestedModel
             global::System.Collections.Generic.Dictionary<long, long[]> tmp_System_Collections_Generic_Dictionary_long__long___;
             global::System.Collections.Generic.Dictionary<string, global::System.Collections.Generic.Dictionary<string, string>> tmp_System_Collections_Generic_Dictionary_string__global__System_Collections_Generic_Dictionary_string__string__;
             global::System.Collections.Generic.Dictionary<float, global::System.Collections.Generic.List<int>> tmp_System_Collections_Generic_Dictionary_float__global__System_Collections_Generic_List_int__;
+            global::System.Collections.Generic.Dictionary<int, global::System.Collections.Generic.List<global::AotFixtures.MapNested.Leaf>> tmp_System_Collections_Generic_Dictionary_int__global__System_Collections_Generic_List_global__AotFixtures_MapNested_Leaf__;
+            global::System.Collections.Generic.Dictionary<int, global::System.Collections.Generic.List<global::System.Tuple<int, string>>> tmp_System_Collections_Generic_Dictionary_int__global__System_Collections_Generic_List_global__System_Tuple_int__string___;
+            global::System.Collections.Generic.Dictionary<int, global::System.Collections.Generic.List<(int, string)>> tmp_System_Collections_Generic_Dictionary_int__global__System_Collections_Generic_List__int__string___;
+            global::System.Collections.Generic.Dictionary<int, global::System.Collections.Generic.Dictionary<int, global::AotFixtures.MapNested.Leaf>> tmp_System_Collections_Generic_Dictionary_int__global__System_Collections_Generic_Dictionary_int__global__AotFixtures_MapNested_Leaf__;
+            global::System.Collections.Generic.Dictionary<int, global::System.Collections.Generic.List<global::System.DateTime>> tmp_System_Collections_Generic_Dictionary_int__global__System_Collections_Generic_List_global__System_DateTime__;
             tmp_System_Collections_Generic_Dictionary_int__global__System_Collections_Generic_List_int__ = value.Lists;
             if (tmp_System_Collections_Generic_Dictionary_int__global__System_Collections_Generic_List_int__ != null)
             {
@@ -117,6 +425,31 @@ partial class MapNestedModel
             if (tmp_System_Collections_Generic_Dictionary_float__global__System_Collections_Generic_List_int__ != null)
             {
                 global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<float, global::System.Collections.Generic.List<int>>().WriteMap(ref state, 4, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp_System_Collections_Generic_Dictionary_float__global__System_Collections_Generic_List_int__, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeFixed32, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
+            }
+            tmp_System_Collections_Generic_Dictionary_int__global__System_Collections_Generic_List_global__AotFixtures_MapNested_Leaf__ = value.Messages;
+            if (tmp_System_Collections_Generic_Dictionary_int__global__System_Collections_Generic_List_global__AotFixtures_MapNested_Leaf__ != null)
+            {
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::System.Collections.Generic.List<global::AotFixtures.MapNested.Leaf>>().WriteMap(ref state, 5, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp_System_Collections_Generic_Dictionary_int__global__System_Collections_Generic_List_global__AotFixtures_MapNested_Leaf__, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
+            }
+            tmp_System_Collections_Generic_Dictionary_int__global__System_Collections_Generic_List_global__System_Tuple_int__string___ = value.Tuples;
+            if (tmp_System_Collections_Generic_Dictionary_int__global__System_Collections_Generic_List_global__System_Tuple_int__string___ != null)
+            {
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::System.Collections.Generic.List<global::System.Tuple<int, string>>>().WriteMap(ref state, 6, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp_System_Collections_Generic_Dictionary_int__global__System_Collections_Generic_List_global__System_Tuple_int__string___, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
+            }
+            tmp_System_Collections_Generic_Dictionary_int__global__System_Collections_Generic_List__int__string___ = value.ValueTuples;
+            if (tmp_System_Collections_Generic_Dictionary_int__global__System_Collections_Generic_List__int__string___ != null)
+            {
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::System.Collections.Generic.List<(int, string)>>().WriteMap(ref state, 7, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp_System_Collections_Generic_Dictionary_int__global__System_Collections_Generic_List__int__string___, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
+            }
+            tmp_System_Collections_Generic_Dictionary_int__global__System_Collections_Generic_Dictionary_int__global__AotFixtures_MapNested_Leaf__ = value.MappedMessages;
+            if (tmp_System_Collections_Generic_Dictionary_int__global__System_Collections_Generic_Dictionary_int__global__AotFixtures_MapNested_Leaf__ != null)
+            {
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::System.Collections.Generic.Dictionary<int, global::AotFixtures.MapNested.Leaf>>().WriteMap(ref state, 8, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp_System_Collections_Generic_Dictionary_int__global__System_Collections_Generic_Dictionary_int__global__AotFixtures_MapNested_Leaf__, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
+            }
+            tmp_System_Collections_Generic_Dictionary_int__global__System_Collections_Generic_List_global__System_DateTime__ = value.Stamps;
+            if (tmp_System_Collections_Generic_Dictionary_int__global__System_Collections_Generic_List_global__System_DateTime__ != null)
+            {
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::System.Collections.Generic.List<global::System.DateTime>>().WriteMap(ref state, 9, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp_System_Collections_Generic_Dictionary_int__global__System_Collections_Generic_List_global__System_DateTime__, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
             }
         }
 
@@ -180,6 +513,71 @@ partial class MapNestedModel
                         if (tmp4 != null) value.FloatKeyed = tmp4;
                         break;
                     }
+                    // raw read pass: legacy-mode - member Messages: map with repeated value
+                    case (5 << 3) | 0:
+                    case (5 << 3) | 1:
+                    case (5 << 3) | 2:  // Messages, field 5
+                    case (5 << 3) | 3:
+                    case (5 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp5 = value.Messages;
+                        tmp5 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::System.Collections.Generic.List<global::AotFixtures.MapNested.Leaf>>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp5, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
+                        if (tmp5 != null) value.Messages = tmp5;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Tuples: map with repeated value
+                    case (6 << 3) | 0:
+                    case (6 << 3) | 1:
+                    case (6 << 3) | 2:  // Tuples, field 6
+                    case (6 << 3) | 3:
+                    case (6 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp6 = value.Tuples;
+                        tmp6 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::System.Collections.Generic.List<global::System.Tuple<int, string>>>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp6, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
+                        if (tmp6 != null) value.Tuples = tmp6;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member ValueTuples: map with repeated value
+                    case (7 << 3) | 0:
+                    case (7 << 3) | 1:
+                    case (7 << 3) | 2:  // ValueTuples, field 7
+                    case (7 << 3) | 3:
+                    case (7 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp7 = value.ValueTuples;
+                        tmp7 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::System.Collections.Generic.List<(int, string)>>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp7, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
+                        if (tmp7 != null) value.ValueTuples = tmp7;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member MappedMessages: map with repeated value
+                    case (8 << 3) | 0:
+                    case (8 << 3) | 1:
+                    case (8 << 3) | 2:  // MappedMessages, field 8
+                    case (8 << 3) | 3:
+                    case (8 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp8 = value.MappedMessages;
+                        tmp8 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::System.Collections.Generic.Dictionary<int, global::AotFixtures.MapNested.Leaf>>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp8, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
+                        if (tmp8 != null) value.MappedMessages = tmp8;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Stamps: map with repeated value
+                    case (9 << 3) | 0:
+                    case (9 << 3) | 1:
+                    case (9 << 3) | 2:  // Stamps, field 9
+                    case (9 << 3) | 3:
+                    case (9 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp9 = value.Stamps;
+                        tmp9 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::System.Collections.Generic.List<global::System.DateTime>>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp9, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
+                        if (tmp9 != null) value.Stamps = tmp9;
+                        break;
+                    }
                     default:
                         if (state.IsScopeEnd(tag)) return value;
                         if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
@@ -190,11 +588,109 @@ partial class MapNestedModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4;
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5 or 6 or 7 or 8 or 9;
         }
+
+        global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::System.Tuple<int, string>>.Features
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
+
+        global::System.Tuple<int, string> global::ProtoBuf.Serializers.ISerializer<global::System.Tuple<int, string>>.Read(ref global::ProtoBuf.ProtoReader.State state, global::System.Tuple<int, string> value)
+        {
+            int arg1 = default;
+            string arg2 = default;
+            if (value != null)
+            {
+                arg1 = value.Item1;
+                arg2 = value.Item2;
+            }
+            int field;
+            while ((field = state.ReadFieldHeader()) > 0)
+            {
+                switch (field)
+                {
+                    case 1:
+                    {
+                        arg1 = state.ReadInt32();
+                        break;
+                    }
+                    case 2:
+                    {
+                        var tmp2 = state.ReadString();
+                        if (tmp2 != null) arg2 = tmp2;
+                        break;
+                    }
+                    default:
+                        state.SkipField();
+                        break;
+                }
+            }
+            value = new global::System.Tuple<int, string>(arg1, arg2);
+            return value;
+        }
+
+        void global::ProtoBuf.Serializers.ISerializer<global::System.Tuple<int, string>>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::System.Tuple<int, string> value)
+            => RawWrite_System_Tuple_int__string_(ref state, value, state.RawDepthBudget);
+
+        public static void RawWrite_System_Tuple_int__string_(ref global::ProtoBuf.ProtoWriter.State state, global::System.Tuple<int, string> value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int tmp_int;
+            string tmp_string;
+            tmp_int = value.Item1;
+            state.WriteRawTag((1 << 3) | 0);  // Item1
+            state.WriteRawVarint64(unchecked((ulong)(long)tmp_int));
+            tmp_string = value.Item2;
+            if (tmp_string != null)
+            {
+                state.WriteRawTag((2 << 3) | 2);  // Item2
+                state.WriteRawString(tmp_string);
+            }
+        }
+
+        private static long Measure_System_Tuple_int__string_(global::System.Tuple<int, string> value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            int tmp_int;
+            string tmp_string;
+            tmp_int = value.Item1;
+            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Item1
+            tmp_string = value.Item2;
+            if (tmp_string != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp_string);  // Item2
+            }
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::System.Tuple<int, string>>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::System.Tuple<int, string> value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_System_Tuple_int__string_(value, depth, slots, context);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
+
+        // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
+
+        global::ProtoBuf.Serializers.ISerializer<global::System.Collections.Generic.Dictionary<int, global::AotFixtures.MapNested.Leaf>> global::ProtoBuf.Serializers.ISerializerProxy<global::System.Collections.Generic.Dictionary<int, global::AotFixtures.MapNested.Leaf>>.Serializer
+            => global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::AotFixtures.MapNested.Leaf>();
 
         global::ProtoBuf.Serializers.ISerializer<global::System.Collections.Generic.Dictionary<string, string>> global::ProtoBuf.Serializers.ISerializerProxy<global::System.Collections.Generic.Dictionary<string, string>>.Serializer
             => global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<string, string>();
+
+        global::ProtoBuf.Serializers.ISerializer<global::System.Collections.Generic.List<(int, string)>> global::ProtoBuf.Serializers.ISerializerProxy<global::System.Collections.Generic.List<(int, string)>>.Serializer
+            => global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<(int, string)>();
+
+        global::ProtoBuf.Serializers.ISerializer<global::System.Collections.Generic.List<global::AotFixtures.MapNested.Leaf>> global::ProtoBuf.Serializers.ISerializerProxy<global::System.Collections.Generic.List<global::AotFixtures.MapNested.Leaf>>.Serializer
+            => global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.MapNested.Leaf>();
+
+        global::ProtoBuf.Serializers.ISerializer<global::System.Collections.Generic.List<global::System.DateTime>> global::ProtoBuf.Serializers.ISerializerProxy<global::System.Collections.Generic.List<global::System.DateTime>>.Serializer
+            => global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::System.DateTime>();
+
+        global::ProtoBuf.Serializers.ISerializer<global::System.Collections.Generic.List<global::System.Tuple<int, string>>> global::ProtoBuf.Serializers.ISerializerProxy<global::System.Collections.Generic.List<global::System.Tuple<int, string>>>.Serializer
+            => global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::System.Tuple<int, string>>();
 
         global::ProtoBuf.Serializers.ISerializer<global::System.Collections.Generic.List<int>> global::ProtoBuf.Serializers.ISerializerProxy<global::System.Collections.Generic.List<int>>.Serializer
             => global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int>();

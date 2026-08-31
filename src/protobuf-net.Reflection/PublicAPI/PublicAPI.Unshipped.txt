@@ -4,3 +4,4 @@ ProtoBuf.Reflection.UnknownSubTypeHandling
 ProtoBuf.Reflection.UnknownSubTypeHandling.Default = 0 -> ProtoBuf.Reflection.UnknownSubTypeHandling
 ProtoBuf.Reflection.UnknownSubTypeHandling.Ignore = 2 -> ProtoBuf.Reflection.UnknownSubTypeHandling
 ProtoBuf.Reflection.UnknownSubTypeHandling.Sealed = 1 -> ProtoBuf.Reflection.UnknownSubTypeHandling
+static Google.Protobuf.Reflection.FileDescriptorSet.Serializer.get -> ProtoBuf.Meta.TypeModel

@@ -156,11 +156,13 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             ProtoMemberKind keyKind, string keyTypeName,
             ProtoMemberKind valueKind, string valueTypeName, bool isValidProtobufMap,
             string? valueSerializerFactory = null,
-            string? keyEnumTypeName = null, string? valueEnumTypeName = null)
+            string? keyEnumTypeName = null, string? valueEnumTypeName = null,
+            string? valueElementTypeName = null)
         {
             KeyEnumTypeName = keyEnumTypeName;
             ValueEnumTypeName = valueEnumTypeName;
             ValueSerializerFactory = valueSerializerFactory;
+            ValueElementTypeName = valueElementTypeName;
             Factory = factory;
             TakesCollectionType = takesCollectionType;
             KeyKind = keyKind;
@@ -213,6 +215,18 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         /// </summary>
         public string? ValueSerializerFactory { get; }
 
+        /// <summary>
+        /// When the value is itself a collection, the <em>element</em> type name - because
+        /// <see cref="ValueKind"/> describes that element while <see cref="ValueTypeName"/> is the
+        /// collection. Null when the value is not nested, where the two already agree.
+        /// </summary>
+        /// <remarks>
+        /// Without this the pair is mismatched, and anything reading it as one gets a wrong answer:
+        /// the drop cascade looked for a contract named <c>List&lt;Foo&gt;</c>, never found one, and
+        /// removed every contract carrying a <c>Dictionary&lt;K, List&lt;message&gt;&gt;</c> member.
+        /// </remarks>
+        public string? ValueElementTypeName { get; }
+
         public bool Equals(ProtoMapPlan other)
             => Factory == other.Factory && TakesCollectionType == other.TakesCollectionType
                 && KeyKind == other.KeyKind && KeyTypeName == other.KeyTypeName
@@ -220,7 +234,8 @@ namespace ProtoBuf.BuildTools.Internal.Aot
                 && IsValidProtobufMap == other.IsValidProtobufMap
                 && KeyEnumTypeName == other.KeyEnumTypeName
                 && ValueEnumTypeName == other.ValueEnumTypeName
-                && ValueSerializerFactory == other.ValueSerializerFactory;
+                && ValueSerializerFactory == other.ValueSerializerFactory
+                && ValueElementTypeName == other.ValueElementTypeName;
 
         public override bool Equals(object? obj) => obj is ProtoMapPlan other && Equals(other);
 
