@@ -1416,7 +1416,12 @@ namespace ProtoBuf.BuildTools.Generators
                 : InbuiltSerializer(member.Map.KeyKind, member.Map.KeyTypeName,
                     EffectiveCompatibilityLevel(member.DeclaredCompatibilityLevel, member.MapKeyFormat),
                     member.MapKeyFormat);
-            var value = member.Map.ValueKind == ProtoMemberKind.Message ? "this"
+            // a nested value - repeated or map - resolves its ISerializer<TCollection> from the
+            // model through the ISerializerProxy<TCollection> the services type exposes, so nothing
+            // is passed here. ValueKind is the *element's*, so testing it would say "this", which is
+            // an ISerializer<TElement> where an ISerializer<TCollection> is wanted: CS1503
+            var value = member.Map.ValueSerializerFactory is not null ? null
+                : member.Map.ValueKind == ProtoMemberKind.Message ? "this"
                 : InbuiltSerializer(member.Map.ValueKind, member.Map.ValueTypeName,
                     EffectiveCompatibilityLevel(member.DeclaredCompatibilityLevel, member.MapValueFormat),
                     member.MapValueFormat);

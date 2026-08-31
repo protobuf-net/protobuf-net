@@ -112,6 +112,14 @@ public class Order
     [ProtoMember(27)] public Dictionary<string, Customer> Directory { get; set; }
     [ProtoMember(28)] public Dictionary<int, List<int>> Buckets { get; set; }
 
+    // ... and a repeated value whose ELEMENT is a message (#1337), which is a fourth way again:
+    // the proxy hands back RepeatedSerializer.CreateList<Customer>() with no element serializer, so
+    // *that* resolves an ISerializer<Customer> from the model too - two resolutions deep, through
+    // the IsDynamicCodeSupported-gated arm that only a native publish takes. It also constructs the
+    // List<Customer> via ActivatorCreate<TCollection>, which is what DynamicAccess.Activated holds
+    // open; a scalar-element bucket proves neither of those for a message element.
+    [ProtoMember(58)] public Dictionary<int, List<Customer>> Baskets { get; set; }
+
     // an enum on each side of a map: like a repeated enum, the serializer is resolved from the
     // *model* through ISerializerProxy<TEnum> rather than passed in, which is the arm that only a
     // native publish exercises
@@ -532,6 +540,7 @@ internal static class Program
             Labels = new() { [1] = "one", [2] = "two" },
             Directory = new() { ["ann"] = new Customer { Id = 3, Name = "ann" } },
             Buckets = new() { [7] = [70, 71], [8] = [80] },
+            Baskets = new() { [9] = [new Customer { Id = 90, Name = "nine" }, new Customer { Id = 91, Name = "one" }] },
             ByStatus = new() { [Status.Open] = 1, [Status.Unknown] = 0 },
             ToStatus = new() { [1] = Status.Closed, [2] = Status.Unknown },
             Barcode = new Barcode { Code = "X-9" },
@@ -637,6 +646,9 @@ internal static class Program
         Check(ref failures, "Buckets", "7=[70,71],8=[80]", clone.Buckets is null ? "null"
             : string.Join(",", clone.Buckets.OrderBy(static x => x.Key)
                 .Select(static x => $"{x.Key}=[{string.Join(",", x.Value)}]")));
+        Check(ref failures, "Baskets", "9=[90:nine,91:one]", clone.Baskets is null ? "null"
+            : string.Join(",", clone.Baskets.OrderBy(static x => x.Key)
+                .Select(static x => $"{x.Key}=[{string.Join(",", x.Value.Select(static c => $"{c.Id}:{c.Name}"))}]")));
 
         Check(ref failures, "ByStatus", "Unknown=0,Open=1", clone.ByStatus is null ? "null"
             : string.Join(",", clone.ByStatus.OrderBy(static x => x.Key)

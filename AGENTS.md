@@ -486,15 +486,38 @@ the model* — so we emit `ISerializerProxy<List<int>>` returning the same
 wire type is the **element's** (`WireTypeVarint` for `List<int>`), and such a shape is never a valid
 protobuf map, so it also picks up `OptionFailOnDuplicateKey`.
 
+**The element may be a message, and `ProtoMapPlan`'s `ValueKind` then describes *that element* while
+`ValueTypeName` describes the collection.** The two are a matched pair everywhere else, so reading
+them as one is the trap here, and it cost #1337 twice over: the emitter paired them and passed
+`this` — an `ISerializer<Leaf>` where an `ISerializer<List<Leaf>>` is wanted, i.e. `CS1503` in the
+consumer's build — and `DropUnsatisfiable` paired them, looked for a contract named `List<Leaf>`,
+found none, and removed **every** contract with such a member before the emit bug could show. Both
+now key off `ValueSerializerFactory`, which is set exactly when the value resolves its serializer
+from the model, and `ValueElementTypeName` carries the element's name so the cascade still has a
+real pair to test. Note v4's `RawMapMeasurable` had already found the same trap from the other side
+and guards with the same marker, so the two are consistent.
+
+Note ref-emit writes `this as ISerializer<List<Leaf>>` here, which is **null at run time** — the
+services type implements `ISerializer<KeyValuePair<int, Leaf>>` — so both paths land on
+`serializer ??= GetSerializer<T>(Model)` and find the proxy. That is why passing nothing agrees on
+the wire, and it is also why the **fully compiled** ref-emit path *fails* on a message element:
+resolution falls back to a model with no entry, and it throws *"No serializer for type
+`List<Tuple<double,String>>`"*. A **scalar** element survives that route (a `List<int>` serializer
+needs no model entry), which is why `Issue54` passes and `Issue1337` pins the throw. So we match the
+reflection path and exceed the compiled one, exactly as for a nested map value.
+
 A nested **key** is still refused. That one is a limit of the plan rather than of protobuf-net's
 reflection path — but note it *does* match the compiled path, which is the more interesting half:
 
-**A compiled model throws on any map whose key or value is a collection.** `Compile(name, path)`
-succeeds and emits the member, then the first use throws *"No serializer for type
-`Dictionary<string,String>` is available for model X"* — the emitted code passes
-`this as ISerializer<Dictionary<string,string>>` and the services type implements
-`ISerializer<KeyValuePair<string,string>>`, so the cast is null and resolution falls back to a model
-with no entry. The reflection path handles all three shapes. So our repeated and nested map **values**
+**A compiled model throws on a map whose key or value is a collection — unless that collection's
+serializer can be built with no model entry at all.** `Compile(name, path)` succeeds and emits the
+member, then the first use throws *"No serializer for type `Dictionary<string,String>` is available
+for model X"* — the emitted code passes `this as ISerializer<Dictionary<string,string>>` and the
+services type implements `ISerializer<KeyValuePair<string,string>>`, so the cast is null and
+resolution falls back to a model with no entry. The escape is a collection of **scalars**, whose
+serializer resolution needs nothing from the model: `Dictionary<float, List<int>>` survives the
+compiled path (`Examples/Issues/Issue54`) while `Dictionary<double, List<Tuple<double,string>>>`
+throws (`Issue1337`, which pins it). The reflection path handles all of them. So our repeated and nested map **values**
 match reflection and *exceed* the compiled path, and our refused nested **key** matches the compiled
 path and falls short of reflection. Item 9 in `notes/aot/findings.md`.
 
@@ -1344,8 +1367,9 @@ that warning's text is boilerplate from the attribute and is aimed at callers; t
 at all — protobuf-net contains no `Enum.GetValues` call in any shipped assembly. The lever is always
 the annotation that demanded the metadata.
 
-The count is now **19**, measured with the `.proto` DTO tree in the fixture (it was 21 before that was
-added, and the two are not comparable — the count tracks fixtures). What is left looks structural: 6
+The count is now **20** on win-x64 (it was 19 before the `Dictionary<int, List<Customer>>` member
+went in for #1337, and 21 before the `.proto` DTO tree was added — none of these are comparable with
+each other, since the count tracks fixtures). What is left looks structural: 7
 `IL2067` and 3 `IL2070` on the runtime-model, `DynamicStub` and auxiliary paths, 5 `IL3050`
 (`MakeGenericType`/`MakeArrayType`, same paths), 1 `IL2057`, 1 `IL2055`, and the spent `IL2091` trio —
 `CreateInstance` ×2 (whose fallback is genuinely live) and `SubTypeState<T>.Cast` (which would need

@@ -247,8 +247,12 @@ namespace ProtoBuf.BuildTools.Generators
                         string? missing;
                         if (member.Kind == ProtoMemberKind.Map)
                         {
+                            // for a nested value the kind describes the *element*, so that is the
+                            // name to pair it with - ValueTypeName is the collection, and looking
+                            // that up finds nothing and drops the contract for no reason
                             missing = Missing(member.Map.KeyKind, member.Map.KeyTypeName)
-                                ?? Missing(member.Map.ValueKind, member.Map.ValueTypeName);
+                                ?? Missing(member.Map.ValueKind,
+                                    member.Map.ValueElementTypeName ?? member.Map.ValueTypeName);
                         }
                         else
                         {
@@ -3082,10 +3086,13 @@ namespace ProtoBuf.BuildTools.Generators
             // RepeatedSerializer and MapSerializer implement IRepeatedSerializer<TCollection>,
             // which is an ISerializer<TCollection>, so the two cases differ only in the rendering
             var valueTypeName = Qualified(compilation, value);
-            string? valueFactory = null;
+            string? valueFactory = null, valueElementTypeName = null;
             if (valueShape.Repeated.Factory is not null)
             {
-                valueFactory = RepeatedFactory(valueShape.Repeated, valueTypeName, valueShape.ElementTypeName!);
+                // ValueKind describes the *element* from here on, while valueTypeName is the
+                // collection - so the element's name is carried too, or the pair is mismatched
+                valueElementTypeName = valueShape.ElementTypeName;
+                valueFactory = RepeatedFactory(valueShape.Repeated, valueTypeName, valueElementTypeName!);
             }
             else if (valueShape.Map.Factory is not null)
             {
@@ -3098,13 +3105,17 @@ namespace ProtoBuf.BuildTools.Generators
             var messages = new List<INamedTypeSymbol>();
             if (keyShape.Message is { } keyMessage) messages.Add(keyMessage);
             if (valueShape.Message is { } valueMessage) messages.Add(valueMessage);
+            // a nested *map* value keeps its own reachable set rather than a single Message, since
+            // it has two sides of its own; without this they are never enqueued
+            if (valueShape.MapMessages is { } nested) messages.AddRange(nested);
 
             var map = new ProtoMapPlan(match.Factory!, match.TakesCollectionType,
                 keyShape.Kind, Qualified(compilation, key),
                 valueShape.Kind, Qualified(compilation, value),
                 IsValidProtobufMap(keyShape, valueShape), valueFactory,
                 keyEnumTypeName: keyShape.EnumType is null ? null : Qualified(compilation, keyShape.EnumType),
-                valueEnumTypeName: valueShape.EnumType is null ? null : Qualified(compilation, valueShape.EnumType));
+                valueEnumTypeName: valueShape.EnumType is null ? null : Qualified(compilation, valueShape.EnumType),
+                valueElementTypeName: valueElementTypeName);
 
             return new MemberShape(ProtoMemberKind.Map, map: map, mapMessages: messages,
                 declaredTypeName: Qualified(compilation, declared));
@@ -3136,7 +3147,7 @@ namespace ProtoBuf.BuildTools.Generators
                 isValidProtobufMap: true, map.ValueSerializerFactory,
                 // carried through: this rebuild only fires for a Guid key, but the *value* may still
                 // be an enum, and dropping its name here would silently lose the proxy
-                map.KeyEnumTypeName, map.ValueEnumTypeName);
+                map.KeyEnumTypeName, map.ValueEnumTypeName, map.ValueElementTypeName);
         }
 
         private static bool IsValidProtobufMap(MemberShape key, MemberShape value)

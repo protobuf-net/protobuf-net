@@ -17,11 +17,92 @@ partial class MapNestedModel
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapNested.Nested>
+        : global::ProtoBuf.Serializers.ISerializer<(int, string)>
+        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapNested.Leaf>
+        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapNested.Nested>
+        , global::ProtoBuf.Serializers.ISerializer<global::System.Tuple<int, string>>
+        , global::ProtoBuf.Serializers.ISerializerProxy<global::System.Collections.Generic.Dictionary<int, global::AotFixtures.MapNested.Leaf>>
         , global::ProtoBuf.Serializers.ISerializerProxy<global::System.Collections.Generic.Dictionary<string, string>>
+        , global::ProtoBuf.Serializers.ISerializerProxy<global::System.Collections.Generic.List<(int, string)>>
+        , global::ProtoBuf.Serializers.ISerializerProxy<global::System.Collections.Generic.List<global::AotFixtures.MapNested.Leaf>>
+        , global::ProtoBuf.Serializers.ISerializerProxy<global::System.Collections.Generic.List<global::System.DateTime>>
+        , global::ProtoBuf.Serializers.ISerializerProxy<global::System.Collections.Generic.List<global::System.Tuple<int, string>>>
         , global::ProtoBuf.Serializers.ISerializerProxy<global::System.Collections.Generic.List<int>>
         , global::ProtoBuf.Serializers.ISerializerProxy<long[]>
     {
+        global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<(int, string)>.Features
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+
+        (int, string) global::ProtoBuf.Serializers.ISerializer<(int, string)>.Read(ref global::ProtoBuf.ProtoReader.State state, (int, string) value)
+        {
+            int arg1 = default;
+            string arg2 = default;
+            arg1 = value.Item1;
+            arg2 = value.Item2;
+            int field;
+            while ((field = state.ReadFieldHeader()) > 0)
+            {
+                switch (field)
+                {
+                    case 1:
+                    {
+                        arg1 = state.ReadInt32();
+                        break;
+                    }
+                    case 2:
+                    {
+                        var tmp2 = state.ReadString();
+                        if (tmp2 != null) arg2 = tmp2;
+                        break;
+                    }
+                    default:
+                        state.SkipField();
+                        break;
+                }
+            }
+            value = (arg1, arg2);
+            return value;
+        }
+
+        void global::ProtoBuf.Serializers.ISerializer<(int, string)>.Write(ref global::ProtoBuf.ProtoWriter.State state, (int, string) value)
+        {
+            var tmp1 = value.Item1;
+            state.WriteInt32Varint(1, tmp1);
+            var tmp2 = value.Item2;
+            state.WriteString(2, tmp2);
+        }
+
+        global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapNested.Leaf>.Features
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+
+        global::AotFixtures.MapNested.Leaf global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapNested.Leaf>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MapNested.Leaf value)
+        {
+            value ??= new global::AotFixtures.MapNested.Leaf();
+            int field;
+            while ((field = state.ReadFieldHeader()) > 0)
+            {
+                switch (field)
+                {
+                    case 1:
+                    {
+                        value.Id = state.ReadInt32();
+                        break;
+                    }
+                    default:
+                        state.SkipField();
+                        break;
+                }
+            }
+            return value;
+        }
+
+        void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapNested.Leaf>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.MapNested.Leaf value)
+        {
+            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            var tmp1 = value.Id;
+            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapNested.Nested>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -61,6 +142,41 @@ partial class MapNestedModel
                         if (tmp4 != null) value.FloatKeyed = tmp4;
                         break;
                     }
+                    case 5:
+                    {
+                        var tmp5 = value.Messages;
+                        tmp5 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::System.Collections.Generic.List<global::AotFixtures.MapNested.Leaf>>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp5, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
+                        if (tmp5 != null) value.Messages = tmp5;
+                        break;
+                    }
+                    case 6:
+                    {
+                        var tmp6 = value.Tuples;
+                        tmp6 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::System.Collections.Generic.List<global::System.Tuple<int, string>>>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp6, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
+                        if (tmp6 != null) value.Tuples = tmp6;
+                        break;
+                    }
+                    case 7:
+                    {
+                        var tmp7 = value.ValueTuples;
+                        tmp7 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::System.Collections.Generic.List<(int, string)>>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp7, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
+                        if (tmp7 != null) value.ValueTuples = tmp7;
+                        break;
+                    }
+                    case 8:
+                    {
+                        var tmp8 = value.MappedMessages;
+                        tmp8 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::System.Collections.Generic.Dictionary<int, global::AotFixtures.MapNested.Leaf>>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp8, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
+                        if (tmp8 != null) value.MappedMessages = tmp8;
+                        break;
+                    }
+                    case 9:
+                    {
+                        var tmp9 = value.Stamps;
+                        tmp9 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::System.Collections.Generic.List<global::System.DateTime>>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp9, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
+                        if (tmp9 != null) value.Stamps = tmp9;
+                        break;
+                    }
                     default:
                         state.SkipField();
                         break;
@@ -92,10 +208,95 @@ partial class MapNestedModel
             {
                 global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<float, global::System.Collections.Generic.List<int>>().WriteMap(ref state, 4, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp4, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeFixed32, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
             }
+            var tmp5 = value.Messages;
+            if (tmp5 != null)
+            {
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::System.Collections.Generic.List<global::AotFixtures.MapNested.Leaf>>().WriteMap(ref state, 5, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp5, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
+            }
+            var tmp6 = value.Tuples;
+            if (tmp6 != null)
+            {
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::System.Collections.Generic.List<global::System.Tuple<int, string>>>().WriteMap(ref state, 6, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp6, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
+            }
+            var tmp7 = value.ValueTuples;
+            if (tmp7 != null)
+            {
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::System.Collections.Generic.List<(int, string)>>().WriteMap(ref state, 7, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp7, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
+            }
+            var tmp8 = value.MappedMessages;
+            if (tmp8 != null)
+            {
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::System.Collections.Generic.Dictionary<int, global::AotFixtures.MapNested.Leaf>>().WriteMap(ref state, 8, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp8, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
+            }
+            var tmp9 = value.Stamps;
+            if (tmp9 != null)
+            {
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::System.Collections.Generic.List<global::System.DateTime>>().WriteMap(ref state, 9, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp9, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
+            }
         }
+
+        global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::System.Tuple<int, string>>.Features
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+
+        global::System.Tuple<int, string> global::ProtoBuf.Serializers.ISerializer<global::System.Tuple<int, string>>.Read(ref global::ProtoBuf.ProtoReader.State state, global::System.Tuple<int, string> value)
+        {
+            int arg1 = default;
+            string arg2 = default;
+            if (value != null)
+            {
+                arg1 = value.Item1;
+                arg2 = value.Item2;
+            }
+            int field;
+            while ((field = state.ReadFieldHeader()) > 0)
+            {
+                switch (field)
+                {
+                    case 1:
+                    {
+                        arg1 = state.ReadInt32();
+                        break;
+                    }
+                    case 2:
+                    {
+                        var tmp2 = state.ReadString();
+                        if (tmp2 != null) arg2 = tmp2;
+                        break;
+                    }
+                    default:
+                        state.SkipField();
+                        break;
+                }
+            }
+            value = new global::System.Tuple<int, string>(arg1, arg2);
+            return value;
+        }
+
+        void global::ProtoBuf.Serializers.ISerializer<global::System.Tuple<int, string>>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::System.Tuple<int, string> value)
+        {
+            var tmp1 = value.Item1;
+            state.WriteInt32Varint(1, tmp1);
+            var tmp2 = value.Item2;
+            state.WriteString(2, tmp2);
+        }
+
+        global::ProtoBuf.Serializers.ISerializer<global::System.Collections.Generic.Dictionary<int, global::AotFixtures.MapNested.Leaf>> global::ProtoBuf.Serializers.ISerializerProxy<global::System.Collections.Generic.Dictionary<int, global::AotFixtures.MapNested.Leaf>>.Serializer
+            => global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::AotFixtures.MapNested.Leaf>();
 
         global::ProtoBuf.Serializers.ISerializer<global::System.Collections.Generic.Dictionary<string, string>> global::ProtoBuf.Serializers.ISerializerProxy<global::System.Collections.Generic.Dictionary<string, string>>.Serializer
             => global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<string, string>();
+
+        global::ProtoBuf.Serializers.ISerializer<global::System.Collections.Generic.List<(int, string)>> global::ProtoBuf.Serializers.ISerializerProxy<global::System.Collections.Generic.List<(int, string)>>.Serializer
+            => global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<(int, string)>();
+
+        global::ProtoBuf.Serializers.ISerializer<global::System.Collections.Generic.List<global::AotFixtures.MapNested.Leaf>> global::ProtoBuf.Serializers.ISerializerProxy<global::System.Collections.Generic.List<global::AotFixtures.MapNested.Leaf>>.Serializer
+            => global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.MapNested.Leaf>();
+
+        global::ProtoBuf.Serializers.ISerializer<global::System.Collections.Generic.List<global::System.DateTime>> global::ProtoBuf.Serializers.ISerializerProxy<global::System.Collections.Generic.List<global::System.DateTime>>.Serializer
+            => global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::System.DateTime>();
+
+        global::ProtoBuf.Serializers.ISerializer<global::System.Collections.Generic.List<global::System.Tuple<int, string>>> global::ProtoBuf.Serializers.ISerializerProxy<global::System.Collections.Generic.List<global::System.Tuple<int, string>>>.Serializer
+            => global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::System.Tuple<int, string>>();
 
         global::ProtoBuf.Serializers.ISerializer<global::System.Collections.Generic.List<int>> global::ProtoBuf.Serializers.ISerializerProxy<global::System.Collections.Generic.List<int>>.Serializer
             => global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int>();
