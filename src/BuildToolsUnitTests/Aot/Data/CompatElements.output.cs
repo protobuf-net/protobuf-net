@@ -746,7 +746,18 @@ partial class CompatElementsModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3;
+            static bool IsKnownField(uint tag)
+            {
+                switch (tag >> 3)
+                {
+                    case 1:
+                    case 2:
+                    case 3:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
         }
     }
 }

@@ -405,31 +405,66 @@ carries one field-2 occurrence *per element* and no length of its own for the va
 therefore a loop, not a term — `EmitMapSide` grew an arm for it rather than `MapSideBody` growing a
 case.
 
-**Only a non-packable element qualifies, and that line is drawn by `WriteRepeated`, not by taste.**
-It packs on `CanBePacked && !IsPackedDisabled && (count == 0 || count > 1)`, so a packable element's
-encoding depends on the *count* in a way nothing else here does — probed: `{7:[70]}` writes the
-unpacked `10-46` while `{7:[70,71]}` writes the packed `12-02-46-47`, and `{7:[]}` writes
-`12-00`. That last one goes through `WriteZeroLengthPackedHeader`, gated on the
-`SkipZeroLengthPackedArrays` **model option** — a runtime property of the consumer's model, so its
-two bytes are not knowable at generation time at all. A non-packable element takes the unpacked loop
-unconditionally, which is why `string` and message elements are in and the numeric ones are out.
-Note `CanBePacked` strips `Nullable<>` first and says **true for enums**, so a `List<TEnum>` value is
-out too.
+**A packable element is a different shape, not a harder one — and getting that wrong cost a round
+trip.** `WriteRepeated` packs on `CanBePacked && !IsPackedDisabled && (count == 0 || count > 1)`, so
+the encoding depends on the *count*: probed, `{1:[]}` writes `12-00`, `{1:[9]}` the **unpacked**
+`10-09`, and `{1:[9,10]}` the packed `12-02-09-0A`. A single element is never packed.
+
+The first pass excluded all of that, reasoning that the count and the `SkipZeroLengthPackedArrays`
+**model option** are "not knowable at generation time". **That confused a compile-time constant with
+a value the generated code can read.** `Measure_` is run-time code: the count is a `foreach` away,
+and the option is `context.Model.Options` — `TypeModel.Options` and `TypeModelOptions` are both
+public. So it is three arms in one pass, and `EmitMapNestedPackedMeasure` emits them. Worth
+remembering as a *pattern*: "the generator cannot know this" is only an argument about the emitted
+constant, never about what the emitted code may compute.
+
+Every packable kind was probed inside a map value rather than assumed, and they all pack — the
+integrals, `bool`, `char`, the floats, **enums** and **arrays** — which also settles that
+`EnumSerializer` is an `IMeasuringSerializer`, as the packed branch requires.
+
+Two things stay out, each for a stated reason rather than caution: a **nullable** element packs too,
+but what the writer does with a null inside a packed run is untested, so its measure would be
+guesswork; and a **value-type collection** (`ImmutableArray<T>`) cannot be null-guarded the way the
+reference ones are — `default` throws on `foreach` while the writer treats it as empty and still
+emits the two-byte header. A nested *map* value is out for a third reason: it is the outer shape
+again one level down.
 
 The **raw read** pass is a separate axis and is unchanged: `map with repeated value` is still a
 legacy-mode reason there, alongside the map shapes that were already legacy-mode. Measure and write
 eligibility are independent of it, exactly as for a repeated BCL member.
 
-**Emitting a long `or` pattern is emitting a deep stack, and it cost a day.** Roslyn binds a binary
-pattern by *recursing* once per `or`, so `IsKnownField`'s `(tag >> 3) is 1 or 2 or ... or 1000` -
-which a protogen stress schema in the corpus really does produce - binds a thousand frames deep. The
-corpus had been sitting just under the compiler's limit; the extra code from this change tipped it,
-and `AotDifferential` died with a bare **`Stack overflow.`** and no diagnostic at all, which is the
-worst failure mode available and says nothing about its cause. `KnownFieldPattern` now collapses
-contiguous runs to `(>= 1 and <= 1000)`, which is one term. Two things worth carrying forward: the
-chain was **pre-existing** (the baseline compiled it, so bisecting to the commit that "broke" it
-would have been misleading), and anything else generated per-member into a single expression has the
-same latent shape.
+**Emitting a long `or` pattern is emitting a deep stack — and the axis that matters is not the one
+it looks like.** Roslyn parses `a or b or c` into a left-nested tree and binds it by *recursing*
+once per `or`, so `IsKnownField`'s `(tag >> 3) is 1 or 2 or ... or 1000` — which a protogen stress
+schema in the corpus really does produce — binds a thousand frames deep. `AotDifferential` died on
+it with a bare **`Stack overflow.`** and no diagnostic at all.
+
+Three things were measured rather than assumed, and each changed the answer:
+
+- **It is not a term count.** An in-process `Compilation.Emit` — what `AotDifferential`,
+  `AotCoverage` and every IDE-hosted analyzer use, on ordinary thread-pool stacks — takes 1000 terms
+  and dies at 5000, while **`csc.exe` swallows 30000**, binding on dedicated large-stack threads. So
+  the same source compiles under `dotnet build` and crashes in our own harness, and there is no
+  threshold worth switching on.
+- **The chain was pre-existing.** The baseline compiled it; this branch's extra code merely tipped
+  the stack. Bisecting to the commit that "broke" it would have pointed at the wrong change.
+- **It never cost anything per call.** Benchmarked at 20M calls, the `or` chain, a range pattern and
+  a switch are indistinguishable (~3ns dense, ~5ns sparse, delegate-bound), because Roslyn's
+  decision DAG already lowers a dense constant set to a jump table and a sparse one to a binary
+  search. Only the compiler was paying.
+
+So `EmitKnownFieldTest` emits a **switch statement**, whose sections are a flat list and therefore
+bind in a loop: good to 60000 labels in the very host that died at 5000 terms, and free at run time.
+Contiguous runs collapse to a relational label (`case >= 1 and <= 1000:`) purely to keep the emitted
+source small — a `.proto` message numbers its fields from 1, so the thousand-field case is one label.
+
+At **two terms or fewer** the one-line `is` form is kept, which is most contracts (measured over the
+fixtures: 109 one-liners against 29 switches). That is not the threshold rejected above: two terms is
+two binder frames, a constant, where the objection was to picking a number *near* a limit that
+cannot be located.
+
+Anything else generated per-member into a *single expression* has the same latent shape; a flat list
+of statements or labels does not.
 
 `MapNested.input.cs` carries `RawNested` (only the measurable nested shapes, so the contract is
 measure-first at all — one blocked member takes the whole contract out) and `RawHolder`, which

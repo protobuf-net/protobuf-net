@@ -52,7 +52,9 @@ current to 2026-08-26:
   regenerate -> baseline, and a polyfilled attribute **must live in the assembly that uses it** or it
   is a runtime `TypeLoadException` that no build catches;
 - **B48 (trim warnings)** - 23 -> 5, paused there deliberately: *"5 is a defensible preview
-  position"*. All five are design-level, not annotations anyone forgot;
+  position"*. All five are design-level, not annotations anyone forgot. (Now **6**: the
+  `Dictionary<int, List<Customer>>` member added to `AotSmoke` for #1337 costs one `IL2067`. The
+  count tracks fixtures, so that is a wider fixture rather than a regression.);
 - **B40 (steering call sites)** - the non-generic API bug is fixed; the analyzer/steering half is
   still a design call;
 - **B16 (locals)** - write and measure bodies now share one local per member type (400 -> 5 on a wide

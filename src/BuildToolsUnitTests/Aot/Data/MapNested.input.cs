@@ -2,8 +2,11 @@ using ProtoBuf;
 using ProtoBuf.Meta;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace AotFixtures.MapNested;
+
+public enum Shade { None = 0, Red = 1, Green = 2 }
 
 [ProtoContract]
 public class Leaf
@@ -62,7 +65,20 @@ public class RawNested
 {
     [ProtoMember(1)] public Dictionary<int, List<Leaf>> Messages { get; set; }
     [ProtoMember(2)] public Dictionary<int, List<string>> Labels { get; set; }
-    [ProtoMember(3)] public int Trailer { get; set; }
+
+    // A PACKABLE element takes the other shape: WriteRepeated packs on
+    // (count == 0 || count > 1), so one element is never packed, and zero elements still emit the
+    // two-byte zero-length header unless the model opts out. All three arms need a sample.
+    [ProtoMember(3)] public Dictionary<int, List<int>> Counts { get; set; }
+    [ProtoMember(4)] public Dictionary<int, long[]> Stamps { get; set; }
+    [ProtoMember(5)] public Dictionary<int, List<double>> Rates { get; set; }
+    [ProtoMember(6)] public Dictionary<int, List<bool>> Flags { get; set; }
+
+    // an enum element arrives as its underlying kind and packs like any other integral, but needs
+    // the cast to get there - and its serializer proxy, exactly as a repeated enum does
+    [ProtoMember(7)] public Dictionary<int, List<Shade>> Shades { get; set; }
+
+    [ProtoMember(8)] public int Trailer { get; set; }
 }
 
 // ... and RawNested has to be reached as a SUB-MESSAGE for any of that to be tested: at root
@@ -114,6 +130,26 @@ public static class MapNestedSamples
         // where an off-by-one in the per-element arithmetic stops being invisible
         new RawHolder { Inner = new RawNested { Labels = new() { [15] = ["0123456789012345678901234567890123456789012345678901234567890123456789"] } }, After = 37 },
         new RawHolder { Inner = new RawNested { Messages = new() { [16] = [new Leaf { Id = 38 }] }, Labels = new() { [17] = ["g"] }, Trailer = 39 }, After = 40 },
+
+        // the packable arms, each reached through the holder so the measure is what sizes them:
+        // empty (the zero-length packed header), one (never packed), and several (packed)
+        new RawHolder { Inner = new RawNested { Counts = new() { [18] = [] } }, After = 41 },
+        new RawHolder { Inner = new RawNested { Counts = new() { [19] = [42] } }, After = 43 },
+        new RawHolder { Inner = new RawNested { Counts = new() { [20] = [44, 45, 46] } }, After = 47 },
+        // a payload wide enough that the packed length prefix needs two varint bytes
+        new RawHolder { Inner = new RawNested { Counts = new() { [21] = [.. Enumerable.Range(1, 200)] } }, After = 48 },
+        // ... and values wide enough that the ELEMENTS are multi-byte varints too
+        new RawHolder { Inner = new RawNested { Counts = new() { [22] = [1, 300, 70000, -1] } }, After = 49 },
+        new RawHolder { Inner = new RawNested { Stamps = new() { [23] = [] } }, After = 50 },
+        new RawHolder { Inner = new RawNested { Stamps = new() { [24] = [51L] } }, After = 52 },
+        new RawHolder { Inner = new RawNested { Stamps = new() { [25] = [53L, -54L] } }, After = 55 },
+        new RawHolder { Inner = new RawNested { Rates = new() { [26] = [1.5, 2.5] } }, After = 56 },
+        new RawHolder { Inner = new RawNested { Rates = new() { [27] = [3.5] } }, After = 57 },
+        new RawHolder { Inner = new RawNested { Flags = new() { [28] = [true, false, true] } }, After = 58 },
+        new RawHolder { Inner = new RawNested { Flags = new() { [29] = [false] } }, After = 59 },
+        new RawHolder { Inner = new RawNested { Shades = new() { [30] = [] } }, After = 60 },
+        new RawHolder { Inner = new RawNested { Shades = new() { [31] = [Shade.Green] } }, After = 61 },
+        new RawHolder { Inner = new RawNested { Shades = new() { [32] = [Shade.Red, Shade.None, Shade.Green] } }, After = 62 },
     ];
 }
 

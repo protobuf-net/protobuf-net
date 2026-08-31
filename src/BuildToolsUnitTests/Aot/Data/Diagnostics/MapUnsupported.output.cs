@@ -226,7 +226,7 @@ partial class MapUnsupportedModel
         : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.MapUnsupported.EnumKey>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.MapUnsupported.EnumValue>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapUnsupported.MappedEnum>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapUnsupported.RepeatedValue>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.MapUnsupported.RepeatedValue>
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.MapUnsupported.Shade>
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.MapUnsupported.Shade?>
         , global::ProtoBuf.Serializers.ISerializerProxy<global::System.Collections.Generic.List<int>>
@@ -525,20 +525,66 @@ partial class MapUnsupportedModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapUnsupported.RepeatedValue>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.MapUnsupported.RepeatedValue global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapUnsupported.RepeatedValue>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MapUnsupported.RepeatedValue value)
             => RawRead_AotFixtures_MapUnsupported_RepeatedValue(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapUnsupported.RepeatedValue>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.MapUnsupported.RepeatedValue value)
+            => RawWrite_AotFixtures_MapUnsupported_RepeatedValue(ref state, value, state.RawDepthBudget);
+
+        public static void RawWrite_AotFixtures_MapUnsupported_RepeatedValue(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.MapUnsupported.RepeatedValue value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            var rawDepth = state.SyncRawDepth(depth);
             global::System.Collections.Generic.Dictionary<int, global::System.Collections.Generic.List<int>> tmp_System_Collections_Generic_Dictionary_int__global__System_Collections_Generic_List_int__;
             tmp_System_Collections_Generic_Dictionary_int__global__System_Collections_Generic_List_int__ = value.Value;
             if (tmp_System_Collections_Generic_Dictionary_int__global__System_Collections_Generic_List_int__ != null)
             {
                 global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::System.Collections.Generic.List<int>>().WriteMap(ref state, 1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp_System_Collections_Generic_Dictionary_int__global__System_Collections_Generic_List_int__, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
             }
+            state.SyncRawDepth(rawDepth);
+        }
+
+        private static long Measure_AotFixtures_MapUnsupported_RepeatedValue(global::AotFixtures.MapUnsupported.RepeatedValue value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            long mapEntry;
+            global::System.Collections.Generic.Dictionary<int, global::System.Collections.Generic.List<int>> tmp_System_Collections_Generic_Dictionary_int__global__System_Collections_Generic_List_int__;
+            tmp_System_Collections_Generic_Dictionary_int__global__System_Collections_Generic_List_int__ = value.Value;
+            if (tmp_System_Collections_Generic_Dictionary_int__global__System_Collections_Generic_List_int__ != null)
+            {
+                foreach (var pair1 in tmp_System_Collections_Generic_Dictionary_int__global__System_Collections_Generic_List_int__)
+                {
+                    mapEntry = 0;
+                    if (pair1.Key != 0) mapEntry += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair1.Key));
+                    if (pair1.Value != null)
+                    {
+                        long packed1 = 0; int count1 = 0;
+                        foreach (var item1 in pair1.Value)
+                        {
+                            packed1 += global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)item1));
+                            count1++;
+                        }
+                        if (count1 == 1) mapEntry += 1 + packed1;  // one element is never packed
+                        else if (count1 != 0) mapEntry += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)packed1) + packed1;
+                        else if ((((context?.Model)?.Options ?? default) & global::ProtoBuf.Meta.TypeModel.TypeModelOptions.SkipZeroLengthPackedArrays) == 0) mapEntry += 2;  // zero-length packed header
+                    }
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)mapEntry) + mapEntry;  // Value
+                }
+            }
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.MapUnsupported.RepeatedValue>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.MapUnsupported.RepeatedValue value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_MapUnsupported_RepeatedValue(value, depth, slots, context);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
         }
 
         private static global::AotFixtures.MapUnsupported.RepeatedValue RawRead_AotFixtures_MapUnsupported_RepeatedValue(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MapUnsupported.RepeatedValue value)

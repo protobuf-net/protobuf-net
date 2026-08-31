@@ -157,8 +157,9 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             ProtoMemberKind valueKind, string valueTypeName, bool isValidProtobufMap,
             string? valueSerializerFactory = null,
             string? keyEnumTypeName = null, string? valueEnumTypeName = null,
-            string? valueElementTypeName = null)
+            string? valueElementTypeName = null, ProtoRepeatedPlan valueRepeated = default)
         {
+            ValueRepeated = valueRepeated;
             KeyEnumTypeName = keyEnumTypeName;
             ValueEnumTypeName = valueEnumTypeName;
             ValueSerializerFactory = valueSerializerFactory;
@@ -227,6 +228,14 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         /// </remarks>
         public string? ValueElementTypeName { get; }
 
+        /// <summary>
+        /// When the value is a nested <em>collection</em>, its own repeated plan — needed because
+        /// the raw measure has to know the collection's shape, notably whether it is a value type
+        /// (a <c>default(ImmutableArray&lt;T&gt;)</c> throws on <c>foreach</c> and cannot be
+        /// null-guarded, so those are left on the classic path).
+        /// </summary>
+        public ProtoRepeatedPlan ValueRepeated { get; }
+
         public bool Equals(ProtoMapPlan other)
             => Factory == other.Factory && TakesCollectionType == other.TakesCollectionType
                 && KeyKind == other.KeyKind && KeyTypeName == other.KeyTypeName
@@ -235,7 +244,8 @@ namespace ProtoBuf.BuildTools.Internal.Aot
                 && KeyEnumTypeName == other.KeyEnumTypeName
                 && ValueEnumTypeName == other.ValueEnumTypeName
                 && ValueSerializerFactory == other.ValueSerializerFactory
-                && ValueElementTypeName == other.ValueElementTypeName;
+                && ValueElementTypeName == other.ValueElementTypeName
+                && ValueRepeated.Equals(other.ValueRepeated);
 
         public override bool Equals(object? obj) => obj is ProtoMapPlan other && Equals(other);
 

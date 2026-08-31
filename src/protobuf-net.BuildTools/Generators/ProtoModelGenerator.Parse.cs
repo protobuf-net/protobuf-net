@@ -3653,7 +3653,8 @@ namespace ProtoBuf.BuildTools.Generators
                 IsValidProtobufMap(keyShape, valueShape), valueFactory,
                 keyEnumTypeName: keyShape.EnumType is null ? null : Qualified(compilation, keyShape.EnumType),
                 valueEnumTypeName: valueShape.EnumType is null ? null : Qualified(compilation, valueShape.EnumType),
-                valueElementTypeName: valueElementTypeName);
+                valueElementTypeName: valueElementTypeName,
+                valueRepeated: valueShape.Repeated);
 
             return new MemberShape(ProtoMemberKind.Map, map: map, mapMessages: messages,
                 declaredTypeName: Qualified(compilation, declared));
@@ -3685,7 +3686,7 @@ namespace ProtoBuf.BuildTools.Generators
                 isValidProtobufMap: true, map.ValueSerializerFactory,
                 // carried through: this rebuild only fires for a Guid key, but the *value* may still
                 // be an enum, and dropping its name here would silently lose the proxy
-                map.KeyEnumTypeName, map.ValueEnumTypeName, map.ValueElementTypeName);
+                map.KeyEnumTypeName, map.ValueEnumTypeName, map.ValueElementTypeName, map.ValueRepeated);
         }
 
         private static bool IsValidProtobufMap(MemberShape key, MemberShape value)
