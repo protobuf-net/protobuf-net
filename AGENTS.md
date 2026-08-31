@@ -386,7 +386,7 @@ Three things about it are load-bearing:
 ### Repeated members on the raw path: four predicates, and one trap that has bitten three times
 
 The generator decides per member whether a repeated, BCL or null-wrapped member takes the raw path.
-The decision is spread over six small predicates in `ProtoModelGenerator.Emit.cs`, and they are easy
+The decision is spread over seven small predicates in `ProtoModelGenerator.Emit.cs`, and they are easy
 to widen one at a time without noticing the others:
 
 | predicate | decides |
@@ -397,6 +397,45 @@ to widen one at a time without noticing the others:
 | `BclMeasurable` | whether a compatibility-level BCL member has arithmetic sizing (currently: default format, `DateTime`/`TimeSpan` below level 240, `Guid`/`decimal` below 300) |
 | `WrappedValueMeasurable` | a **lone** `[NullWrappedValue]`, whose inner field is *omitted* when trivial |
 | `WrappedRepeatedMeasurable` | a wrapped **collection**, in either scope, whose element wrapper *always* carries its inner field — the opposite rule, hence a second predicate rather than a widening of the first |
+| `RawMapNestedValueMeasurable` | a **nested** map value (`Dictionary<K, List<V>>`), which is a different shape again — see below |
+
+**A nested map value repeats field 2; it does not fill it.** `KeyValuePairSerializer` hands the
+collection to `WriteAny`, which sees `CategoryRepeated` and calls `WriteRepeated`, so the entry
+carries one field-2 occurrence *per element* and no length of its own for the value. The measure is
+therefore a loop, not a term — `EmitMapSide` grew an arm for it rather than `MapSideBody` growing a
+case.
+
+**Only a non-packable element qualifies, and that line is drawn by `WriteRepeated`, not by taste.**
+It packs on `CanBePacked && !IsPackedDisabled && (count == 0 || count > 1)`, so a packable element's
+encoding depends on the *count* in a way nothing else here does — probed: `{7:[70]}` writes the
+unpacked `10-46` while `{7:[70,71]}` writes the packed `12-02-46-47`, and `{7:[]}` writes
+`12-00`. That last one goes through `WriteZeroLengthPackedHeader`, gated on the
+`SkipZeroLengthPackedArrays` **model option** — a runtime property of the consumer's model, so its
+two bytes are not knowable at generation time at all. A non-packable element takes the unpacked loop
+unconditionally, which is why `string` and message elements are in and the numeric ones are out.
+Note `CanBePacked` strips `Nullable<>` first and says **true for enums**, so a `List<TEnum>` value is
+out too.
+
+The **raw read** pass is a separate axis and is unchanged: `map with repeated value` is still a
+legacy-mode reason there, alongside the map shapes that were already legacy-mode. Measure and write
+eligibility are independent of it, exactly as for a repeated BCL member.
+
+**Emitting a long `or` pattern is emitting a deep stack, and it cost a day.** Roslyn binds a binary
+pattern by *recursing* once per `or`, so `IsKnownField`'s `(tag >> 3) is 1 or 2 or ... or 1000` -
+which a protogen stress schema in the corpus really does produce - binds a thousand frames deep. The
+corpus had been sitting just under the compiler's limit; the extra code from this change tipped it,
+and `AotDifferential` died with a bare **`Stack overflow.`** and no diagnostic at all, which is the
+worst failure mode available and says nothing about its cause. `KnownFieldPattern` now collapses
+contiguous runs to `(>= 1 and <= 1000)`, which is one term. Two things worth carrying forward: the
+chain was **pre-existing** (the baseline compiled it, so bisecting to the commit that "broke" it
+would have been misleading), and anything else generated per-member into a single expression has the
+same latent shape.
+
+`MapNested.input.cs` carries `RawNested` (only the measurable nested shapes, so the contract is
+measure-first at all — one blocked member takes the whole contract out) and `RawHolder`, which
+**exists so the measure is reached**: at root `RawWrite_` writes straight out and never measures, so
+a wrong measure would not show. Both arms were proven able to fail by perturbing the emitted
+arithmetic and watching the conformance suite go red, not by observing it pass.
 
 **Widening any of them without a matching measure arm makes the generator THROW**, and the symptom
 does not name the cause: every model in the compilation loses its generated `Instance`, producing a
@@ -1196,13 +1235,16 @@ that warning's text is boilerplate from the attribute and is aimed at callers; t
 at all — protobuf-net contains no `Enum.GetValues` call in any shipped assembly. The lever is always
 the annotation that demanded the metadata.
 
-The count is now **20** on win-x64 (it was 19 before the `Dictionary<int, List<Customer>>` member
-went in for #1337, and 21 before the `.proto` DTO tree was added — none of these are comparable with
-each other, since the count tracks fixtures). What is left looks structural: 7
-`IL2067` and 3 `IL2070` on the runtime-model, `DynamicStub` and auxiliary paths, 5 `IL3050`
-(`MakeGenericType`/`MakeArrayType`, same paths), 1 `IL2057`, 1 `IL2055`, and the spent `IL2091` trio —
+**On this branch the count is 6** on win-x64, measured: 3 `IL2067` and the spent `IL2091` trio —
 `CreateInstance` ×2 (whose fallback is genuinely live) and `SubTypeState<T>.Cast` (which would need
-the annotation on every consumer).
+the annotation on every consumer). It was 5 before the `Dictionary<int, List<Customer>>` member went
+in for #1337, which added one `IL2067`; B48 in `notes/aot/findings.md` is where the 23 → 5 came from
+and why it paused there.
+
+The paragraphs above are **main's** history and stop at *its* number — 20, having been 19 before that
+same member and 21 before the `.proto` DTO tree. Do not read them as a v4 baseline: none of these
+figures are comparable with each other, since the count tracks both fixtures and the annotation work
+on the branch.
 
 **Watch bytes as well as warnings — they do not move together.** Two changes of identical shape:
 removing the transport annotation was −14 warnings and **−808 KB**; removing the `MapSerializer`

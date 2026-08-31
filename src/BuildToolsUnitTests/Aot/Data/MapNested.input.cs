@@ -53,6 +53,29 @@ public class Nested
     public Dictionary<int, List<DateTime>> Stamps { get; set; }
 }
 
+// Nested above is deliberately unmeasurable - a packable element, a nested map value and a BCL
+// element are all still blocked - and one blocked member takes the whole contract out of the
+// measure-first set, so it could never show the raw shape. This one carries only the nested values
+// that ARE arithmetic, so it is measure-first and its Measure_ shows the per-element loop.
+[ProtoContract]
+public class RawNested
+{
+    [ProtoMember(1)] public Dictionary<int, List<Leaf>> Messages { get; set; }
+    [ProtoMember(2)] public Dictionary<int, List<string>> Labels { get; set; }
+    [ProtoMember(3)] public int Trailer { get; set; }
+}
+
+// ... and RawNested has to be reached as a SUB-MESSAGE for any of that to be tested: at root
+// RawWrite_ writes straight out and never measures, so a wrong measure would not show. Here the
+// holder measures Inner to emit its length prefix, and After sits behind it - so a measure that is
+// off by a byte puts After in the wrong place and the differential sees it immediately.
+[ProtoContract]
+public class RawHolder
+{
+    [ProtoMember(1)] public RawNested Inner { get; set; }
+    [ProtoMember(2)] public int After { get; set; }
+}
+
 public static class MapNestedSamples
 {
     public static object[] Values =>
@@ -67,11 +90,37 @@ public static class MapNestedSamples
         new Nested { ValueTuples = new() { [13] = [(14, "b")] } },
         new Nested { MappedMessages = new() { [15] = new() { [16] = new Leaf { Id = 17 } } } },
         new Nested { Stamps = new() { [18] = [new DateTime(2020, 1, 2, 3, 4, 5, DateTimeKind.Utc)] } },
+
+        // the measure has to agree with WriteMap on every one of these: an empty collection (which
+        // contributes nothing for a non-packable element), a single element, several, and a
+        // trailing member whose position depends on the map's measured length being exact
+        new RawNested(),
+        new RawNested { Messages = new() { [1] = [] }, Trailer = 19 },
+        new RawNested { Messages = new() { [2] = [new Leaf { Id = 20 }] } },
+        new RawNested { Messages = new() { [3] = [new Leaf { Id = 21 }, new Leaf(), new Leaf { Id = 22 }] } },
+        new RawNested { Messages = new() { [4] = [new Leaf { Id = 23 }], [5] = [new Leaf { Id = 24 }] }, Trailer = 25 },
+        new RawNested { Labels = new() { [6] = [] } },
+        new RawNested { Labels = new() { [7] = ["a"] } },
+        new RawNested { Labels = new() { [8] = ["", "bb", "ccc"] }, Trailer = 26 },
+        new RawNested { Messages = new() { [9] = [new Leaf { Id = 27 }] }, Labels = new() { [10] = ["d"] }, Trailer = 28 },
+
+        new RawHolder(),
+        new RawHolder { Inner = new RawNested(), After = 29 },
+        new RawHolder { Inner = new RawNested { Messages = new() { [11] = [] } }, After = 30 },
+        new RawHolder { Inner = new RawNested { Messages = new() { [12] = [new Leaf { Id = 31 }] } }, After = 32 },
+        new RawHolder { Inner = new RawNested { Messages = new() { [13] = [new Leaf { Id = 33 }, new Leaf { Id = 34 }] } }, After = 35 },
+        new RawHolder { Inner = new RawNested { Labels = new() { [14] = ["e", "ff"] } }, After = 36 },
+        // a payload long enough that the entry length crosses into a two-byte varint, which is
+        // where an off-by-one in the per-element arithmetic stops being invisible
+        new RawHolder { Inner = new RawNested { Labels = new() { [15] = ["0123456789012345678901234567890123456789012345678901234567890123456789"] } }, After = 37 },
+        new RawHolder { Inner = new RawNested { Messages = new() { [16] = [new Leaf { Id = 38 }] }, Labels = new() { [17] = ["g"] }, Trailer = 39 }, After = 40 },
     ];
 }
 
 [ProtoModel]
 [ProtoSerializable(typeof(Nested))]
+[ProtoSerializable(typeof(RawNested))]
+[ProtoSerializable(typeof(RawHolder))]
 public partial class MapNestedModel : TypeModel
 {
 }

@@ -407,7 +407,7 @@ partial class InheritAccessorModel
             }
             return value.Value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 10;
+            static bool IsKnownField(uint tag) => (tag >> 3) is (>= 1 and <= 4) or 10;
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InheritAccessor.Derived>.Features
