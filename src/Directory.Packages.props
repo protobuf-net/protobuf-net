@@ -10,7 +10,11 @@
     <PackageVersion Include="System.Reflection.Emit.Lightweight" Version="4.7.0" />
     <PackageVersion Include="System.IO.Pipelines" Version="10.0.7" />
     <!-- note: some key types get removed in 10.* -->
-    <PackageVersion Include="System.ServiceModel.Primitives" Version="[8.1.2]" />
+    <PackageVersion Include="System.ServiceModel.Primitives" Version="[10.0.652802]" />
+    <!-- CVE-2026-50648 (DoS in XML decryption) affects 8.0.0-8.0.3 and 10.0.0-10.0.9; both WCF
+         Client majors depend on an affected version, so both legs are pulled up. net8.0 takes 8.0.4
+         via VersionOverride in the consuming project -->
+    <PackageVersion Include="System.Security.Cryptography.Xml" Version="10.0.11" />
   </ItemGroup>
   <ItemGroup>
     <PackageVersion Include="FSharp.Core" Version="10.1.400" />
