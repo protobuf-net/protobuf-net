@@ -298,7 +298,7 @@ partial class ListOptionsModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5 or 6;
+            static bool IsKnownField(uint tag) => (tag >> 3) is (>= 1 and <= 6);
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ListOptions.Options>.Features
@@ -545,7 +545,7 @@ partial class ListOptionsModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5 or 6;
+            static bool IsKnownField(uint tag) => (tag >> 3) is (>= 1 and <= 6);
         }
     }
 }

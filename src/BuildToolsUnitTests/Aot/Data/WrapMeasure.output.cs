@@ -586,7 +586,7 @@ partial class WrapMeasureModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5 or 6 or 7 or 8 or 9 or 20;
+            static bool IsKnownField(uint tag) => (tag >> 3) is (>= 1 and <= 9) or 20;
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.WrapMeasure.Carton>.Features
@@ -755,7 +755,7 @@ partial class WrapMeasureModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4;
+            static bool IsKnownField(uint tag) => (tag >> 3) is (>= 1 and <= 4);
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.WrapMeasure.Crate>.Features
@@ -1226,7 +1226,7 @@ partial class WrapMeasureModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5 or 6 or 7 or 8 or 9 or 10 or 11 or 12 or 13 or 21;
+            static bool IsKnownField(uint tag) => (tag >> 3) is (>= 1 and <= 13) or 21;
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.WrapMeasure.Leaf>.Features
@@ -1577,7 +1577,7 @@ partial class WrapMeasureModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5 or 6 or 20;
+            static bool IsKnownField(uint tag) => (tag >> 3) is (>= 1 and <= 6) or 20;
         }
 
         global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.WrapMeasure.Tint> global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.WrapMeasure.Tint>.Serializer

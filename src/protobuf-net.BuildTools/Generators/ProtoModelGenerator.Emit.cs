@@ -980,8 +980,8 @@ namespace ProtoBuf.BuildTools.Generators
             var exit = subType ? "return value.Value;" : "return value;";
             var knownFields = contract.Members.Select(static m => m.FieldNumber)
                 .Concat(contract.SubTypes.Select(static s => s.FieldNumber))
+                .Distinct()
                 .OrderBy(static n => n)
-                .Select(static n => n.ToString(CultureInfo.InvariantCulture))
                 .ToArray();
             Line(sb, indent + 3, "default:");
             Line(sb, indent + 4, hasAfter
@@ -1012,10 +1012,100 @@ namespace ProtoBuf.BuildTools.Generators
             if (knownFields.Length != 0)
             {
                 sb.AppendLine();
-                Line(sb, indent + 1, "static bool IsKnownField(uint tag) => (tag >> 3) is "
-                    + string.Join(" or ", knownFields) + ";");
+                EmitKnownFieldTest(sb, indent + 1, knownFields);
             }
             Line(sb, indent, "}");
+        }
+
+        /// <summary>
+        /// <c>IsKnownField</c>, as a <b>switch statement</b> with one case label per contiguous run.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>An <c>or</c> chain here is a deep stack, and it is not a term-count problem.</b>
+        /// Roslyn parses <c>a or b or c</c> into a left-nested tree and binds it by RECURSING once
+        /// per <c>or</c>, so how many terms fit depends on the stack available at that point.
+        /// Measured: an in-process <c>Compilation.Emit</c> - which is what
+        /// <c>AotDifferential</c>, <c>AotCoverage</c> and every IDE-hosted analyzer use, on ordinary
+        /// thread-pool stacks - takes 1000 terms and dies on 5000, while <c>csc.exe</c> swallows
+        /// 30000 because it binds on dedicated large-stack threads. So the corpus compiled under
+        /// <c>dotnet build</c> and crashed in our own harness, with a bare <c>Stack overflow.</c>
+        /// and no diagnostic. There is no dependable threshold to switch on, which is why this is
+        /// unconditional.
+        /// </para>
+        /// <para>
+        /// A switch's sections are a FLAT LIST, so binding them is a loop: measured good to 60000
+        /// labels in the same host that died at 5000 terms. It costs nothing at run time either -
+        /// benchmarked at 20M calls, the <c>or</c> chain, a range pattern and this switch are
+        /// indistinguishable (~3ns dense, ~5ns sparse, delegate-bound), because Roslyn's decision
+        /// DAG already lowers a dense constant set to a jump table and a sparse one to a binary
+        /// search. The <c>or</c> chain was never paying per-call for its length; only the compiler
+        /// was.
+        /// </para>
+        /// <para>
+        /// Runs collapse to a relational label purely to keep the emitted source small - a
+        /// <c>.proto</c> message numbers its fields from 1 upwards, so the thousand-field case is
+        /// one label. Runs of three or fewer stay spelled out, because <c>case 1: case 2:</c> reads
+        /// better than a range.
+        /// </para>
+        /// </remarks>
+        private static void EmitKnownFieldTest(StringBuilder sb, int indent, int[] sorted)
+        {
+            var runs = KnownFieldRuns(sorted);
+            // At most two terms is at most two binder frames - a constant, not a bet on how much
+            // stack is left - so the one-liner is kept for what is overwhelmingly the common shape:
+            // a .proto message numbers its fields from 1, which collapses to a single range. This is
+            // not the kind of threshold rejected above; that objection was to picking a number NEAR
+            // the limit, which is exactly what cannot be done.
+            if (runs.Count <= 2)
+            {
+                Line(sb, indent, "static bool IsKnownField(uint tag) => (tag >> 3) is "
+                    + string.Join(" or ", runs.Select(static x => x.Pattern)) + ";");
+                return;
+            }
+            Line(sb, indent, "static bool IsKnownField(uint tag)");
+            Line(sb, indent, "{");
+            Line(sb, indent + 1, "switch (tag >> 3)");
+            Line(sb, indent + 1, "{");
+            foreach (var run in runs) Line(sb, indent + 2, $"case {run.Label}:");
+            Line(sb, indent + 3, "return true;");
+            Line(sb, indent + 2, "default:");
+            Line(sb, indent + 3, "return false;");
+            Line(sb, indent + 1, "}");
+            Line(sb, indent, "}");
+        }
+
+        /// <summary>
+        /// The sorted field numbers as terms, with contiguous runs of four or more collapsed to a
+        /// relational one. Shorter runs stay spelled out, since <c>1 or 2 or 3</c> reads better than
+        /// a range and three frames is no one's problem.
+        /// </summary>
+        private static List<(string Pattern, string Label)> KnownFieldRuns(int[] sorted)
+        {
+            var runs = new List<(string, string)>();
+            for (int i = 0; i < sorted.Length;)
+            {
+                int start = i;
+                while (i + 1 < sorted.Length && sorted[i + 1] == sorted[i] + 1) i++;
+                if (i - start + 1 > 3)
+                {
+                    var range = $">= {sorted[start].ToString(CultureInfo.InvariantCulture)}"
+                        + $" and <= {sorted[i].ToString(CultureInfo.InvariantCulture)}";
+                    // a pattern needs the parentheses against the surrounding `or`; a case label,
+                    // being the whole pattern, does not
+                    runs.Add(($"({range})", range));
+                }
+                else
+                {
+                    for (int j = start; j <= i; j++)
+                    {
+                        var one = sorted[j].ToString(CultureInfo.InvariantCulture);
+                        runs.Add((one, one));
+                    }
+                }
+                i++;
+            }
+            return runs;
         }
 
         private static string WireName(int wire) => wire switch
@@ -3562,7 +3652,12 @@ namespace ProtoBuf.BuildTools.Generators
                 : InbuiltSerializer(member.Map.KeyKind, member.Map.KeyTypeName,
                     EffectiveCompatibilityLevel(member.DeclaredCompatibilityLevel, member.MapKeyFormat),
                     member.MapKeyFormat);
-            var value = member.Map.ValueKind == ProtoMemberKind.Message ? self
+            // a nested value - repeated or map - resolves its ISerializer<TCollection> from the
+            // model through the ISerializerProxy<TCollection> the services type exposes, so nothing
+            // is passed here. ValueKind is the *element's*, so testing it would say "this", which is
+            // an ISerializer<TElement> where an ISerializer<TCollection> is wanted: CS1503
+            var value = member.Map.ValueSerializerFactory is not null ? null
+                : member.Map.ValueKind == ProtoMemberKind.Message ? self
                 : InbuiltSerializer(member.Map.ValueKind, member.Map.ValueTypeName,
                     EffectiveCompatibilityLevel(member.DeclaredCompatibilityLevel, member.MapValueFormat),
                     member.MapValueFormat);
@@ -4648,21 +4743,90 @@ namespace ProtoBuf.BuildTools.Generators
             && member.DataFormat == ProtoDataFormat.Default
             && member.MapKeyFormat == ProtoDataFormat.Default
             && member.MapValueFormat == ProtoDataFormat.Default
+            && MapSideMeasurable(member.Map.KeyKind)
+            && member.Map.KeyKind != ProtoMemberKind.Message
             // A REPEATED VALUE (Dictionary<int, List<int>>) is legal - the one place nesting is -
-            // and ValueKind is then the ELEMENT's kind, so the scalar test above says "Int32" for
+            // and ValueKind is then the ELEMENT's kind, so the scalar test below says "Int32" for
             // a List<int> and the measure would emit `pair.Value != 0` against a List<int>. The
             // corpus caught exactly that. ValueSerializerFactory is the marker: it is set when the
-            // value resolves its serializer from the model, which is what a repeated value does
-            && member.Map.ValueSerializerFactory is null
-            && MapSideMeasurable(member.Map.KeyKind)
-            // a MESSAGE value recurses into the target's own Measure_ (gap B6). It needs the
-            // target to be measurable, and nothing more - the entry arithmetic is the same shape
-            // as any other length-prefixed sub-message. What blocked it for two sittings was not
-            // this predicate but a re-entrancy bug one layer down; see RawLengthBuffer.SeekTo.
-            && (MapSideMeasurable(member.Map.ValueKind)
-                || (member.Map.ValueKind == ProtoMemberKind.Message
-                    && member.Map.ValueTypeName is { } valueType && measurable.ContainsKey(valueType)))
-            && member.Map.KeyKind != ProtoMemberKind.Message;
+            // value resolves its serializer from the model, which is what a nested value does, and
+            // it is what selects the nested rules rather than the plain ones.
+            && (member.Map.ValueSerializerFactory is null
+                // a MESSAGE value recurses into the target's own Measure_ (gap B6). It needs the
+                // target to be measurable, and nothing more - the entry arithmetic is the same
+                // shape as any other length-prefixed sub-message. What blocked it for two sittings
+                // was not this predicate but a re-entrancy bug one layer down; see
+                // RawLengthBuffer.SeekTo.
+                ? MapSideMeasurable(member.Map.ValueKind)
+                    || (member.Map.ValueKind == ProtoMemberKind.Message
+                        && member.Map.ValueTypeName is { } valueType && measurable.ContainsKey(valueType))
+                : RawMapNestedValueMeasurable(member.Map, measurable));
+
+        /// <summary>
+        /// A nested map value - <c>Dictionary&lt;K, List&lt;V&gt;&gt;</c> - whose size is still pure
+        /// arithmetic (#1337).
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// The value is not a field of the entry in the ordinary sense: <c>KeyValuePairSerializer</c>
+        /// hands it to <c>WriteAny</c>, which sees <c>CategoryRepeated</c> and calls
+        /// <c>WriteRepeated</c> - so field 2 <b>repeats</b>, once per element, and the entry carries
+        /// no length of its own for it.
+        /// </para>
+        /// <para>
+        /// <b>A packable element takes a different shape, not a harder one.</b> <c>WriteRepeated</c>
+        /// packs on <c>CanBePacked &amp;&amp; !IsPackedDisabled &amp;&amp; (count == 0 || count > 1)</c>,
+        /// so the encoding depends on the <em>count</em> - probed: <c>{1:[]}</c> writes
+        /// <c>12-00</c>, <c>{1:[9]}</c> the unpacked <c>10-09</c>, and <c>{1:[9,10]}</c> the packed
+        /// <c>12-02-09-0A</c>. That is a run-time question and <c>Measure_</c> is run-time code, so
+        /// it is simply a branch on the count; likewise the empty case's
+        /// <c>WriteZeroLengthPackedHeader</c>, gated on the <c>SkipZeroLengthPackedArrays</c> model
+        /// option, which the measure reads off <c>context.Model.Options</c>. An earlier pass
+        /// excluded packable elements on the grounds that neither was "knowable at generation time",
+        /// which confused a compile-time constant with a value the generated code can read.
+        /// </para>
+        /// <para>
+        /// Every packable kind was probed inside a map value rather than assumed, and they all pack:
+        /// the integrals, <c>bool</c>, <c>char</c>, the floats, <b>enums</b> and <b>arrays</b>. So
+        /// <c>EnumSerializer</c> is an <c>IMeasuringSerializer</c>, which the packed branch requires.
+        /// </para>
+        /// <para>
+        /// Two things stay out. A <b>nullable</b> element (<c>List&lt;int?&gt;</c>) packs too, but
+        /// what the writer does with a null inside a packed run is untested, so its measure would be
+        /// guesswork. And a <b>value-type collection</b> (<c>ImmutableArray&lt;T&gt;</c>) cannot be
+        /// null-guarded the way the reference ones are - <c>default</c> throws on <c>foreach</c>
+        /// while the writer treats it as empty and still emits the two-byte zero-length header - so
+        /// those keep the classic path. A nested <em>map</em> value is out for a third reason: it is
+        /// the outer shape again one level down, and nothing needs it yet.
+        /// </para>
+        /// </remarks>
+        private static bool RawMapNestedValueMeasurable(ProtoMapPlan map,
+            Dictionary<string, ProtoContractPlan> measurable)
+            => map.ValueElementTypeName is { } element
+            // a default(ImmutableArray<T>) throws on foreach and reads as empty to the writer
+            && !map.ValueRepeated.IsValueType
+            // a null element inside a packed run has no reference behaviour we have established
+            && !element.EndsWith("?", StringComparison.Ordinal)
+            && map.ValueKind switch
+            {
+                // never packable: WriteRepeated always loops, one tag per element
+                ProtoMemberKind.String => true,
+                ProtoMemberKind.Message => measurable.ContainsKey(element),
+                // packable: the three-way count branch below
+                _ => MapNestedPackableKind(map.ValueKind),
+            };
+
+        /// <summary>
+        /// The element kinds that reach <c>WriteRepeated</c>'s packed branch inside a map value -
+        /// <c>TypeHelper&lt;T&gt;.CanBePacked</c>, restricted to the kinds
+        /// <see cref="MapSideBody"/> can size. An enum arrives here as its underlying kind, with
+        /// <c>ValueEnumTypeName</c> set, and packs like any other integral.
+        /// </summary>
+        private static bool MapNestedPackableKind(ProtoMemberKind kind) => kind is
+            ProtoMemberKind.Bool or ProtoMemberKind.Int32 or ProtoMemberKind.SByte
+            or ProtoMemberKind.Int16 or ProtoMemberKind.UInt32 or ProtoMemberKind.Byte
+            or ProtoMemberKind.UInt16 or ProtoMemberKind.Char or ProtoMemberKind.Int64
+            or ProtoMemberKind.UInt64 or ProtoMemberKind.Single or ProtoMemberKind.Double;
 
         /// <summary>
         /// Whether a map side is an <b>enum</b>, which is the underlying scalar on the wire but
@@ -4687,6 +4851,43 @@ namespace ProtoBuf.BuildTools.Generators
             bool key, string expression, string entry, string number)
         {
             var kind = key ? member.Map.KeyKind : member.Map.ValueKind;
+            if (!key && member.Map.ValueSerializerFactory is not null)
+            {
+                // A NESTED value repeats field 2 rather than filling it once: WriteAny sees
+                // CategoryRepeated and hands the whole collection to WriteRepeated, which emits its
+                // own headers. RawMapNestedValueMeasurable admits only non-packable elements, so
+                // that is always the unpacked loop - an empty collection contributes nothing, and
+                // there is no count==1 special case and no zero-length packed header to account for.
+                // The element's own null check mirrors the writer's, which throws rather than
+                // skipping.
+                var item = $"item{number}";
+                var element = member.Map.ValueElementTypeName!;
+                Line(sb, indent, $"if ({expression} != null)");
+                Line(sb, indent, "{");
+                if (MapNestedPackableKind(kind))
+                {
+                    EmitMapNestedPackedMeasure(sb, indent + 1, member, kind, expression, entry, number);
+                    Line(sb, indent, "}");
+                    return;
+                }
+                Line(sb, indent + 1, $"foreach (var {item} in {expression})");
+                Line(sb, indent + 1, "{");
+                Line(sb, indent + 2, $"if ({item} is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<{element}>();");
+                if (kind == ProtoMemberKind.Message)
+                {
+                    // Discard, not a reserved slot: the write stays on MapSerializer.WriteMap, which
+                    // computes its own sub-lengths, exactly as the unary message side does
+                    Line(sb, indent + 2, $"sub = Measure_{Sanitise(element)}({item}, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);");
+                    Line(sb, indent + 2, $"{entry} += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;");
+                }
+                else
+                {
+                    Line(sb, indent + 2, $"{entry} += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString({item});");
+                }
+                Line(sb, indent + 1, "}");
+                Line(sb, indent, "}");
+                return;
+            }
             if (kind == ProtoMemberKind.Message)
             {
                 // present-but-empty is a real case: {1:Leaf()} writes 12-00, where {1:null} omits
@@ -4737,6 +4938,47 @@ namespace ProtoBuf.BuildTools.Generators
 
             var add = $"{entry} += 1 + {MapSideBody(kind, value)};";
             Line(sb, indent, enumSide ? add : $"if ({MapSideGuard(kind, unwrapped)}) {add}");
+        }
+
+        /// <summary>
+        /// The three-way packed measure for a packable element inside a map value, mirroring
+        /// <c>RepeatedSerializer.WriteRepeated</c> exactly.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Count and payload come from ONE pass, which is why nothing here needs the collection's
+        /// <c>Count</c>/<c>Length</c> - the map plan does not carry which of those applies, and an
+        /// enumerable is all the writer requires either.
+        /// </para>
+        /// <para>
+        /// The three arms are the writer's, and the middle one is the surprising one: a single
+        /// element is <b>never</b> packed, so it is the plain <c>tag + payload</c>, which is also
+        /// exactly the accumulated payload plus one. Zero elements still emit
+        /// <c>WriteZeroLengthPackedHeader</c>'s two bytes unless the model opts out, and a null
+        /// model means the default options, so the test mirrors <c>OmitsOption</c> rather than
+        /// assuming a model is present.
+        /// </para>
+        /// </remarks>
+        private static void EmitMapNestedPackedMeasure(StringBuilder sb, int indent, ProtoMemberPlan member,
+            ProtoMemberKind kind, string expression, string entry, string number)
+        {
+            var item = $"item{number}";
+            var count = $"count{number}";
+            var payload = $"packed{number}";
+            // an enum element is the underlying scalar on the wire, and needs the cast to get there
+            var value = member.Map.ValueEnumTypeName is null
+                ? item : $"({UnderlyingKeyword(kind)}){item}";
+            Line(sb, indent, $"long {payload} = 0; int {count} = 0;");
+            Line(sb, indent, $"foreach (var {item} in {expression})");
+            Line(sb, indent, "{");
+            Line(sb, indent + 1, $"{payload} += {MapSideBody(kind, value)};");
+            Line(sb, indent + 1, $"{count}++;");
+            Line(sb, indent, "}");
+            Line(sb, indent, $"if ({count} == 1) {entry} += 1 + {payload};  // one element is never packed");
+            Line(sb, indent, $"else if ({count} != 0) {entry} += 1 + global::ProtoBuf.ProtoWriter.State"
+                + $".MeasureRawVarint64((ulong){payload}) + {payload};");
+            Line(sb, indent, "else if ((((context?.Model)?.Options ?? default) & global::ProtoBuf.Meta.TypeModel"
+                + $".TypeModelOptions.SkipZeroLengthPackedArrays) == 0) {entry} += 2;  // zero-length packed header");
         }
 
         /// <summary>

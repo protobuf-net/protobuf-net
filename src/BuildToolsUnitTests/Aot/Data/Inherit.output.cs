@@ -506,7 +506,18 @@ partial class InheritModel
             }
             return value.Value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 100 or 101;
+            static bool IsKnownField(uint tag)
+            {
+                switch (tag >> 3)
+                {
+                    case 1:
+                    case 100:
+                    case 101:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Inherit.Cat>.Features

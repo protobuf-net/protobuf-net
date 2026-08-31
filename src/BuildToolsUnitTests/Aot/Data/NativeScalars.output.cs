@@ -266,7 +266,7 @@ partial class NativeScalarsModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5 or 6 or 7 or 8;
+            static bool IsKnownField(uint tag) => (tag >> 3) is (>= 1 and <= 8);
         }
     }
 }

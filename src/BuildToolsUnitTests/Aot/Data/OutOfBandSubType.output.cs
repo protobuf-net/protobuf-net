@@ -917,7 +917,19 @@ partial class OutOfBandSubTypeModel
             }
             return value.Value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 100 or 101 or 102;
+            static bool IsKnownField(uint tag)
+            {
+                switch (tag >> 3)
+                {
+                    case 1:
+                    case 100:
+                    case 101:
+                    case 102:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.OutOfBandSubType.Square>.Features
@@ -1306,7 +1318,18 @@ partial class OutOfBandSubTypeModel
             }
             return value.Value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 10 or 11;
+            static bool IsKnownField(uint tag)
+            {
+                switch (tag >> 3)
+                {
+                    case 1:
+                    case 10:
+                    case 11:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
         }
     }
 }

@@ -230,7 +230,7 @@ partial class ModelSerializerModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5;
+            static bool IsKnownField(uint tag) => (tag >> 3) is (>= 1 and <= 5);
         }
 
         global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSerializer.Wrapped<byte>> global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.ModelSerializer.Wrapped<byte>>.Serializer

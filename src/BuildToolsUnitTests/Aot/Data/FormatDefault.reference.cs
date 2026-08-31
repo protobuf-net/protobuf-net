@@ -66,7 +66,7 @@ internal sealed class ___PBN_Services___FormatDefaultModel : ISerializer<Payment
 			case 6:
 			{
 				Dictionary<int, Guid> byId = value.ById;
-				byId = MapSerializer.CreateDictionary<int, Guid>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, byId, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeString, null, TypeModel.GetInbuiltSerializer<Guid>(CompatibilityLevel.Level300, DataFormat.Default));
+				byId = MapSerializer.CreateDictionary<int, Guid>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, byId, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeString, null, TypeModel.GetInbuiltSerializer<Guid>(CompatibilityLevel.Level300));
 				if (byId != null)
 				{
 					value.ById = byId;
@@ -130,7 +130,7 @@ internal sealed class ___PBN_Services___FormatDefaultModel : ISerializer<Payment
 		if (byId != null)
 		{
 			Dictionary<int, Guid> values2 = byId;
-			MapSerializer.CreateDictionary<int, Guid>().WriteMap(ref state, 6, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values2, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeString, null, TypeModel.GetInbuiltSerializer<Guid>(CompatibilityLevel.Level300, DataFormat.Default));
+			MapSerializer.CreateDictionary<int, Guid>().WriteMap(ref state, 6, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values2, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeString, null, TypeModel.GetInbuiltSerializer<Guid>(CompatibilityLevel.Level300));
 		}
 		List<Guid?> certs = value.Certs;
 		if (certs != null)

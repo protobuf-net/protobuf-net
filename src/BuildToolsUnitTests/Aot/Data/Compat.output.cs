@@ -658,7 +658,7 @@ partial class CompatModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5 or 6 or 7 or 8;
+            static bool IsKnownField(uint tag) => (tag >> 3) is (>= 1 and <= 8);
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.InheritsLevel>.Features
@@ -935,7 +935,7 @@ partial class CompatModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5 or 6;
+            static bool IsKnownField(uint tag) => (tag >> 3) is (>= 1 and <= 6);
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.LegacyFixed>.Features
@@ -1123,7 +1123,7 @@ partial class CompatModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4;
+            static bool IsKnownField(uint tag) => (tag >> 3) is (>= 1 and <= 4);
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.Level300>.Features
@@ -1290,7 +1290,7 @@ partial class CompatModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5;
+            static bool IsKnownField(uint tag) => (tag >> 3) is (>= 1 and <= 5);
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.LevelledBase>.Features
@@ -1525,7 +1525,18 @@ partial class CompatModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3;
+            static bool IsKnownField(uint tag)
+            {
+                switch (tag >> 3)
+                {
+                    case 1:
+                    case 2:
+                    case 3:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.WellKnown>.Features
@@ -1604,7 +1615,18 @@ partial class CompatModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3;
+            static bool IsKnownField(uint tag)
+            {
+                switch (tag >> 3)
+                {
+                    case 1:
+                    case 2:
+                    case 3:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
         }
     }
 }

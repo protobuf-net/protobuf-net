@@ -497,7 +497,7 @@ partial class FormatsModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5 or 6 or 7 or 8 or 9 or 10 or 11;
+            static bool IsKnownField(uint tag) => (tag >> 3) is (>= 1 and <= 11);
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Formats.Inner>.Features
@@ -769,7 +769,7 @@ partial class FormatsModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5 or 6 or 7 or 20;
+            static bool IsKnownField(uint tag) => (tag >> 3) is (>= 1 and <= 7) or 20;
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Formats.SizedHolder>.Features

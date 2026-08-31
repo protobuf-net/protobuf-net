@@ -988,7 +988,18 @@ partial class GenericHierarchyModel
             }
             return value.Value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 3 or 4;
+            static bool IsKnownField(uint tag)
+            {
+                switch (tag >> 3)
+                {
+                    case 1:
+                    case 3:
+                    case 4:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GenericHierarchy.PlainNode>.Features

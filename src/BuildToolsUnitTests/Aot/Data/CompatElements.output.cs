@@ -391,7 +391,7 @@ partial class CompatElementsModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5 or 6 or 7;
+            static bool IsKnownField(uint tag) => (tag >> 3) is (>= 1 and <= 7);
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.CompatElements.Level300Lists>.Features
@@ -588,7 +588,7 @@ partial class CompatElementsModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5;
+            static bool IsKnownField(uint tag) => (tag >> 3) is (>= 1 and <= 5);
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.CompatElements.Level300Map>.Features
@@ -746,7 +746,18 @@ partial class CompatElementsModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3;
+            static bool IsKnownField(uint tag)
+            {
+                switch (tag >> 3)
+                {
+                    case 1:
+                    case 2:
+                    case 3:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
         }
     }
 }
