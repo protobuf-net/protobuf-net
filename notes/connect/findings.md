@@ -1019,6 +1019,64 @@ second Kestrel endpoint on HTTP/2, and it should be a **separate project**: prot
 reflective code-first path is what `GrpcProxyGenerator` exists to replace, so hosting it inside a
 `PublishAot` project would pollute the warning baseline that makes §16's numbers meaningful.
 
+## 18. Where the marshallers went — there are none, deliberately
+
+`HandWritten.cs` names no marshaller, and `ConnectMethod<TRequest, TResponse>` carries no serializer,
+unlike `Grpc.Core.Method<,>`. That is a structural difference from the gRPC path rather than an
+omission, and it is worth recording because the obvious "fix" is to add them back.
+
+### The thing marshallers work around does not exist here
+
+`AGENTS.md` records why `GrpcProxyGenerator` pre-registers marshallers, and is explicit that it is
+**load-bearing, not an optimisation**: `MarshallerCache.CreateMarshaller<T>` gates on
+`CanSerialize(typeof(T))`, which reaches `DynamicStub` → `MakeGenericType` and returns **false** under
+AOT, so the generator calls `BinderConfiguration.SetMarshaller<T>` per payload to sidestep the gate.
+
+The Connect path never enters that machinery. Traced rather than assumed:
+
+```
+codec.Read<T>(seq) → TypeModel.Deserialize<T>(ReadOnlySequence<byte>)
+                   → state.DeserializeRootImpl<T>(value)              // the *generic* root path
+                   → GetSerializer<T>()
+                   → SerializerCache.Get<ProtoBufGeneratedServices, T>()
+```
+
+`DynamicStub` appears only in `TypeModel`'s **`Type`-based** overloads (`DeserializeRootFallback`,
+`TrySerializeRoot`, …), none of which is on this path. There is no `MarshallerCache`, no
+`CanSerialize`, no `MakeGenericType`. So there is nothing to pre-register *around*.
+
+### And a per-type marshaller could not work anyway
+
+The server picks the codec **per request, from the content-type**: `application/proto` and
+`application/json` must serialize the same method differently. A serializer baked into a method
+descriptor is codec-fixed by construction, so it cannot express content negotiation at all.
+
+This is the same fact, seen from the other side, as §8.1's note that a `ConnectCallInvoker` would be
+binary-only: `Grpc.Core.Marshaller<T>` is where the gRPC design puts the codec, and the Connect design
+cannot put it there.
+
+Hence `ConnectCodec` holds the `TypeModel`, and lives on the channel (client) or in
+`ConnectServerOptions.Codecs` (server) — not on the method.
+
+### Nothing is lost, and both halves were checked
+
+- **No caching gap.** `SerializerCache.Get<TProvider, T>()` already resolves to a *static generic
+  field* for a generated model, so caching a serializer per `ConnectMethod<,>` would save a static
+  field read. The gRPC proxy caches marshallers in fields because `Method<,>` demands them, not because
+  resolution is expensive.
+- **ILC still generates the instantiations without pre-registration**, because they are statically
+  reachable from generated code: `GreeterMethods.SayHello` is a `ConnectMethod<HelloRequest, HelloReply>`,
+  and `UnaryAsync<HelloRequest, HelloReply>` → `Read<HelloReply>` → `Deserialize<HelloReply>`. That is
+  *why* the native smoke test round-trips; had it not been true, §16 would have failed rather than
+  passed quietly.
+
+### The one real consequence
+
+**A `ConnectChannel` is bound to a single `TypeModel`,** since the codec holds it — the role
+`BinderConfiguration` plays in protobuf-net.Grpc. Two models means two channels. That looks right
+rather than limiting, but it is the design's one visible constraint and should be a deliberate choice
+if it ever changes.
+
 ## 12. Unverified — check before committing to any of this
 
 Everything below is assumption or inference, not measurement:
