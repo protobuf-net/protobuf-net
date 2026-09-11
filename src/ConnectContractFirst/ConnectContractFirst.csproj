@@ -26,6 +26,12 @@
     <PackageReference Include="Google.Protobuf" />
     <PackageReference Include="Grpc.Net.Client" />
     <ProjectReference Include="../protobuf-net.Connect.AspNetCore/protobuf-net.Connect.AspNetCore.csproj" />
+    <!-- PBN5007 is the one thing on this path that can go silently WRONG rather than merely missing, so
+         the sample carries the analyzer that catches it. Note it does NOT arrive on its own: nothing in
+         the reference chain brings BuildTools to a contract-first consumer, which is a real packaging
+         question - see notes/connect/findings.md §43. -->
+    <ProjectReference Include="../protobuf-net.BuildTools/protobuf-net.BuildTools.csproj"
+                      OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
 </Project>

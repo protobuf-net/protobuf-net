@@ -2571,10 +2571,79 @@ this repo has a section on exactly that mistake — so the native binary execute
 
 ### Next
 
-- **Endpoint metadata for contract-first** (§41): `[Authorize]` is still not inferred, and that is the
-  one gap here with a security shape rather than a convenience shape.
-- `connectconformance` against both halves.
+- `connectconformance` against both halves — see §43 for why it is bigger than it sounds.
 - JSON codec — still the largest single piece, and still unsized by anything but judgement.
+
+## 43. `PBN5007`: the authorization gap, caught at build time instead
+
+§41 recorded that contract-first does not infer endpoint metadata, so `[Authorize]` on a service method
+is silently *not honoured* and the endpoint is served unauthenticated. That is the one thing on this
+path that can be **wrong** rather than merely missing, and a documented parameter is not much of a
+guard — the person who hits it is migrating an existing gRPC service, has already written the
+attribute, and has no reason to re-read our docs.
+
+So it is an analyzer, which is the answer this repo keeps arriving at and the one asked for: *check
+that the user isn't doing the thing we just said they can't do.*
+
+**`ConnectContractFirstAnalyzer` / `PBN5007`** fires on a `MapConnectService` call whose
+implementation carries an authorization attribute and which supplies no metadata. Details that were
+decided rather than defaulted:
+
+- **It reads the *contract-first* overload only**, told apart by its second parameter being a delegate
+  rather than an `IConnectServiceBinder`. The code-first overload infers nothing and gets its metadata
+  from the generator, so it has nothing to be wrong about.
+- **`[AllowAnonymous]` counts too.** Dropped, it makes an endpoint *less* reachable rather than more —
+  a different bug, equally invisible, and worth the same warning.
+- **Derived attributes count**, since carrying a policy on a derived `AuthorizeAttribute` is far more
+  common in real code than the bare one. Base types are walked, because a shared contract may put the
+  attribute on the generated base.
+- **Any chained call on the returned builder silences it.** Deliberately *any*, not specifically
+  `RequireAuthorization`: the complaint is that authorization was written down and dropped, and a
+  consumer using the builder has demonstrably read the return value. Insisting on one method would
+  make the rule a style opinion and a noisy one, and a noisy authorization rule is a rule people turn
+  off — which protects nothing.
+- A **warning**, per this assembly's convention, but the one here most worth `WarningsAsErrors`.
+
+### The tests had a vacuous-pass hole, and it was already open
+
+Most of the twelve cases are *negative* (`DoesNotContain PBN5007`). `AnalyzerTestBase` returns **all**
+diagnostics, compiler errors included, and asserts nothing about them — so a negative test whose
+fixture does not compile passes trivially, having analysed nothing.
+
+That was not hypothetical: the first run had the stub extension method out of scope, and **six tests
+reported it while six passed anyway**. `RunAsync` now asserts the fixture compiled. The positive and
+negative cases are also written as controlled pairs differing in one token (`, "rpc"` versus
+`, metadata: ...`; chained versus not), so each negative result is attributable.
+
+### Two findings about delivery, both measured
+
+- **The analyzer does not reach a contract-first consumer on its own.** Nothing in the
+  `protobuf-net.Connect.AspNetCore` → `protobuf-net.Connect` → `protobuf-net.Core` chain brings
+  BuildTools with it; removing the sample's explicit analyzer reference took the csc `/analyzer:` count
+  to zero and the diagnostic with it. So **`PBN5007` protects nobody unless packaging delivers it**, and
+  that is a real question for whenever these projects become packages — a contract-first consumer has
+  no reason to reference protobuf-net at all.
+- **A single `OutputItemType="Analyzer"` project reference reaches csc twice**, so every diagnostic in
+  such a project is reported twice. Pre-existing and repo-wide — `AotConnectSmoke` does it too — and
+  invisible until now only because those projects emit no diagnostics. Not fixed here; recorded because
+  "why is my warning doubled" is otherwise a puzzle, and because it means a diagnostic *count* from one
+  of these projects is not a count of anything.
+
+### Sizing `connectconformance`, since it is the obvious next thing and looks smaller than it is
+
+It is not "download a binary and run it". The runner spawns *our* executable and speaks a
+protobuf-framed control protocol over stdin/stdout, and the program under test must implement
+`connectrpc.conformance.v1.ConformanceService` — a substantial service in its own right — in both a
+`--mode client` and a `--mode server` shape. That is a project, not an afternoon, and it should be
+started as one rather than half-landed.
+
+### Status
+
+- `BuildToolsUnitTests` — **552/552** (540 + 12).
+- `src/ConnectContractFirst` — 27/27, and clean once the temporary `[Authorize]` used to prove the
+  analyzer fires on a real build is removed.
+- `protobuf-net.BuildTools.Legacy` builds; analyzers are listed there by name, so a new one is
+  correctly invisible to it.
 
 ## 12. Unverified — check before committing to any of this
 
