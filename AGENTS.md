@@ -19,12 +19,13 @@ The notes are deliberately versioned **with the code**, not in one central place
 and a note on a branch correctly describes *that branch*. The cost is that you have to know where
 to look while a stack is in flight, which is what this section is for.
 
-**A branch IS in flight as of 2026-08-26** — `nrt-reflection`, carrying gap B51's Reflection stage
-(NRT across the hand-written sources, protogen emitting annotations, `Descriptor.cs` regenerated,
-the PublicAPI baseline recorded) and gap B52's closure. The "current on" column below is therefore
-restored, per the rule that follows; drop it again when the branch merges and `v4` is once more the
-only answer. Two wrong-branch claims were shipped last time it was left off while a stack was in
-flight, one of them in this very table.
+**No branch is in flight as of 2026-09-11** — `nrt-reflection` merged as #1332, so **`v4` is once
+more the only answer** and the "current on" column below is dropped again, per the rule that follows.
+Restore it the moment a sub-branch is cut: two wrong-branch claims were shipped last time it was left
+off while a stack was in flight, one of them in this very table.
+
+`v4` last took `main` on **2026-09-11** (the 3.4.21 line). `main` is the released line and is no
+longer ahead of this one; a fix that has to ship before v4 does goes there first and is merged here.
 
 `notes/readme.md` states the `docs/` vs `notes/` split and why it matters; read it before adding a
 file to either. The short form is that `docs/` is the published site, so "it is obviously internal"
@@ -38,21 +39,23 @@ battery, who owns which diagnostic id — as against what it can look up once it
 about how one shape is emitted belongs in the reference; a new way to get something silently wrong
 belongs here.
 
-| document | covers | current on |
-| --- | --- | --- |
-| `AGENTS.md` (this file) | conventions, traps, gate battery | `v4` |
-| **`notes/gaps.md`** | **every known gap with its DECISION — start here for "what is missing?"** | `nrt-reflection` |
-| **`notes/aot/generator-reference.md`** | **what the generator emits for each shape, and why — the per-feature reference, carved out of this file on 2026-08-25** | `v4` |
-| `notes/nano-core.md` | the reader arc: design and the cuts | `v4` |
-| `notes/nano-writer.md` | the writer arc, **plus an index of everything parked or owed** | `v4` |
-| `notes/packed-writes.md` | the packed matrix, **and the raw packed surface that came out of it** | `v4` |
-| `notes/aot-schema-model.md` | `[ProtoSchema]`: design and open items | `v4` |
-| `notes/aot/findings.md` | numbered findings from the AOT generator work, and the ranked next-steps list | `nrt-reflection` |
-| `notes/aot/coverage.md`, `notes/aot/differential.md` | the two corpus sweeps' last snapshots (tool output — regenerated, not maintained) | `v4` |
-| `notes/aot/grpc.md` | the gRPC proxy generator (from `main`) | `v4` |
-| `notes/editions/feature-analysis.md` | the editions arc (from `main`) | `v4` |
-| `docs/aot.md` | the consumer-facing AOT guide, incl. the throughput table | `v4` |
-| `tools/` | repo scripts that are not part of a build — currently `annotate-public-api.py`, which rewrites `PublicAPI.*.txt` baselines from the analyzer's own `RS0036` output (gap B51) | `v4` |
+All of these are current on **`v4`**:
+
+| document | covers |
+| --- | --- |
+| `AGENTS.md` (this file) | conventions, traps, gate battery |
+| **`notes/gaps.md`** | **every known gap with its DECISION — start here for "what is missing?"** |
+| **`notes/aot/generator-reference.md`** | **what the generator emits for each shape, and why — the per-feature reference, carved out of this file on 2026-08-25** |
+| `notes/nano-core.md` | the reader arc: design and the cuts |
+| `notes/nano-writer.md` | the writer arc, **plus an index of everything parked or owed** |
+| `notes/packed-writes.md` | the packed matrix, **and the raw packed surface that came out of it** |
+| `notes/aot-schema-model.md` | `[ProtoSchema]`: design and open items |
+| `notes/aot/findings.md` | numbered findings from the AOT generator work, the **Handover**, and the ranked next-steps list |
+| `notes/aot/coverage.md`, `notes/aot/differential.md` | the two corpus sweeps' last snapshots (tool output — regenerated, not maintained) |
+| `notes/aot/grpc.md` | the gRPC proxy generator (from `main`) |
+| `notes/editions/feature-analysis.md` | the editions arc (from `main`) |
+| `docs/aot.md` | the consumer-facing AOT guide, incl. the throughput table |
+| `tools/` | repo scripts that are not part of a build — currently `annotate-public-api.py`, which rewrites `PublicAPI.*.txt` baselines from the analyzer's own `RS0036` output (gap B51) |
 
 Two rules that keep this honest, both learned the hard way here:
 

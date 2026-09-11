@@ -6,13 +6,19 @@ about the generator. Kept here so they can become issues rather than being lost 
 Each was found by deriving the generator's expected output from ref-emit (`src/AotRefGen`) or by the
 native-AOT smoke test (`src/AotSmoke`) — i.e. by comparison, not by reading the code and guessing.
 
-## Handover — **current as of 2026-08-26**; read this first on a cold start
+## Handover — **current as of 2026-09-11**; read this first on a cold start
 
-**Where the work is.** The stack lives on **`v4`**, and there IS a branch in flight:
-**`nrt-reflection`**, carrying gap B51's Reflection stage and gap B52's closure. `AGENTS.md`'s notes
-table has its "current on" column restored for the duration. Five commits, unpushed at the time of
-writing: B52 closed; NRT on Reflection's hand-written sources; the `DiscriminatedUnionObject` fix;
-protogen emitting NRT; and the regeneration + baseline.
+**Where the work is.** The stack lives on **`v4`**, and **no branch is in flight** — `nrt-reflection`
+merged as #1332, so `AGENTS.md`'s notes table has its "current on" column dropped again, per its own
+rule. `v4` last took `main` on **2026-09-11** (the 3.4.21 line, ten commits); five of those had
+already been cherry-picked as part of #1339, so every merge conflict was v4's adapted copy against
+main's original and every one resolved to v4's. The merge commit records which and why — read it
+rather than re-deriving, since "take ours" was a *judgement* in each case and not a policy.
+
+**What `main` is, relative to this.** `main` is the released 3.4.x line, and it is where the AOT
+generator reached feature parity and shipped. Nothing on it is ahead of `v4` any more. If a fix has
+to ship before v4 does, it goes to `main` first and is merged here — which is what #1338/#1339 was,
+and is the shape to repeat.
 
 **What the arc has become.** The generator no longer merely emits a serializer — it emits a
 **measure-first** one: `Measure_` computes a contract's length arithmetically, `RawWrite_` writes it
@@ -21,29 +27,47 @@ positionally. `AGENTS.md`'s "The writer's measure-first path" is the section to 
 any of it; the three invariants there are the ones that break silently. The measurable census is
 **2803 contracts** across the corpus.
 
-**The gate battery, and what it reported on 2026-08-26** — all of it green, run in this order:
+**The gate battery, and what it reported on 2026-09-11** — run on **linux-x64**, in this order.
+The 2026-08-26 figures are kept alongside, because a count that moved is the interesting column:
 
-| gate | result |
-| --- | --- |
-| `dotnet build Build.csproj -c Debug` | 0 errors |
-| `BuildToolsUnitTests` (goldens + analyzers + fixers) | 659 passed |
-| `AotConformanceTests` (differential over the fixtures) | 1842 passed |
-| `protobuf-net.Test` | **1584** (net8.0) / **1583** (net472) — +4, the new `DiscriminatedUnionNullTests` |
-| `protobuf-net.Reflection.Test` | 616 / 616 |
-| `Examples` | 679 (net8.0) / 705 (net472) |
-| `AotDifferential` (the corpus, on bytes) | **3134 compared, 100% match**, exit 0 |
-| `AotSmoke` — `-c Debug` JIT run | PASSED |
-| `AotSmoke` — `publish -c Release -r win-x64` | not re-run on this branch; nothing here touches ILC's inputs |
-| `AotNodaTimeSmoke` | PASSED |
-| `DownLevelSmoke` (net472) | builds; 3 `PBN3xxx` warnings, 0 errors — the documented shape |
-| `protobuf-net.BuildTools.Legacy` | builds |
+| gate | 2026-09-11 (linux) | was (2026-08-26, win) |
+| --- | --- | --- |
+| `dotnet build Build.csproj -c Debug` | 0 errors | 0 errors |
+| `BuildToolsUnitTests` (goldens + analyzers + fixers) | **655 / 662 — see B53** | 659 passed |
+| `AotConformanceTests` (differential over the fixtures) | **1920** passed | 1842 |
+| `protobuf-net.Test` | **1593** (net8.0) | 1584 / 1583 (net472) |
+| `protobuf-net.Reflection.Test` | **621** | 616 / 616 |
+| `Examples` | **681** (net8.0) | 679 / 705 (net472) |
+| `AotDifferential` (the corpus, on bytes) | **3137 compared, 100% match**, exit 0 | 3134, 100% |
+| `AotGrpcMetadataDiff` | 2 operations, **0 failing** | (not recorded) |
+| `AotSmoke` — `-c Debug` JIT run | PASSED | PASSED |
+| `AotSmoke` — `publish -c Release -r win-x64` | not re-run; nothing since has touched ILC's inputs | — |
+| `AotNodaTimeSmoke` | PASSED | PASSED |
+| `DownLevelSmoke` | builds; 3 `PBN3xxx` warnings, 0 errors — the documented shape | same |
+| `protobuf-net.BuildTools.Legacy` | builds | builds |
 
 Those numbers are the baseline to compare against, and **the warning count tracks fixtures** — adding
 a member to `AotSmoke` moves it, so re-measure both sides when you do.
 
-**What is open.** `notes/gaps.md` is the entry point and its last entry is **B52**. The live ones,
-current to 2026-08-26:
+**The net472 legs are missing from the new column, and that is the platform, not a regression** —
+this machine is Linux, so `dotnet test -f net8.0` is the whole of what ran. Anything needing net472
+(`AotRefGen` included) still has to be run on Windows before it is evidence.
 
+**`BuildToolsUnitTests` is RED here, and it is red on a clean `origin/v4` too** — confirmed in a
+separate worktree before the merge, so it is not merge damage. Seven
+`SchemaSourcedModelEndToEndTests` fail on Linux only; gap **B53** has the diagnosis. Treat 655/662 as
+the current linux baseline and 662/662 as what Windows should report.
+
+**What is open.** `notes/gaps.md` is the entry point and its last entry is **B53**. The live ones,
+current to 2026-09-11:
+
+- **B53 (the Linux-only `SchemaSourcedModelEndToEndTests` failures)** - **new, and the only thing
+  here that is currently RED.** Seven tests fail on Linux because the fixture hard-codes
+  `C:\proj\shop.proto` and `Path.GetFileName` does not treat `\` as a separator off Windows, so the
+  whole string survives as the leaf and reaches `AddSource` as a hintName containing `:`. Small, and
+  it decides something worth deciding: whether `ProtoFileGenerator` should accept either separator
+  regardless of host, or the fixture should stop asserting a Windows path. Until then this gate
+  cannot be read on Linux, which is where most of this work now happens;
 - **B51 (NRT)** - ServiceModel and **`protobuf-net.Reflection` are done**, and protogen now EMITS
   annotations (C# only; VB has no NRT). **Next slice is `protobuf-net.Core` (1952 sites)**, which
   drags `protobuf-net.BuildTools` with it because BuildTools compiles Core's sources in - the
@@ -63,7 +87,14 @@ current to 2026-08-26:
 - **B21 tier 3** (vectorised LEB128, research-shaped, modern-TFM only) and **B12** (an intermittent
   net472 flake) round it out.
 
-**Closed on 2026-08-25/26**, so do not go looking for work in them: B17 (measure-first is twice on
+**The dependabot backlog is its own item, and is being taken deliberately rather than PR by PR**
+(Marc, 2026-09-11): sweep the deltas locally, apply everything that does not change a major, see how
+it behaves, and then take the majors one at a time — **xunit especially**, which has resisted a
+straight bump before. `main` is where those land, and they reach here by merge.
+
+**Closed since**, so do not go looking for work in them: **#1332** (B51's Reflection stage and
+B52 — the branch this handover previously said was in flight), **#1338/#1339** (a map's nested
+collection value, on both lines) and **#1341** (ServiceModel on net10.0). Earlier, on 2026-08-25/26: B17 (measure-first is twice on
 every backend for generated code; the classic stream asymmetry is deliberate), B18b (**retracted** -
 the raw path has block-copied fixed-width packed columns all along; the entry described the classic
 engine), B23 (derived lists admitted to the raw packed path), B49 + `PBN3014`, B50, and **B52 - the

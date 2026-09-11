@@ -13,7 +13,8 @@ Detail lives in the linked documents; this file is the index and the verdict. St
 | **next** | agreed, unstarted |
 
 This file lives on **`v4`** — the writer/schema stack collapsed onto it on 2026-08-14 — and on
-whatever sub-branch is currently in flight off it.
+whatever sub-branch is currently in flight off it. **As of 2026-09-11 there is no such sub-branch**:
+`nrt-reflection` merged (#1332), so `v4` is the only answer.
 
 *(It has now asserted the wrong branch **twice** — first `writer-buffer-core`, then
 `aot-schema-model` after the stack collapsed — and `AGENTS.md`'s index repeated the error
@@ -5801,3 +5802,57 @@ reported nothing. That was the question B51 could not answer while the gate's ow
 and it is the reassuring answer: the several thousand annotations coming to Core, `protobuf-net` and
 Reflection are invisible to package validation, so a real break in the same diff will not be lost in
 noise.
+
+
+### B53. Seven `SchemaSourcedModelEndToEndTests` fail on Linux — **OPEN, and the only RED gate**
+
+**Found 2026-09-11**, while re-running the battery after merging `main` into `v4`. Confirmed
+**pre-existing on a clean `origin/v4`** in a separate worktree *before* concluding anything, because
+a red gate arriving alongside a merge reads as merge damage and this one is not.
+
+```
+Failed SchemaSourcedModelEndToEndTests.APathSelectsTheIntendedSchema  (x4)
+Failed SchemaSourcedModelEndToEndTests.NoArgumentMeansEverySchema
+Failed SchemaSourcedModelEndToEndTests.NoArgumentSkipsSchemasExcludedFromOutput
+Failed SchemaSourcedModelEndToEndTests.OneProjectSchemaDtosAndModelAllCompile
+```
+
+**The cause is one line of platform assumption, and both halves of it are ours.** The fixture hard-codes
+Windows paths — deliberately, and the comment says why:
+
+```csharp
+// additional files carry FULL paths in a real build, which is exactly why a bare leaf can
+// be ambiguous; using relative paths here would let the leaf match one of them exactly and
+// quietly test the wrong thing
+private const string ShopPath = @"C:\proj\shop.proto";
+```
+
+`ProtoFileGenerator` takes the leaf with `Path.GetFileName`, which on Linux does **not** treat `\` as
+a separator — so the whole string survives as the "file name" and reaches `AddSource` as a hintName
+containing a `:`:
+
+```
+warning CS8785: Generator 'ProtoFileGenerator' failed to generate source. Exception was of type
+'ArgumentException' with message 'The hintName 'C:\proj\shop.generated.cs' contains an invalid
+character ':' at position 1.'
+```
+
+The generator then reports `PBN3022` ("the schema could not be added") for the same reason, so the two
+visible symptoms are one cause.
+
+**The decision owed is which side to fix, and they are not equivalent:**
+
+| | |
+| --- | --- |
+| **fix the fixture** (use `Path.Combine`, or the host's separator) | smallest, and restores the gate. But it also *stops testing* the thing the comment is about on the platform the CI job runs on, since the ambiguity case is only interesting with full paths |
+| **fix the generator** — split on `/` **and** `\` regardless of host | arguably correct independently: `AdditionalFiles` paths come from MSBuild, and a generator has no business assuming the host's separator matches the path's. It also makes the hintName derivation total rather than "total on Windows" |
+
+**Leaning to the generator**, with the fixture left alone — the fixture is asserting something real,
+and a generator that produces an invalid hintName from a valid `AdditionalFiles` entry is a defect
+whoever wrote the path. Note `ProtoFileGenerator` keys schemas by leaf name anyway (C11), so this is
+in code that already has a known sharp edge.
+
+**It was invisible until now because the battery is normally run on Windows.** That is the wider
+point worth keeping: this repo's gates are Windows-shaped (`AotRefGen` is net472, CI is
+windows-latest), and most of the actual work now happens on Linux. A gate that cannot be read on the
+machine doing the work is a gate that stops being run.
