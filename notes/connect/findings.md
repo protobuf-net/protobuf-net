@@ -2313,6 +2313,67 @@ rather than contract-first-specific. §38's "easier than code-first" still looks
 shape, but not for the total: what contract-first buys is JSON, and what it costs is the per-method
 codec seam that code-first has so far not needed.
 
+## 40. Contract-first: what the consumer writes, and what the shapes cost
+
+Review asked how the user-provided half gets annotated for contract-first, given there is **no
+interface** - just a generated abstract base and a client class. Probed rather than guessed.
+
+### The annotation already exists, and protoc writes it
+
+```csharp
+[grpc::BindServiceMethod(typeof(Greeter), "BindService")]
+public abstract partial class GreeterBase { ... }
+```
+
+That attribute names both the holder type and the method, and it is how `Grpc.AspNetCore.Server` finds
+`BindService` from a service type. **So the consumer writes nothing** - no `[ProtoConnect]`, no
+`[ProtoService]`, no partial class. Two shapes, both attribute-free:
+
+| | |
+| --- | --- |
+| `app.MapConnectService<GreeterImpl>()` | walks the base chain for `[BindServiceMethod]` and invokes it — **reflective**, startup-only, annotatable, and exactly what `BinderServiceMethodProvider` does |
+| `app.MapConnectService<GreeterImpl>(Greeter.BindService)` | the same, named explicitly — **no reflection at all**, one token more |
+
+Which also settles a question §38 left open: **contract-first needs no generator**, and therefore none
+of the container/`Extensions`/naming design that code-first needed. `[ProtoConnect(Model = ...)]` would
+be actively wrong here, since there is no protobuf-net model to name.
+
+### But the handler shapes are gRPC's, not ours
+
+This is the part the earlier notes missed. The generated base is writer-and-reader shaped:
+
+```csharp
+public virtual Task<HelloReply> SayHello(HelloRequest request, ServerCallContext context);
+public virtual Task Subscribe(HelloRequest request, IServerStreamWriter<HelloReply> responseStream, ServerCallContext context);
+public virtual Task<HelloReply> Collect(IAsyncStreamReader<HelloRequest> requestStream, ServerCallContext context);
+public virtual Task Chat(IAsyncStreamReader<HelloRequest> requestStream, IServerStreamWriter<HelloReply> responseStream, ServerCallContext context);
+```
+
+Our invokers are `IAsyncEnumerable`-shaped. So the adapter needs **`IServerStreamWriter<T>` over our
+`PipeWriter` and `IAsyncStreamReader<T>` over our `PipeReader`** - mechanical, bounded, and exactly the
+shims grpc-dotnet already has, but not nothing. That is a second work item beside the per-method codec.
+
+### Two smaller things the shapes imply
+
+- **The methods are `virtual`, not `abstract`**, and each throws `RpcException(Unimplemented)` by
+  default. So an implementation overrides only what it serves, and the binder captures handlers for
+  everything - including methods that will throw. `RpcException` therefore has to map onto
+  `ConnectException`, and `StatusCode` → `ConnectCode` is a cast, since §15 aligned the ordinals.
+- **`ServerCallContext` is already what we supply.** `ConnectServerCallContext` derives from it, so the
+  generated handlers can be handed ours unchanged - which is a nice dividend from §17's decision to
+  implement that rather than invent a context.
+
+### Revised shape of the work
+
+| | |
+| --- | --- |
+| consumer annotation | **nothing** — protoc already did it |
+| generator | **none needed** |
+| binding | `ServiceBinderBase` subclass; confirmed, easy |
+| per-method codec | the `Marshaller<T>` seam — done as of §39's refactor, needs a marshaller-backed implementation |
+| stream shims | `IServerStreamWriter<T>` / `IAsyncStreamReader<T>` over pipes — **new, and the bulk of it** |
+| errors | `RpcException` → `ConnectException`, ordinals already aligned |
+
 ## 12. Unverified — check before committing to any of this
 
 Everything below is assumption or inference, not measurement:
