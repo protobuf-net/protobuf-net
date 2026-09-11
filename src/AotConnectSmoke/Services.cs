@@ -12,7 +12,8 @@ namespace ProtoBuf.AotConnectSmoke;
 //
 // Note [ProtoService] is protobuf-net.Grpc's own, unchanged: it already says exactly what is needed,
 // and the same declaration serves a [ProtoGrpc] container. Only the container attribute selects the
-// transport.
+// transport. Its own documentation says "Repeat for each contract", so one container holding several
+// services is the designed shape rather than something being stretched.
 //
 // The accessibility declared here governs: the generated half restates no modifier, so a consumer who
 // writes `public` gets a public surface and one who writes `internal` gets an internal one. Note also
@@ -22,6 +23,7 @@ namespace ProtoBuf.AotConnectSmoke;
 
 [ProtoConnect(Model = typeof(SmokeModel))]
 [ProtoService(typeof(IGreeter), typeof(GreeterService))]
+[ProtoService(typeof(IFarewell), typeof(FarewellService))]
 internal partial class SmokeServices
 {
 }

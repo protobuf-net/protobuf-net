@@ -1,6 +1,8 @@
 using Grpc.Core;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using ProtoBuf.Connect;
 using ProtoBuf.Connect.AspNetCore;
 using ProtoBuf.Grpc;
@@ -8,84 +10,106 @@ using ProtoBuf.Grpc;
 namespace ProtoBuf.AotConnectSmoke;
 
 // ---------------------------------------------------------------------------------------------
-// THIS FILE IS THE GENERATOR'S TARGET OUTPUT, written by hand.
+// THE GENERATED HALF, written by hand. The consumer's half is Services.cs - three lines.
 //
 // Stage 1 of notes/connect/findings.md §14: get the shape working and reviewed *before* a Roslyn
-// generator is taught to emit it. The repo already works this way - AotRefGen exists so that expected
-// generator output is derived and reviewable rather than invented - and here there is no ref-emit to
-// derive from, so writing it, making it work and reviewing it is the substitute.
+// generator is taught to emit it. AotRefGen exists so that expected generator output is derived and
+// reviewable rather than invented; there is no ref-emit to derive Connect output from, so writing it,
+// making it work and reviewing it is the substitute.
 //
-// The shape mirrors GrpcProxyGenerator's output: everything is nested inside one consumer-declared
-// partial class, which is what a [ProtoConnect(Model = typeof(SmokeModel))] attribute would mark. That
-// container is not decoration - it is where the model is named, where CreateClient<T> lives, and what
-// the registration extension hangs off. SmokeServices stands in for it here.
+// It now carries TWO services, which is what [ProtoService] means by "Repeat for each contract" -
+// see §26 for what that cost and what it settled.
 //
-// Three properties to preserve when this becomes generated:
+// Properties to preserve when this becomes generated:
 //   - nothing here reflects, and nothing here needs to;
 //   - the service and method names are the only strings, and they come from the contract;
-//   - protobuf-net.Grpc appears HERE, in generated code, and not in the runtime libraries. That is
-//     what keeps the v2/v3 TypeModel collision in the consumer's project, where a reference to
-//     protobuf-net v3 resolves it. Note the collision is per-*usage*, not per-assembly: it fires only
-//     where TypeModel is named, which is why ConnectCallOptions.From can live in the library.
+//   - protobuf-net.Grpc appears HERE, in generated code, not in the runtime libraries;
+//   - no accessibility or `static` is restated on the partial: both are the consumer's to choose.
 // ---------------------------------------------------------------------------------------------
 
-/// <summary>The generated half of <c>SmokeServices</c>; the consumer's half is in Services.cs.</summary>
-/// <remarks>
-/// <b>Every member is static, and deliberately so.</b> The first cut mirrored <c>GrpcProxyGenerator</c>'s output, which
-/// is an instance with an <c>Instance</c> accessor - but there the instance is load-bearing and here it
-/// is not. A <c>[ProtoGrpc]</c> container derives from the abstract <c>ClientFactory</c>, holds a
-/// <c>BinderConfiguration</c> with a marshaller cache, and is <c>TryAddSingleton</c>'d into DI. This
-/// one derives from nothing, has no fields, and caches nothing: the codec lives on the
-/// <see cref="ConnectChannel"/> and the serializers live in <see cref="Greeter"/>'s static initialiser.
-/// So an <c>Instance</c> would have been ceremony inherited from a shape whose justification does not
-/// carry over.
-/// <para>
-/// What would change the answer is a DI client-factory story - <c>services.AddConnectClient&lt;T&gt;()</c>
-/// resolving "the thing that makes clients" - which needs an instance implementing some interface, as
-/// protobuf-net.Grpc's <c>ClientFactory</c> does. That is a real question and an open one, but it is not
-/// answered by inventing an instance before anything asks for one; note it would be a
-/// consumer-visible break to add later.
-/// </para>
-/// <para>
-/// Note the class itself is not declared <c>static</c>, and no accessibility is restated: both are the
-/// consumer's to choose in Services.cs, and a generated part that restated either would either fight
-/// them or force them. Static members plus a private constructor get the same effect without the
-/// consumer having to think about it - which is what <c>GrpcProxyGenerator</c> already emits, for its
-/// own reasons.
-/// </para>
-/// </remarks>
 partial class SmokeServices
 {
     /// <summary>There is nothing to construct: every member here is static.</summary>
     private SmokeServices() { }
 
-    /// <summary>Creates a client proxy for one of the services this container knows about.</summary>
-    public static TService CreateClient<TService>(ConnectChannel channel) where TService : class
+    /// <summary>Creates a client proxy for one of the contracts this container declares.</summary>
+    public static TContract CreateClient<TContract>(ConnectChannel channel) where TContract : class
     {
-        if (typeof(TService) == typeof(IGreeter)) return (TService)(object)new GreeterClientProxy(channel);
+        if (typeof(TContract) == typeof(IGreeter)) return (TContract)(object)new GreeterClientProxy(channel);
+        if (typeof(TContract) == typeof(IFarewell)) return (TContract)(object)new FarewellClientProxy(channel);
         throw new InvalidOperationException(
-            "No build-time Connect proxy for " + typeof(TService).FullName + " in " + nameof(SmokeServices) + ".");
+            "No build-time Connect proxy for " + typeof(TContract).FullName + " in " + nameof(SmokeServices) + ".");
     }
 
-    /// <summary>Maps every service this container declares onto endpoint routing.</summary>
+    /// <summary>Maps every service this container declares.</summary>
     /// <remarks>
-    /// The counterpart of <see cref="CreateClient{TService}"/>, and with it the whole of the surface:
-    /// the method descriptors, the proxy and the bindings are all private, because nothing outside has
-    /// any business naming them. A consumer states a contract and gets two verbs.
+    /// One call for all of them, because that is what a consumer wants nine times in ten. The returned
+    /// builder applies conventions to all of them at once - <c>.RequireAuthorization()</c> here covers
+    /// every method of every service. Where that is too broad, bind the services separately with the
+    /// generic overload.
     /// </remarks>
     public static IEndpointConventionBuilder BindServer(
         IEndpointRouteBuilder endpoints, string? routingPrefix = null)
-        => endpoints.MapConnectService(new GreeterServerBindings(), routingPrefix);
+        => new CompositeConventionBuilder(
+        [
+            BindServer<IGreeter>(endpoints, routingPrefix),
+            BindServer<IFarewell>(endpoints, routingPrefix),
+        ]);
+
+    /// <summary>Maps one service, so that conventions can differ between them.</summary>
+    /// <remarks>
+    /// Keyed on the <em>contract</em>, matching <see cref="CreateClient{TContract}"/>, even though the
+    /// runtime binds by implementation type - the consumer named the pairing once in Services.cs and
+    /// should not have to remember which side each API wants.
+    /// </remarks>
+    public static IEndpointConventionBuilder BindServer<TContract>(
+        IEndpointRouteBuilder endpoints, string? routingPrefix = null)
+    {
+        if (typeof(TContract) == typeof(IGreeter))
+        {
+            return endpoints.MapConnectService(new GreeterServerBindings(), routingPrefix);
+        }
+
+        if (typeof(TContract) == typeof(IFarewell))
+        {
+            return endpoints.MapConnectService(new FarewellServerBindings(), routingPrefix);
+        }
+
+        throw new InvalidOperationException(
+            "No build-time Connect bindings for " + typeof(TContract).FullName + " in " + nameof(SmokeServices) + ".");
+    }
 
     /// <summary>
-    /// The method descriptors for <see cref="IGreeter"/>, shared by the proxy and the bindings.
+    /// Registers what the server needs: the codec over this container's model, and the service
+    /// implementations.
     /// </summary>
     /// <remarks>
-    /// The serializers are resolved <em>here</em>, once, in the static initialiser - not per message.
-    /// This is the closest thing to a marshaller in the design, and unlike protobuf-net.Grpc's it is
-    /// not working around anything: there is no MarshallerCache and no CanSerialize gate on this path
-    /// (§18). It simply hoists the model lookup out of every request.
+    /// The counterpart of <c>GrpcProxyGenerator</c>'s <c>AddXxx</c>, and it exists because the
+    /// alternative is a consumer hand-wiring a codec they should not have to know about and then
+    /// discovering an unregistered implementation as a DI failure at first call. The model comes from
+    /// <c>[ProtoConnect(Model = ...)]</c>, so the generator knows it.
+    /// <para>
+    /// <c>TryAdd</c> throughout: a consumer who registered an implementation themselves - with
+    /// different lifetime, or a decorator - keeps theirs.
+    /// </para>
     /// </remarks>
+    public static IServiceCollection AddSmokeServices(IServiceCollection services)
+    {
+        services.AddConnect(options =>
+        {
+            if (!options.Codecs.Any(c => c.Name == "proto")) options.Codecs.Add(new ProtoConnectCodec(SmokeModel.Instance));
+        });
+        services.TryAddScoped<GreeterService>();
+        services.TryAddScoped<FarewellService>();
+        return services;
+    }
+
+    // Method descriptors. Named from the contract's SIMPLE name, which is unambiguous here; a
+    // generator sees every contract in the container, so it can qualify only on collision rather than
+    // always - GrpcProxyGenerator emits `Ns_Sub_IGreeter_ClientProxy` unconditionally, which is safe
+    // but reads badly in the common case.
+    //
+    // The serializers are resolved here, once, in the static initialiser - not per message.
     private static class Greeter
     {
         public const string ServiceName = "aotconnectsmoke.v1.Greeter";
@@ -113,14 +137,21 @@ partial class SmokeServices
                 responseSerializer: SmokeModel.Serializer<HelloReply>());
     }
 
-    /// <summary>
-    /// Client proxy. Private: a consumer reaches it through <see cref="CreateClient{TService}"/> and
-    /// only ever sees <see cref="IGreeter"/>, so the proxy type itself is not API.
-    /// </summary>
-    /// <remarks>
-    /// The signatures are <see cref="IGreeter"/>'s, unchanged - a caller written against the
-    /// protobuf-net.Grpc client sees no difference at all.
-    /// </remarks>
+    private static class Farewell
+    {
+        public const string ServiceName = "aotconnectsmoke.v1.Farewell";
+
+        public static readonly ConnectMethod<HelloRequest, HelloReply> Goodbye =
+            Method(ConnectMethodType.Unary, "Goodbye");
+        public static readonly ConnectMethod<HelloRequest, HelloReply> Wave =
+            Method(ConnectMethodType.ServerStreaming, "Wave");
+
+        private static ConnectMethod<HelloRequest, HelloReply> Method(ConnectMethodType type, string name)
+            => new(type, ServiceName, name,
+                requestSerializer: SmokeModel.Serializer<HelloRequest>(),
+                responseSerializer: SmokeModel.Serializer<HelloReply>());
+    }
+
     private sealed class GreeterClientProxy : IGreeter
     {
         private readonly ConnectChannel _channel;
@@ -160,13 +191,27 @@ partial class SmokeServices
                 ConnectCallOptions.From(context.CallOptions), context.CancellationToken);
     }
 
-    /// <summary>Server bindings: one typed delegate per method, no reflection.</summary>
+    private sealed class FarewellClientProxy : IFarewell
+    {
+        private readonly ConnectChannel _channel;
+
+        public FarewellClientProxy(ConnectChannel channel) => _channel = channel;
+
+        public Task<HelloReply> GoodbyeAsync(HelloRequest request, CallContext context = default)
+            => _channel.UnaryAsync(Farewell.Goodbye, request,
+                ConnectCallOptions.From(context.CallOptions), context.CancellationToken);
+
+        public IAsyncEnumerable<HelloReply> WaveAsync(HelloRequest request, CallContext context = default)
+            => _channel.ServerStreaming(Farewell.Wave, request,
+                ConnectCallOptions.From(context.CallOptions), context.CancellationToken);
+    }
+
     private sealed class GreeterServerBindings : IConnectServiceBinder<GreeterService>
     {
         public void Bind(ConnectServiceBinderContext<GreeterService> context)
         {
-            // `new CallContext(service, ctx)` is the same line GrpcProxyGenerator emits into its server
-            // bindings; it is what keeps protobuf-net.Grpc out of protobuf-net.Connect.AspNetCore
+            // `new CallContext(service, ctx)` is the same line GrpcProxyGenerator emits; it is what
+            // keeps protobuf-net.Grpc out of protobuf-net.Connect.AspNetCore
             context.AddUnaryMethod(Greeter.SayHello,
                 static (service, request, ctx) => service.SayHelloAsync(request, new CallContext(service, ctx)));
             context.AddUnaryMethod(Greeter.Refuse,
@@ -185,19 +230,51 @@ partial class SmokeServices
                 static (service, requests, ctx) => service.Chat(requests, new CallContext(service, ctx)));
         }
     }
+
+    private sealed class FarewellServerBindings : IConnectServiceBinder<FarewellService>
+    {
+        public void Bind(ConnectServiceBinderContext<FarewellService> context)
+        {
+            context.AddUnaryMethod(Farewell.Goodbye,
+                static (service, request, ctx) => service.GoodbyeAsync(request, new CallContext(service, ctx)));
+            context.AddServerStreamingMethod(Farewell.Wave,
+                static (service, request, ctx) => service.WaveAsync(request, new CallContext(service, ctx)));
+        }
+    }
+
+    /// <summary>Applies conventions across several services' endpoints at once.</summary>
+    private sealed class CompositeConventionBuilder : IEndpointConventionBuilder
+    {
+        private readonly IEndpointConventionBuilder[] _inner;
+
+        public CompositeConventionBuilder(IEndpointConventionBuilder[] inner) => _inner = inner;
+
+        public void Add(Action<EndpointBuilder> convention)
+        {
+            foreach (var builder in _inner) builder.Add(convention);
+        }
+
+        public void Finally(Action<EndpointBuilder> finallyConvention)
+        {
+            foreach (var builder in _inner) builder.Finally(finallyConvention);
+        }
+    }
 }
 
 /// <summary>
-/// The idiomatic front door, as GrpcProxyGenerator's <c>AddXxx</c> extension is for gRPC: ASP.NET Core
-/// consumers reach for <c>app.MapXxx()</c>. It is a one-line alias for
-/// <see cref="SmokeServices.BindServer"/> and adds no capability of its own.
+/// The idiomatic front doors, as <c>GrpcProxyGenerator</c>'s <c>AddXxx</c> is for gRPC: ASP.NET Core
+/// consumers reach for <c>services.AddXxx()</c> and <c>app.MapXxx()</c>. Both are one-line aliases and
+/// add no capability of their own.
 /// </summary>
 /// <remarks>
 /// <c>internal</c> because the container is: the generated surface mirrors whatever the consumer
 /// declared in Services.cs rather than picking for them.
 /// </remarks>
-internal static class SmokeServicesEndpointExtensions
+internal static class SmokeServicesExtensions
 {
+    internal static IServiceCollection AddSmokeServices(this IServiceCollection services)
+        => SmokeServices.AddSmokeServices(services);
+
     internal static IEndpointConventionBuilder MapSmokeServices(
         this IEndpointRouteBuilder endpoints, string? routingPrefix = null)
         => SmokeServices.BindServer(endpoints, routingPrefix);

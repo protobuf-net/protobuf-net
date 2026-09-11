@@ -33,7 +33,8 @@ Working notes for a possible Connect implementation, in the same spirit as `note
 > `demo.connectrpc.com`, as a JIT run *and* as a native AOT binary (7.3 MB, 33 IL warnings, **none of
 > them ours**). Code-first protobuf-net bytes interoperate with connect-go with no `.proto` anywhere.
 >
-> **All four method shapes work — §22, §23, §24 — plus routing prefixes (§25).** `AotConnectSmoke` reads **17/17**, JIT and native,
+> **All four method shapes work — §22, §23, §24 — plus routing prefixes (§25) and several services per
+> container (§26).** `AotConnectSmoke` reads **19/19**, JIT and native,
 > and duplex is proven to *interleave* rather than merely complete. Native AOT is **33 IL warnings
 > across every shape added** - streaming contributed no annotation debt at all.
 >
@@ -1586,6 +1587,74 @@ channel normalises rather than requiring callers to know that.
 
 Both are the sort of thing that produces a 404 against a correct server and sends you looking in the
 wrong place.
+
+## 26. Several services in one container
+
+Explored by building it rather than deciding on paper: `AotConnectSmoke` now declares a second,
+unrelated contract. **19/19**, JIT and native; native AOT still **33 IL warnings**, +30 KB.
+
+### One container, many services — and the vocabulary already said so
+
+`[ProtoService]`'s own documentation reads *"Repeat for each contract"*, so a container holding several
+services is the designed shape, not something being stretched. The consumer's half stays three lines
+plus one per service:
+
+```csharp
+[ProtoConnect(Model = typeof(SmokeModel))]
+[ProtoService(typeof(IGreeter), typeof(GreeterService))]
+[ProtoService(typeof(IFarewell), typeof(FarewellService))]
+internal partial class SmokeServices { }
+```
+
+Two containers remain possible and are the answer when the *models* differ, since a container names
+exactly one. For services sharing a model there is nothing to gain from splitting.
+
+### Binding: one call for all, plus a per-service overload
+
+Both, and the pairing is the point:
+
+| | |
+| --- | --- |
+| `BindServer(endpoints, prefix)` | every service the container declares, returning a composite builder — so `.RequireAuthorization()` covers all of them at once |
+| `BindServer<TContract>(endpoints, prefix)` | one service, so conventions can differ between them |
+
+The generic overload is keyed on the **contract**, matching `CreateClient<TContract>`, even though the
+runtime binds by implementation type. The consumer named the pairing once in Services.cs and should not
+have to remember which side each API wants. A check binds `IFarewell` alone under `/solo` and confirms
+`IGreeter` is *absent* there — so "bound separately" means separately, not merely ordered differently.
+
+### The thing building it actually settled: registration
+
+The bigger finding was not about binding at all. Adding a second service made the consumer's `Program.cs`
+worse in a way one service had hidden — they were hand-wiring a codec they should not need to know
+about, and then registering each implementation by hand, where a miss surfaces as a DI failure at first
+call rather than at startup.
+
+So the generator should emit a **registration** method too, the counterpart of `GrpcProxyGenerator`'s
+`AddXxx`:
+
+```csharp
+builder.Services.AddSmokeServices();   // codec over [ProtoConnect(Model = ...)], plus every implementation
+...
+app.MapSmokeServices();                // every service's endpoints
+```
+
+That is the ASP.NET Core shape (`AddX` then `MapX`), and the consumer never names `ProtoConnectCodec` or
+the model. `TryAdd` throughout, so a consumer who registered an implementation themselves — different
+lifetime, or a decorator — keeps theirs.
+
+**Two generated verbs on the server, one on the client**, which is the whole surface.
+
+### Nested type naming: qualify only on collision
+
+`GrpcProxyGenerator` names its nested types from the contract's *fully-qualified* name
+(`GrpcFixtures_Basic_IGreeter_ClientProxy`) unconditionally. That is safe, and until there were two
+services here it looked like over-caution; with two it is obviously guarding against a container holding
+two contracts of the same simple name from different namespaces.
+
+But the generator **sees every contract in the container**, so it can use the simple name where it is
+unique and qualify only where it is not. That reads far better in the common case and is no less safe.
+The fixture uses simple names on that basis.
 
 ## 12. Unverified — check before committing to any of this
 

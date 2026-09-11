@@ -51,18 +51,18 @@ builder.WebHost.ConfigureKestrel(o =>
 // HTTP/1.1 is the default for a plaintext Kestrel endpoint, and this test deliberately leaves it that
 // way: gRPC could not be served here at all without switching the port to HTTP/2, which is the whole
 // operational argument for Connect. Nothing below asks for HTTP/2 and everything works.
-builder.Services.AddConnect(options =>
-{
-    options.Codecs.Add(new ProtoConnectCodec(SmokeModel.Instance));
-    // IncludeExceptionDetailInErrors stays off, which one of the checks below relies on
-});
-builder.Services.AddScoped<GreeterService>();
+// one call: the generated registration adds the codec over this container's model and registers every
+// service implementation it declares. The consumer never names ProtoConnectCodec or SmokeModel here.
+// IncludeExceptionDetailInErrors is left at its default of off, which one of the checks relies on.
+builder.Services.AddSmokeServices();
 
 var app = builder.Build();
 app.MapSmokeServices();
 // the same services again under a routing prefix, which the protocol allows and which is what lets
 // Connect share a host with gRPC - the two use identical paths otherwise
 app.MapSmokeServices("rpc");
+// and just one of them, alone, to show conventions can differ between services
+SmokeServices.BindServer<IFarewell>(app, "solo");
 await app.StartAsync();
 
 var address = $"http://127.0.0.1:{httpPort}";
@@ -228,6 +228,39 @@ await checks.Run("client-streaming round-trip, chunked", async () =>
             yield return new HelloRequest { Name = name };
         }
     }
+});
+
+await checks.Run("a second service in the same container", async () =>
+{
+    var farewell = SmokeServices.CreateClient<IFarewell>(channel);
+
+    var reply = await farewell.GoodbyeAsync(new HelloRequest { Name = "marc" });
+    Checks.Require(reply.Message == "goodbye marc", $"the unary method answered, was \"{reply.Message}\"");
+
+    var waves = 0;
+    await foreach (var _ in farewell.WaveAsync(new HelloRequest { Name = "marc" })) waves++;
+    Checks.Require(waves == 2, $"and its streaming method, got {waves}");
+
+    // the first service is unaffected - they are separate endpoints under separate service names
+    var greeting = await client.SayHelloAsync(new HelloRequest { Name = "still here" });
+    Checks.Require(greeting.Message == "hello still here", "the other service still answers");
+    return "two services, one container, one registration";
+});
+
+await checks.Run("services can be bound separately when conventions differ", async () =>
+{
+    // BindServer<TContract> exists so one service can carry conventions the other does not; here the
+    // proof is simply that a single service can be mapped alone, under its own prefix
+    var solo = new ConnectChannel(http, new ProtoConnectCodec(SmokeModel.Instance), new Uri($"{address}/solo"));
+    var farewell = SmokeServices.CreateClient<IFarewell>(solo);
+    var reply = await farewell.GoodbyeAsync(new HelloRequest { Name = "alone" });
+    Checks.Require(reply.Message == "goodbye alone", $"only Farewell is mapped at /solo, was \"{reply.Message}\"");
+
+    // ...and Greeter is NOT there, since it was never bound at that prefix
+    var greeter = SmokeServices.CreateClient<IGreeter>(solo);
+    var ex = await Checks.Throws(() => greeter.SayHelloAsync(new HelloRequest { Name = "nope" }));
+    Checks.Require(ex.Code == ConnectCode.Unimplemented, $"404 infers unimplemented, was {ex.Code.ToWireName()}");
+    return "Farewell alone at /solo; Greeter absent, as bound";
 });
 
 await checks.Run("a routing prefix is honoured on both sides", async () =>

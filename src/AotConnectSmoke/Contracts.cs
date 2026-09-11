@@ -64,6 +64,33 @@ public class HelloReply
     public int Length { get; set; }
 }
 
+/// <summary>A second, deliberately unrelated contract, to see what multi-service costs.</summary>
+[Service]
+public interface IFarewell
+{
+    Task<HelloReply> GoodbyeAsync(HelloRequest request, CallContext context = default);
+
+    IAsyncEnumerable<HelloReply> WaveAsync(HelloRequest request, CallContext context = default);
+}
+
+public sealed class FarewellService : IFarewell
+{
+    public Task<HelloReply> GoodbyeAsync(HelloRequest request, CallContext context = default)
+    {
+        var message = $"goodbye {request.Name}";
+        return Task.FromResult(new HelloReply { Message = message, Length = message.Length });
+    }
+
+    public async IAsyncEnumerable<HelloReply> WaveAsync(HelloRequest request, CallContext context = default)
+    {
+        for (var i = 0; i < 2; i++)
+        {
+            yield return new HelloReply { Message = "wave", Length = 4 };
+        }
+        await Task.CompletedTask;
+    }
+}
+
 public sealed class GreeterService : IGreeter
 {
     public Task<HelloReply> SayHelloAsync(HelloRequest request, CallContext context = default)
