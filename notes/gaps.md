@@ -5858,10 +5858,11 @@ windows-latest), and most of the actual work now happens on Linux. A gate that c
 machine doing the work is a gate that stops being run.
 
 
-### B54. xunit.v3 4.0 is a *migration*, not a bump — **proven working locally; one decision left**
+### B54. xunit.v3 4.0 is a *migration*, not a bump — **proven working locally; the CI change is one line**
 
 **Tried 2026-09-11** as the careful half of the dependency sweep, and taken far enough to be certain
-it works before writing it down. It is reverted in the tree; this entry is the recipe.
+it works before writing it down. It is reverted in the tree; this entry is the recipe, and it is now
+a complete one — the open question it originally ended on is answered below.
 
 **What blocks a straight bump.** `xunit.v3` 4.0.0 brings Microsoft.Testing.Platform 2.x, and MTP 2.x
 **drops the VSTest bridge on the .NET 10 SDK**. Every `dotnet test` fails identically, before running
@@ -5887,32 +5888,59 @@ With that in place **the whole solution passes**: 5573 tests, 5542 passed, 24 sk
 failures are B53's seven. Every test project moved without a source change, `protobuf-net.FSharp.Test`
 included.
 
-**The decision that is left is the CI test container, and it is not cosmetic.** Today CI runs
-`dotnet test Build.csproj --no-build`. Under MTP that reports **"No test projects were found"** — the
-new `dotnet test` discovers from a solution or a project, and a `Microsoft.Build.Traversal` project is
-neither. `dotnet test protobuf-net.slnx` *does* work, but the two containers are **not the same set**,
-and both differences matter:
+**This is a known SDK gap with a known fix, and that reframes the whole decision** —
+**[dotnet/sdk#51316](https://github.com/dotnet/sdk/issues/51316)**, *"`dotnet test` support for
+traversal projects in .NET 10"*, opened 2025-10-16 and **closed completed 2026-07-22** by
+[dotnet/sdk#55297](https://github.com/dotnet/sdk/pull/55297), which special-cases the `IsTraversal`
+property and expands a traversal project into its `ProjectReference`s. Read the issue before doing
+anything here; two things in it matter to us:
 
-| | in `Build.csproj` | in `protobuf-net.slnx` |
-| --- | :-: | :-: |
-| `BuildToolsSmokeTests` | **excluded** — it consumes the *released* BuildTools package and its readme documents a hand-edited version and a nuget-cache clear | included |
-| `VBTest.vbproj` | **excluded** — the traversal globs `*.csproj` only | included |
-| the ten `Aot*`/bench apps | included | **absent from the solution entirely** |
+- **the fix is milestoned `11.0-rc1`** and was backported only to `release/11.0.1xx-preview7`. There
+  is **no .NET 10 backport**, and this machine and CI are both on the 10.0.3xx band. So on our SDK
+  the gap is permanent;
+- the root cause is structural rather than an oversight, which is why no Traversal-side fix exists:
+  MTP test apps are launched as child processes with no MSBuild target driving them, while a
+  traversal project works *only* by forwarding known targets to its references. The thread records
+  an attempt to fix it in `Microsoft.Build.Traversal` and why it cannot be — the only universally
+  available target is `VSTest`, which MTP projects do not define.
 
-So swapping the container silently adds two projects CI has never run *and* drops nothing it needs —
-but the first of those two is manual-use-only by design, so it would newly fail or newly pass for
-reasons nobody is watching. Options, in the order I would consider them:
+**So the answer is `-t:Test`, and it is a one-line CI change rather than a container swap.** Probed
+rather than taken from the thread:
 
-1. **mark `BuildToolsSmokeTests` (and `VBTest`) as not-a-test-project for discovery** and point CI at
-   the slnx. Smallest, and it states in the project file what `Build.csproj`'s `Exclude` states today
-   in a place discovery cannot see;
-2. a dedicated **`Tests.slnx`**. Explicit, but a second list to maintain — and the traversal's
-   auto-globbing (a new `src/` project is picked up by CI for free) is a property `AGENTS.md`
-   deliberately values;
-3. loop `dotnet test` per test project in the workflow. Keeps discovery implicit, loses the single
-   command and the single summary.
+```sh
+dotnet build Build.csproj -t:Test --no-restore -p:SkipNonexistentTargets=True
+```
 
-**Leaning to 1**, but it is a CI-semantics change and belongs to a human.
+MTP's own targets define a `Test` target (`Microsoft.Testing.Platform.MSBuild.CustomTestTarget.targets`),
+the traversal forwards it like any other, and `SkipNonexistentTargets` absorbs the ~22 non-test
+projects that have no such target — without it they are 44 `MSB4057`s. It **fails the build when
+tests fail**, which is the property the gate needs. Measured on Linux: 4 errors, of which 3 are the
+net472 legs failing *"Full path tool calculation failed. Runner 'mono'"* — a platform artefact that
+cannot arise on windows-latest — and the fourth is B53's genuine failure. So on CI this is expected
+to be clean.
+
+Two things to check when it is actually done, neither blocking: whether `-t:Test` honours the
+already-built state the way `dotnet test --no-build` does (the step order in the workflow assumes
+it), and that the output is readable — it reports a failure as an error line pointing at a
+`TestResults/*.log` rather than as `dotnet test`'s summary table.
+
+**A second `.slnx` in place of `Build.csproj` was considered and does not work** (Marc asked; probed
+2026-09-11). SLNX has no wildcard support — a `<Project Path="src/*/*.csproj" />` does not expand, it
+takes MSBuild down with an `MSB4014` and a stack trace out of `SolutionProjectGenerator`. So the
+replacement would be a hand-maintained list of ~40 projects, and it would cost two properties the
+traversal is relied on for:
+
+- **auto-globbing.** `AGENTS.md` states the value explicitly: a new project under `src/` is picked up
+  by CI for free. A solution has to be edited, and the failure mode is silent — a new project simply
+  never gets built or tested;
+- **the `Packing=true` subset.** `Build.csproj`'s second `ItemGroup` is conditional, so the same file
+  serves both "everything" and "just the shipping projects"; CI's pack step depends on it. Two
+  solutions would be needed, and they would drift.
+
+Worth knowing anyway: the existing `protobuf-net.slnx` is **already** out of step with the traversal
+in both directions — it is missing the ten `Aot*`/bench projects, and it carries `VBTest.vbproj` and
+`BuildToolsSmokeTests`, which the traversal excludes. That is a live argument for the globbing rather
+than against it.
 
 **Two pieces of hygiene that fall out either way**, worth doing with it rather than after: under MTP,
 `xunit.runner.visualstudio` (the VSTest adapter), `Microsoft.NET.Test.Sdk` and `coverlet.collector`

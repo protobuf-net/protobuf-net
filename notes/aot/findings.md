@@ -61,8 +61,8 @@ the current linux baseline and 662/662 as what Windows should report.
 **What is open.** `notes/gaps.md` is the entry point and its last entry is **B54**. The live ones,
 current to 2026-09-11:
 
-- **B54 (xunit.v3 4.0)** - new; proven working locally and reverted, pending a decision on the CI
-  test container. The entry carries the whole recipe, so it is an hour's work once that is settled;
+- **B54 (xunit.v3 4.0)** - new; proven working locally and reverted. The entry carries the whole
+  recipe including the CI change, so it is an hour's work whenever it is wanted;
 - **B53 (the Linux-only `SchemaSourcedModelEndToEndTests` failures)** - **new, and the only thing
   here that is currently RED.** Seven tests fail on Linux because the fixture hard-codes
   `C:\proj\shop.proto` and `Path.GetFileName` does not treat `\` as a separator off Windows, so the
@@ -98,8 +98,11 @@ raised shipped floor; a `*.reference.cs` diff owed on the next Windows `AotRefGe
 - `protobuf-net`/`.Reflection`/`.BuildTools` at 3.2.46 — not stale, the `ReleasedBench` baseline. But
   "what you get today" in `docs/aot.md` is **3.4.21** now, so that column has aged and moving it is a
   decision about the benchmark;
-- **xunit.v3 4.0 — gap B54.** It works, with one line in `global.json`; what it needs is a decision
-  about CI's test container, since MTP cannot discover a traversal project.
+- **xunit.v3 4.0 — gap B54.** It works, with one line in `global.json` and a one-line CI change.
+  MTP cannot discover a traversal project — that is **dotnet/sdk#51316**, fixed for **.NET 11 only**,
+  with no 10.x backport — so CI moves from `dotnet test Build.csproj` to
+  `dotnet build Build.csproj -t:Test -p:SkipNonexistentTargets=True`, which keeps the traversal and
+  its auto-globbing. A replacement `.slnx` was ruled out: SLNX has no wildcards.
 
 **Closed since**, so do not go looking for work in them: **#1332** (B51's Reflection stage and
 B52 — the branch this handover previously said was in flight), **#1338/#1339** (a map's nested
