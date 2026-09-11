@@ -1,4 +1,14 @@
 <Project Sdk="Microsoft.Build.Traversal/2.0.19">
+  <PropertyGroup>
+    <!-- The Traversal SDK sets this itself, but ONLY for a file named dirs.proj - that is the whole
+         of $(TraversalProjectNames)'s default, and this file is Build.csproj. Nothing in Traversal
+         2.0.19 reads it back, so it is inert here today; what reads it is the .NET 11 SDK, where
+         `dotnet test` expands an IsTraversal project into its ProjectReferences (dotnet/sdk#55297,
+         fixing #51316). Without it, `dotnet test Build.csproj` under Microsoft.Testing.Platform
+         reports "No test projects were found" - which is indistinguishable from not having the fix
+         at all, so the trap is concluding it never shipped. -->
+    <IsTraversal>true</IsTraversal>
+  </PropertyGroup>
   <ItemGroup>
     <!-- After moving files around, this can be src\**\*.csroj -->
     <ProjectReference Include="src\protobuf-net\*.csproj" />
