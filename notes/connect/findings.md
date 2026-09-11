@@ -1656,6 +1656,56 @@ But the generator **sees every contract in the container**, so it can use the si
 unique and qualify only where it is not. That reads far better in the common case and is no less safe.
 The fixture uses simple names on that basis.
 
+## 27. Client-only: `[ProtoService(typeof(IFarewell))]`
+
+Yes — and it is real API with an explicit meaning, not a happy accident. `ProtoServiceAttribute` has two
+constructors, and the one-argument form's documentation reads:
+
+> *Generate a client proxy for `contract`. **No server bindings are generated**: use the two-argument
+> form in the project that hosts the service.*
+
+The docs also call this the **common** shape: *"service contracts usually ship in a shared package"*, so
+a client project references that package and has no implementation to name.
+
+### Why the server needs the implementation, and why that transfers to Connect unchanged
+
+`ProtoServiceAttribute.Implementation`'s remark says it outright:
+
+> *Naming it is what lets the generated server bindings close their generics at compile time:
+> `IServiceMethodProvider<TService>` is generic in the implementation, so without one there is nothing
+> to instantiate it with and the binding would have to go through `MakeGenericMethod`.*
+
+**That reasoning applies to Connect identically**, because `IConnectServiceBinder<TService>` is generic
+in the implementation for exactly the same reason. So the constraint is not inherited from gRPC — it is
+re-derived, and would exist even if the vocabulary had not already encoded it.
+
+### Client-only is a genuinely smaller shape, not a trimmed one
+
+`AotConnectSmoke` now carries a second container, `SmokeClientOnly`, declaring only
+`[ProtoService(typeof(IFarewell))]`; a check drives it against the service the *first* container hosts.
+In real code the two would be different projects, which is the whole point. **20/20**, JIT and native,
+still 33 IL warnings.
+
+Its generated surface is **one verb**:
+
+| container | generated surface |
+| --- | --- |
+| hosting (`[ProtoService(contract, impl)]`) | `CreateClient<TContract>`, `BindServer`, `AddXxx` |
+| client-only (`[ProtoService(contract)]`) | `CreateClient<TContract>` |
+
+No `BindServer`, for the generic-closing reason above. And no `AddXxx` either, which is the part worth
+noticing: a client needs **no DI registration at all**, because the codec lives on the `ConnectChannel`
+rather than in the container. Nothing for a client-only container to add.
+
+### The diagnostic this implies
+
+A consumer calling `BindServer<TContract>` for a contract declared client-only reaches the type-test
+chain's fallthrough. The message must name the fix — *"no implementation was named; use
+`[ProtoService(typeof(X), typeof(XImpl))]` in the project that hosts the service"* — rather than the
+generic "no bindings" it would otherwise say. Better still, the generator can catch it at compile time
+when the call names the contract as a literal type argument; worth a `PBN5xxx` when the generator is
+written.
+
 ## 12. Unverified — check before committing to any of this
 
 Everything below is assumption or inference, not measurement:

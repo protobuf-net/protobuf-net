@@ -263,6 +263,22 @@ await checks.Run("services can be bound separately when conventions differ", asy
     return "Farewell alone at /solo; Greeter absent, as bound";
 });
 
+await checks.Run("a client-only container talks to a hosting one", async () =>
+{
+    // SmokeClientOnly declares [ProtoService(typeof(IFarewell))] with no implementation - the shape a
+    // client project has, since it references the contract package and hosts nothing. In real code the
+    // two containers would be in different projects; the wire does not care.
+    var farewell = SmokeClientOnly.CreateClient<IFarewell>(channel);
+
+    var reply = await farewell.GoodbyeAsync(new HelloRequest { Name = "from afar" });
+    Checks.Require(reply.Message == "goodbye from afar", $"it reached the hosting container, was \"{reply.Message}\"");
+
+    var waves = 0;
+    await foreach (var _ in farewell.WaveAsync(new HelloRequest { Name = "x" })) waves++;
+    Checks.Require(waves == 2, $"streaming works from a client-only container too, got {waves}");
+    return "one verb, no bindings, no registration";
+});
+
 await checks.Run("a routing prefix is honoured on both sides", async () =>
 {
     // the base address carries the prefix; note it must combine as a RELATIVE reference, since a
