@@ -5788,12 +5788,31 @@ generalise to stages 5 and 6:
 survived the sweep precisely because the sweep only rewrote guards whose tested variable and `nameof`
 agreed - a mismatch was the one thing it would not touch.
 
-##### The blocker: `T?` on an unconstrained type parameter cannot be used yet
+##### The blocker: `T?` on an unconstrained type parameter cannot be used yet — **cause UNKNOWN**
 
-**`protobuf-net.BuildTools` compiles Core's sources in with `<Nullable>` unset**, and there `T?` on an
-unconstrained `T` resolves as `Nullable<T>` and fails **CS0453** - an *error*, so it breaks that build
-rather than adding noise. Found by trying it on `TypeModel.InputOutput.cs`'s three
-`IProtoInput<T>.Deserialize` implementations; reverted.
+**`protobuf-net.BuildTools` fails CS0453 on it** - "the type 'T' must be a non-nullable value type",
+i.e. `T?` is being read as `Nullable<T>` there - while `protobuf-net.Core` compiles the identical
+source. It is an *error*, so it breaks that build rather than adding noise. Found by trying it on
+`TypeModel.InputOutput.cs`'s three `IProtoInput<T>.Deserialize` implementations; reverted twice.
+
+**The obvious explanation is wrong and was tested.** It is not the nullable context: BuildTools is now
+`<Nullable>annotations</Nullable>` and `enable` was tried as the decisive experiment - CS0453 persists
+under both. Ruled out by measurement rather than by reasoning:
+
+| | BuildTools | Core |
+| --- | --- | --- |
+| csc `/nullable:` | `enable` | `enable` |
+| csc `/langversion:` | `latest` | `latest` |
+| `#nullable` directive in either file | none | none |
+| definitions of `IProtoInput<TInput>` visible | 1 | 1 |
+| `IProtoInputT.cs` excluded? | no | no |
+| result | **CS0453** | compiles |
+
+So the two compile the same files with the same flags and disagree. Whatever the cause is, it is
+something else about that compilation - `DefineConstants` (BuildTools defines `BUILD_TOOLS`), the
+reference set, or the polyfilled nullable attributes Core's sources bring in. **Start from that
+difference, not from an explanation of it**; an earlier commit message asserted the nullable context
+was the mechanism and that claim is retracted.
 
 That is not a detail, it is the shape of what is left. **49 of the remaining 225 sites are the
 unconstrained-generic families** - `RepeatedSerializer` (+`.Immutable`), `MapSerializer`,
