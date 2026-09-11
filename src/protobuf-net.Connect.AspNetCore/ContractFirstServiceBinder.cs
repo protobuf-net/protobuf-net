@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Grpc.Core;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
-using ProtoBuf.Connect.AspNetCore.Internal;
+using ProtoBuf.Connect.Internal;
 
 namespace ProtoBuf.Connect.AspNetCore
 {
@@ -145,13 +145,13 @@ namespace ProtoBuf.Connect.AspNetCore
 
             public override void AddMethod<TRequest, TResponse>(
                 Method<TRequest, TResponse> method, UnaryServerMethod<TRequest, TResponse>? handler)
-                => _context.AddUnaryMethod(Describe(method), (service, request, context)
+                => _context.AddUnaryMethod(ConnectMethod.FromGrpc(method), (service, request, context)
                     => _owner.Handler<UnaryServerMethod<TRequest, TResponse>>(service, method)(request, context),
                     Metadata(method));
 
             public override void AddMethod<TRequest, TResponse>(
                 Method<TRequest, TResponse> method, ServerStreamingServerMethod<TRequest, TResponse>? handler)
-                => _context.AddServerStreamingMethod(Describe(method), (service, request, context)
+                => _context.AddServerStreamingMethod(ConnectMethod.FromGrpc(method), (service, request, context)
                     => GrpcStreamAdapters.ToAsyncEnumerable<TResponse>(
                         writer => _owner.Handler<ServerStreamingServerMethod<TRequest, TResponse>>(service, method)(request, writer, context),
                         context.CancellationToken),
@@ -159,14 +159,14 @@ namespace ProtoBuf.Connect.AspNetCore
 
             public override void AddMethod<TRequest, TResponse>(
                 Method<TRequest, TResponse> method, ClientStreamingServerMethod<TRequest, TResponse>? handler)
-                => _context.AddClientStreamingMethod(Describe(method), (service, requests, context)
+                => _context.AddClientStreamingMethod(ConnectMethod.FromGrpc(method), (service, requests, context)
                     => _owner.Handler<ClientStreamingServerMethod<TRequest, TResponse>>(service, method)(
                         GrpcStreamAdapters.ToStreamReader(requests, context.CancellationToken), context),
                     Metadata(method));
 
             public override void AddMethod<TRequest, TResponse>(
                 Method<TRequest, TResponse> method, DuplexStreamingServerMethod<TRequest, TResponse>? handler)
-                => _context.AddDuplexMethod(Describe(method), (service, requests, context)
+                => _context.AddDuplexMethod(ConnectMethod.FromGrpc(method), (service, requests, context)
                     => GrpcStreamAdapters.ToAsyncEnumerable<TResponse>(
                         writer => _owner.Handler<DuplexStreamingServerMethod<TRequest, TResponse>>(service, method)(
                             GrpcStreamAdapters.ToStreamReader(requests, context.CancellationToken), writer, context),
@@ -174,33 +174,6 @@ namespace ProtoBuf.Connect.AspNetCore
                     Metadata(method));
 
             private IReadOnlyList<object>? Metadata(IMethod method) => _owner._metadata?.Invoke(method);
-
-            /// <remarks>
-            /// The shape is taken from the descriptor rather than from which overload we are in, so that the
-            /// two can be checked against each other: <c>ConnectServiceBinderContext</c> throws if a method
-            /// declaring itself unary arrives through the server-streaming overload. Reading it off the
-            /// overload instead would make that check tautological.
-            /// </remarks>
-            private static ConnectMethod<TRequest, TResponse> Describe<TRequest, TResponse>(Method<TRequest, TResponse> method)
-            {
-                ArgumentNullException.ThrowIfNull(method);
-                return new ConnectMethod<TRequest, TResponse>(
-                    method.Type switch
-                    {
-                        MethodType.Unary => ConnectMethodType.Unary,
-                        MethodType.ClientStreaming => ConnectMethodType.ClientStreaming,
-                        MethodType.ServerStreaming => ConnectMethodType.ServerStreaming,
-                        MethodType.DuplexStreaming => ConnectMethodType.DuplexStreaming,
-                        _ => throw new ArgumentOutOfRangeException(nameof(method), method.Type, "Unknown method type."),
-                    },
-                    method.ServiceName,
-                    method.Name,
-                    // protoc does emit idempotency_level into the descriptor set, but Method<,> does not
-                    // carry it, so there is nothing to read here; GET-able RPCs stay POST for now
-                    idempotent: false,
-                    requestCodec: new MarshallerMessageCodec<TRequest>(method.RequestMarshaller),
-                    responseCodec: new MarshallerMessageCodec<TResponse>(method.ResponseMarshaller));
-            }
         }
 
         /// <summary>Captures the handlers a bind against a real instance produces.</summary>

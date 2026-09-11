@@ -31,6 +31,8 @@ namespace ProtoBuf.Connect
         public abstract string Name { get; }
 
         /// <summary>Serializes a message, with no framing.</summary>
+        /// <param name="destination">Where to write the encoded message.</param>
+        /// <param name="value">The message.</param>
         /// <param name="over">
         /// A per-method codec to use instead of this one, where the method carries one. The branch lives
         /// here so that every call site is spared it.
@@ -56,6 +58,7 @@ namespace ProtoBuf.Connect
         protected abstract long? MeasureCore<T>(T value);
 
         /// <summary>Deserializes a whole message.</summary>
+        /// <param name="source">The whole encoded message, with no framing around it.</param>
         /// <param name="over">As for <see cref="Write"/>: a per-method codec, where the method has one.</param>
         public T Read<T>(in ReadOnlySequence<byte> source, IConnectMessageCodec<T>? over = null)
             => over is not null ? over.Read(source) : ReadCore<T>(source);

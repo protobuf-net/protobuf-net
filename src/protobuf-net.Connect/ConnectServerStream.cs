@@ -55,8 +55,7 @@ namespace ProtoBuf.Connect
         public IReadOnlyList<KeyValuePair<string, string>> Trailers { get; private set; }
 
         /// <inheritdoc/>
-        public async IAsyncEnumerator<TResponse> GetAsyncEnumerator(
-            [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        public async IAsyncEnumerator<TResponse> GetAsyncEnumerator(CancellationToken cancellationToken = default)
         {
             if (Interlocked.Exchange(ref _enumerated, 1) != 0)
             {

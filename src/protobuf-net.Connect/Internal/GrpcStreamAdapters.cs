@@ -6,7 +6,7 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using Grpc.Core;
 
-namespace ProtoBuf.Connect.AspNetCore.Internal
+namespace ProtoBuf.Connect.Internal
 {
     /// <summary>
     /// Bridges between <c>Grpc.Core</c>'s reader/writer-shaped service methods and the
@@ -81,6 +81,34 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
             }
         }
 
+        /// <summary>
+        /// Creates an <see cref="IClientStreamWriter{T}"/> and the sequence its messages come out of.
+        /// </summary>
+        /// <remarks>
+        /// The client's mirror of <see cref="ToAsyncEnumerable{TResponse}"/>, and needed for the same
+        /// reason: a <c>protoc</c>-generated client is <em>handed</em> a writer and writes to it whenever
+        /// it likes, while the request body is produced by <em>enumerating</em> a sequence. Unlike the
+        /// server side there is no handler to invoke, so the two halves are returned separately and the
+        /// caller joins them.
+        /// <para>
+        /// Bounded at one, so a write completes only once the previous message has been framed onto the
+        /// wire. <c>CompleteAsync</c> ends the sequence, which is what ends the request body - a Connect
+        /// request stream has no terminating message, so the end of the body <em>is</em> the end of the
+        /// stream.
+        /// </para>
+        /// </remarks>
+        public static (IClientStreamWriter<TRequest> Writer, IAsyncEnumerable<TRequest> Messages) CreateRequestStream<TRequest>()
+        {
+            var channel = Channel.CreateBounded<TRequest>(new BoundedChannelOptions(1)
+            {
+                SingleReader = true,
+                SingleWriter = true,
+                FullMode = BoundedChannelFullMode.Wait,
+            });
+
+            return (new ChannelClientStreamWriter<TRequest>(channel.Writer), channel.Reader.ReadAllAsync());
+        }
+
         /// <summary>Presents a sequence as an <see cref="IAsyncStreamReader{T}"/>.</summary>
         public static IAsyncStreamReader<TRequest> ToStreamReader<TRequest>(
             IAsyncEnumerable<TRequest> source, CancellationToken cancellationToken)
@@ -106,6 +134,28 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
 
             public Task WriteAsync(T message, CancellationToken cancellationToken)
                 => _writer.WriteAsync(message, cancellationToken).AsTask();
+        }
+
+        private sealed class ChannelClientStreamWriter<T> : IClientStreamWriter<T>
+        {
+            private readonly ChannelWriter<T> _writer;
+
+            public ChannelClientStreamWriter(ChannelWriter<T> writer) => _writer = writer;
+
+            /// <inheritdoc cref="ChannelServerStreamWriter{T}.WriteOptions"/>
+            public WriteOptions? WriteOptions { get; set; }
+
+            public Task WriteAsync(T message) => WriteAsync(message, CancellationToken.None);
+
+            public Task WriteAsync(T message, CancellationToken cancellationToken)
+                => _writer.WriteAsync(message, cancellationToken).AsTask();
+
+            /// <summary>Signals that no further requests will be sent, ending the request body.</summary>
+            public Task CompleteAsync()
+            {
+                _writer.TryComplete();
+                return Task.CompletedTask;
+            }
         }
 
         private sealed class EnumerableStreamReader<T> : IAsyncStreamReader<T>

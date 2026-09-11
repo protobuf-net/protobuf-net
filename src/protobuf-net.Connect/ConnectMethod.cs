@@ -1,4 +1,5 @@
 using System;
+using Grpc.Core;
 using ProtoBuf.Serializers;
 
 namespace ProtoBuf.Connect
@@ -21,6 +22,47 @@ namespace ProtoBuf.Connect
         ServerStreaming,
         /// <summary>A stream of requests and a stream of responses.</summary>
         DuplexStreaming,
+    }
+
+    /// <summary>
+    /// Builds a <see cref="ConnectMethod{TRequest, TResponse}"/> from a <c>Grpc.Core</c> descriptor.
+    /// </summary>
+    public static class ConnectMethod
+    {
+        /// <summary>
+        /// Describes a <c>protoc</c>-generated <see cref="Method{TRequest, TResponse}"/> as a Connect method.
+        /// </summary>
+        /// <remarks>
+        /// Both halves of the contract-first story go through this - the server's
+        /// <c>ServiceBinderBase</c> adapter and the client's <c>CallInvoker</c> - and they must agree
+        /// exactly, since a disagreement about a path or a shape is an interoperability bug between our
+        /// own two ends. One definition is the only way to be sure of that.
+        /// <para>
+        /// The marshallers come from the descriptor and are used unchanged: for <c>application/proto</c>
+        /// a Connect body and a gRPC body are the same bytes.
+        /// </para>
+        /// </remarks>
+        public static ConnectMethod<TRequest, TResponse> FromGrpc<TRequest, TResponse>(Method<TRequest, TResponse> method)
+        {
+            if (method is null) throw new ArgumentNullException(nameof(method));
+
+            return new ConnectMethod<TRequest, TResponse>(
+                method.Type switch
+                {
+                    MethodType.Unary => ConnectMethodType.Unary,
+                    MethodType.ClientStreaming => ConnectMethodType.ClientStreaming,
+                    MethodType.ServerStreaming => ConnectMethodType.ServerStreaming,
+                    MethodType.DuplexStreaming => ConnectMethodType.DuplexStreaming,
+                    _ => throw new ArgumentOutOfRangeException(nameof(method), method.Type, "Unknown method type."),
+                },
+                method.ServiceName,
+                method.Name,
+                // protoc records idempotency_level in the descriptor set, but Method<,> does not carry it,
+                // so there is nothing to read and every contract-first RPC stays POST
+                idempotent: false,
+                requestCodec: new MarshallerMessageCodec<TRequest>(method.RequestMarshaller),
+                responseCodec: new MarshallerMessageCodec<TResponse>(method.ResponseMarshaller));
+        }
     }
 
     /// <summary>

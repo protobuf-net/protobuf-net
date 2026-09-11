@@ -2482,13 +2482,76 @@ coincidences were being relied on.
 - `src/AotConnectSmoke` — 22/22, unchanged. `src/ConnectProbe` — 9/9 against connect-go.
 - `BuildToolsUnitTests` — 540/540. Traversal build clean.
 
+## 42. The generated *client* works too, unchanged
+
+`ConnectCallInvoker : CallInvoker` completes the claim from the other end:
+
+```csharp
+var client = new Greeter.GreeterClient(new ConnectCallInvoker(http, baseAddress));
+```
+
+protoc's own client type, no subclassing, no wrapper. All four shapes pass, plus the blocking unary
+overload, plus `RpcException` fidelity in both directions — 27 checks in `src/ConnectContractFirst`.
+
+**`CallInvoker` is the only way in, and that is the design rather than luck.** A generated client keeps
+its `Method<,>` descriptors in `private static readonly` fields and routes every call through its
+invoker, so there is no other seam — and no need for one.
+
+The headline: **everything but duplex now runs over HTTP/1.1.** The generated client is unchanged; only
+the transport under it moved.
+
+### Metadata is where the fidelity is, and a bare sequence loses it
+
+The first cut drove the streaming shapes from `ConnectChannel.ServerStreaming`/`Duplex`, which return a
+bare `IAsyncEnumerable`. That compiles, passes a naive test, and is wrong twice:
+
+- `ResponseHeadersAsync` would resolve only when the *stream ended*, where a gRPC caller may await it
+  before reading any message;
+- trailers would come back **empty**, because Connect delivers trailing metadata in the terminating
+  envelope and a bare sequence never exposes it.
+
+Driving from `ServerStreamingAsync`/`DuplexAsync` — which return `ConnectServerStream<T>`, carrying
+`Headers` at the start and `Trailers` after the terminator — fixes both. Client-streaming needed a new
+`ClientStreamingWithMetadataAsync` for the same reason, symmetric with the unary one that already
+existed.
+
+This is pinned rather than asserted: the fixture's `Subscribe` sets a leading header *and* a trailer,
+and the generated client reads both back. **That trailer travelled in the terminating envelope over
+HTTP/1.1** — which is the entire argument for Connect, demonstrated through an unmodified gRPC client.
+
+### Decisions worth keeping
+
+- **A per-call `host` is refused, not ignored.** gRPC's per-call host overrides the channel authority;
+  ignoring it would silently send the call somewhere the caller did not ask for. Generated clients
+  always pass `null`.
+- **`BlockingUnaryCall` blocks on the async path**, because there is no synchronous transport under
+  `HttpClient` and generated clients expose the overload regardless. Refusing would make an ordinary
+  client partly unusable for no gain.
+- **The status mapping is two explicit tables, not a cast** — `ConnectException.FromRpcException` and
+  `ToStatusCode`. The ordinals *do* line up today; they are maintained by different people in different
+  repositories, and this codebase has already shipped exactly that bug once (`DataFormat` to
+  `ProtoDataFormat`). The two directions are separate maps because they are not quite inverses: every
+  gRPC code has a Connect code, but an unrecognised Connect code has no better answer than `Unknown`.
+- **`ConnectMethod.FromGrpc` is shared by both halves.** A disagreement between our own client and
+  server about a path or a shape is an interoperability bug with ourselves; one definition is the only
+  way to be sure of it. The server binder's private copy is gone.
+- The gRPC stream shims moved down into `protobuf-net.Connect` with an `InternalsVisibleTo` for the
+  AspNetCore half, since the reader shim is *literally the same type* on both sides and a second copy
+  of a subtle bridge is worse than a shared internal.
+
+### Status
+
+- `src/ConnectContractFirst` — 27/27 (raw-HTTP checks *and* generated-client checks).
+- `src/AotConnectSmoke` — 22/22. `src/ConnectProbe` — 9/9 against connect-go.
+- `BuildToolsUnitTests` — 540/540. Traversal build clean, and the six long-standing warnings in
+  `protobuf-net.Connect` are gone.
+
 ### Next
 
-`ConnectCallInvoker`. The server half is done; the client half is the same claim from the other end —
-`new Greeter.GreeterClient(new ConnectCallInvoker(...))`, i.e. protoc's *generated client*, unchanged,
-speaking Connect over HTTP/1.1. It shares this section's `SerializationContext` machinery, and the
-`__Method_*` descriptors are private, so the `CallInvoker` seam is the only route in — which is exactly
-what it is for.
+- **Endpoint metadata for contract-first** (§41): `[Authorize]` is still not inferred, and that is the
+  one gap here with a security shape rather than a convenience shape.
+- `connectconformance` against both halves.
+- JSON codec — still the largest single piece, and still unsized by anything but judgement.
 
 ## 12. Unverified — check before committing to any of this
 

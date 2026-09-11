@@ -112,6 +112,36 @@ namespace ProtoBuf.Connect
                 code, string.IsNullOrEmpty(detail) ? null : detail, innerException: exception);
         }
 
+        /// <summary>
+        /// The inverse of <see cref="FromRpcException"/>: the gRPC status code for a Connect code.
+        /// </summary>
+        /// <remarks>
+        /// Written out for the reason given there. The two directions are separate maps rather than one
+        /// table because they are not quite inverses at the edges - every gRPC code has a Connect code,
+        /// but an unrecognised Connect code has no better answer than <c>Unknown</c>.
+        /// </remarks>
+        public static Grpc.Core.StatusCode ToStatusCode(ConnectCode code) => code switch
+        {
+            ConnectCode.Ok => Grpc.Core.StatusCode.OK,
+            ConnectCode.Cancelled => Grpc.Core.StatusCode.Cancelled,
+            ConnectCode.Unknown => Grpc.Core.StatusCode.Unknown,
+            ConnectCode.InvalidArgument => Grpc.Core.StatusCode.InvalidArgument,
+            ConnectCode.DeadlineExceeded => Grpc.Core.StatusCode.DeadlineExceeded,
+            ConnectCode.NotFound => Grpc.Core.StatusCode.NotFound,
+            ConnectCode.AlreadyExists => Grpc.Core.StatusCode.AlreadyExists,
+            ConnectCode.PermissionDenied => Grpc.Core.StatusCode.PermissionDenied,
+            ConnectCode.ResourceExhausted => Grpc.Core.StatusCode.ResourceExhausted,
+            ConnectCode.FailedPrecondition => Grpc.Core.StatusCode.FailedPrecondition,
+            ConnectCode.Aborted => Grpc.Core.StatusCode.Aborted,
+            ConnectCode.OutOfRange => Grpc.Core.StatusCode.OutOfRange,
+            ConnectCode.Unimplemented => Grpc.Core.StatusCode.Unimplemented,
+            ConnectCode.Internal => Grpc.Core.StatusCode.Internal,
+            ConnectCode.Unavailable => Grpc.Core.StatusCode.Unavailable,
+            ConnectCode.DataLoss => Grpc.Core.StatusCode.DataLoss,
+            ConnectCode.Unauthenticated => Grpc.Core.StatusCode.Unauthenticated,
+            _ => Grpc.Core.StatusCode.Unknown,
+        };
+
         private static string Describe(ConnectCode code, string? message, int? httpStatus)
         {
             // the protocol explicitly allows an omitted or empty message, saying the client should

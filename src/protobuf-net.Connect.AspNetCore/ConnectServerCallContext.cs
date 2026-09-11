@@ -189,8 +189,7 @@ namespace ProtoBuf.Connect.AspNetCore
             var status = StatusCore;
             if (status.StatusCode == StatusCode.OK) return null;
 
-            // ConnectCode's ordinals are gRPC's, deliberately, so this is a cast rather than a table
-            return new ConnectException((ConnectCode)(int)status.StatusCode, status.Detail);
+            return ConnectException.FromRpcException(new RpcException(status));
         }
 
         internal static DateTime DeadlineFrom(TimeSpan? timeout)

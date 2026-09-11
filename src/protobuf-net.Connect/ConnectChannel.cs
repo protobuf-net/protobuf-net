@@ -215,6 +215,25 @@ namespace ProtoBuf.Connect
             ConnectCallOptions? options = null,
             CancellationToken cancellationToken = default)
         {
+            var (response, _) = await ClientStreamingWithMetadataAsync(method, requests, options, cancellationToken)
+                .ConfigureAwait(false);
+            return response;
+        }
+
+        /// <summary>
+        /// Invokes a client-streaming RPC and returns the response together with its metadata.
+        /// </summary>
+        /// <remarks>
+        /// The metadata form matters more here than it looks: trailing metadata on a client-streaming call
+        /// arrives in the <em>terminating envelope</em>, not in the response headers, so it is unreachable
+        /// to a caller holding only the response message. A <c>CallInvoker</c> must surface it.
+        /// </remarks>
+        public async Task<(TResponse Response, ConnectCallResult Call)> ClientStreamingWithMetadataAsync<TRequest, TResponse>(
+            ConnectMethod<TRequest, TResponse> method,
+            IAsyncEnumerable<TRequest> requests,
+            ConnectCallOptions? options = null,
+            CancellationToken cancellationToken = default)
+        {
             if (method is null) throw new ArgumentNullException(nameof(method));
             if (requests is null) throw new ArgumentNullException(nameof(requests));
             if (method.Type != ConnectMethodType.ClientStreaming)
@@ -267,7 +286,7 @@ namespace ProtoBuf.Connect
                     $"'{method}' is client-streaming and must answer with exactly one message; {count} arrived.");
             }
 
-            return response!;
+            return (response!, new ConnectCallResult(stream.Headers, stream.Trailers));
         }
 
         /// <summary>

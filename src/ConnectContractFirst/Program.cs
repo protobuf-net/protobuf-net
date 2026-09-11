@@ -144,6 +144,85 @@ void Check(string what, bool ok, string? detail = null)
         json.Contains("permission_denied") && json.Contains("not for you"), json);
 }
 
+// ---------------------------------------------------------------------------------------------------
+// The other end of the same claim: protoc's OWN GENERATED CLIENT, unchanged, over Connect. The only
+// difference from a gRPC deployment is the CallInvoker handed to the constructor - and with it, the
+// fact that everything but duplex now runs over HTTP/1.1.
+{
+    var invoker = new ConnectCallInvoker(http, new Uri(address));
+    var client = new Greeter.GreeterClient(invoker);
+
+    var reply = await client.SayHelloAsync(new HelloRequest { Name = "Grace" });
+    Check("generated client: unary", reply.Message == "Hello Grace" && reply.Length == 5, reply.Message);
+
+    // and the blocking overload a generated client also exposes
+    var blocking = client.SayHello(new HelloRequest { Name = "Alan" });
+    Check("generated client: blocking unary", blocking.Message == "Hello Alan", blocking.Message);
+
+    using var subscribe = client.Subscribe(new HelloRequest { Name = "Ada", Repeat = 2 });
+    var streamed = new List<string>();
+    while (await subscribe.ResponseStream.MoveNext(CancellationToken.None))
+    {
+        streamed.Add(subscribe.ResponseStream.Current.Message);
+    }
+
+    Check("generated client: server streaming", streamed.Count == 2 && streamed[0] == "Ada #1",
+        string.Join(",", streamed));
+
+    var headers = await subscribe.ResponseHeadersAsync;
+    var trailers = subscribe.GetTrailers();
+    Check("generated client: leading metadata", headers.GetValue("x-greeting") == "hi",
+        headers.GetValue("x-greeting") ?? "<none>");
+    // the sharp one: this arrived in the terminating envelope, not in an HTTP trailer
+    Check("generated client: trailing metadata", trailers.GetValue("x-count") == "2",
+        trailers.GetValue("x-count") ?? "<none>");
+    Check("generated client: status is OK", subscribe.GetStatus().StatusCode == StatusCode.OK,
+        subscribe.GetStatus().StatusCode.ToString());
+
+    using var collect = client.Collect();
+    foreach (var name in new[] { "x", "yy" }) await collect.RequestStream.WriteAsync(new HelloRequest { Name = name });
+    await collect.RequestStream.CompleteAsync();
+    var collected = await collect.ResponseAsync;
+    Check("generated client: client streaming", collected.Message == "x,yy" && collected.Length == 3,
+        collected.Message);
+
+    // an RpcException thrown on the server arrives as an RpcException on the client, with its code -
+    // which is what makes an existing gRPC error-handling path keep working
+    RpcException? caught = null;
+    try
+    {
+        await client.SayHelloAsync(new HelloRequest { Name = "boom" });
+    }
+    catch (RpcException ex)
+    {
+        caught = ex;
+    }
+
+    Check("generated client: RpcException survives the round trip",
+        caught is { StatusCode: StatusCode.PermissionDenied } && caught.Status.Detail == "not for you",
+        caught is null ? "<none>" : $"{caught.StatusCode}: {caught.Status.Detail}");
+}
+
+// duplex needs HTTP/2, exactly as it does under gRPC; everything above did not
+{
+    var client = new Greeter.GreeterClient(new ConnectCallInvoker(http, new Uri(http2Address)));
+    using var chat = client.Chat();
+
+    var seen = new List<string>();
+    var reader = Task.Run(async () =>
+    {
+        while (await chat.ResponseStream.MoveNext(CancellationToken.None)) seen.Add(chat.ResponseStream.Current.Message);
+    });
+
+    await chat.RequestStream.WriteAsync(new HelloRequest { Name = "ping" });
+    await chat.RequestStream.WriteAsync(new HelloRequest { Name = "pong" });
+    await chat.RequestStream.CompleteAsync();
+    await reader;
+
+    Check("generated client: duplex", seen.Count == 2 && seen[0] == "re: ping" && seen[1] == "re: pong",
+        string.Join(",", seen));
+}
+
 await app.StopAsync();
 
 Console.WriteLine();
@@ -225,6 +304,11 @@ sealed class GreeterImpl : Greeter.GreeterBase
 
     public override async Task Subscribe(HelloRequest request, IServerStreamWriter<HelloReply> responseStream, ServerCallContext context)
     {
+        // leading metadata goes out as response headers; trailing metadata rides in the terminating
+        // envelope, which is the whole reason Connect needs no HTTP trailers and so no HTTP/2
+        await context.WriteResponseHeadersAsync(new Metadata { { "x-greeting", "hi" } });
+        context.ResponseTrailers.Add("x-count", request.Repeat.ToString());
+
         for (var i = 1; i <= request.Repeat; i++)
         {
             await responseStream.WriteAsync(new HelloReply { Message = $"{request.Name} #{i}", Length = i });

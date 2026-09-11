@@ -31,9 +31,6 @@ namespace ProtoBuf.Connect.Internal
             message = null;
             details = Array.Empty<ConnectErrorDetail>();
 
-            var haveCode = false;
-            List<ConnectErrorDetail>? collected = null;
-
             try
             {
                 var reader = new Utf8JsonReader(utf8, new JsonReaderOptions
