@@ -15,7 +15,6 @@
   <ItemGroup>
     <PackageVersion Include="FSharp.Core" Version="11.0.100" />
     <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
-    <PackageVersion Include="coverlet.collector" Version="10.0.1" />
     <PackageVersion Include="Google.Protobuf" Version="3.36.1" />
     <PackageVersion Include="ICSharpCode.Decompiler" Version="11.0.0.9375" />
     <PackageVersion Include="Grpc.Net.Client" Version="2.83.0" />
@@ -23,7 +22,6 @@
     <PackageVersion Include="Iesi.Collections" Version="4.1.1" />
     <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.12" />
     <PackageVersion Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.10.0" />
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.401" PrivateAssets="All" />
     <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="5.9.0" PrivateAssets="all" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.3.1" />
@@ -62,7 +60,6 @@
     <PackageVersion Include="System.Threading.ThreadPool" Version="4.3.0" />
     <PackageVersion Include="System.Reflection.Metadata" Version="10.0.12" />
     <PackageVersion Include="System.ValueTuple" Version="4.6.2" />
-    <PackageVersion Include="xunit.v3" Version="3.2.2" />
-    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
+    <PackageVersion Include="xunit.v3" Version="4.0.0" />
   </ItemGroup>
 </Project>

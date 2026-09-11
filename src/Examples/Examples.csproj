@@ -25,15 +25,10 @@
     <PackageReference Include="Google.Protobuf">
       <Aliases>gpb</Aliases>
     </PackageReference>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="Microsoft.Data.SqlClient" />
     <PackageReference Include="Newtonsoft.Json" />
     <PackageReference Include="System.ValueTuple" />
     <PackageReference Include="xunit.v3" />
-    <PackageReference Include="xunit.runner.visualstudio">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-    </PackageReference>
     <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)'=='net472' and $(RuntimeIdentifier.StartsWith('win'))">
