@@ -6011,3 +6011,28 @@ a removal rather than a replacement.
 following test projects are using VSTest test runner"*, i.e. a message about the wrong thing entirely.
 A per-project `dotnet restore` fixed it. Suspect a stale restore before believing any MTP
 runner-mismatch message.
+
+
+### B55. `protobuf-net.FSharp.Test` and `VBTest` are not in CI — **won't do** (Marc, 2026-09-11)
+
+`Build.csproj` globs **`src\*\*.csproj`**, so an `.fsproj` or a `.vbproj` is invisible to it. Two
+projects sit outside every gate as a result, and always have:
+
+| | |
+| --- | --- |
+| `src/protobuf-net.FSharp.Test/protobuf-net.FSharp.Test.fsproj` | 6 tests. They **pass** — run directly, 6/6, measured 2026-09-11 — but nothing runs them |
+| `src/VBTest/VBTest.vbproj` | `IsTestProject=false`: a **compile-only** smoke over generated VB (`Descriptor.vb`, `Everything.vb`), so what is unchecked is whether protogen's VB output still compiles |
+
+Found while reconciling the run list during the xunit migration (B54), which is worth noting in
+itself: the count of test *projects* in the output is a thing nobody reads, so this survived every
+CI change until a migration forced someone to enumerate them.
+
+**Accepted rather than fixed**, and the mitigating fact is that the *shipped* F# artefact is covered:
+`protobuf-net.FSharp.csproj` is named explicitly in `Build.csproj`'s first `ItemGroup`, so it is
+built, packed and package-validated on every run. What is missing is its test project, not the
+library. `VBTest` ships nothing at all.
+
+The change would be one line — glob `*.fsproj`/`*.vbproj` too — but it newly admits two projects to
+every CI run, which is a different thing from a one-line diff: `VBTest` is `netstandard2.0` at
+`LangVersion 14` and has never been built by anything automated, so "add it and see" is a fair
+description of the risk. If it is ever done, do the two separately.

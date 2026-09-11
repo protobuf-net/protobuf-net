@@ -82,7 +82,9 @@ closed on 2026-09-11**. The live ones:
   contract). The **`RawRead_` body is untouched**, and the `foreach` variables cannot be shared at
   all, which is a floor rather than an omission;
 - **B21 tier 3** (vectorised LEB128, research-shaped, modern-TFM only) and **B12** (an intermittent
-  net472 flake) round it out.
+  net472 flake) round it out. **B55** is closed as *won't do* rather than open: two projects
+  (`protobuf-net.FSharp.Test`, `VBTest`) sit outside CI because the traversal globs `*.csproj` only,
+  and that is accepted.
 
 **The dependency sweep is DONE for everything below a major** (2026-09-11): 22 of the 30 packages
 that were behind, applied in one commit and green on every gate. Two majors followed — FSharp.Core 11
