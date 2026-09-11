@@ -26,6 +26,38 @@ namespace ProtoBuf.BuildTools.Internal
     /// </remarks>
     internal static class SchemaFileMatcher
     {
+        /// <summary>
+        /// Splits a path on <em>both</em> separators regardless of the host, returning the leaf.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="System.IO.Path.GetFileName(string)"/> only honours the running platform's
+        /// separator, so on Linux it treats <c>C:\proj\shop.proto</c> as one long file name - which
+        /// then reaches <c>AddSource</c> as a hint name containing <c>':'</c> and throws. The paths
+        /// here are strings we are handed (an <c>AdditionalFiles</c> item, or a literal the consumer
+        /// wrote in a <c>[ProtoSchema]</c> attribute), not paths we opened, so the separator in them
+        /// is not the host's to assume. This is the same equivalence <see cref="Normalize"/> already
+        /// applies when matching one against another.
+        /// </remarks>
+        internal static string GetFileName(string? path)
+        {
+            if (string.IsNullOrEmpty(path)) return "";
+            var index = path!.LastIndexOfAny(PathSeparators);
+            return index < 0 ? path : path.Substring(index + 1);
+        }
+
+        /// <summary>
+        /// The directory portion of <paramref name="path"/>, by the same rule as
+        /// <see cref="GetFileName"/>; empty when there is none.
+        /// </summary>
+        internal static string GetDirectoryName(string? path)
+        {
+            if (string.IsNullOrEmpty(path)) return "";
+            var index = path!.LastIndexOfAny(PathSeparators);
+            return index < 0 ? "" : path.Substring(0, index);
+        }
+
+        private static readonly char[] PathSeparators = { '/', '\\' };
+
         internal enum MatchResult
         {
             Matched,

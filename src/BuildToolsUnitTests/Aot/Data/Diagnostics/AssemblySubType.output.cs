@@ -515,7 +515,18 @@ partial class AssemblySubTypeModel
             }
             return value.Value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 50 or 51;
+            static bool IsKnownField(uint tag)
+            {
+                switch (tag >> 3)
+                {
+                    case 1:
+                    case 50:
+                    case 51:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
         }
     }
 }

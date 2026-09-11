@@ -2367,7 +2367,7 @@ partial class CustomProtogenSerializer
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5 or 6 or 7 or 8 or 9 or 10 or 11;
+            static bool IsKnownField(uint tag) => (tag >> 3) is (>= 1 and <= 11);
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.DescriptorProto.ExtensionRange>.Features
@@ -2503,7 +2503,18 @@ partial class CustomProtogenSerializer
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3;
+            static bool IsKnownField(uint tag)
+            {
+                switch (tag >> 3)
+                {
+                    case 1:
+                    case 2:
+                    case 3:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.DescriptorProto.ReservedRange>.Features
@@ -2847,7 +2858,7 @@ partial class CustomProtogenSerializer
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5 or 6;
+            static bool IsKnownField(uint tag) => (tag >> 3) is (>= 1 and <= 6);
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.EnumDescriptorProto.EnumReservedRange>.Features
@@ -3138,7 +3149,20 @@ partial class CustomProtogenSerializer
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 2 or 3 or 6 or 7 or 999;
+            static bool IsKnownField(uint tag)
+            {
+                switch (tag >> 3)
+                {
+                    case 2:
+                    case 3:
+                    case 6:
+                    case 7:
+                    case 999:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.EnumValueDescriptorProto>.Features
@@ -3279,7 +3303,18 @@ partial class CustomProtogenSerializer
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3;
+            static bool IsKnownField(uint tag)
+            {
+                switch (tag >> 3)
+                {
+                    case 1:
+                    case 2:
+                    case 3:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.EnumValueOptions>.Features
@@ -3483,7 +3518,7 @@ partial class CustomProtogenSerializer
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 999;
+            static bool IsKnownField(uint tag) => (tag >> 3) is (>= 1 and <= 4) or 999;
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.ExtensionRangeOptions>.Features
@@ -3681,7 +3716,19 @@ partial class CustomProtogenSerializer
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 2 or 3 or 50 or 999;
+            static bool IsKnownField(uint tag)
+            {
+                switch (tag >> 3)
+                {
+                    case 2:
+                    case 3:
+                    case 50:
+                    case 999:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.ExtensionRangeOptions.Declaration>.Features
@@ -3845,7 +3892,20 @@ partial class CustomProtogenSerializer
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 5 or 6;
+            static bool IsKnownField(uint tag)
+            {
+                switch (tag >> 3)
+                {
+                    case 1:
+                    case 2:
+                    case 3:
+                    case 5:
+                    case 6:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.FeatureSet>.Features
@@ -4075,7 +4135,7 @@ partial class CustomProtogenSerializer
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5 or 6 or 7 or 8;
+            static bool IsKnownField(uint tag) => (tag >> 3) is (>= 1 and <= 8);
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.FieldDescriptorProto>.Features
@@ -4393,7 +4453,7 @@ partial class CustomProtogenSerializer
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5 or 6 or 7 or 8 or 9 or 10 or 17;
+            static bool IsKnownField(uint tag) => (tag >> 3) is (>= 1 and <= 10) or 17;
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.FieldOptions>.Features
@@ -4815,7 +4875,26 @@ partial class CustomProtogenSerializer
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 5 or 6 or 10 or 15 or 16 or 17 or 19 or 20 or 21 or 22 or 999;
+            static bool IsKnownField(uint tag)
+            {
+                switch (tag >> 3)
+                {
+                    case 1:
+                    case 2:
+                    case 3:
+                    case 5:
+                    case 6:
+                    case 10:
+                    case 15:
+                    case 16:
+                    case 17:
+                    case >= 19 and <= 22:
+                    case 999:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.FieldOptions.EditionDefault>.Features
@@ -5080,7 +5159,7 @@ partial class CustomProtogenSerializer
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5;
+            static bool IsKnownField(uint tag) => (tag >> 3) is (>= 1 and <= 5);
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.FileDescriptorProto>.Features
@@ -5587,7 +5666,18 @@ partial class CustomProtogenSerializer
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5 or 6 or 7 or 8 or 9 or 10 or 11 or 12 or 14 or 15;
+            static bool IsKnownField(uint tag)
+            {
+                switch (tag >> 3)
+                {
+                    case >= 1 and <= 12:
+                    case 14:
+                    case 15:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.FileDescriptorSet>.Features
@@ -6256,7 +6346,31 @@ partial class CustomProtogenSerializer
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 8 or 9 or 10 or 11 or 16 or 17 or 18 or 20 or 23 or 27 or 31 or 36 or 37 or 39 or 40 or 41 or 42 or 44 or 45 or 50 or 999;
+            static bool IsKnownField(uint tag)
+            {
+                switch (tag >> 3)
+                {
+                    case 1:
+                    case >= 8 and <= 11:
+                    case 16:
+                    case 17:
+                    case 18:
+                    case 20:
+                    case 23:
+                    case 27:
+                    case 31:
+                    case 36:
+                    case 37:
+                    case >= 39 and <= 42:
+                    case 44:
+                    case 45:
+                    case 50:
+                    case 999:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.MessageOptions>.Features
@@ -6489,7 +6603,22 @@ partial class CustomProtogenSerializer
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 7 or 11 or 12 or 999;
+            static bool IsKnownField(uint tag)
+            {
+                switch (tag >> 3)
+                {
+                    case 1:
+                    case 2:
+                    case 3:
+                    case 7:
+                    case 11:
+                    case 12:
+                    case 999:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.MethodDescriptorProto>.Features
@@ -6694,7 +6823,7 @@ partial class CustomProtogenSerializer
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5 or 6;
+            static bool IsKnownField(uint tag) => (tag >> 3) is (>= 1 and <= 6);
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.MethodOptions>.Features
@@ -6873,7 +7002,19 @@ partial class CustomProtogenSerializer
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 33 or 34 or 35 or 999;
+            static bool IsKnownField(uint tag)
+            {
+                switch (tag >> 3)
+                {
+                    case 33:
+                    case 34:
+                    case 35:
+                    case 999:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.OneofDescriptorProto>.Features
@@ -7289,7 +7430,18 @@ partial class CustomProtogenSerializer
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3;
+            static bool IsKnownField(uint tag)
+            {
+                switch (tag >> 3)
+                {
+                    case 1:
+                    case 2:
+                    case 3:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.ServiceOptions>.Features
@@ -7446,7 +7598,18 @@ partial class CustomProtogenSerializer
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 33 or 34 or 999;
+            static bool IsKnownField(uint tag)
+            {
+                switch (tag >> 3)
+                {
+                    case 33:
+                    case 34:
+                    case 999:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.SourceCodeInfo>.Features
@@ -7747,7 +7910,7 @@ partial class CustomProtogenSerializer
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 6;
+            static bool IsKnownField(uint tag) => (tag >> 3) is (>= 1 and <= 4) or 6;
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.UninterpretedOption>.Features
@@ -7983,7 +8146,7 @@ partial class CustomProtogenSerializer
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 2 or 3 or 4 or 5 or 6 or 7 or 8;
+            static bool IsKnownField(uint tag) => (tag >> 3) is (>= 2 and <= 8);
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.UninterpretedOption.NamePart>.Features
@@ -8180,7 +8343,18 @@ partial class CustomProtogenSerializer
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3;
+            static bool IsKnownField(uint tag)
+            {
+                switch (tag >> 3)
+                {
+                    case 1:
+                    case 2:
+                    case 3:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::ProtoBuf.Reflection.ProtogenEnumValueOptions>.Features
@@ -8379,7 +8553,7 @@ partial class CustomProtogenSerializer
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4;
+            static bool IsKnownField(uint tag) => (tag >> 3) is (>= 1 and <= 4);
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::ProtoBuf.Reflection.ProtogenFileOptions>.Features
@@ -8556,7 +8730,7 @@ partial class CustomProtogenSerializer
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5 or 6 or 7;
+            static bool IsKnownField(uint tag) => (tag >> 3) is (>= 1 and <= 7);
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::ProtoBuf.Reflection.ProtogenMessageOptions>.Features
@@ -8701,7 +8875,7 @@ partial class CustomProtogenSerializer
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5;
+            static bool IsKnownField(uint tag) => (tag >> 3) is (>= 1 and <= 5);
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::ProtoBuf.Reflection.ProtogenMethodOptions>.Features

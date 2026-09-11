@@ -74,6 +74,80 @@ namespace SomeNamespace.Whatever
             Assert.Equal("This member is not a method; only methods are supported for gRPC services.", err.GetMessage(CultureInfo.InvariantCulture));
         }
 
+        /// <summary>
+        /// A constant on a service interface is not an operation candidate, so it should be passed
+        /// over rather than reported (#1314).
+        /// </summary>
+        [Fact]
+        public async Task ConstantIsIgnored()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf.Grpc.Configuration;
+using System.Threading.Tasks;
+
+[Service]
+public interface IDoServiceGrpc
+{
+    public const string CONST_TEXT = ""hello-world"";
+
+    ValueTask DoAsync();
+}");
+            Assert.Empty(diagnostics);
+        }
+
+        /// <summary>
+        /// The same reasoning covers everything else an interface can declare that the runtime
+        /// binder never enumerates: static members of any shape, and nested types.
+        /// </summary>
+        [Fact]
+        public async Task StaticMembersAndNestedTypesAreIgnored()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf.Grpc.Configuration;
+using System.Threading.Tasks;
+
+[Service]
+public interface IMyService
+{
+    const int Answer = 42;
+    static int Counter;
+    static int Twice(int value) => value * 2;
+
+    public enum Mode { A, B }
+
+    ValueTask DoAsync();
+}");
+            Assert.Empty(diagnostics);
+        }
+
+        /// <summary>
+        /// ...but an INSTANCE property is exactly what this rule is for, and must still report -
+        /// otherwise the #1314 fix would have quietly disabled it.
+        /// </summary>
+        [Fact]
+        public async Task InstancePropertyStillReportsAlongsideAConstant()
+        {
+            // the property type is a contract so its ACCESSOR is valid and only the property itself
+            // reports - the same shape DetectInvalidMethodKind uses, for the same reason
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf.Grpc.Configuration;
+using ProtoBuf;
+using System.Threading.Tasks;
+
+[Service]
+public interface IMyService
+{
+    const int Answer = 42;
+    Foo Instance { get; }
+
+    ValueTask DoAsync();
+}
+[ProtoContract]
+public class Foo {}");
+            var err = Assert.Single(diagnostics);
+            Assert.Equal(ServiceContractAnalyzer.InvalidMemberKind, err.Descriptor);
+        }
+
         [Fact]
         public async Task ValidMethodKindIsClean()
         {

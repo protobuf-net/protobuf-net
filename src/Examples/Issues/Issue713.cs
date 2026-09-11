@@ -63,7 +63,7 @@ namespace ProtoBuf.Issues
             Test(model);
 
             var dll = model.Compile(nameof(CanSerializeNullableSomeEnumArray_NoNulls), nameof(CanSerializeNullableSomeEnumArray_NoNulls) + ".dll");
-            PEVerify.AssertValid(nameof(CanSerializeNullableInt32Array_NoNulls) + ".dll");
+            PEVerify.AssertValid(nameof(CanSerializeNullableSomeEnumArray_NoNulls) + ".dll");
             Test(dll);
 
             //Test(model.Compile());

@@ -19,12 +19,15 @@ The notes are deliberately versioned **with the code**, not in one central place
 and a note on a branch correctly describes *that branch*. The cost is that you have to know where
 to look while a stack is in flight, which is what this section is for.
 
-**A branch IS in flight as of 2026-08-26** — `nrt-core`, carrying gap B51 **stage 4**: NRT on
-`protobuf-net.Core`. It is pushed, green and **unfinished** (573 -> 369 sites); `notes/gaps.md`
-B51's "Stage 4" section is the working document. Its predecessor `nrt-reflection` merged as
-PR #1332. The "current on" column below is therefore restored, per the rule that follows; drop it
-again when the branch merges and `v4` is once more the only answer. Two wrong-branch claims were shipped last time it was left off while a stack was in
-flight, one of them in this very table.
+**A branch IS in flight as of 2026-09-11** — `nrt-core`, carrying gap B51 **stage 4**: NRT on
+`protobuf-net.Core`. It is pushed, green and **unfinished**; `notes/gaps.md` B51's "Stage 4" section
+is the working document. Its predecessor `nrt-reflection` merged as PR #1332. The "current on" column
+below is therefore restored, per the rule that follows; drop it again when the branch merges and `v4`
+is once more the only answer. Two wrong-branch claims were shipped last time it was left off while a
+stack was in flight, one of them in this very table.
+
+`v4` last took `main` on **2026-09-11** (the 3.4.21 line). `main` is the released line and is no
+longer ahead of this one; a fix that has to ship before v4 does goes there first and is merged here.
 
 `notes/readme.md` states the `docs/` vs `notes/` split and why it matters; read it before adding a
 file to either. The short form is that `docs/` is the published site, so "it is obviously internal"
@@ -386,7 +389,7 @@ Three things about it are load-bearing:
 ### Repeated members on the raw path: four predicates, and one trap that has bitten three times
 
 The generator decides per member whether a repeated, BCL or null-wrapped member takes the raw path.
-The decision is spread over six small predicates in `ProtoModelGenerator.Emit.cs`, and they are easy
+The decision is spread over seven small predicates in `ProtoModelGenerator.Emit.cs`, and they are easy
 to widen one at a time without noticing the others:
 
 | predicate | decides |
@@ -397,6 +400,80 @@ to widen one at a time without noticing the others:
 | `BclMeasurable` | whether a compatibility-level BCL member has arithmetic sizing (currently: default format, `DateTime`/`TimeSpan` below level 240, `Guid`/`decimal` below 300) |
 | `WrappedValueMeasurable` | a **lone** `[NullWrappedValue]`, whose inner field is *omitted* when trivial |
 | `WrappedRepeatedMeasurable` | a wrapped **collection**, in either scope, whose element wrapper *always* carries its inner field — the opposite rule, hence a second predicate rather than a widening of the first |
+| `RawMapNestedValueMeasurable` | a **nested** map value (`Dictionary<K, List<V>>`), which is a different shape again — see below |
+
+**A nested map value repeats field 2; it does not fill it.** `KeyValuePairSerializer` hands the
+collection to `WriteAny`, which sees `CategoryRepeated` and calls `WriteRepeated`, so the entry
+carries one field-2 occurrence *per element* and no length of its own for the value. The measure is
+therefore a loop, not a term — `EmitMapSide` grew an arm for it rather than `MapSideBody` growing a
+case.
+
+**A packable element is a different shape, not a harder one — and getting that wrong cost a round
+trip.** `WriteRepeated` packs on `CanBePacked && !IsPackedDisabled && (count == 0 || count > 1)`, so
+the encoding depends on the *count*: probed, `{1:[]}` writes `12-00`, `{1:[9]}` the **unpacked**
+`10-09`, and `{1:[9,10]}` the packed `12-02-09-0A`. A single element is never packed.
+
+The first pass excluded all of that, reasoning that the count and the `SkipZeroLengthPackedArrays`
+**model option** are "not knowable at generation time". **That confused a compile-time constant with
+a value the generated code can read.** `Measure_` is run-time code: the count is a `foreach` away,
+and the option is `context.Model.Options` — `TypeModel.Options` and `TypeModelOptions` are both
+public. So it is three arms in one pass, and `EmitMapNestedPackedMeasure` emits them. Worth
+remembering as a *pattern*: "the generator cannot know this" is only an argument about the emitted
+constant, never about what the emitted code may compute.
+
+Every packable kind was probed inside a map value rather than assumed, and they all pack — the
+integrals, `bool`, `char`, the floats, **enums** and **arrays** — which also settles that
+`EnumSerializer` is an `IMeasuringSerializer`, as the packed branch requires.
+
+Two things stay out, each for a stated reason rather than caution: a **nullable** element packs too,
+but what the writer does with a null inside a packed run is untested, so its measure would be
+guesswork; and a **value-type collection** (`ImmutableArray<T>`) cannot be null-guarded the way the
+reference ones are — `default` throws on `foreach` while the writer treats it as empty and still
+emits the two-byte header. A nested *map* value is out for a third reason: it is the outer shape
+again one level down.
+
+The **raw read** pass is a separate axis and is unchanged: `map with repeated value` is still a
+legacy-mode reason there, alongside the map shapes that were already legacy-mode. Measure and write
+eligibility are independent of it, exactly as for a repeated BCL member.
+
+**Emitting a long `or` pattern is emitting a deep stack — and the axis that matters is not the one
+it looks like.** Roslyn parses `a or b or c` into a left-nested tree and binds it by *recursing*
+once per `or`, so `IsKnownField`'s `(tag >> 3) is 1 or 2 or ... or 1000` — which a protogen stress
+schema in the corpus really does produce — binds a thousand frames deep. `AotDifferential` died on
+it with a bare **`Stack overflow.`** and no diagnostic at all.
+
+Three things were measured rather than assumed, and each changed the answer:
+
+- **It is not a term count.** An in-process `Compilation.Emit` — what `AotDifferential`,
+  `AotCoverage` and every IDE-hosted analyzer use, on ordinary thread-pool stacks — takes 1000 terms
+  and dies at 5000, while **`csc.exe` swallows 30000**, binding on dedicated large-stack threads. So
+  the same source compiles under `dotnet build` and crashes in our own harness, and there is no
+  threshold worth switching on.
+- **The chain was pre-existing.** The baseline compiled it; this branch's extra code merely tipped
+  the stack. Bisecting to the commit that "broke" it would have pointed at the wrong change.
+- **It never cost anything per call.** Benchmarked at 20M calls, the `or` chain, a range pattern and
+  a switch are indistinguishable (~3ns dense, ~5ns sparse, delegate-bound), because Roslyn's
+  decision DAG already lowers a dense constant set to a jump table and a sparse one to a binary
+  search. Only the compiler was paying.
+
+So `EmitKnownFieldTest` emits a **switch statement**, whose sections are a flat list and therefore
+bind in a loop: good to 60000 labels in the very host that died at 5000 terms, and free at run time.
+Contiguous runs collapse to a relational label (`case >= 1 and <= 1000:`) purely to keep the emitted
+source small — a `.proto` message numbers its fields from 1, so the thousand-field case is one label.
+
+At **two terms or fewer** the one-line `is` form is kept, which is most contracts (measured over the
+fixtures: 109 one-liners against 29 switches). That is not the threshold rejected above: two terms is
+two binder frames, a constant, where the objection was to picking a number *near* a limit that
+cannot be located.
+
+Anything else generated per-member into a *single expression* has the same latent shape; a flat list
+of statements or labels does not.
+
+`MapNested.input.cs` carries `RawNested` (only the measurable nested shapes, so the contract is
+measure-first at all — one blocked member takes the whole contract out) and `RawHolder`, which
+**exists so the measure is reached**: at root `RawWrite_` writes straight out and never measures, so
+a wrong measure would not show. Both arms were proven able to fail by perturbing the emitted
+arithmetic and watching the conformance suite go red, not by observing it pass.
 
 **Widening any of them without a matching measure arm makes the generator THROW**, and the symptom
 does not name the cause: every model in the compilation loses its generated `Instance`, producing a
@@ -1196,12 +1273,16 @@ that warning's text is boilerplate from the attribute and is aimed at callers; t
 at all — protobuf-net contains no `Enum.GetValues` call in any shipped assembly. The lever is always
 the annotation that demanded the metadata.
 
-The count is now **19**, measured with the `.proto` DTO tree in the fixture (it was 21 before that was
-added, and the two are not comparable — the count tracks fixtures). What is left looks structural: 6
-`IL2067` and 3 `IL2070` on the runtime-model, `DynamicStub` and auxiliary paths, 5 `IL3050`
-(`MakeGenericType`/`MakeArrayType`, same paths), 1 `IL2057`, 1 `IL2055`, and the spent `IL2091` trio —
+**On this branch the count is 6** on win-x64, measured: 3 `IL2067` and the spent `IL2091` trio —
 `CreateInstance` ×2 (whose fallback is genuinely live) and `SubTypeState<T>.Cast` (which would need
-the annotation on every consumer).
+the annotation on every consumer). It was 5 before the `Dictionary<int, List<Customer>>` member went
+in for #1337, which added one `IL2067`; B48 in `notes/aot/findings.md` is where the 23 → 5 came from
+and why it paused there.
+
+The paragraphs above are **main's** history and stop at *its* number — 20, having been 19 before that
+same member and 21 before the `.proto` DTO tree. Do not read them as a v4 baseline: none of these
+figures are comparable with each other, since the count tracks both fixtures and the annotation work
+on the branch.
 
 **Watch bytes as well as warnings — they do not move together.** Two changes of identical shape:
 removing the transport annotation was −14 warnings and **−808 KB**; removing the `MapSerializer`

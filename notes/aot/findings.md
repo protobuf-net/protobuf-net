@@ -6,19 +6,27 @@ about the generator. Kept here so they can become issues rather than being lost 
 Each was found by deriving the generator's expected output from ref-emit (`src/AotRefGen`) or by the
 native-AOT smoke test (`src/AotSmoke`) — i.e. by comparison, not by reading the code and guessing.
 
-## Handover — **current as of 2026-08-26**; read this first on a cold start
-
-**Where the work is.** The stack lives on **`v4`**. `nrt-reflection` **merged as PR #1332** (gap
-B51's Reflection stage, protogen emitting NRT, and gap B52's closure).
+## Handover — **current as of 2026-09-11**; read this first on a cold start
 
 **A branch IS in flight: `nrt-core`**, carrying gap B51 **stage 4** - NRT on `protobuf-net.Core`.
-Five commits, pushed, **unfinished but green**: the solution builds with 0 errors and every gate
-passes, but Core still reports **369 NRT warnings**. It is committed in that state deliberately, so
-the structural decisions are reviewable apart from the per-site grind. **`notes/gaps.md` B51's
-"Stage 4" section is the working document** - read it before touching Core; it has the file-by-file
-breakdown, the sweep technique, and three traps that have already produced wrong annotations.
+Pushed, **unfinished but green**: the solution builds with 0 errors and every gate passes, but Core
+still reports NRT warnings. It is committed in that state deliberately, so the structural decisions
+are reviewable apart from the per-site grind. **`notes/gaps.md` B51's "Stage 4" section is the
+working document** - read it before touching Core; it has the file-by-file breakdown, the sweep
+technique, and three traps that have already produced wrong annotations. `AGENTS.md`'s notes table
+has its "current on" column restored for the duration.
 
-`AGENTS.md`'s notes table has its "current on" column restored for the duration.
+**Where the work is.** The stack lives on **`v4`**, and **no branch is in flight** — `nrt-reflection`
+merged as #1332, so `AGENTS.md`'s notes table has its "current on" column dropped again, per its own
+rule. `v4` last took `main` on **2026-09-11** (the 3.4.21 line, ten commits); five of those had
+already been cherry-picked as part of #1339, so every merge conflict was v4's adapted copy against
+main's original and every one resolved to v4's. The merge commit records which and why — read it
+rather than re-deriving, since "take ours" was a *judgement* in each case and not a policy.
+
+**What `main` is, relative to this.** `main` is the released 3.4.x line, and it is where the AOT
+generator reached feature parity and shipped. Nothing on it is ahead of `v4` any more. If a fix has
+to ship before v4 does, it goes to `main` first and is merged here — which is what #1338/#1339 was,
+and is the shape to repeat.
 
 **What the arc has become.** The generator no longer merely emits a serializer — it emits a
 **measure-first** one: `Measure_` computes a contract's length arithmetically, `RawWrite_` writes it
@@ -27,29 +35,43 @@ positionally. `AGENTS.md`'s "The writer's measure-first path" is the section to 
 any of it; the three invariants there are the ones that break silently. The measurable census is
 **2803 contracts** across the corpus.
 
-**The gate battery, and what it reported on 2026-08-26** — all green, on **`nrt-core`**, run in
-this order:
+**The gate battery, and what it reported on 2026-09-11** — run on **linux-x64** under the **.NET 11
+SDK**, in this order. The 2026-08-26 figures are kept alongside, because a count that moved is the
+interesting column:
 
-| gate | result |
-| --- | --- |
-| `dotnet build Build.csproj -c Debug` | 0 errors |
-| `BuildToolsUnitTests` (goldens + analyzers + fixers) | 659 passed |
-| `AotConformanceTests` (differential over the fixtures) | 1842 passed |
-| `protobuf-net.Test` | **1584** (net8.0) / **1583** (net472) — +4, the new `DiscriminatedUnionNullTests` |
-| `protobuf-net.Reflection.Test` | 616 / 616 |
-| `Examples` | 679 (net8.0) / 705 (net472) |
-| `AotDifferential` (the corpus, on bytes) | **3134 compared, 100% match**, exit 0 |
-| `AotSmoke` — `-c Debug` JIT run | PASSED |
-| `AotSmoke` — `publish -c Release -r win-x64` | **not re-run since `nrt-reflection`.** Worth doing before `nrt-core` merges: nothing in it should touch ILC's inputs, but gap B48's measured shape (a void throw-helper plus an explicit return) is *exactly* what the NRT work is tempted to rewrite, so the size/warning numbers are the check |
-| `AotNodaTimeSmoke` | PASSED |
-| `DownLevelSmoke` (net472) | builds; 3 `PBN3xxx` warnings, 0 errors — the documented shape |
-| `protobuf-net.BuildTools.Legacy` | builds |
+| gate | 2026-09-11 (linux) | was (2026-08-26, win) |
+| --- | --- | --- |
+| `dotnet build Build.csproj -c Debug` | 0 errors | 0 errors |
+| `BuildToolsUnitTests` (goldens + analyzers + fixers) | **662 / 662** | 659 passed |
+| `dotnet test Build.csproj` (the whole traversal, net8.0) | **5504 total, 0 failed**, exit 0 | — |
+| `AotConformanceTests` (differential over the fixtures) | **1920** passed | 1842 |
+| `protobuf-net.Test` | **1593** (net8.0) | 1584 / 1583 (net472) |
+| `protobuf-net.Reflection.Test` | **621** | 616 / 616 |
+| `Examples` | **681** (net8.0) | 679 / 705 (net472) |
+| `AotDifferential` (the corpus, on bytes) | **3137 compared, 100% match**, exit 0 | 3134, 100% |
+| `AotGrpcMetadataDiff` | 2 operations, **0 failing** | (not recorded) |
+| `AotSmoke` — `-c Debug` JIT run | PASSED | PASSED |
+| `AotSmoke` — `publish -c Release -r win-x64` | not re-run; nothing since has touched ILC's inputs | — |
+| `AotNodaTimeSmoke` | PASSED | PASSED |
+| `DownLevelSmoke` | builds; 3 `PBN3xxx` warnings, 0 errors — the documented shape | same |
+| `protobuf-net.BuildTools.Legacy` | builds | builds |
 
 Those numbers are the baseline to compare against, and **the warning count tracks fixtures** — adding
 a member to `AotSmoke` moves it, so re-measure both sides when you do.
 
-**What is open.** `notes/gaps.md` is the entry point and its last entry is **B52**. The live ones,
-current to 2026-08-26:
+**The net472 legs are missing from the new column, and that is the platform, not a regression** —
+this machine is Linux, so `dotnet test -f net8.0` is the whole of what ran. Anything needing net472
+(`AotRefGen` included) still has to be run on Windows before it is evidence.
+
+**Everything is green on Linux, which is new.** `BuildToolsUnitTests` was 655/662 before this
+sitting — seven `SchemaSourcedModelEndToEndTests` failing on Linux only — and gap **B53** records
+the cause and the fix: the leaf/directory split deferred to `System.IO.Path`, and therefore to the
+host's separator, where every other path comparison in that code already treats `/` and `\` as the
+same thing. So a full `dotnet test Build.csproj` now passes here rather than needing to be read
+around, which matters because this is where the work happens.
+
+**What is open.** `notes/gaps.md` is the entry point and its last entry is **B54**; **B53 and B54 both
+closed on 2026-09-11**. The live ones:
 
 - **B51 (NRT)** - ServiceModel and `protobuf-net.Reflection` are **done and merged**, and protogen
   now EMITS annotations (C# only; VB has no NRT). **Stage 4, `protobuf-net.Core`, is IN FLIGHT on
@@ -62,22 +84,51 @@ current to 2026-08-26:
   After Core: `protobuf-net` (~622), then `protobuf-net.BuildTools`, which is what removes the
   `CS8632` `NoWarn` now carried by BuildTools and BuildTools.Legacy;
 - **B48 (trim warnings)** - 23 -> 5, paused there deliberately: *"5 is a defensible preview
-  position"*. All five are design-level, not annotations anyone forgot;
+  position"*. All five are design-level, not annotations anyone forgot. (Now **6**: the
+  `Dictionary<int, List<Customer>>` member added to `AotSmoke` for #1337 costs one `IL2067`. The
+  count tracks fixtures, so that is a wider fixture rather than a regression.);
 - **B40 (steering call sites)** - the non-generic API bug is fixed; the analyzer/steering half is
   still a design call;
 - **B16 (locals)** - write and measure bodies now share one local per member type (400 -> 5 on a wide
   contract). The **`RawRead_` body is untouched**, and the `foreach` variables cannot be shared at
   all, which is a floor rather than an omission;
 - **B21 tier 3** (vectorised LEB128, research-shaped, modern-TFM only) and **B12** (an intermittent
-  net472 flake) round it out.
+  net472 flake) round it out. **B55** is closed as *won't do* rather than open: two projects
+  (`protobuf-net.FSharp.Test`, `VBTest`) sit outside CI because the traversal globs `*.csproj` only,
+  and that is accepted.
 
-**Closed on 2026-08-25/26**, so do not go looking for work in them: B17 (measure-first is twice on
+**The dependency sweep is DONE for everything below a major** (2026-09-11): 22 of the 30 packages
+that were behind, applied in one commit and green on every gate. Two majors followed — FSharp.Core 11
+and ICSharpCode.Decompiler 11 — each carrying a consequence the version number does not show (a
+raised shipped floor; a `*.reference.cs` diff owed on the next Windows `AotRefGen` run). What is left:
+
+- `Microsoft.CodeAnalysis.CSharp.Workspaces` 4.3.1 → 5.9.0 — **declined**, and `AGENTS.md` says why;
+- `protobuf-net`/`.Reflection`/`.BuildTools` at 3.2.46 — not stale, the `ReleasedBench` baseline. But
+  "what you get today" in `docs/aot.md` is **3.4.21** now, so that column has aged and moving it is a
+  decision about the benchmark;
+- **xunit.v3 4.0 — gap B54.** It works, with one line in `global.json` and a one-line CI change.
+  MTP cannot discover a traversal project — that is **dotnet/sdk#51316**, fixed for **.NET 11 only**.
+  On SDK 10, CI moves to `dotnet build Build.csproj -t:Test -p:SkipNonexistentTargets=True`; on
+  SDK 11 the CI command does not change at all, now that `Build.csproj` declares `IsTraversal`
+  (the SDK sets it only for a file named `dirs.proj`, which is why the fix appeared not to work).
+  A replacement `.slnx` was ruled out: SLNX has no wildcards.
+
+**Closed since**, so do not go looking for work in them: **#1332** (B51's Reflection stage and
+B52 — the branch this handover previously said was in flight), **#1338/#1339** (a map's nested
+collection value, on both lines) and **#1341** (ServiceModel on net10.0). Earlier, on 2026-08-25/26: B17 (measure-first is twice on
 every backend for generated code; the classic stream asymmetry is deliberate), B18b (**retracted** -
 the raw path has block-copied fixed-width packed columns all along; the entry described the classic
 engine), B23 (derived lists admitted to the raw packed path), B49 + `PBN3014`, B50, and **B52 - the
 ApiCompat gate DOES run and DOES fail the build; the earlier negative was a measurement artefact
 (`dotnet pack` never reaches the hook here, and `NuGetPackageRoot` is not the default path on this
 machine). That also settles the NRT half: annotations are invisible to package validation.**
+
+**A .NET 11 SDK build is now required**, and the failure is unhelpful if it is missing:
+`global.json` selects the Microsoft.Testing.Platform runner (xunit.v3 4.0 dropped the VSTest bridge
+on the .NET 10 SDK), and `dotnet test` can only expand a traversal project on .NET 11
+(dotnet/sdk#55297, no 10.x backport). On 10.x you get **"No test projects were found"**, which says
+nothing about the cause. `allowPrerelease` is on until 11 GAs in November. Gap **B54** has the whole
+story, including why `Build.csproj` declares `IsTraversal`.
 
 **Three operational traps that have each cost a sitting**, kept here because they are about running
 the gates rather than about the code:

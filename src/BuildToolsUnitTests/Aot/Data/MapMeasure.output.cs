@@ -809,7 +809,7 @@ partial class MapMeasureModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5 or 6 or 7 or 8 or 9 or 10;
+            static bool IsKnownField(uint tag) => (tag >> 3) is (>= 1 and <= 10);
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapMeasure.Note>.Features
@@ -952,7 +952,18 @@ partial class MapMeasureModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3;
+            static bool IsKnownField(uint tag)
+            {
+                switch (tag >> 3)
+                {
+                    case 1:
+                    case 2:
+                    case 3:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
         }
 
         private static global::AotFixtures.MapMeasure.Note ReadEmpty_AotFixtures_MapMeasure_Note(global::ProtoBuf.ISerializationContext context)

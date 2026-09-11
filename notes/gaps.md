@@ -13,7 +13,8 @@ Detail lives in the linked documents; this file is the index and the verdict. St
 | **next** | agreed, unstarted |
 
 This file lives on **`v4`** — the writer/schema stack collapsed onto it on 2026-08-14 — and on
-whatever sub-branch is currently in flight off it.
+whatever sub-branch is currently in flight off it. **As of 2026-09-11 there is no such sub-branch**:
+`nrt-reflection` merged (#1332), so `v4` is the only answer.
 
 *(It has now asserted the wrong branch **twice** — first `writer-buffer-core`, then
 `aot-schema-model` after the stack collapsed — and `AGENTS.md`'s index repeated the error
@@ -5891,3 +5892,269 @@ reported nothing. That was the question B51 could not answer while the gate's ow
 and it is the reassuring answer: the several thousand annotations coming to Core, `protobuf-net` and
 Reflection are invisible to package validation, so a real break in the same diff will not be lost in
 noise.
+
+
+### B53. ~~Seven `SchemaSourcedModelEndToEndTests` fail on Linux~~ — **FIXED 2026-09-11, in the generator**
+
+**Found 2026-09-11**, while re-running the battery after merging `main` into `v4`. Confirmed
+**pre-existing on a clean `origin/v4`** in a separate worktree *before* concluding anything, because
+a red gate arriving alongside a merge reads as merge damage and this one is not.
+
+```
+Failed SchemaSourcedModelEndToEndTests.APathSelectsTheIntendedSchema  (x4)
+Failed SchemaSourcedModelEndToEndTests.NoArgumentMeansEverySchema
+Failed SchemaSourcedModelEndToEndTests.NoArgumentSkipsSchemasExcludedFromOutput
+Failed SchemaSourcedModelEndToEndTests.OneProjectSchemaDtosAndModelAllCompile
+```
+
+**The cause is one line of platform assumption, and both halves of it are ours.** The fixture hard-codes
+Windows paths — deliberately, and the comment says why:
+
+```csharp
+// additional files carry FULL paths in a real build, which is exactly why a bare leaf can
+// be ambiguous; using relative paths here would let the leaf match one of them exactly and
+// quietly test the wrong thing
+private const string ShopPath = @"C:\proj\shop.proto";
+```
+
+`ProtoFileGenerator` takes the leaf with `Path.GetFileName`, which on Linux does **not** treat `\` as
+a separator — so the whole string survives as the "file name" and reaches `AddSource` as a hintName
+containing a `:`:
+
+```
+warning CS8785: Generator 'ProtoFileGenerator' failed to generate source. Exception was of type
+'ArgumentException' with message 'The hintName 'C:\proj\shop.generated.cs' contains an invalid
+character ':' at position 1.'
+```
+
+The generator then reports `PBN3022` ("the schema could not be added") for the same reason, so the two
+visible symptoms are one cause.
+
+**Fixed in the generator, with the fixture left alone** — and what settled it was finding that this
+codebase had *already* decided the question one layer over. `SchemaTextFileSystem.Normalize` folds
+`\` to `/` before matching one path against another, and `SchemaFileMatcher` does the same and says
+why in its own remarks: *"`/` and `\` are the same separator and must not be [distinguishable]"*. So
+treating the two as equivalent is the existing policy; the leaf/directory split was simply the one
+place that still deferred to `System.IO.Path` and therefore to the host.
+
+`SchemaFileMatcher.GetFileName`/`GetDirectoryName` split on both separators regardless of platform,
+and the two call sites use them: `ProtoFileGenerator` (which is where the hint name is derived) and
+`ProtoModelGenerator.Schemas.TryParse`. Both carry a comment saying *not* `System.IO.Path` and why,
+because the next person's instinct will be to "tidy" it back.
+
+**The fixture is right and stays as it is.** Its comment explains that additional files carry full
+paths in a real build, which is exactly what makes a bare leaf ambiguous; relative paths would let
+the leaf match exactly and quietly test the wrong thing. A generator that produces an invalid hint
+name from a path a consumer legitimately wrote is our defect, whichever separator it used.
+
+Result: `BuildToolsUnitTests` reads **662/662** on Linux, and the whole traversal is **5504 tests, 0
+failed** — the first fully green `dotnet test` on this machine.
+
+**It was invisible until now because the battery is normally run on Windows.** That is the wider
+point worth keeping: this repo's gates are Windows-shaped (`AotRefGen` is net472, CI is
+windows-latest), and most of the actual work now happens on Linux. A gate that cannot be read on the
+machine doing the work is a gate that stops being run — which is the real reason this was worth
+fixing rather than tolerating.
+
+
+### B54. ~~xunit.v3 4.0 is a *migration*, not a bump~~ — **DONE 2026-09-11 (#1348), on the .NET 11 SDK**
+
+**Done 2026-09-11**, as #1348 on `main` and merged here. Kept in full rather than trimmed to a
+one-liner, because the route taken was chosen against two alternatives and the reasons are the part
+worth having. What shipped: xunit.v3 4.0, the `global.json` runner opt-in, the move to the .NET 11
+SDK, `<OutputType>Exe</OutputType>` on three projects, and the removal of three VSTest-era packages.
+The CI test command did **not** change.
+
+Two tails worth knowing. `release.yml` has its own `setup-dotnet` and was missed (#1349) — it runs
+`dotnet test` and would have failed at *publish* time, the worst moment to find out. And the first
+CI run surfaced `Issue713`, a test that had been PEVerify-ing the dll a *different* test writes and
+so silently depended on execution order; the migration did not break it, it stopped hiding it.
+
+**What blocks a straight bump.** `xunit.v3` 4.0.0 brings Microsoft.Testing.Platform 2.x, and MTP 2.x
+**drops the VSTest bridge on the .NET 10 SDK**. Every `dotnet test` fails identically, before running
+anything:
+
+```
+Microsoft.Testing.Platform.MSBuild.targets(320,5): error : Testing with VSTest target is no longer
+supported by Microsoft.Testing.Platform on .NET 10 SDK and later.
+```
+
+That is the whole of the difficulty, and it is a host-integration change rather than an API break —
+**not one test source file needs touching.**
+
+**The opt-in is in `global.json`, not `dotnet.config`** — which cost a wrong turn, since the error's
+own link points at the `dotnet.config` form. Read the condition in the targets file (it computes
+`_SupportsGlobalJsonTestRunner` from `NETCoreSdkVersion`) rather than the docs:
+
+```json
+{ "sdk": { ... }, "test": { "runner": "Microsoft.Testing.Platform" } }
+```
+
+With that in place **the whole solution passes**: 5573 tests, 5542 passed, 24 skipped, and the only
+failures are B53's seven. Every test project moved without a source change, `protobuf-net.FSharp.Test`
+included.
+
+**This is a known SDK gap with a known fix, and that reframes the whole decision** —
+**[dotnet/sdk#51316](https://github.com/dotnet/sdk/issues/51316)**, *"`dotnet test` support for
+traversal projects in .NET 10"*, opened 2025-10-16 and **closed completed 2026-07-22** by
+[dotnet/sdk#55297](https://github.com/dotnet/sdk/pull/55297), which special-cases the `IsTraversal`
+property and expands a traversal project into its `ProjectReference`s. Read the issue before doing
+anything here; two things in it matter to us:
+
+- **the fix is milestoned `11.0-rc1`** and was backported only to `release/11.0.1xx-preview7`. There
+  is **no .NET 10 backport**, and CI is on the 10.0.3xx band. So on that SDK the gap is permanent;
+- the root cause is structural rather than an oversight, which is why no Traversal-side fix exists:
+  MTP test apps are launched as child processes with no MSBuild target driving them, while a
+  traversal project works *only* by forwarding known targets to its references. The thread records
+  an attempt to fix it in `Microsoft.Build.Traversal` and why it cannot be — the only universally
+  available target is `VSTest`, which MTP projects do not define.
+
+#### The fix DOES work — but only once `IsTraversal` is set, and ours never was
+
+Verified against **SDK 11.0.100-rc.1** in a throwaway worktree (Marc had it installed; `global.json`
+pins 10.x with `allowPrerelease: false`, which is why `dotnet --version` reads 10.0.302 despite it).
+
+The first run on SDK 11 **still said "No test projects were found"** — identical to SDK 10, which
+reads exactly like the fix never shipped. It had; the trap is one line in the Traversal SDK:
+
+```xml
+<!-- Microsoft.Build.Traversal 2.0.19, Sdk.props -->
+<TraversalProjectNames Condition=" '$(TraversalProjectNames)' == '' ">dirs.proj</TraversalProjectNames>
+<IsTraversal Condition=" '$(IsTraversal)' == '' And $(TraversalProjectNames.IndexOf($(MSBuildProjectFile), ...)) >= 0 ">true</IsTraversal>
+```
+
+`IsTraversal` is set **only for a file literally named `dirs.proj`**, and ours is `Build.csproj` — so
+the property is empty, and the SDK-11 fix, which keys on it, never fires. **The symptom of "not
+arranged for" and "not fixed" is the same message**, which is the thing to remember here.
+
+`<IsTraversal>true</IsTraversal>` is now in `Build.csproj` with a comment saying why. It is **inert on
+SDK 10** — nothing in Traversal 2.0.19 reads the property back, and a full Debug build is
+byte-for-byte the same 275 warnings / 0 errors — so it costs nothing today and the whole problem
+disappears when CI's SDK moves to 11. With it set, on SDK 11:
+
+```
+$ dotnet test Build.csproj --no-build --framework net8.0
+  total: 5504   failed: 7 (B53)   succeeded: 5473   skipped: 24
+```
+
+— the **unchanged CI command**, discovering exactly the traversal's set: eight test projects, with
+`BuildToolsSmokeTests` and `VBTest` correctly absent, which is the semantics the container-swap
+options could not preserve. (`--framework net8.0` is a Linux necessity, not part of the answer: SDK 11
+removed the mono launch target, so a net472 leg is `NETSDK1243` off Windows.)
+
+**So there are two routes, and which one applies is decided by the SDK, not by us:**
+
+| | |
+| --- | --- |
+| **SDK 10** (CI today) | `dotnet build Build.csproj -t:Test -p:SkipNonexistentTargets=True` |
+| **SDK 11** | `dotnet test Build.csproj --no-build` — unchanged, now that `IsTraversal` is set |
+
+#### The SDK 10 route: `-t:Test`
+
+Probed
+rather than taken from the thread:
+
+```sh
+dotnet build Build.csproj -t:Test --no-restore -p:SkipNonexistentTargets=True
+```
+
+MTP's own targets define a `Test` target (`Microsoft.Testing.Platform.MSBuild.CustomTestTarget.targets`),
+the traversal forwards it like any other, and `SkipNonexistentTargets` absorbs the ~22 non-test
+projects that have no such target — without it they are 44 `MSB4057`s. It **fails the build when
+tests fail**, which is the property the gate needs. Measured on Linux: 4 errors, of which 3 are the
+net472 legs failing *"Full path tool calculation failed. Runner 'mono'"* — a platform artefact that
+cannot arise on windows-latest — and the fourth is B53's genuine failure. So on CI this is expected
+to be clean.
+
+Two things to check when it is actually done, neither blocking: whether `-t:Test` honours the
+already-built state the way `dotnet test --no-build` does (the step order in the workflow assumes
+it), and that the output is readable — it reports a failure as an error line pointing at a
+`TestResults/*.log` rather than as `dotnet test`'s summary table.
+
+**A second `.slnx` in place of `Build.csproj` was considered and does not work** (Marc asked; probed
+2026-09-11). SLNX has no wildcard support — a `<Project Path="src/*/*.csproj" />` does not expand, it
+takes MSBuild down with an `MSB4014` and a stack trace out of `SolutionProjectGenerator`. So the
+replacement would be a hand-maintained list of ~40 projects, and it would cost two properties the
+traversal is relied on for:
+
+- **auto-globbing.** `AGENTS.md` states the value explicitly: a new project under `src/` is picked up
+  by CI for free. A solution has to be edited, and the failure mode is silent — a new project simply
+  never gets built or tested;
+- **the `Packing=true` subset.** `Build.csproj`'s second `ItemGroup` is conditional, so the same file
+  serves both "everything" and "just the shipping projects"; CI's pack step depends on it. Two
+  solutions would be needed, and they would drift.
+
+Worth knowing anyway: the existing `protobuf-net.slnx` is **already** out of step with the traversal
+in both directions — it is missing the ten `Aot*`/bench projects, and it carries `VBTest.vbproj` and
+`BuildToolsSmokeTests`, which the traversal excludes. That is a live argument for the globbing rather
+than against it.
+
+**Two pieces of hygiene that fall out either way**, worth doing with it rather than after: under MTP,
+`xunit.runner.visualstudio` (the VSTest adapter), `Microsoft.NET.Test.Sdk` and `coverlet.collector`
+(a VSTest data collector) are all dead weight — nine projects reference the first two. Coverage under
+MTP is `Microsoft.Testing.Extensions.CodeCoverage`; nothing in CI collects coverage today, so that is
+a removal rather than a replacement.
+
+**One trap met on the way, and it will be met again.** `dotnet restore Build.csproj` does not restore
+`BuildToolsSmokeTests` (the traversal excludes it), so its `project.assets.json` goes stale and
+`IsTestingPlatformApplication` evaluates **empty** — which the new `dotnet test` reports as *"the
+following test projects are using VSTest test runner"*, i.e. a message about the wrong thing entirely.
+A per-project `dotnet restore` fixed it. Suspect a stale restore before believing any MTP
+runner-mismatch message.
+
+
+### B55. `protobuf-net.FSharp.Test` and `VBTest` are not in CI — **won't do** (Marc, 2026-09-11)
+
+`Build.csproj` globs **`src\*\*.csproj`**, so an `.fsproj` or a `.vbproj` is invisible to it. Two
+projects sit outside every gate as a result, and always have:
+
+| | |
+| --- | --- |
+| `src/protobuf-net.FSharp.Test/protobuf-net.FSharp.Test.fsproj` | 6 tests. They **pass** — run directly, 6/6, measured 2026-09-11 — but nothing runs them |
+| `src/VBTest/VBTest.vbproj` | `IsTestProject=false`: a **compile-only** smoke over generated VB (`Descriptor.vb`, `Everything.vb`), so what is unchecked is whether protogen's VB output still compiles |
+
+Found while reconciling the run list during the xunit migration (B54), which is worth noting in
+itself: the count of test *projects* in the output is a thing nobody reads, so this survived every
+CI change until a migration forced someone to enumerate them.
+
+**Accepted rather than fixed**, and the mitigating fact is that the *shipped* F# artefact is covered:
+`protobuf-net.FSharp.csproj` is named explicitly in `Build.csproj`'s first `ItemGroup`, so it is
+built, packed and package-validated on every run. What is missing is its test project, not the
+library. `VBTest` ships nothing at all.
+
+The change would be one line — glob `*.fsproj`/`*.vbproj` too — but it newly admits two projects to
+every CI run, which is a different thing from a one-line diff: `VBTest` is `netstandard2.0` at
+`LangVersion 14` and has never been built by anything automated, so "add it and see" is a fair
+description of the risk. If it is ever done, do the two separately.
+
+
+### B56. Two dependabot asks closed themselves undecided — **won't do** (Marc, 2026-09-11)
+
+When #1347 merged, dependabot closed **#1342** and **#1343** on its own with *"Looks like X is no
+longer updatable, so this is no longer needed"* — an inference from the manifest having changed
+under it, not from either ask being satisfied. Neither was overtaken. Recorded here because a PR
+that closes itself leaves nothing behind, and dependabot will raise both again.
+
+Both are major bumps arriving awkwardly, which is the reason for declining them:
+
+- **#1343 — `System.ServiceModel.Primitives` `[8.1.2]` → `[10.0.652802]`.** Not an API question. WCF
+  Client majors track .NET **LTS majors** rather than semver, so v8 *is* the net8.0 package and v10
+  *is* the net10.0 one; each ships only its own TFM's asset plus a netstandard2.0 stub with no usable
+  surface. Point net8.0 at v10 and it restores happily, then fails to compile against
+  `System.ServiceModel.Description`/`.Dispatcher` — which reads as "the types were deleted" and is
+  really "you were handed the stub". v4 answers it by **multi-targeting** (#1341,
+  `net462;net8.0;net10.0`, with net8.0 held at `[8.1.2]` by `VersionOverride`), which is a design
+  change rather than a bump. `main` stays on 8.1.2.
+- **#1342 — `System.Collections.Immutable` 6.0.0 → 10.0.11 in `protobuf-net.BuildTools`.** The 6.0.0
+  is **transitive**, not declared: verified from `project.assets.json`, it is
+  `Microsoft.CodeAnalysis.Common/4.3.1` that asks for it — i.e. it is a property of the Roslyn
+  baseline this file elsewhere forbids revving speculatively. Dependabot's proposed fix is to *add*
+  an explicit `PackageReference` to force it up, and that is the awkward part: this is an
+  **analyzer**, loaded into the compiler's own load context alongside whatever
+  `System.Collections.Immutable` the host already has. Forcing a newer one there is the class of
+  change that works locally and breaks in someone's IDE, and it buys nothing — nothing in BuildTools
+  needs an API added after 6.0.0.
+
+The general rule these two illustrate, worth more than either: **a transitive version is usually a
+fact about a pinned dependency, not a thing to override.** The lever is the pin, and here the pin is
+deliberate.
