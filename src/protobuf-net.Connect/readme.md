@@ -123,12 +123,16 @@ dotnet publish -c Release -r linux-x64     # PublishAot=true
 
 ## Conformance
 
-Measured against [`connectrpc/conformance`](https://github.com/connectrpc/conformance) v1.0.5 in
-server mode, declaring binary (`CODEC_PROTO`) support over HTTP/1.1 and HTTP/2:
+Measured against [`connectrpc/conformance`](https://github.com/connectrpc/conformance) v1.0.5,
+declaring binary (`CODEC_PROTO`) support over HTTP/1.1 and HTTP/2 — **both directions pass in full**:
 
-| | |
+| mode | |
 | --- | --- |
-| **207 / 207** | passing |
+| **server** | **207 / 207** |
+| **client** | **253 / 253** |
+
+Server mode drives a real Connect client against our server; client mode drives our client against the
+suite's reference server. Between them there is no step where both ends are ours.
 
 Declared unsupported, and therefore not counted: JSON, compression, TLS, and Connect GET. Those are
 recorded as gaps rather than hidden — see `notes/connect/findings.md`.

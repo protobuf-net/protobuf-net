@@ -84,7 +84,7 @@ internal static class ConformanceClient
             switch (request.Method)
             {
                 case "Unary":
-                    await UnaryAsync(client, request, options, result).ConfigureAwait(false);
+                    await UnaryAsync(client, request, options, result, cancellation).ConfigureAwait(false);
                     break;
                 case "IdempotentUnary":
                     await IdempotentUnaryAsync(client, request, options, result).ConfigureAwait(false);
@@ -122,11 +122,17 @@ internal static class ConformanceClient
 
     private static async Task UnaryAsync(
         ConformanceService.ConformanceServiceClient client, ClientCompatRequest request,
-        CallOptions options, ClientResponseResult result)
+        CallOptions options, ClientResponseResult result, CancellationTokenSource cancellation)
     {
         using var call = client.UnaryAsync(Unpack<UnaryRequest>(request.RequestMessages[0]), options);
         await CaptureAsync(call.ResponseHeadersAsync, () => call.GetStatus(), () => call.GetTrailers(), result,
-            async () => Record(result, (await call.ResponseAsync.ConfigureAwait(false)).Payload)).ConfigureAwait(false);
+            async () =>
+            {
+                // a unary call has no request stream, so "after close send" is simply "once the request
+                // has gone" - the whole request goes in one write
+                await CancelAfterSendAsync(request, cancellation).ConfigureAwait(false);
+                Record(result, (await call.ResponseAsync.ConfigureAwait(false)).Payload);
+            }).ConfigureAwait(false);
     }
 
     private static async Task IdempotentUnaryAsync(
@@ -155,6 +161,7 @@ internal static class ConformanceClient
         await CaptureAsync(call.ResponseHeadersAsync, () => call.GetStatus(), () => call.GetTrailers(), result,
             async () =>
             {
+                await CancelAfterSendAsync(request, cancellation).ConfigureAwait(false);
                 while (await call.ResponseStream.MoveNext(CancellationToken.None).ConfigureAwait(false))
                 {
                     Record(result, call.ResponseStream.Current.Payload);
@@ -201,7 +208,16 @@ internal static class ConformanceClient
                         if (ShouldCancelAfter(request, result.Payloads.Count)) throw Cancel(cancellation);
                     }
 
+                    // the full-duplex loop closes the request stream itself rather than going through
+                    // SendAllAsync, so it has to honour the same cancellation timings
+                    if (request.Cancel?.CancelTimingCase
+                        == ClientCompatRequest.Types.Cancel.CancelTimingOneofCase.BeforeCloseSend)
+                    {
+                        throw Cancel(cancellation);
+                    }
+
                     await call.RequestStream.CompleteAsync().ConfigureAwait(false);
+                    await CancelAfterSendAsync(request, cancellation).ConfigureAwait(false);
                 }
                 else
                 {
@@ -258,6 +274,18 @@ internal static class ConformanceClient
     {
         cancellation.Cancel();
         return new OperationCanceledException(cancellation.Token);
+    }
+
+    /// <summary>Honours <c>after_close_send_ms</c> for a shape with no request stream to close.</summary>
+    private static async Task CancelAfterSendAsync(ClientCompatRequest request, CancellationTokenSource cancellation)
+    {
+        if (request.Cancel?.CancelTimingCase != ClientCompatRequest.Types.Cancel.CancelTimingOneofCase.AfterCloseSendMs)
+        {
+            return;
+        }
+
+        await Task.Delay((int)request.Cancel.AfterCloseSendMs).ConfigureAwait(false);
+        cancellation.Cancel();
     }
 
     private static bool ShouldCancelAfter(ClientCompatRequest request, int received)

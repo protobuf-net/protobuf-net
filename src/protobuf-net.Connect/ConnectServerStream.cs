@@ -73,6 +73,15 @@ namespace ProtoBuf.Connect
             // stops when enumeration does
             using var deadline = _deadline;
 
+            // ...and it has to be JOINED to the enumeration token, which comes from whoever enumerates
+            // and knows nothing about it. Without this the deadline is linked to the caller's token and
+            // fires into a void: the reads below observe only what the enumerator was handed, so a
+            // streaming call would run past its deadline and deliver the whole response late.
+            using var linked = deadline is null
+                ? null
+                : CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, deadline.Token);
+            if (linked is not null) cancellationToken = linked.Token;
+
             var body = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
             var reader = PipeReader.Create(body);
 
@@ -184,12 +193,12 @@ namespace ProtoBuf.Connect
                 // the error never sees this stream object - a gRPC caller reads them off
                 // RpcException.Trailers. So the metadata has to travel ON the exception, or it is simply
                 // lost for every failed streaming call.
-                if (_failure is { } failure && trailers.Count != 0)
+                if (_failure is { } failure)
                 {
                     _failure = new ConnectException(
                         failure.Code, failure.RawMessage, failure.HttpStatus, failure.Details,
                         failure.CodeWasInferred, failure.InnerException)
-                    { Trailers = trailers };
+                    { Headers = Headers, Trailers = trailers };
                 }
             }
             finally
@@ -203,8 +212,8 @@ namespace ProtoBuf.Connect
             if ((flags & ConnectEnvelope.FlagCompressed) != 0)
             {
                 throw new ConnectException(
-                    ConnectCode.Unimplemented,
-                    "The response stream is compressed; compression negotiation is not implemented yet.");
+                    ConnectCode.Internal,
+                    $"A response message for '{_method}' is flagged compressed, but no compression was negotiated.");
             }
 
             if ((flags & ConnectEnvelope.FlagReserved) != 0)

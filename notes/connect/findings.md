@@ -2759,6 +2759,73 @@ interesting failures here are exactly the ones that abort a response after it ha
 - JSON codec — still the largest single piece.
 - Compression, Connect GET, TLS.
 
+## 45. Client-mode conformance: 253/253
+
+Both directions now pass in full: **207/207 server, 253/253 client**. Between them there is no step
+where both ends are ours — server mode proves a real Connect client can talk to us, client mode proves
+we can talk to a real Connect server.
+
+The calls go through `protoc`'s generated `ConformanceServiceClient` over `ConnectCallInvoker`, so the
+suite exercises the contract-first client path exactly as a consumer gets it.
+
+### Seven client-side defects, and the shape of them
+
+Every one was a place where our client was *lenient about something the protocol is strict about*, or
+where it advertised an intention it did not act on. None was reachable from a self-test.
+
+- **A deadline was advertised and never enforced.** `connect-timeout-ms` tells the server what we will
+  wait for; a caller that sets a deadline is asking for the call to end by then *whatever the server
+  does*, and gRPC clients enforce it locally for exactly that reason. The suite tests the point
+  directly — its reference server delays past the deadline and expects the client to give up — and
+  every `Timeouts` case was returning a successful response a second and a half late.
+- **...and then the deadline fired into a void for streaming shapes.** The timer was linked to the
+  caller's token, but a stream's reads observe the token passed to `GetAsyncEnumerator`, which comes
+  from whoever enumerates and knows nothing about the deadline. The two have to be *joined* inside the
+  stream. This is the second half of one bug and the half that looked like it was already working.
+- **An error object without a usable code was read as "not an error".** The protocol names several such
+  shapes — `{}`, `{"code": null}`, a code from a revision we do not know — and for each the body is
+  still an error object whose `message` and `details` belong to the caller. Reporting "not parseable"
+  threw the message away and substituted the raw body, so `{ "message": "oops" }` surfaced as a
+  *message* of `{ "message": "oops" }`. Worse, in a **terminating envelope** it was read as **success**,
+  handing the caller a stream that merely stopped.
+- **An error response's metadata was discarded** — both the leading headers and the trailers, on unary
+  and streaming alike. gRPC callers read it off `RpcException.Trailers`.
+- **A 200 with the wrong content-type was read anyway**, handing arbitrary bytes to a codec. The two
+  failures are told apart because they mean different things: not a Connect content-type at all is
+  `unknown` (the peer is not speaking this protocol), while a Connect content-type naming a different
+  *codec* is `internal` (it is speaking the protocol and got negotiation wrong).
+- **Two status codes were the wrong way round**, both pinned by the suite: a client-streaming response
+  of the wrong cardinality is `unimplemented` (a disagreement about the contract) not `internal`, and a
+  compressed payload where nothing was negotiated is `internal` (the peer contradicting itself) not
+  `unimplemented`. Note the second is the mirror of the server-side fix in §44 — the same distinction,
+  found independently from the other end.
+- **Request metadata was base64-encoded with padding**, the same bug the server side had.
+
+### Two things about the harness worth keeping
+
+- **A deliberate cancellation must throw, not `break`.** Breaking out of a read loop looks to the suite
+  like a call that ended successfully — "expecting an error but received none". Throwing puts a
+  cancellation we caused on the same path as one raised by the transport, recorded in one place.
+- **`DuplexAsync` pins HTTP/2, and that cannot be the last word.** Full duplex deadlocks without it, but
+  half-duplex bidi over HTTP/1.1 is legal and the suite tests it — so the harness overrides the pin with
+  a `DelegatingHandler`. **This is a real gap**: a consumer wanting half-duplex bidi over HTTP/1.1 has
+  no supported way to ask for it, and a handler is the only route. Worth an option on
+  `ConnectCallOptions`; not built.
+
+### Sizing, one more time
+
+§43 called client mode "the one §43's sizing actually described" and treated it as the larger half. It
+was about the same size as server mode, and most of the work was in *our client*, not the harness —
+which is the useful way round.
+
+### Next
+
+- JSON codec — now unambiguously the largest remaining piece.
+- Compression, Connect GET, TLS.
+- An HTTP-version option, per the duplex gap above.
+- Wiring conformance into CI: it needs the runner binary downloaded, so it is a job step rather than a
+  traversal-build target.
+
 ## 12. Unverified — check before committing to any of this
 
 Everything below is assumption or inference, not measurement:

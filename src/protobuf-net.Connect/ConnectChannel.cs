@@ -132,6 +132,9 @@ namespace ProtoBuf.Connect
                 throw await ReadErrorAsync(httpResponse, cancellationToken).ConfigureAwait(false);
             }
 
+            // a 200 with the wrong framing is not a payload we can read
+            ValidateContentType(httpResponse, method.Type, method);
+
             // unary is small by construction and the codec reads a whole message, so the body is taken in
             // one piece; a streaming response reads from the PipeReader incrementally instead
             var body = await httpResponse.Content.ReadAsByteArrayAsync(cancellationToken).ConfigureAwait(false);
@@ -217,6 +220,9 @@ namespace ProtoBuf.Connect
                     httpResponse.Dispose();
                 }
             }
+
+            // a 200 with the wrong framing is not a payload we can read
+            ValidateContentType(httpResponse, method.Type, method);
 
             var metadata = ReadMetadata(httpResponse);
             return new ConnectServerStream<TResponse>(
@@ -306,6 +312,9 @@ namespace ProtoBuf.Connect
                 }
             }
 
+            // a 200 with the wrong framing is not a payload we can read
+            ValidateContentType(httpResponse, method.Type, method);
+
             var metadata = ReadMetadata(httpResponse);
             var stream = new ConnectServerStream<TResponse>(
                 httpResponse, Codec, method.ResponseCodec, method.ToString(), metadata.Headers);
@@ -322,8 +331,11 @@ namespace ProtoBuf.Connect
             // about what this method is
             if (count != 1)
             {
+                // `unimplemented`, not `internal`: the peer answered a shape it does not implement the way
+                // this method is declared, which is a disagreement about the contract rather than a fault
+                // on either side. The conformance suite pins it.
                 throw new ConnectException(
-                    ConnectCode.Internal,
+                    ConnectCode.Unimplemented,
                     $"'{method}' is client-streaming and must answer with exactly one message; {count} arrived.");
             }
 
@@ -405,6 +417,9 @@ namespace ProtoBuf.Connect
                 }
             }
 
+            // a 200 with the wrong framing is not a payload we can read
+            ValidateContentType(httpResponse, method.Type, method);
+
             var metadata = ReadMetadata(httpResponse);
             return new ConnectServerStream<TResponse>(
                 httpResponse, Codec, method.ResponseCodec, method.ToString(), metadata.Headers, deadline);
@@ -472,6 +487,39 @@ namespace ProtoBuf.Connect
             {
                 foreach (var header in headers) request.Headers.TryAddWithoutValidation(header.Key, header.Value);
             }
+        }
+
+        /// <summary>
+        /// Checks that a successful response is framed the way this call asked for.
+        /// </summary>
+        /// <remarks>
+        /// A 200 with the wrong content-type is not a payload we can read, and reading it anyway means
+        /// handing arbitrary bytes to a codec and reporting whatever comes out. The two failures are
+        /// told apart deliberately, because they mean different things to a caller:
+        /// <list type="bullet">
+        /// <item><description>not a Connect content-type at all (<c>image/jpeg</c>) - the peer is not
+        /// speaking this protocol, which is <see cref="ConnectCode.Unknown"/>;</description></item>
+        /// <item><description>a Connect content-type naming a <em>different codec</em>
+        /// (<c>application/json</c> where proto was asked for) - it is speaking the protocol and got the
+        /// negotiation wrong, which is <see cref="ConnectCode.Internal"/>.</description></item>
+        /// </list>
+        /// </remarks>
+        private void ValidateContentType(HttpResponseMessage response, ConnectMethodType type, object method)
+        {
+            var expected = Codec.ContentTypeFor(type);
+            var actual = response.Content.Headers.ContentType?.MediaType;
+
+            if (string.Equals(actual, expected, StringComparison.OrdinalIgnoreCase)) return;
+
+            // the framing prefix the shape requires, with any codec after it
+            var prefix = type == ConnectMethodType.Unary ? "application/" : "application/connect+";
+            var isConnect = actual is not null
+                && actual.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
+                && actual.Length > prefix.Length;
+
+            throw new ConnectException(
+                isConnect ? ConnectCode.Internal : ConnectCode.Unknown,
+                $"The response to '{method}' is '{actual ?? "<none>"}', but this call asked for '{expected}'.");
         }
 
         private static ConnectCallResult ReadMetadata(HttpResponseMessage response)
