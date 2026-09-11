@@ -109,7 +109,14 @@ namespace ProtoBuf.Serializers
         [MethodImpl(ProtoReader.HotPath)] // note: not "in" because ArraySegment<T> isn't "readonly" on all TFMs
         internal static void ReverseInPlace<T>(this ref ArraySegment<T> values) => Array.Reverse(values.Array, values.Offset, values.Count);
         [MethodImpl(ProtoReader.HotPath)]
-        internal static ref T? Singleton<T>(this ref ArraySegment<T> values) => ref values.Array[values.Offset];
+        /// <remarks>
+        /// <c>ref T</c>, not <c>ref T?</c>: the storage is a <c>T[]</c>, so that is what the ref
+        /// aliases - and protobuf-net rejects null elements inside a collection outright
+        /// (<c>ThrowNullRepeatedContents</c>), so a null element is not a state this can be in.
+        /// The `!` is on Array, which ArraySegment declares nullable and which every caller here
+        /// has already sized.
+        /// </remarks>
+        internal static ref T Singleton<T>(this ref ArraySegment<T> values) => ref values.Array![values.Offset];
     }
 
 

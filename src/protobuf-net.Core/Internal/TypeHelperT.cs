@@ -89,9 +89,14 @@ namespace ProtoBuf.Internal
         }
 
         [Obsolete("Prefer list provider")]
-        internal static bool ResolveUniqueEnumerableT(Type type, out Type t)
+        /// <remarks>
+        /// The out parameter is set only when this returns true, which is what
+        /// <c>[NotNullWhen(true)]</c> says - without it every caller has to re-test a value the
+        /// method's own contract already decided.
+        /// </remarks>
+        internal static bool ResolveUniqueEnumerableT(Type type, [NotNullWhen(true)] out Type? t)
         {
-            static bool IsEnumerableT(Type type, out Type? t)
+            static bool IsEnumerableT(Type type, [NotNullWhen(true)] out Type? t)
             {
                 if (type.IsInterface && type.IsGenericType
                     && type.GetGenericTypeDefinition() == typeof(IEnumerable<>))
