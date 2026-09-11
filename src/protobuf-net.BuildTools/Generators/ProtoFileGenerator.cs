@@ -177,8 +177,10 @@ namespace ProtoBuf.BuildTools.Generators
                         FileSystem = fileSystem
                     };
 
-                    var name = Path.GetFileName(schema.Value.Path);
-                    var location = Path.GetDirectoryName(schema.Value.Path);
+                    // NOT Path.GetFileName: an AdditionalFiles path is a string we are handed, so
+                    // its separator is not the host's to assume - see SchemaFileMatcher
+                    var name = SchemaFileMatcher.GetFileName(schema.Value.Path);
+                    var location = SchemaFileMatcher.GetDirectoryName(schema.Value.Path);
                     log?.Invoke($"Processing '{name}' relative to '{location}'");
 
                     var userOptions = context.AnalyzerConfigOptions.GetOptions(schema.Value);

@@ -275,8 +275,9 @@ namespace ProtoBuf.BuildTools.Generators
             try
             {
                 var set = new FileDescriptorSet { FileSystem = new SchemaTextFileSystem(all) };
-                var name = System.IO.Path.GetFileName(text.Path);
-                var directory = System.IO.Path.GetDirectoryName(text.Path);
+                // NOT System.IO.Path: see SchemaFileMatcher.GetFileName
+                var name = SchemaFileMatcher.GetFileName(text.Path);
+                var directory = SchemaFileMatcher.GetDirectoryName(text.Path);
                 if (!string.IsNullOrEmpty(directory)) set.AddImportPath(directory);
 
                 if (!set.Add(name, includeInOutput: true))

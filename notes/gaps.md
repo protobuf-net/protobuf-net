@@ -5804,7 +5804,7 @@ Reflection are invisible to package validation, so a real break in the same diff
 noise.
 
 
-### B53. Seven `SchemaSourcedModelEndToEndTests` fail on Linux — **OPEN, and the only RED gate**
+### B53. ~~Seven `SchemaSourcedModelEndToEndTests` fail on Linux~~ — **FIXED 2026-09-11, in the generator**
 
 **Found 2026-09-11**, while re-running the battery after merging `main` into `v4`. Confirmed
 **pre-existing on a clean `origin/v4`** in a separate worktree *before* concluding anything, because
@@ -5840,29 +5840,45 @@ character ':' at position 1.'
 The generator then reports `PBN3022` ("the schema could not be added") for the same reason, so the two
 visible symptoms are one cause.
 
-**The decision owed is which side to fix, and they are not equivalent:**
+**Fixed in the generator, with the fixture left alone** — and what settled it was finding that this
+codebase had *already* decided the question one layer over. `SchemaTextFileSystem.Normalize` folds
+`\` to `/` before matching one path against another, and `SchemaFileMatcher` does the same and says
+why in its own remarks: *"`/` and `\` are the same separator and must not be [distinguishable]"*. So
+treating the two as equivalent is the existing policy; the leaf/directory split was simply the one
+place that still deferred to `System.IO.Path` and therefore to the host.
 
-| | |
-| --- | --- |
-| **fix the fixture** (use `Path.Combine`, or the host's separator) | smallest, and restores the gate. But it also *stops testing* the thing the comment is about on the platform the CI job runs on, since the ambiguity case is only interesting with full paths |
-| **fix the generator** — split on `/` **and** `\` regardless of host | arguably correct independently: `AdditionalFiles` paths come from MSBuild, and a generator has no business assuming the host's separator matches the path's. It also makes the hintName derivation total rather than "total on Windows" |
+`SchemaFileMatcher.GetFileName`/`GetDirectoryName` split on both separators regardless of platform,
+and the two call sites use them: `ProtoFileGenerator` (which is where the hint name is derived) and
+`ProtoModelGenerator.Schemas.TryParse`. Both carry a comment saying *not* `System.IO.Path` and why,
+because the next person's instinct will be to "tidy" it back.
 
-**Leaning to the generator**, with the fixture left alone — the fixture is asserting something real,
-and a generator that produces an invalid hintName from a valid `AdditionalFiles` entry is a defect
-whoever wrote the path. Note `ProtoFileGenerator` keys schemas by leaf name anyway (C11), so this is
-in code that already has a known sharp edge.
+**The fixture is right and stays as it is.** Its comment explains that additional files carry full
+paths in a real build, which is exactly what makes a bare leaf ambiguous; relative paths would let
+the leaf match exactly and quietly test the wrong thing. A generator that produces an invalid hint
+name from a path a consumer legitimately wrote is our defect, whichever separator it used.
+
+Result: `BuildToolsUnitTests` reads **662/662** on Linux, and the whole traversal is **5504 tests, 0
+failed** — the first fully green `dotnet test` on this machine.
 
 **It was invisible until now because the battery is normally run on Windows.** That is the wider
 point worth keeping: this repo's gates are Windows-shaped (`AotRefGen` is net472, CI is
 windows-latest), and most of the actual work now happens on Linux. A gate that cannot be read on the
-machine doing the work is a gate that stops being run.
+machine doing the work is a gate that stops being run — which is the real reason this was worth
+fixing rather than tolerating.
 
 
-### B54. xunit.v3 4.0 is a *migration*, not a bump — **proven working locally; the CI change is one line**
+### B54. ~~xunit.v3 4.0 is a *migration*, not a bump~~ — **DONE 2026-09-11 (#1348), on the .NET 11 SDK**
 
-**Tried 2026-09-11** as the careful half of the dependency sweep, and taken far enough to be certain
-it works before writing it down. It is reverted in the tree; this entry is the recipe, and it is now
-a complete one — the open question it originally ended on is answered below.
+**Done 2026-09-11**, as #1348 on `main` and merged here. Kept in full rather than trimmed to a
+one-liner, because the route taken was chosen against two alternatives and the reasons are the part
+worth having. What shipped: xunit.v3 4.0, the `global.json` runner opt-in, the move to the .NET 11
+SDK, `<OutputType>Exe</OutputType>` on three projects, and the removal of three VSTest-era packages.
+The CI test command did **not** change.
+
+Two tails worth knowing. `release.yml` has its own `setup-dotnet` and was missed (#1349) — it runs
+`dotnet test` and would have failed at *publish* time, the worst moment to find out. And the first
+CI run surfaced `Issue713`, a test that had been PEVerify-ing the dll a *different* test writes and
+so silently depended on execution order; the migration did not break it, it stopped hiding it.
 
 **What blocks a straight bump.** `xunit.v3` 4.0.0 brings Microsoft.Testing.Platform 2.x, and MTP 2.x
 **drops the VSTest bridge on the .NET 10 SDK**. Every `dotnet test` fails identically, before running
