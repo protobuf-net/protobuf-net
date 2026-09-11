@@ -1264,6 +1264,55 @@ immediately — every caller is a static initialiser naming a concrete contract 
 there is nothing to hand it. It buys `Content-Length`, which is worth more than it costs. A
 `Measure<T>(T, ISerializer<T>)` overload would close it, and that *would* be a Core change.
 
+## 20. Can one type serve both Connect and gRPC?
+
+Asked in review. Three separable layers, and the sharp one is not where it looks.
+
+### The attributes coexist; the generated members collide
+
+`[ProtoGrpc]` and `[ProtoConnect]` are different types, both `AttributeTargets.Class`, so one class can
+carry both — and `[ProtoService]` is already shared (§"The route in"), so the seeding needs no
+duplication at all.
+
+What collides is the *emitted* code. Both generators would emit `private MyServices() { }` → **CS0111**.
+Both want `CreateClient<TService>`; those could coexist as overloads, since the parameter types differ
+(`CallInvoker` versus `ConnectChannel`), but gRPC's is an instance `override` inherited from
+`ClientFactory` while ours is static. Nested type names differ only because the two naming schemes
+happen not to clash, which is luck rather than design.
+
+So it is *possible*, but only with the two generators aware of each other — coupling that buys little.
+**Two containers sharing the same `[ProtoService]` declarations** is trivially safe and costs two
+duplicated attribute lines. Prefer that unless someone asks otherwise.
+
+### The server side is where it bites, and two registrations is the wrong shape
+
+**gRPC and Connect use the identical URL path** — `/[package.]Service/Method` — so mapping both puts
+two endpoints on one route. Probed rather than assumed, by registering a second `MapPost` at
+`SayHello`'s path:
+
+| | |
+| --- | --- |
+| startup | **succeeds** |
+| `SayHello` (the duplicated path) | **HTTP 500**, `AmbiguousMatchException`, at *request* time |
+| the three methods at distinct paths | unaffected |
+
+Which is an unpleasant shape of failure: a green startup, most of the service working, and one method
+500ing. Worth knowing before anyone tries it. (Our client reports it `unknown (HTTP 500)` — the
+status-inference table working correctly on a 500 that carries no Connect error object.)
+
+**The right answer is one handler dispatching on content-type**, which is exactly how connect-go
+supports "Connect, gRPC and gRPC-Web on the same port" — `application/grpc*` versus
+`application/proto|json` versus `application/connect+*`. We are closer to that than it looks:
+`ConnectContentType.TryParse` already separates codec from framing and already declines what it does
+not know, and per §2 gRPC's framing is **the same 5-byte envelope layout** Connect streaming uses,
+differing in the flag byte's meaning and in where trailers go. Bounded work, on machinery the streaming
+shapes need anyway.
+
+**The cheap escape is in the protocol already**: Connect's path grammar allows a routing prefix
+(`/[prefix/]package.Service/Method`), so mounting Connect under `/connect/` sidesteps the collision for
+the cost of a non-default URL. **We do not support it today** — `ConnectMethod` hard-codes
+`"/" + service + "/" + method` — and it is worth adding regardless of this question.
+
 ## 12. Unverified — check before committing to any of this
 
 Everything below is assumption or inference, not measurement:
