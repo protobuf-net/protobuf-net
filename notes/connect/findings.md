@@ -670,11 +670,45 @@ largest reason to do this in-repo.
 exits non-zero on mismatch, published on both RIDs in the existing CI job. Then `connectconformance`
 with a narrow `features` declaration (`codecs: [CODEC_PROTO]`, unary only), widened as stages land.
 
+### 14.1 Unary first, but all five shapes are expected — what that forbids
+
+Decided: the first MVP is unary only, but every method shape is expected in the end, so nothing may be
+designed in a way that shuts them out. That is a constraint on **stage 1**, not on stage 0, and it is
+close to free if taken at the start and invasive afterwards. The specific traps, each one a thing that
+works perfectly for unary and cannot be extended:
+
+- **Do not make the transport buffer-shaped.** The obvious unary implementation is "serialize to a
+  `byte[]`, POST it, read a `byte[]` back", which has no seam a framed stream can be threaded through.
+  The protocol itself supplies the right abstraction, so take it: **codec** (`proto` / `json`) and
+  **framing** (none / enveloped) are independent, and the content-type already spells them separately
+  — `application/proto` versus `application/connect+proto`. Unary is the framing that happens to be
+  "none", not a different path.
+- **Do not let the generated server handler be `Task<TResponse> Handle(TRequest)`.** That signature is
+  unreachable from a streaming shape. Follow grpc-dotnet: the generated registration hands the runtime
+  a **typed delegate per shape** and the runtime owns reading and writing, so adding a shape adds a
+  delegate type rather than a second pipeline.
+- **Do not assume trailing metadata is response headers.** It is for unary (`trailer-` prefixed), and
+  it very much is not for streaming, where it arrives inside the terminating `EndStreamResponse`. The
+  call object's trailer accessor must be an abstraction that both satisfy from day one; hard-code the
+  unary answer and every streaming shape breaks it.
+- **Do not assume `Content-Length` is knowable.** For unary it is — protobuf-net's
+  `IMeasuredProtoOutput<>` gives the length before writing, which is a genuine win worth keeping. For a
+  client-streaming or duplex request it is not. So the request body wants a small family of
+  `HttpContent`, with the measured one as an optimisation rather than the only case.
+- **Do not surface errors twice.** A unary failure is a non-200 with a JSON body; a streaming failure is
+  a **200** with the error inside the final envelope; and per §13 an unrouted path is a `text/plain`
+  404 with no error object at all. All three must land on one exception type carrying
+  code/message/details, decided in one place. Three separate throw sites will not converge later.
+
+None of these costs anything at stage 1 if known in advance, which is the entire reason for writing
+them down before the code exists rather than after.
+
 ### What is deliberately *not* in the MVP
 
 - **JSON** (§4) — optional, declarable-away in conformance, and the long pole.
 - **Streaming** — unary is the bare-body form and needs no framing at all; streaming needs the
-  envelope reader/writer and `EndStreamResponse`. Additive, and a clean second increment.
+  envelope reader/writer and `EndStreamResponse`. Additive, and a clean second increment. **But see
+  §14.1: all five shapes are expected eventually, so the MVP must not preclude them.**
 - **GET/idempotency, compression negotiation, reflection, rich error details.** The last of these is
   blocked on stable qualified names anyway (§3b).
 - **The `ConnectCallInvoker`** (§8.1). Still high-value and still cheap, but it is a *parallel*
