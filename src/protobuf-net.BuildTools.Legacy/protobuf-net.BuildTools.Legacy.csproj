@@ -6,10 +6,11 @@
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <NoWarn>$(NoWarn);RS2007;NU5128</NoWarn>
-    <!-- same reason as protobuf-net.BuildTools: this project compiles protobuf-net.Core's and
-         protobuf-net.Reflection's sources in, so it also compiles their nullable annotations
-         while its own compilation has NRT off - which is CS8632, once per `?`. Gap B51. -->
-    <NoWarn>$(NoWarn);CS8632</NoWarn>
+    <!-- same reason as protobuf-net.BuildTools, and see the longer note there: this project
+         compiles Core's and Reflection's sources in, so it needs a nullable ANNOTATION context -
+         without one their `?` is CS8632 and `T?` on an unconstrained type parameter is CS0453.
+         Warnings stay off; this project's own sources are not annotated yet. -->
+    <Nullable>annotations</Nullable>
     <Title>protobuf-net.BuildTools.Legacy</Title>
     <Description>Analyzer and Generator support for protobuf-net, using build SDK 3</Description>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>

@@ -17,14 +17,15 @@
          APIs and compiler-provided references, RS1037 a CompilationEnd tag. Declined rather than
          unexamined. -->
     <NoWarn>$(NoWarn);RS1032;RS1036;RS1037;RS1038</NoWarn>
-    <!-- This project does not REFERENCE protobuf-net.Core / protobuf-net.Reflection, it compiles
-         their sources in (see the Compile Include items below) - so it also compiles whatever
-         nullable annotations they carry, while its own compilation has NRT off. That combination is
-         exactly CS8632 ("annotation used outside a '#nullable' annotations context"), once per `?`.
-         Silenced rather than fixed, because the fix is to enable NRT here too, and this project has
-         ~717 sites of its own on top of everything Core brings - gap B51 stage 4. Until then the
-         annotations are simply ignored in this compilation, which is the status quo. -->
-    <NoWarn>$(NoWarn);CS8632</NoWarn>
+    <!-- `annotations`, deliberately, not `enable`: this project compiles protobuf-net.Core's and
+         protobuf-net.Reflection's sources in, so it has to be in a nullable ANNOTATION context or
+         their `?` is CS8632 once per occurrence - and, worse, `T?` on an unconstrained type
+         parameter resolves as Nullable<T> here and fails CS0453, an ERROR, which is what blocked
+         the generic families in gap B51 stage 4. Turning annotations on fixes both and costs no
+         warning noise, because WARNINGS stay off until this project's own sources are annotated
+         (stage 6). notes/gaps.md calls this out as a legitimate staging post, and not a
+         destination: nothing checks the annotations here are right until warnings follow. -->
+    <Nullable>annotations</Nullable>
     <!-- an id missing from AnalyzerReleases.*.md is a build break, which is the whole reason this is on -->
     <WarningsAsErrors>$(WarningsAsErrors);RS2000;RS2001;RS2002</WarningsAsErrors>
     <Description>Analyzer and Generator support for protobuf-net</Description>

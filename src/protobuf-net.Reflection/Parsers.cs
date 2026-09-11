@@ -54,9 +54,9 @@ namespace Google.Protobuf.Reflection
         /// </summary>
         bool Exists(string path);
         /// <summary>
-        /// Opens the specified file for text parsing
+        /// Opens the specified file for text parsing, or null when there is no such file
         /// </summary>
-        TextReader OpenText(string path);
+        TextReader? OpenText(string path);
     }
 
     internal class DefaultFileSystem : IFileSystem
