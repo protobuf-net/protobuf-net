@@ -2919,6 +2919,64 @@ the same way it already pins `[Service("pkg.v1.Name")]` rather than accepting th
 4. **Code-first JSON in the generator**, staged: scalars, messages, repeated, maps and enums first; the
    well-known and compatibility-level types second.
 
+## 47. Contract-first JSON works, and conformance passes in full on both codecs
+
+`protobuf-net.Connect.Google` — a new assembly whose whole job is keeping Google.Protobuf **off**
+`protobuf-net.Connect`'s dependency graph. A code-first consumer has no Google.Protobuf messages and no
+reason to carry the package; a contract-first one already has it.
+
+```
+                       CODEC_PROTO only          + CODEC_JSON
+  server                207 / 207                 390 / 390
+  client                253 / 253                 444 / 444
+```
+
+Declaring JSON nearly doubles the matrix, and both directions pass it. The JSON is Google's
+`JsonFormatter`/`JsonParser`, not a reimplementation — there is one correct implementation of the
+canonical mapping already in the process, and the mapping is far too detailed to want a second.
+
+### The seam had to become codec-aware first, and that was a latent bug
+
+`ConnectCodec.Write/Read/Measure` used the per-method codec **whenever one was present**. That was fine
+while `proto` was the only codec and is wrong the moment there are two: a `MarshallerMessageCodec<T>`
+writes binary protobuf, so a call that negotiated `application/json` would have got protobuf bytes
+under a JSON content-type — unreadable by any peer, and silent on our side.
+
+So `IConnectMessageCodec<T>` gained `CodecName`, and a channel codec delegates to `over` only when the
+names agree. **`over` is still passed down to the core methods**, which is what makes the JSON codec
+possible at all: it cannot delegate to a binary codec, but it can mine one.
+
+### Two things the suite found that no amount of reading would have
+
+- **`Marshaller<T>.Deserializer` throws `NotImplementedException`** for a generated marshaller. protoc
+  builds marshallers from the *contextual* delegates, and the plain `byte[]` accessors are not
+  implemented for those. The descriptor trick of §46 has to go through the codec, which already knows
+  which of the pair to use — `marshaller.Read(default)` rather than
+  `marshaller.Marshaller.Deserializer(Array.Empty<byte>())`.
+- **The default `JsonFormatter`/`JsonParser` cannot handle `google.protobuf.Any` at all.** Canonical
+  JSON writes an `Any` as `{"@type": ...}`, which means resolving that name to a descriptor in both
+  directions, and the defaults carry an *empty* `TypeRegistry` — "Type registry has no descriptor for
+  type name ...". This is not an edge case: the conformance payloads embed every echoed request as an
+  `Any`, so it broke every streaming JSON case.
+
+  The registry is built per `FileDescriptor` (`TypeRegistry.FromFiles`, which walks dependencies) and
+  cached, so every type the message's own file can name resolves. A consumer whose `Any` values come
+  from elsewhere passes its own formatter and parser.
+
+### Known costs, recorded rather than hidden
+
+- **`Measure` returns `null`**, so JSON never states a `Content-Length` and every enveloped message is
+  buffered. The framing already copes (§41), but it is a real cost that binary does not pay.
+- **There is a transcode on both sides.** `JsonFormatter.Format` and `JsonParser.Parse` speak
+  `string`/`TextReader`/`TextWriter`, not UTF-8 spans, so bytes → string → bytes. Correctness first;
+  this is the obvious thing to optimise if JSON ever matters for throughput.
+
+### Still open
+
+Code-first JSON, which is the harder half and unchanged by any of this — §46 has the design and the
+field-name risk that gates it. `GoogleJsonConnectCodec` refuses a non-`IMessage` payload with a message
+saying so, rather than producing something plausible and wrong.
+
 ## 12. Unverified — check before committing to any of this
 
 Everything below is assumption or inference, not measurement:

@@ -69,7 +69,14 @@ internal static class ConformanceClient
         };
 
         var address = new Uri($"http://{request.Host}:{request.Port}");
-        var client = new ConformanceService.ConformanceServiceClient(new ConnectCallInvoker(http, address));
+
+        // the case names the codec it wants; the content-type follows from the codec's own name
+        ConnectCodec codec = request.Codec == Codec.Json
+            ? ProtoBuf.Connect.Google.GoogleJsonConnectCodec.Instance
+            : MarshallerConnectCodec.Instance;
+
+        var client = new ConformanceService.ConformanceServiceClient(
+            new ConnectCallInvoker(new ConnectChannel(http, codec, address)));
 
         var result = new ClientResponseResult();
         using var cancellation = new CancellationTokenSource();

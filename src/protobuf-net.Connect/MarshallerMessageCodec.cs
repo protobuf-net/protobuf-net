@@ -26,6 +26,20 @@ namespace ProtoBuf.Connect
         public MarshallerMessageCodec(Marshaller<T> marshaller)
             => _marshaller = marshaller ?? throw new ArgumentNullException(nameof(marshaller));
 
+        /// <inheritdoc/>
+        public string CodecName => "proto";
+
+        /// <summary>
+        /// The marshaller this wraps.
+        /// </summary>
+        /// <remarks>
+        /// Exposed because a codec that cannot delegate to this one can still make use of it: the JSON
+        /// codec needs a <c>MessageDescriptor</c>, and the only route to one that does not reflect is to
+        /// materialise an empty message through this marshaller and ask the instance. See
+        /// notes/connect/findings.md §46.
+        /// </remarks>
+        public Marshaller<T> Marshaller => _marshaller;
+
         /// <summary>
         /// Always <c>null</c>: a marshaller cannot report a length without encoding.
         /// </summary>

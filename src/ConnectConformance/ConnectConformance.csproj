@@ -28,6 +28,7 @@
     <PackageReference Include="Google.Protobuf" />
     <PackageReference Include="Grpc.StatusProto" />
     <ProjectReference Include="../protobuf-net.Connect.AspNetCore/protobuf-net.Connect.AspNetCore.csproj" />
+    <ProjectReference Include="../protobuf-net.Connect.Google/protobuf-net.Connect.Google.csproj" />
   </ItemGroup>
 
 </Project>

@@ -144,15 +144,15 @@ internal sealed class RawCodec : ConnectCodec
 {
     public override string Name => "proto";
 
-    protected override long? MeasureCore<T>(T value) => value is byte[] bytes ? bytes.Length : null;
+    protected override long? MeasureCore<T>(T value, IConnectMessageCodec<T>? over) => value is byte[] bytes ? bytes.Length : null;
 
-    protected override void WriteCore<T>(IBufferWriter<byte> destination, T value)
+    protected override void WriteCore<T>(IBufferWriter<byte> destination, T value, IConnectMessageCodec<T>? over)
     {
         if (value is byte[] bytes) destination.Write(bytes);
     }
 
     // never reached: every call made through this codec is expected to fail
-    protected override T ReadCore<T>(in ReadOnlySequence<byte> source) => default!;
+    protected override T ReadCore<T>(in ReadOnlySequence<byte> source, IConnectMessageCodec<T>? over) => default!;
 }
 
 internal sealed class Probe

@@ -126,21 +126,23 @@ dotnet publish -c Release -r linux-x64     # PublishAot=true
 Measured against [`connectrpc/conformance`](https://github.com/connectrpc/conformance) v1.0.5,
 declaring binary (`CODEC_PROTO`) support over HTTP/1.1 and HTTP/2 — **both directions pass in full**:
 
-| mode | |
-| --- | --- |
-| **server** | **207 / 207** |
-| **client** | **253 / 253** |
+| mode | `proto` only | with `json` |
+| --- | --- | --- |
+| **server** | **207 / 207** | **390 / 390** |
+| **client** | **253 / 253** | **444 / 444** |
 
 Server mode drives a real Connect client against our server; client mode drives our client against the
 suite's reference server. Between them there is no step where both ends are ours.
 
-Declared unsupported, and therefore not counted: JSON, compression, TLS, and Connect GET. Those are
+Declared unsupported, and therefore not counted: compression, TLS, and Connect GET. Those are
 recorded as gaps rather than hidden — see `notes/connect/findings.md`.
 
 ## What is not here yet
 
-- **JSON codec.** Binary only today. Connect clients in other languages default to binary, so this is
-  an interoperability *limit*, not a blocker.
+- **JSON for code-first contracts.** Contract-first services already speak canonical JSON, through
+  `protobuf-net.Connect.Google`; a code-first `[ProtoModel]` is binary only, because protobuf JSON is a
+  specified mapping of a *proto schema* rather than a serialization of a POCO, so it has to be
+  generated the same way the binary path is.
 - **Compression**, **Connect GET** for side-effect-free methods, and **TLS client certificates**.
 - Endpoint metadata inference for contract-first (see the warning above).
 
@@ -150,6 +152,7 @@ recorded as gaps rather than hidden — see `notes/connect/findings.md`.
 | --- | --- |
 | `protobuf-net.Connect` | client, codecs, framing, the call invoker |
 | `protobuf-net.Connect.AspNetCore` | server, on endpoint routing — Kestrel, HTTP.sys, IIS or TestServer |
+| `protobuf-net.Connect.Google` | canonical protobuf JSON, for contract-first messages |
 | `ConnectContractFirst` | the contract-first sample, and its 27 checks |
 | `AotConnectSmoke` | the code-first smoke test, native-AOT published |
 | `ConnectConformance` | the conformance suite's server harness |

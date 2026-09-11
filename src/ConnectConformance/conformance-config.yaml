@@ -6,10 +6,12 @@ features:
   protocols:
     - PROTOCOL_CONNECT
 
-  # Binary only. JSON is the long pole (§4) and is declared away rather than faked - the suite has an
-  # explicit mechanism for exactly this, which is why binary-first was a viable plan at all.
+  # Binary AND canonical JSON. The JSON is Google's protojson, delegated to JsonFormatter/JsonParser
+  # rather than reimplemented - see notes §46. This covers the contract-first path only; a code-first
+  # model has no Google.Protobuf message to hand to them, and that half is not built.
   codecs:
     - CODEC_PROTO
+    - CODEC_JSON
 
   compressions:
     - COMPRESSION_IDENTITY

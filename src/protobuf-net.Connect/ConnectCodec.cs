@@ -39,12 +39,24 @@ namespace ProtoBuf.Connect
         /// </param>
         public void Write<T>(IBufferWriter<byte> destination, T value, IConnectMessageCodec<T>? over = null)
         {
-            if (over is not null) over.Write(destination, value);
-            else WriteCore(destination, value);
+            if (Owns(over)) over!.Write(destination, value);
+            else WriteCore(destination, value, over);
         }
 
         /// <summary>Serializes a message using this codec's own marshalling.</summary>
-        protected abstract void WriteCore<T>(IBufferWriter<byte> destination, T value);
+        protected abstract void WriteCore<T>(IBufferWriter<byte> destination, T value, IConnectMessageCodec<T>? over);
+
+        /// <summary>
+        /// Whether a per-method codec marshals for <em>this</em> codec and can simply be delegated to.
+        /// </summary>
+        /// <remarks>
+        /// It is not enough that one is present. A per-method codec marshals one wire format - a
+        /// <c>Marshaller&lt;T&gt;</c> writes binary protobuf - so using it for a call that negotiated
+        /// JSON would put protobuf bytes under a JSON content-type. It is still passed to the core
+        /// methods, because a codec may be able to mine it for what it needs; it is just not the encoder.
+        /// </remarks>
+        private bool Owns<T>(IConnectMessageCodec<T>? over)
+            => over is not null && string.Equals(over.CodecName, Name, StringComparison.Ordinal);
 
         /// <summary>
         /// Measures a message, where the codec can do so without serializing twice; <c>null</c> when it
@@ -52,19 +64,19 @@ namespace ProtoBuf.Connect
         /// streaming one never can.
         /// </summary>
         public long? Measure<T>(T value, IConnectMessageCodec<T>? over = null)
-            => over is not null ? over.Measure(value) : MeasureCore(value);
+            => Owns(over) ? over!.Measure(value) : MeasureCore(value, over);
 
         /// <summary>Measures using this codec's own marshalling.</summary>
-        protected abstract long? MeasureCore<T>(T value);
+        protected abstract long? MeasureCore<T>(T value, IConnectMessageCodec<T>? over);
 
         /// <summary>Deserializes a whole message.</summary>
         /// <param name="source">The whole encoded message, with no framing around it.</param>
         /// <param name="over">As for <see cref="Write"/>: a per-method codec, where the method has one.</param>
         public T Read<T>(in ReadOnlySequence<byte> source, IConnectMessageCodec<T>? over = null)
-            => over is not null ? over.Read(source) : ReadCore<T>(source);
+            => Owns(over) ? over!.Read(source) : ReadCore<T>(source, over);
 
         /// <summary>Deserializes using this codec's own marshalling.</summary>
-        protected abstract T ReadCore<T>(in ReadOnlySequence<byte> source);
+        protected abstract T ReadCore<T>(in ReadOnlySequence<byte> source, IConnectMessageCodec<T>? over);
 
         /// <summary>
         /// The content-type for an RPC of the given shape: <c>application/{name}</c> for unary, and
@@ -94,7 +106,7 @@ namespace ProtoBuf.Connect
         public override string Name => "proto";
 
         /// <inheritdoc/>
-        protected override long? MeasureCore<T>(T value)
+        protected override long? MeasureCore<T>(T value, IConnectMessageCodec<T>? over)
         {
             // the one remaining per-message resolution: TypeModel.Measure<T> takes no over, so there
             // is nothing to hand it. It buys Content-Length, which is worth more than it costs.
@@ -109,14 +121,14 @@ namespace ProtoBuf.Connect
                 + "Suppressed here rather than annotated, because annotating would push the demand onto every "
                 + "public generic on this assembly and thence onto every consumer's payload types - which is the "
                 + "mistake AGENTS.md records against IConnectMessageCodec<T>.")]
-        protected override void WriteCore<T>(IBufferWriter<byte> destination, T value)
+        protected override void WriteCore<T>(IBufferWriter<byte> destination, T value, IConnectMessageCodec<T>? over)
             => ((IProtoOutput<IBufferWriter<byte>>)_model).Serialize(destination, value);
 
         /// <inheritdoc/>
         [UnconditionalSuppressMessage("Trimming", "IL2091",
             Justification = "As for Write: DeserializeRoot's annotation covers a fallback a non-null serializer "
                 + "short-circuits, and annotating instead would propagate the demand across the whole surface.")]
-        protected override T ReadCore<T>(in ReadOnlySequence<byte> source)
+        protected override T ReadCore<T>(in ReadOnlySequence<byte> source, IConnectMessageCodec<T>? over)
             => ((IProtoInput<ReadOnlySequence<byte>>)_model).Deserialize<T>(source);
     }
 
@@ -152,12 +164,12 @@ namespace ProtoBuf.Connect
                 + "was not built from a generated descriptor.");
 
         /// <inheritdoc/>
-        protected override long? MeasureCore<T>(T value) => throw NoCodec<T>();
+        protected override long? MeasureCore<T>(T value, IConnectMessageCodec<T>? over) => throw NoCodec<T>();
 
         /// <inheritdoc/>
-        protected override void WriteCore<T>(IBufferWriter<byte> destination, T value) => throw NoCodec<T>();
+        protected override void WriteCore<T>(IBufferWriter<byte> destination, T value, IConnectMessageCodec<T>? over) => throw NoCodec<T>();
 
         /// <inheritdoc/>
-        protected override T ReadCore<T>(in ReadOnlySequence<byte> source) => throw NoCodec<T>();
+        protected override T ReadCore<T>(in ReadOnlySequence<byte> source, IConnectMessageCodec<T>? over) => throw NoCodec<T>();
     }
 }

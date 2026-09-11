@@ -28,6 +28,22 @@ namespace ProtoBuf.Connect
     public interface IConnectMessageCodec<T>
     {
         /// <summary>
+        /// The codec this marshalling belongs to, as it appears in a content-type: <c>proto</c>, <c>json</c>.
+        /// </summary>
+        /// <remarks>
+        /// <b>A per-method codec is not codec-agnostic</b>, and treating it as one is a wire bug waiting
+        /// to happen. A <see cref="MarshallerMessageCodec{T}"/> writes binary protobuf; handing it a
+        /// call that negotiated <c>application/json</c> would produce protobuf bytes under a JSON
+        /// content-type, which no peer can read and nothing here would notice.
+        /// <para>
+        /// So the channel codec uses <c>over</c> only when the names agree, and otherwise falls back to
+        /// its own marshalling - with <c>over</c> still passed down, since a codec may be able to mine it
+        /// for what it needs even when it cannot delegate to it wholesale.
+        /// </para>
+        /// </remarks>
+        string CodecName { get; }
+
+        /// <summary>
         /// The encoded length, where it can be known without encoding twice; <c>null</c> when it cannot.
         /// </summary>
         /// <remarks>
@@ -63,6 +79,9 @@ namespace ProtoBuf.Connect
             _model = model ?? throw new ArgumentNullException(nameof(model));
             _serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
         }
+
+        /// <inheritdoc/>
+        public string CodecName => "proto";
 
         /// <inheritdoc/>
         public long? Measure(T value)

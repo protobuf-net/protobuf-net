@@ -69,6 +69,7 @@ builder.WebHost.ConfigureKestrel(o =>
 builder.Services.AddConnect(o =>
 {
     o.Codecs.Add(MarshallerConnectCodec.Instance);
+    o.Codecs.Add(ProtoBuf.Connect.Google.GoogleJsonConnectCodec.Instance);
     // the suite asserts on error messages, so an unexpected failure must say what it was rather than
     // reporting a bare "internal"
     o.IncludeExceptionDetailInErrors = true;
