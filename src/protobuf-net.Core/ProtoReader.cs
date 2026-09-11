@@ -547,7 +547,7 @@ namespace ProtoBuf
             return default;
         }
 
-        internal static void Seek(Stream source, long count, byte[] buffer)
+        internal static void Seek(Stream source, long count, byte[]? buffer)
         {
             if (source.CanSeek)
             {

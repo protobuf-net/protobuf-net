@@ -941,7 +941,9 @@ namespace ProtoBuf.Meta
         {
             if (type is null || type == typeof(object))
             {
-                if (value is null) ThrowHelper.ThrowArgumentNullException(nameof(type));
+                // nameof(type) is deliberate: the caller supplied neither a type nor a value to
+                // take one from, and `type` is the parameter they are being told about
+                ThrowHelper.ThrowIfNull(value, nameof(type));
                 type = value.GetType();
             }
 
@@ -1422,7 +1424,7 @@ namespace ProtoBuf.Meta
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static TypeModel? SetDefaultModel(TypeModel newValue)
+        internal static TypeModel? SetDefaultModel(TypeModel? newValue)
         {
             switch (newValue)
             {
@@ -1589,7 +1591,7 @@ namespace ProtoBuf.Meta
         {
             try
             {
-                return (T)Activator.CreateInstance(typeof(T), nonPublic: true);
+                return (T)Activator.CreateInstance(typeof(T), nonPublic: true)!;
             }
             catch (MissingMethodException mme)
             {
@@ -1747,7 +1749,7 @@ namespace ProtoBuf.Meta
         protected static void RegisterRootType<T>()
             => DynamicStub.Register<T>();
 
-        internal static ISerializer<T> TryGetSerializer<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(TypeModel? model)
+        internal static ISerializer<T>? TryGetSerializer<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(TypeModel? model)
           => SerializerCache<PrimaryTypeProvider, T>.InstanceField
             ?? model?.GetSerializer<T>();
 
@@ -2228,7 +2230,7 @@ namespace ProtoBuf.Meta
 #endif
 
         [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
-        internal static Type? ResolveKnownType(string name, Assembly assembly)
+        internal static Type? ResolveKnownType(string name, Assembly? assembly)
         {
             if (string.IsNullOrEmpty(name)) return null;
             try
