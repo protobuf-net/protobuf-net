@@ -2,7 +2,11 @@
 
 Working notes for a possible Connect implementation, in the same spirit as `notes/aot/findings.md`.
 
-> **Handover** (2026-09-11). Branch `marc/connect`. **Nothing has been built or run** — this is a
+> **Handover** (2026-09-11). Branch `marc/connect`, **current with `main` as of `9acf850f`** — the
+> dependency sweep and the xunit.v3/Microsoft.Testing.Platform move to the .NET 11 SDK. Merged rather
+> than rebased, because the branch is pushed. Everything was re-measured afterwards and **nothing
+> moved**: 33 IL warnings, a byte-identical 15,443,448 native binary, 9/9 and 7/7. The net8.0 ILC packs
+> are TFM-pinned, so the SDK bump does not reach the output. **Nothing has been built or run** — this is a
 > desk investigation only, and no code exists. Protocol facts are from the published spec and from
 > connect-go's source, cited inline; everything about *our* side is either read out of this repo or
 > flagged as an assumption. **§12 lists what is unverified; read it before acting on any of this.**

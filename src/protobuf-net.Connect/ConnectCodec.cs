@@ -112,6 +112,8 @@ public sealed class ProtoConnectCodec : ConnectCodec
         if (serializer is null) return ((IProtoInput<ReadOnlySequence<byte>>)_model).Deserialize<T>(source);
 
         using var state = ProtoReader.State.Create(source, _model);
-        return state.DeserializeRoot(default(T), serializer);
+        // the type argument is explicit: `default(T)` on an unconstrained T infers T?, which selects
+        // DeserializeRoot<T?> and mismatches the ISerializer<T> we are handing it
+        return state.DeserializeRoot<T>(default!, serializer);
     }
 }

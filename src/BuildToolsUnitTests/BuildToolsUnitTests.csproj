@@ -4,6 +4,8 @@
     <!-- the compile-time model attributes are [Experimental] while the shape settles -->
     <NoWarn>$(NoWarn);PBN9001</NoWarn>
     <TargetFramework>net8.0</TargetFramework>
+    <!-- an MTP test app is its own host, so it must be an exe; Directory.Build.props defaults to Library -->
+    <OutputType>Exe</OutputType>
     <RootNamespace>BuildToolsUnitTests</RootNamespace>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <Nullable>enable</Nullable>
@@ -18,10 +20,6 @@
     
     <PackageReference Include="System.Collections.Immutable" />
     <PackageReference Include="xunit.v3" />
-    <PackageReference Include="xunit.runner.visualstudio">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-    </PackageReference>
     <!-- The shipped analyzer still compiles against the low Roslyn baseline (4.3.1); the tests need a
          newer one for two reasons, and neither touches what ships:
            * to parse C# 12, which is the serializer generator's declared floor;
@@ -29,7 +27,6 @@
              reflectively off the host. Below it, InterceptableLocations.IsSupported is false and the
              interceptor path could not be tested in-process at all. -->
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" VersionOverride="4.11.0" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" />
   </ItemGroup>
 
   <ItemGroup>
