@@ -2005,6 +2005,73 @@ stale: it claimed `Task<Stream>` was refused, which stopped being true when byte
 fixture now keeps `Task<Stream>` deliberately, as the contrast of a shape that once belonged on the list
 and no longer does.
 
+## 35. Code-first clients in DI — logged, not built
+
+A consideration to carry into the generator rather than a decision. **Nothing here is verified**; it is
+a reading of the two existing designs and what they imply for Connect.
+
+### The two existing shapes
+
+| | `Grpc.Net.ClientFactory` | `protobuf-net.Grpc.ClientFactory` |
+| --- | --- | --- |
+| registers | `AddGrpcClient<Greeter.GreeterClient>(o => o.Address = ...)` | `AddCodeFirstGrpcClient<IMyAmazingService>(o => o.Address = ...)` |
+| `T` is | the **generated concrete client class** | the **contract interface** |
+| you inject | `Greeter.GreeterClient` | `IMyAmazingService` |
+| returns | an `IHttpClientBuilder`, which is what makes the chaining work | the same, built on top of it |
+
+The code-first difference is the one that matters: **you depend on the contract**, not on a generated
+class. That is the shape Connect should keep.
+
+Everything `Grpc.Net.ClientFactory` chains onto that builder is worth cataloguing, because it is the
+list of things a Connect equivalent will be compared against:
+`ConfigurePrimaryHttpMessageHandler`, `AddInterceptor<T>` (with `InterceptorScope`), `ConfigureChannel`,
+`AddCallCredentials`, `EnableCallContextPropagation`, and **named clients** via
+`AddGrpcClient<T>("name", …)` + `GrpcClientFactory.CreateClient<T>("name")`.
+
+### Connect should have an easier time of it, for one structural reason
+
+gRPC's factory exists partly to manage a `GrpcChannel` wrapped around an `HttpMessageHandler`, which is
+why it needs `ConfigureChannel(GrpcChannelOptions)` at all. **We are already on `HttpClient`**, so a
+Connect client factory is closer to plain `IHttpClientFactory` usage: take the `HttpClient` it hands
+out, wrap a thin `ConnectChannel` round it, done. There is no channel-options surface to mirror.
+
+**And interception is already solved, by the framework rather than by us.** `AddInterceptor<T>` and
+`AddCallCredentials` exist because `CallInvoker` has its own interception model. Connect's interception
+model is `DelegatingHandler` — so `.AddHttpMessageHandler<AuthHandler>()` does that job with the
+standard .NET mechanism people already know, and Polly arrives through
+`Microsoft.Extensions.Http.Resilience` without us doing anything. That is a real simplification rather
+than a gap.
+
+### The shape it probably wants, and why it needs no new naming rule
+
+Registration needs to know *which container* knows how to build the proxy — so it cannot be a bare
+`AddConnectClient<IGreeter>`. But §32's rule already answers this: **contract-named, so collision-safe**:
+
+```csharp
+builder.Services.AddGreeterClient(o => o.Address = new Uri("https://..."))
+    .AddHttpMessageHandler<AuthHandler>();
+```
+
+returning `IHttpClientBuilder` so the standard chain works, and registering `IGreeter` as transient.
+It sits alongside `AddGreeter()` (server-side registration) and `GreeterClient(this ConnectChannel)`
+(the manual factory) without inventing anything.
+
+### Two things to decide when it is built
+
+- **Deadline and cancellation propagation.** `EnableCallContextPropagation()` reads the ambient server
+  call's deadline and token and applies them to outgoing calls. The Connect equivalent is well-defined -
+  `connect-timeout-ms` in, `connect-timeout-ms` out - and is the sort of thing that is much easier to
+  build in than to retrofit, because it wants a place to hang ambient state.
+- **Named clients**, for two configurations of one contract. `IHttpClientFactory` has named clients
+  already, so this may cost nothing; worth checking rather than assuming.
+
+### It does *not* revive the instance-vs-static question
+
+§30 flagged that a DI client-factory story was the thing that might force the container to be an
+instance. On this reading it does not: the registration can be a generated static that closes over the
+container's static `CreateClient<TService>`, and what DI holds is the resolved `IGreeter`, not the
+container. The container stays static.
+
 ## 12. Unverified — check before committing to any of this
 
 Everything below is assumption or inference, not measurement:
