@@ -2008,7 +2008,10 @@ and no longer does.
 ## 35. Code-first clients in DI — logged, not built
 
 A consideration to carry into the generator rather than a decision. **Nothing here is verified**; it is
-a reading of the two existing designs and what they imply for Connect.
+a reading of the two existing designs and what they imply for Connect. Sources:
+
+- <https://learn.microsoft.com/aspnet/core/grpc/clientfactory> — the Microsoft one, `Grpc.Net.ClientFactory`
+- <https://github.com/protobuf-net/protobuf-net.Grpc/blob/main/src/protobuf-net.Grpc.ClientFactory/readme.md>
 
 ### The two existing shapes
 
