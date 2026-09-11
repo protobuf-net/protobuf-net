@@ -417,6 +417,9 @@ namespace ProtoBuf.Connect
         {
             var status = (int)response.StatusCode;
 
+            // the metadata belongs to the error as much as to a success; see ConnectException.Headers
+            var metadata = ReadMetadata(response);
+
             // A non-200 does NOT imply a Connect error object. An unrouted path is answered by the HTTP
             // layer - measured: text/plain, no body of ours at all - so the status has to be enough on its
             // own, and the protocol supplies an inference table for exactly that.
@@ -429,7 +432,8 @@ namespace ProtoBuf.Connect
             {
                 return new ConnectException(
                     ConnectCodes.FromHttpStatus(status), response.ReasonPhrase, status,
-                    codeWasInferred: true, innerException: ex);
+                    codeWasInferred: true, innerException: ex)
+                    { Headers = metadata.Headers, Trailers = metadata.Trailers };
             }
 
             var isJson = string.Equals(
@@ -437,14 +441,16 @@ namespace ProtoBuf.Connect
 
             if (isJson && ConnectErrorReader.TryParse(payload, out var code, out var message, out var details))
             {
-                return new ConnectException(code, message, status, details);
+                return new ConnectException(code, message, status, details)
+                    { Headers = metadata.Headers, Trailers = metadata.Trailers };
             }
 
             return new ConnectException(
                 ConnectCodes.FromHttpStatus(status),
                 DescribeOpaqueBody(payload, response.ReasonPhrase),
                 status,
-                codeWasInferred: true);
+                codeWasInferred: true)
+                { Headers = metadata.Headers, Trailers = metadata.Trailers };
         }
 
         private static string? DescribeOpaqueBody(byte[] payload, string? reasonPhrase)

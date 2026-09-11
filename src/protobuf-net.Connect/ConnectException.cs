@@ -67,6 +67,20 @@ namespace ProtoBuf.Connect
         internal static ConnectException UnsupportedMediaType(string message)
             => new(ConnectCode.Unknown, message, 415);
 
+        /// <summary>Leading metadata from the response that carried this error.</summary>
+        /// <remarks>
+        /// An error response carries metadata like any other, and dropping it loses information the
+        /// caller asked for: gRPC callers read it off <c>RpcException.Trailers</c>, and the Connect
+        /// protocol is explicit that trailing metadata accompanies a failed call. Empty when the error
+        /// did not come from a response at all - one we raised locally, for instance.
+        /// </remarks>
+        public IReadOnlyList<KeyValuePair<string, string>> Headers { get; init; }
+            = Array.Empty<KeyValuePair<string, string>>();
+
+        /// <summary>Trailing metadata from the response that carried this error.</summary>
+        public IReadOnlyList<KeyValuePair<string, string>> Trailers { get; init; }
+            = Array.Empty<KeyValuePair<string, string>>();
+
         /// <summary>Creates a new <see cref="ConnectException"/>.</summary>
         public ConnectException(
             ConnectCode code,

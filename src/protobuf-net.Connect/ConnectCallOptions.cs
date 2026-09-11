@@ -49,9 +49,10 @@ namespace ProtoBuf.Connect
             {
                 foreach (var entry in headers)
                 {
-                    // binary metadata travels as base64 under its -bin suffixed name
+                    // binary metadata travels as base64 under its -bin suffixed name, and Connect's
+                    // base64 is unpadded - see Internal.ConnectBase64
                     (converted ??= new()).Add(new(
-                        entry.Key, entry.IsBinary ? Convert.ToBase64String(entry.ValueBytes) : entry.Value));
+                        entry.Key, entry.IsBinary ? Internal.ConnectBase64.Encode(entry.ValueBytes) : entry.Value));
                 }
             }
 

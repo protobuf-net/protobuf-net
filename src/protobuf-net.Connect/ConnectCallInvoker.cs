@@ -253,7 +253,16 @@ namespace ProtoBuf.Connect
         }
 
         private static RpcException ToRpcException(ConnectException error)
-            => new(new Status(ConnectException.ToStatusCode(error.Code), error.RawMessage ?? error.Message, error));
+        {
+            var status = new Status(ConnectException.ToStatusCode(error.Code), error.RawMessage ?? error.Message, error);
+
+            // trailing metadata rides on the exception, which is where a gRPC caller looks for it
+            if (error.Trailers.Count == 0) return new RpcException(status);
+
+            var trailers = new Metadata();
+            foreach (var pair in error.Trailers) trailers.Add(pair.Key, pair.Value);
+            return new RpcException(status, trailers);
+        }
 
         /// <summary>
         /// Holds the headers, trailers and status a <c>Grpc.Core</c> call object hands back.
@@ -292,7 +301,10 @@ namespace ProtoBuf.Connect
 
             public void Fail(ConnectException error)
             {
-                _headers.TrySetResult(new Metadata());
+                // a failed call still has metadata, and callers read it: gRPC puts it on
+                // RpcException.Trailers, and the suite checks both sides of it
+                _headers.TrySetResult(ToMetadata(error.Headers));
+                _trailers = ToMetadata(error.Trailers);
                 _status ??= new Status(ConnectException.ToStatusCode(error.Code), error.RawMessage ?? error.Message, error);
             }
 

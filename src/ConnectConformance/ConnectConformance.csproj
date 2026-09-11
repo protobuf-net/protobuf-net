@@ -15,13 +15,14 @@
 
   <ItemGroup>
     <!-- The conformance suite's own contracts, vendored at the runner's version (v1.0.5) so the two
-         cannot drift silently. Only the three the server needs are compiled: client_compat and
-         suite describe the CLIENT-mode protocol and the test-suite format, neither of which a
-         server-under-test parses.
-         Server="true" on service.proto only - server_compat/config are plain messages. -->
+         cannot drift silently. suite.proto is deliberately absent: it describes the test-suite FILE
+         format, which only the runner reads. -->
     <Protobuf Include="proto/connectrpc/conformance/v1/config.proto" ProtoRoot="proto" GrpcServices="None" />
     <Protobuf Include="proto/connectrpc/conformance/v1/server_compat.proto" ProtoRoot="proto" GrpcServices="None" />
-    <Protobuf Include="proto/connectrpc/conformance/v1/service.proto" ProtoRoot="proto" GrpcServices="Server" />
+    <!-- Both, now that the CLIENT half is exercised too: the same generated ConformanceServiceClient a
+         gRPC consumer would have, driven through ConnectCallInvoker. -->
+    <Protobuf Include="proto/connectrpc/conformance/v1/service.proto" ProtoRoot="proto" GrpcServices="Both" />
+    <Protobuf Include="proto/connectrpc/conformance/v1/client_compat.proto" ProtoRoot="proto" GrpcServices="None" />
 
     <PackageReference Include="Grpc.Tools" PrivateAssets="all" />
     <PackageReference Include="Google.Protobuf" />

@@ -19,6 +19,14 @@ using ProtoBuf.ConnectConformance;
 // writing a protobuf-net code-first mirror of someone else's contract would be testing our translation
 // of the suite rather than the suite.
 
+// The runner invokes whatever command it was given, so the mode is ours to declare. Client mode reads
+// a SEQUENCE of test cases and drives RPCs against the runner's reference server; server mode reads one
+// bootstrap message and serves. They share nothing but the length-prefixed framing.
+if (args.Contains("--client"))
+{
+    return await ConformanceClient.RunAsync(Environment.GetEnvironmentVariable("CONNECT_CONFORMANCE_LOG"));
+}
+
 var request = ReadRequest();
 
 var builder = WebApplication.CreateSlimBuilder(args);

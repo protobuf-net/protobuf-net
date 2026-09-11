@@ -144,6 +144,18 @@ namespace ProtoBuf.Connect
             {
                 EndStreamReader.Parse(span, out _failure, out var trailers);
                 Trailers = trailers;
+
+                // The terminator carries the error AND the trailing metadata, and a caller that catches
+                // the error never sees this stream object - a gRPC caller reads them off
+                // RpcException.Trailers. So the metadata has to travel ON the exception, or it is simply
+                // lost for every failed streaming call.
+                if (_failure is { } failure && trailers.Count != 0)
+                {
+                    _failure = new ConnectException(
+                        failure.Code, failure.RawMessage, failure.HttpStatus, failure.Details,
+                        failure.CodeWasInferred, failure.InnerException)
+                    { Trailers = trailers };
+                }
             }
             finally
             {
