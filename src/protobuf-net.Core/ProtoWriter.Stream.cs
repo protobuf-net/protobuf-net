@@ -407,7 +407,7 @@ namespace ProtoBuf
                     }
                 }
             }
-            private protected override SubItemToken ImplStartLengthPrefixedSubItem(ref State state, object instance, PrefixStyle style)
+            private protected override SubItemToken ImplStartLengthPrefixedSubItem(ref State state, object? instance, PrefixStyle style)
             {
                 switch (WireType)
                 {

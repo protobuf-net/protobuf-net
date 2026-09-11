@@ -479,7 +479,7 @@ namespace ProtoBuf
             private protected override void ImplEndLengthPrefixedSubItem(ref State state, SubItemToken token, PrefixStyle style)
                 => ThrowHelper.ThrowNotSupportedException("You must use the WriteMessage API with this writer type");
 
-            private protected override SubItemToken ImplStartLengthPrefixedSubItem(ref State state, object instance, PrefixStyle style)
+            private protected override SubItemToken ImplStartLengthPrefixedSubItem(ref State state, object? instance, PrefixStyle style)
             {
                 ThrowHelper.ThrowNotSupportedException("You must use the WriteMessage API with this writer type");
                 return default;

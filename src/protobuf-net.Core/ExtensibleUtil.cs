@@ -127,7 +127,7 @@ namespace ProtoBuf
                     TValue? current = default;
                     var any = false;
                     int field;
-                    List<TValue> packed = null;
+                    List<TValue>? packed = null;
                     while ((field = state.ReadFieldHeader()) > 0)
                     {
                         if (field != tag)

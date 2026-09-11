@@ -23,7 +23,9 @@ namespace ProtoBuf
         public static ProtoReader Create(Stream source, TypeModel? model, SerializationContext? context = null, long length = TO_EOF)
             => Create(source, model, (object)context, length);
 
-        private static readonly FieldInfo s_origin = typeof(MemoryStream).GetField("_origin", BindingFlags.NonPublic | BindingFlags.Instance),
+        // GetField answers null when the runtime does not have those private fields under those
+        // names; every use is already guarded by the `is not null` test in ReflectionTryGetBuffer
+        private static readonly FieldInfo? s_origin = typeof(MemoryStream).GetField("_origin", BindingFlags.NonPublic | BindingFlags.Instance),
             s_buffer = typeof(MemoryStream).GetField("_buffer", BindingFlags.NonPublic | BindingFlags.Instance);
         private static bool ReflectionTryGetBuffer(MemoryStream ms, out ArraySegment<byte> buffer)
         {
@@ -31,8 +33,10 @@ namespace ProtoBuf
             {
                 try
                 {
-                    int offset = (int)s_origin.GetValue(ms);
-                    byte[]? arr = (byte[])s_buffer.GetValue(ms);
+                    // GetValue is object? on a field we have just proven exists, on an instance of
+                    // exactly MemoryStream - and the catch below covers any way that is wrong
+                    int offset = (int)s_origin.GetValue(ms)!;
+                    byte[] arr = (byte[])s_buffer.GetValue(ms)!;
                     buffer = new ArraySegment<byte>(arr, offset, checked((int)ms.Length));
                     return true;
                 }
@@ -55,7 +59,7 @@ namespace ProtoBuf
                 {   // make sure we apply a length limit
                     count = (int)length;
                 }
-                data = new ArraySegment<byte>(segment.Array, offset, count);
+                data = new ArraySegment<byte>(segment.Array!, offset, count); // TryGetBuffer succeeded
                 // skip the data in the source
                 ms.Seek(count, SeekOrigin.Current);
                 return true;

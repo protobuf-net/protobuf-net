@@ -26,7 +26,7 @@ namespace ProtoBuf
             }
 
 #pragma warning disable IDE0060 // map isn't implemented yet, but we definitely want it
-            private void WriteStringWithLengthPrefix(string value, StringMap map)
+            private void WriteStringWithLengthPrefix(string value, StringMap? map)
 #pragma warning restore IDE0060
             {
                 var writer = _writer;

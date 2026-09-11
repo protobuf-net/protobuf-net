@@ -594,7 +594,7 @@ namespace ProtoBuf
         protected private abstract void ImplWriteBytes(ref State state, ReadOnlySpan<byte> data);
         protected private abstract void ImplWriteBytes(ref State state, ReadOnlySequence<byte> data);
         protected private abstract void ImplCopyRawFromStream(ref State state, Stream source);
-        private protected abstract SubItemToken ImplStartLengthPrefixedSubItem(ref State state, object instance, PrefixStyle style);
+        private protected abstract SubItemToken ImplStartLengthPrefixedSubItem(ref State state, object? instance, PrefixStyle style);
         protected private abstract void ImplEndLengthPrefixedSubItem(ref State state, SubItemToken token, PrefixStyle style);
         protected private abstract bool ImplDemandFlushOnDispose { get; }
 

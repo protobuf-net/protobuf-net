@@ -170,7 +170,7 @@ namespace ProtoBuf
                 AdvanceSubMessage(ref state, len, PrefixStyle.Base128);
             }
 
-            private protected override SubItemToken ImplStartLengthPrefixedSubItem(ref State state, object instance, PrefixStyle style)
+            private protected override SubItemToken ImplStartLengthPrefixedSubItem(ref State state, object? instance, PrefixStyle style)
             {
                 WireType = WireType.None;
                 return new SubItemToken(_position64);
