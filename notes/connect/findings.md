@@ -33,6 +33,10 @@ Working notes for a possible Connect implementation, in the same spirit as `note
 > `demo.connectrpc.com`, as a JIT run *and* as a native AOT binary (7.3 MB, 33 IL warnings, **none of
 > them ours**). Code-first protobuf-net bytes interoperate with connect-go with no `.proto` anywhere.
 >
+> **Server-streaming is done — §22**, verified in both directions against connect-go. Four of the five
+> §14.1 constraints held unchanged; the fifth ("one error path") held in substance but was phrased
+> wrongly — see §22. `AotConnectSmoke` 13/13, `ConnectProbe` 9/9, native AOT still 33 IL warnings.
+>
 > **Stage 1 is done — §16.** `src/protobuf-net.Connect.AspNetCore` + `src/AotConnectSmoke` read
 > **8/8**, JIT and native AOT, and the server is verified from outside .NET with `curl`. It is served
 > over **HTTP/1.1**, from a plaintext Kestrel endpoint that could not serve gRPC at all. The entire
@@ -1360,6 +1364,73 @@ Server-streaming alone exercises **every** §14.1 constraint, which is what this
 the design, not adding features. Worth spiking the duplex-`HttpClient` question separately and early
 though — it is orthogonal to Connect, answerable in ~30 lines against an echo endpoint, and better known
 now than after client-streaming lands.
+
+## 22. Server-streaming — built, and the §14.1 verdict
+
+Built end to end, and **verified in both directions against connect-go**: our client drives Eliza's
+server-streaming `Introduce` (§21's probe, now a `ConnectProbe` check), and `curl` drives our server.
+
+Our server's output, read off the wire:
+
+```
+00 00000011  0a 0d "hello curl #1" 10 0d           <- flags 0
+00 00000011  0a 0d "hello curl #2" 10 0d           <- flags 0
+02 00000024  {"metadata":{"greeter-count":["2"]}}  <- flags 2 = end of stream
+```
+
+Byte-for-byte the shape connect-go produced. `AotConnectSmoke` reads **13/13**, JIT and native;
+`ConnectProbe` reads **9/9** against `demo.connectrpc.com`. Native AOT is **33 IL warnings, unchanged**,
+and +173 KB.
+
+### The verdict: four of five constraints held unchanged, one needed refining
+
+This stage existed to falsify §14.1, so the result matters more than the feature.
+
+| constraint | verdict |
+| --- | --- |
+| transport not buffer-shaped | **held.** The codec was untouched; streaming is the same codec with different framing, and `EnvelopedCodecContent` slotted in beside `MeasuredCodecContent` exactly as that file's comment predicted |
+| no `Task<TResponse> Handle(TRequest)` server handler | **held, and this is the big one.** Adding server-streaming was one new delegate type plus one new invoker, with **zero** changes to `MapConnectService`, to endpoint creation, or to the registration record beyond carrying the shape |
+| trailers behind an accessor | **held, and it would have hurt.** Streaming populates the same accessor from the terminating message instead of from `trailer-` headers. Had unary hard-coded headers, every streaming shape would have broken |
+| `Content-Length` not assumed | **held**, but only half-exercised: the streaming *response* states none, while the streaming *request* still can, being one message. Client-streaming is what really tests this |
+| one error path | **held in substance, wrong in my phrasing** — see below |
+
+### "One error path" meant one error *type*, not one catch block
+
+The refinement is worth recording because the original wording would have misled whoever implemented
+this next. A streaming invoker **has to catch its own failures**: once the first message is out the
+status is committed to `200`, so the endpoint's error path — which writes a non-200 with a JSON body —
+has nowhere to put them. It cannot be the single catch block I implied.
+
+What actually holds, and what the constraint should have said: **one exception type, and one decision
+about codes**. `ConnectException` reaches two writers, chosen by whether the response has started:
+
+| | |
+| --- | --- |
+| `ConnectErrorWriter` | non-200 plus a JSON body — the call never started |
+| `EndStreamWriter` | the terminating envelope — the call started and then failed |
+
+`ConnectException.HttpStatus` is `null` for the second, and that is load-bearing rather than incidental:
+it is how a caller tells "the service reported `resource_exhausted`" from "something between us returned
+a 500". One of the checks asserts exactly that.
+
+### Two things this turned up that §14.1 did not anticipate
+
+- **Content-type validation has to be shape-aware.** The content-type states the framing
+  (`application/proto` versus `application/connect+proto`), so it must agree with the method's declared
+  shape or the body cannot be parsed at all. `SelectCodec` now takes the shape and answers `415` naming
+  the framing to use, in both directions. Two checks pin it.
+- **`Utf8JsonWriter` escapes `+` as `\u002B`**, so `application/connect+proto` does not appear
+  literally in an error body. Valid JSON and every client parses it, but it is worth knowing before
+  matching on message text — a check asserted the literal and failed. It is also mild grit against
+  Connect's whole debuggability pitch; whether to use a relaxed encoder is an open question with a
+  faint security dimension (the default escapes HTML-sensitive characters too), so it is left alone
+  rather than decided in passing.
+
+### Next
+
+Client-streaming, which adds exactly one thing: an incremental request body with no `Content-Length`.
+Then duplex, which adds only HTTP/2 and interleaving. The duplex-`HttpClient` spike (§21) is still worth
+doing out of order, since it is the one genuinely unknown environmental risk.
 
 ## 12. Unverified — check before committing to any of this
 

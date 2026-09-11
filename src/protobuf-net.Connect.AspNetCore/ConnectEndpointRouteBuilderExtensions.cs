@@ -83,7 +83,7 @@ namespace ProtoBuf.Connect.AspNetCore
                             StatusCodes.Status400BadRequest);
                     }
 
-                    var codec = SelectCodec(http, options);
+                    var codec = SelectCodec(http, options, method.Type);
 
                     var cancellationToken = http.RequestAborted;
                     TimeSpan? span = TryGetTimeout(http, out var parsed) ? parsed : null;
@@ -128,7 +128,7 @@ namespace ProtoBuf.Connect.AspNetCore
                 }
             };
 
-        private static ConnectCodec SelectCodec(HttpContext http, ConnectServerOptions options)
+        private static ConnectCodec SelectCodec(HttpContext http, ConnectServerOptions options, ConnectMethodType type)
         {
             var contentType = http.Request.ContentType;
             if (!ConnectContentType.TryParse(contentType, out var parsed))
@@ -139,12 +139,25 @@ namespace ProtoBuf.Connect.AspNetCore
                     StatusCodes.Status415UnsupportedMediaType);
             }
 
-            if (parsed.IsEnveloped)
+            // the content-type states the framing, and it has to agree with the method's shape: unary is
+            // the bare message, everything else is enveloped
+            var wantsEnvelopes = type != ConnectMethodType.Unary;
+            if (parsed.IsEnveloped != wantsEnvelopes)
             {
                 throw new ConnectException(
                     ConnectCode.Unimplemented,
-                    $"'{contentType}' asks for a streaming call; only unary is implemented.",
+                    wantsEnvelopes
+                        ? $"'{contentType}' is the unary framing, but this method is {type}; use 'application/connect+{parsed.CodecName}'."
+                        : $"'{contentType}' asks for enveloped framing, but this method is unary; use 'application/{parsed.CodecName}'.",
                     StatusCodes.Status415UnsupportedMediaType);
+            }
+
+            if (type is ConnectMethodType.ClientStreaming or ConnectMethodType.DuplexStreaming)
+            {
+                throw new ConnectException(
+                    ConnectCode.Unimplemented,
+                    $"'{type}' is not implemented yet; unary and server-streaming are.",
+                    StatusCodes.Status501NotImplemented);
             }
 
             foreach (var codec in options.Codecs)

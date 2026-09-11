@@ -6,6 +6,7 @@ using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 using ProtoBuf.Serializers;
+using ProtoBuf.Connect;
 
 namespace ProtoBuf.Connect.Internal
 {

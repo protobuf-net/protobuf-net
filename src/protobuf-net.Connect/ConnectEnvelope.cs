@@ -2,7 +2,7 @@ using System;
 using System.Buffers;
 using System.Buffers.Binary;
 
-namespace ProtoBuf.Connect.Internal
+namespace ProtoBuf.Connect
 {
     /// <summary>
     /// The five-byte frame every streaming message carries: one flag byte, then a big-endian
@@ -19,9 +19,14 @@ namespace ProtoBuf.Connect.Internal
     /// framing implementation to get right.
     /// </para>
     /// </remarks>
-    internal static class ConnectEnvelope
+    public static class ConnectEnvelope
     {
         /// <summary>The flag byte plus the four length bytes.</summary>
+        /// <remarks>
+        /// Public because the wire format is shared by both halves of this implementation and is fixed
+        /// by the specification; a private copy on each side would be a duplicated wire format, which is
+        /// the one thing not worth duplicating.
+        /// </remarks>
         public const int HeaderLength = 5;
 
         /// <summary>Bit 0: the payload is compressed per <c>connect-content-encoding</c>.</summary>

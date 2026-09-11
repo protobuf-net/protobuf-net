@@ -93,9 +93,17 @@ partial class SmokeServices
         public static readonly ConnectMethod<HelloRequest, HelloReply> Refuse = Unary("Refuse");
         public static readonly ConnectMethod<HelloRequest, HelloReply> Explode = Unary("Explode");
         public static readonly ConnectMethod<HelloRequest, HelloReply> Dawdle = Unary("Dawdle");
+        public static readonly ConnectMethod<HelloRequest, HelloReply> Subscribe = Streaming("Subscribe");
+        public static readonly ConnectMethod<HelloRequest, HelloReply> SubscribeThenFail = Streaming("SubscribeThenFail");
 
         private static ConnectMethod<HelloRequest, HelloReply> Unary(string name)
-            => new(ConnectMethodType.Unary, ServiceName, name,
+            => Method(ConnectMethodType.Unary, name);
+
+        private static ConnectMethod<HelloRequest, HelloReply> Streaming(string name)
+            => Method(ConnectMethodType.ServerStreaming, name);
+
+        private static ConnectMethod<HelloRequest, HelloReply> Method(ConnectMethodType type, string name)
+            => new(type, ServiceName, name,
                 requestSerializer: SmokeModel.Serializer<HelloRequest>(),
                 responseSerializer: SmokeModel.Serializer<HelloReply>());
     }
@@ -129,6 +137,14 @@ partial class SmokeServices
         public Task<HelloReply> DawdleAsync(HelloRequest request, CallContext context = default)
             => _channel.UnaryAsync(Greeter.Dawdle, request,
                 ConnectCallOptions.From(context.CallOptions), context.CancellationToken);
+
+        public IAsyncEnumerable<HelloReply> Subscribe(HelloRequest request, CallContext context = default)
+            => _channel.ServerStreaming(Greeter.Subscribe, request,
+                ConnectCallOptions.From(context.CallOptions), context.CancellationToken);
+
+        public IAsyncEnumerable<HelloReply> SubscribeThenFail(HelloRequest request, CallContext context = default)
+            => _channel.ServerStreaming(Greeter.SubscribeThenFail, request,
+                ConnectCallOptions.From(context.CallOptions), context.CancellationToken);
     }
 
     /// <summary>Server bindings: one typed delegate per method, no reflection.</summary>
@@ -146,6 +162,10 @@ partial class SmokeServices
                 static (service, request, ctx) => service.ExplodeAsync(request, new CallContext(service, ctx)));
             context.AddUnaryMethod(Greeter.Dawdle,
                 static (service, request, ctx) => service.DawdleAsync(request, new CallContext(service, ctx)));
+            context.AddServerStreamingMethod(Greeter.Subscribe,
+                static (service, request, ctx) => service.Subscribe(request, new CallContext(service, ctx)));
+            context.AddServerStreamingMethod(Greeter.SubscribeThenFail,
+                static (service, request, ctx) => service.SubscribeThenFail(request, new CallContext(service, ctx)));
         }
     }
 }

@@ -130,6 +130,77 @@ await checks.Run("leading metadata set on a CallContext reaches the service", as
     return "x-caller travelled as an ordinary request header";
 });
 
+await checks.Run("server-streaming round-trip", async () =>
+{
+    var messages = new List<string>();
+    await foreach (var reply in client.Subscribe(new HelloRequest { Name = "marc", Repeat = 3 }))
+    {
+        messages.Add(reply.Message!);
+        Checks.Require(reply.Length == reply.Message!.Length, "a second field survived each message");
+    }
+
+    Checks.Require(messages.Count == 3, $"three messages, got {messages.Count}");
+    Checks.Require(messages[2] == "hello marc #3", $"in order, last was \"{messages[2]}\"");
+    return string.Join(", ", messages);
+});
+
+await checks.Run("streaming trailers travel in the terminator, not the headers", async () =>
+{
+    var subscribe = new ConnectMethod<HelloRequest, HelloReply>(
+        ConnectMethodType.ServerStreaming, ServiceOnTheWire, "Subscribe");
+    var stream = await channel.ServerStreamingAsync(subscribe, new HelloRequest { Name = "t", Repeat = 2 });
+
+    // before enumeration the trailers cannot exist yet - that is the whole distinction from unary
+    Checks.Require(stream.Trailers.Count == 0, "no trailers before the stream is drained");
+    Checks.Require(!stream.Headers.Any(h => h.Key.StartsWith("trailer-")), "and none smuggled in as headers");
+
+    var count = 0;
+    await foreach (var _ in stream) count++;
+
+    Checks.Require(count == 2, $"two messages, got {count}");
+    var trailer = stream.Trailers.FirstOrDefault(t => t.Key == "greeter-count");
+    Checks.Require(trailer.Value == "2", $"greeter-count=2 from the terminator, was \"{trailer.Value}\"");
+    return $"{stream.Trailers.Count} trailer(s), from the terminating message";
+});
+
+await checks.Run("a mid-stream failure arrives under HTTP 200", async () =>
+{
+    var failing = new ConnectMethod<HelloRequest, HelloReply>(
+        ConnectMethodType.ServerStreaming, ServiceOnTheWire, "SubscribeThenFail");
+    var stream = await channel.ServerStreamingAsync(failing, new HelloRequest { Name = "x" });
+
+    var received = new List<string>();
+    var ex = await Checks.Throws(async () =>
+    {
+        await foreach (var reply in stream) received.Add(reply.Message!);
+    });
+
+    Checks.Require(received.Count == 2, $"the messages before the failure still arrived, got {received.Count}");
+    Checks.Require(ex.Code == ConnectCode.ResourceExhausted, $"resource_exhausted, was {ex.Code.ToWireName()}");
+    Checks.Require(ex.RawMessage == "the well ran dry", $"the message survived, was \"{ex.RawMessage}\"");
+    // no HTTP status is the evidence: the response said 200 before anything went wrong, so this error
+    // can only have come from the terminating message
+    Checks.Require(ex.HttpStatus is null, $"no HTTP status - it came from the terminator, was {ex.HttpStatus}");
+    return $"{received.Count} messages, then {ex.Code.ToWireName()} from the terminator";
+});
+
+await checks.Run("framing must match the method's shape", async () =>
+{
+    // unary framing at a streaming method: the content-type states the framing, and disagreeing is 415
+    using var request = new HttpRequestMessage(HttpMethod.Post, $"{address}/{ServiceOnTheWire}/Subscribe")
+    {
+        Content = new ByteArrayContent([]) { Headers = { ContentType = new MediaTypeHeaderValue("application/proto") } },
+    };
+    using var response = await http.SendAsync(request);
+    Checks.Require((int)response.StatusCode == 415, $"HTTP 415, was {(int)response.StatusCode}");
+    var body = await response.Content.ReadAsStringAsync();
+    // note '+' arrives as \u002B: Utf8JsonWriter's default encoder escapes it. Valid JSON, and the
+    // client parses it fine, but it is worth knowing before matching on message text.
+    Checks.Require(body.Contains("ServerStreaming"), $"it names the shape, body was {body}");
+    Checks.Require(body.Contains("unary framing"), $"and what was wrong, body was {body}");
+    return body;
+});
+
 await checks.Run("an unknown codec is 415", async () =>
 {
     using var request = new HttpRequestMessage(HttpMethod.Post, $"{address}/{ServiceOnTheWire}/SayHello)".TrimEnd(')'))
@@ -145,7 +216,7 @@ await checks.Run("an unknown codec is 415", async () =>
     return body;
 });
 
-await checks.Run("a streaming content-type is declined, not mishandled", async () =>
+await checks.Run("enveloped framing at a unary method is declined", async () =>
 {
     using var request = new HttpRequestMessage(HttpMethod.Post, $"{address}/{ServiceOnTheWire}/SayHello")
     {
@@ -154,7 +225,7 @@ await checks.Run("a streaming content-type is declined, not mishandled", async (
     using var response = await http.SendAsync(request);
     Checks.Require((int)response.StatusCode == 415, $"HTTP 415, was {(int)response.StatusCode}");
     var body = await response.Content.ReadAsStringAsync();
-    Checks.Require(body.Contains("only unary"), $"it says why, body was {body}");
+    Checks.Require(body.Contains("this method is unary"), $"it says why, body was {body}");
     return body;
 });
 

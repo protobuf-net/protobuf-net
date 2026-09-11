@@ -26,6 +26,15 @@ public interface IGreeter
 
     /// <summary>Takes longer than any caller will wait, to exercise <c>connect-timeout-ms</c>.</summary>
     Task<HelloReply> DawdleAsync(HelloRequest request, CallContext context = default);
+
+    /// <summary>Server-streaming: <c>Repeat</c> messages, then a clean terminator.</summary>
+    IAsyncEnumerable<HelloReply> Subscribe(HelloRequest request, CallContext context = default);
+
+    /// <summary>
+    /// Fails <em>after</em> the stream has started, which HTTP cannot express: the status was committed
+    /// to 200 with the first message, so the failure has to travel in the terminating message.
+    /// </summary>
+    IAsyncEnumerable<HelloReply> SubscribeThenFail(HelloRequest request, CallContext context = default);
 }
 
 [ProtoContract]
@@ -67,6 +76,30 @@ public sealed class GreeterService : IGreeter
 
     public Task<HelloReply> ExplodeAsync(HelloRequest request, CallContext context = default)
         => throw new InvalidOperationException("a secret that must not reach the caller");
+
+    public async IAsyncEnumerable<HelloReply> Subscribe(HelloRequest request, CallContext context = default)
+    {
+        var count = Math.Max(1, request.Repeat);
+        for (var i = 1; i <= count; i++)
+        {
+            context.CancellationToken.ThrowIfCancellationRequested();
+            var message = $"hello {request.Name} #{i}";
+            yield return new HelloReply { Message = message, Length = message.Length };
+        }
+
+        // added after the last message and before the terminator - which is where it will travel, since
+        // response headers were committed long ago
+        context.ServerCallContext?.ResponseTrailers.Add("greeter-count", count.ToString());
+        await Task.CompletedTask;
+    }
+
+    public async IAsyncEnumerable<HelloReply> SubscribeThenFail(HelloRequest request, CallContext context = default)
+    {
+        yield return new HelloReply { Message = "first", Length = 5 };
+        yield return new HelloReply { Message = "second", Length = 6 };
+        await Task.CompletedTask;
+        throw new ConnectException(ConnectCode.ResourceExhausted, "the well ran dry");
+    }
 
     public async Task<HelloReply> DawdleAsync(HelloRequest request, CallContext context = default)
     {
