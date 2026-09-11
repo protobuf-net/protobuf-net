@@ -1876,6 +1876,45 @@ these cannot collide between containers however many there are. The singular/plu
 natural rather than surgical, since the extension names are built from the container name plus a
 literal suffix rather than by stripping anything.
 
+## 32. No generics in the extension surface, and no surgery on the consumer's name
+
+Review caught that `BindSmokeService<T>` was `Bind` + `SmokeService` — **stripping a trailing `s` from
+the consumer's own identifier**, since "Services" is part of the container's name (`SmokeServices`) and
+not a suffix we add. Exactly the string surgery §30 had claimed to be avoiding, done two sections later
+without noticing.
+
+The obvious repair, a bare `Bind<TService>()`, **reintroduces the ambiguity §31 was built to avoid**.
+Measured rather than reasoned, by giving two containers one each:
+
+```
+error CS0121: The call is ambiguous between
+'SmokeClientOnlyExtensions.Bind<TService>(IEndpointRouteBuilder)' and
+'SmokeServicesExtensions.Bind<TService>(IEndpointRouteBuilder)'
+```
+
+Same failure as the generic `CreateClient<TService>`, for the same reason: the name carries nothing
+container-specific.
+
+### The rule, now uniform
+
+| operation covers | named after | example |
+| --- | --- | --- |
+| **all** services | the **container** | `AddSmokeServices`, `BindSmokeServices` |
+| **one** contract | the **contract** | `BindGreeter`, `BindFarewell`, `GreeterClient`, `FarewellClient` |
+
+**There are no generics in the extension surface at all**, which is what makes it safe: every name
+carries either the container or the contract, so the only possible collision is the narrow one — two
+containers declaring the same contract — and that is a call-site `CS0121` naming both candidates, with
+`SmokeServices.CreateClient<IFarewell>(channel)` as the way through.
+
+And nothing is derived by mutilating an identifier. `AddSmokeServices` is `Add` + the container's name;
+`BindGreeter` is `Bind` + the contract's, with the conventional leading `I` dropped as .NET does
+everywhere. The singular/plural distinction that caused this stopped existing once the names were
+composed from two sources rather than one.
+
+The generic forms live on the container — `BindService<TService>`, `CreateClient<TService>` — where
+they cannot be ambiguous, and are the escape hatch when two containers do share a contract.
+
 ## 12. Unverified — check before committing to any of this
 
 Everything below is assumption or inference, not measurement:

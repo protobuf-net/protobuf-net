@@ -62,7 +62,7 @@ app.BindSmokeServices();
 // Connect share a host with gRPC - the two use identical paths otherwise
 app.BindSmokeServices("rpc");
 // and just one of them, alone, to show conventions can differ between services
-app.BindSmokeService<IFarewell>("solo");
+app.BindFarewell("solo");
 await app.StartAsync();
 
 var address = $"http://127.0.0.1:{httpPort}";
@@ -252,7 +252,7 @@ await checks.Run("a second service in the same container", async () =>
 
 await checks.Run("services can be bound separately when conventions differ", async () =>
 {
-    // BindSmokeService<TService> exists so one service can carry conventions the other does not; here the
+    // BindFarewell / BindGreeter exist so one service can carry conventions the other does not; here the
     // proof is simply that a single service can be mapped alone, under its own prefix
     var solo = new ConnectChannel(http, new ProtoConnectCodec(SmokeModel.Instance), new Uri($"{address}/solo"));
     var farewell = SmokeServices.CreateClient<IFarewell>(solo);

@@ -288,11 +288,20 @@ static partial class SmokeServices
 /// Always emitted, whether or not the container is <c>static</c>, so that the fluent form does not
 /// depend on how the consumer declared their half. Accessibility mirrors the container's.
 /// <para>
-/// Client factories are named <b>per contract</b> rather than generic, and that is what makes them
-/// safe as extensions: a generic <c>CreateClient&lt;TService&gt;(this ConnectChannel)</c> is ambiguous
-/// between <em>any</em> two containers in scope, whereas <c>GreeterClient</c> can only collide with
-/// another container declaring the same contract. The generic form stays on the container itself,
-/// where it cannot be ambiguous at all.
+/// Per-contract operations are named after the <b>contract</b>, never generic, and that is what makes
+/// them safe as extensions: a generic <c>CreateClient&lt;TService&gt;</c> or <c>Bind&lt;TService&gt;</c>
+/// is ambiguous between <em>any</em> two containers in scope, whereas <c>GreeterClient</c> and
+/// <c>BindGreeter</c> can only collide with another container declaring the same contract. Both
+/// measured, not assumed.
+/// <para>
+/// Operations covering <em>all</em> services carry the container's own name instead -
+/// <c>AddSmokeServices</c>, <c>BindSmokeServices</c> - which is equally collision-proof and needs no
+/// surgery on the consumer's identifier. Note "Services" there is the consumer's, not a suffix we add.
+/// </para>
+/// <para>
+/// The generic forms stay on the container, where they cannot be ambiguous at all, and are the way
+/// through when two containers do share a contract.
+/// </para>
 /// </para>
 /// </remarks>
 internal static class SmokeServicesExtensions
@@ -306,10 +315,15 @@ internal static class SmokeServicesExtensions
         this IEndpointRouteBuilder endpoints, string? routingPrefix = null)
         => SmokeServices.BindServices(endpoints, routingPrefix);
 
-    /// <summary>Maps one service, so conventions can differ between them.</summary>
-    public static IEndpointConventionBuilder BindSmokeService<TService>(
+    /// <summary>Maps <see cref="IGreeter"/> alone, so its conventions can differ from the others'.</summary>
+    public static IEndpointConventionBuilder BindGreeter(
         this IEndpointRouteBuilder endpoints, string? routingPrefix = null)
-        => SmokeServices.BindService<TService>(endpoints, routingPrefix);
+        => SmokeServices.BindService<IGreeter>(endpoints, routingPrefix);
+
+    /// <summary>Maps <see cref="IFarewell"/> alone.</summary>
+    public static IEndpointConventionBuilder BindFarewell(
+        this IEndpointRouteBuilder endpoints, string? routingPrefix = null)
+        => SmokeServices.BindService<IFarewell>(endpoints, routingPrefix);
 
     /// <summary>Creates an <see cref="IGreeter"/> client over the channel.</summary>
     public static IGreeter GreeterClient(this ConnectChannel channel)
