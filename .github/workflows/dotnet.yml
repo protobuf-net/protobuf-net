@@ -25,6 +25,12 @@ jobs:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         fetch-depth: 0  # Fetch the full history (for versioning)
+    # 11.0.x is required by the test step: global.json selects the Microsoft.Testing.Platform
+    # runner, and `dotnet test` can only see a traversal project on the .NET 11 SDK
+    # (dotnet/sdk#55297). The bare channel is deliberate - it resolves to whatever is newest there,
+    # so this becomes GA with no edit. Do NOT add `dotnet-quality: preview`, which pins to the last
+    # preview forever: measured, `--channel 10.0 --quality preview` still resolves to 10.0.100-rc.2
+    # months after 10.0 shipped.
     - name: Setup .NET
       uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
       with:
@@ -98,6 +104,12 @@ jobs:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         fetch-depth: 0  # versioning
+    # 11.0.x is required by the test step: global.json selects the Microsoft.Testing.Platform
+    # runner, and `dotnet test` can only see a traversal project on the .NET 11 SDK
+    # (dotnet/sdk#55297). The bare channel is deliberate - it resolves to whatever is newest there,
+    # so this becomes GA with no edit. Do NOT add `dotnet-quality: preview`, which pins to the last
+    # preview forever: measured, `--channel 10.0 --quality preview` still resolves to 10.0.100-rc.2
+    # months after 10.0 shipped.
     - name: Setup .NET
       uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
       with:
