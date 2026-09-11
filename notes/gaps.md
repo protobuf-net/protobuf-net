@@ -5751,7 +5751,7 @@ replaces a silent data change with a compile error, for the one shape that could
 `src/protobuf-net.Core/CompatibilitySuppressions.xml`, which explains itself and warns against
 regenerating it wholesale to make a build pass.
 
-#### Stage 4, continued (2026-09-11): 372 -> 225, and what the remainder is made of
+#### Stage 4, continued (2026-09-11): 372 -> 219, and what the remainder is made of
 
 Picked up after merging current `v4` in (the branch predates the main merge, xunit/MTP, the .NET 11
 SDK and B53; that merge cost **3** sites). Five techniques did most of the work, and the first three
@@ -5841,7 +5841,19 @@ therefore has to come before the end of stage 4**, which inverts the sequencing 
 then a tail. `CS8604` is still the largest code at 89, spread thin; the leverage is spent and what
 is left really is one question at a time, which is what the 2026-08-26 note predicted.
 
-Gates at 225: traversal 0 errors, `dotnet test Build.csproj` **5504 / 0 failed**.
+**BuildTools and Legacy are in a nullable ANNOTATION context now** (`<Nullable>annotations</Nullable>`),
+which retired the `CS8632` `NoWarn` both carried and revealed four latent mismatches, all fixed:
+`IFileSystem.OpenText` was declared non-nullable over two implementations that return null, and
+`DiagnosticPropertiesBuilder` built an `ImmutableDictionary<string, string>` where Roslyn wants
+`<string, string?>`. It did **not** unblock the generic families - see above.
+
+**One measuring trap worth adding to the list**: the traversal reports ~1,340 warnings on
+`--no-incremental` and ~275 incrementally, because a project that does not recompile reports nothing.
+The low number is the artefact, and it is reassuring in exactly the wrong direction.
+
+Gates at 219: traversal 0 errors; `dotnet test Build.csproj` **5504 / 0 failed**; `AotDifferential`
+3137 compared, 100% match; `AotGrpcMetadataDiff` 0 failing; `AotSmoke`, `AotNodaTimeSmoke` and
+`AotGrpcSmoke` all passed; Release packing build with package validation clean.
 
 #### Sequencing
 

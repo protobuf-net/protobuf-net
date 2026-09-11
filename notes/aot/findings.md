@@ -82,7 +82,7 @@ closed on 2026-09-11**. The live ones:
   **Two things from 2026-09-11 change the plan**, both in B51's "Stage 4, continued" section.
   **`T?` on an unconstrained type parameter fails CS0453 in BuildTools and compiles in Core, on the
   identical source, and nobody knows why yet** - `/nullable:enable /langversion:latest` in both, no
-  directives, one interface definition. That blocks 49 of the 225 (the generic collection families).
+  directives, one interface definition. That blocks 49 of the 219 (the generic collection families).
   The nullable context was the obvious culprit and has been ruled out by test; BuildTools is in an
   annotation context now regardless, which retired the `CS8632` `NoWarn`. And **two
   items are design calls owed to a human rather than annotations**: `ISerializer<T>.Read`'s merge
