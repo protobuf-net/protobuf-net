@@ -911,19 +911,27 @@ the registration extension hangs off. The first cut had three peer types at name
 container at all**, which review caught: it left the proxy and bindings as visible API, and it was
 missing the type the generator will need anyway.
 
-Inside it:
+**The whole visible surface is two verbs**, `CreateClient<TService>` and `BindServer`, plus `Instance`.
+Everything else is **private**:
 
 | | |
 | --- | --- |
-| `Greeter` (internal static) | a `ConnectMethod<,>` per operation, shared by both sides, so the service and method names exist once — and where the serializers are resolved, in the static initialiser |
-| `GreeterClientProxy` (**private**) | one call to `channel.UnaryAsync` per method. Private because a consumer reaches it through `CreateClient<TService>` and only ever sees `IGreeter` |
-| `GreeterServerBindings` (internal) | `AddUnaryMethod(method, handler)` per operation, the handler a `static` lambda so it allocates nothing. Internal only because the registration extension constructs it |
+| `Greeter` (private static) | a `ConnectMethod<,>` per operation, shared by both sides, so the service and method names exist once — and where the serializers are resolved, in the static initialiser |
+| `GreeterClientProxy` (private) | one call to `channel.UnaryAsync` per method; a consumer reaches it through `CreateClient<TService>` and only ever sees `IGreeter` |
+| `GreeterServerBindings` (private) | `AddUnaryMethod(method, handler)` per operation, the handler a `static` lambda so it allocates nothing |
 
-Registration is `endpoints.MapSmokeServices()`, a generated extension over
-`MapConnectService(new …ServerBindings())` — the counterpart of `GrpcProxyGenerator`'s `AddXxx`. It maps
-one endpoint per method (§14.1) and returns a composite `IEndpointConventionBuilder`, so
-`.RequireAuthorization()` on the service applies to all of them while generated per-method metadata
-still attaches individually.
+Getting there was review pushing twice, and the second push found a test smell. `Greeter` had to be
+`internal` **only because the harness reached into it** for the service name and a method descriptor —
+a test affordance leaking into the design. Removing it made the checks *better*: the raw-HTTP checks now
+state the expected service name independently, where before they derived it from the implementation's
+own constant and so **could not have caught a wrong service name** — they would have agreed with
+whatever the bindings did.
+
+`endpoints.MapSmokeServices()` survives as a one-line alias for `BindServer`, because `app.MapXxx()` is
+what an ASP.NET Core consumer reaches for — the counterpart of `GrpcProxyGenerator`'s `AddXxx`. It adds
+no capability. Underneath, `MapConnectService` maps one endpoint per method (§14.1) and returns a
+composite `IEndpointConventionBuilder`, so `.RequireAuthorization()` on the service applies to all of
+them while generated per-method metadata still attaches individually.
 
 ### The vocabulary decision is still open, and the fixture does not pre-empt it
 

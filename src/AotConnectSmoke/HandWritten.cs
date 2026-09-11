@@ -46,6 +46,15 @@ internal sealed class SmokeServices
             "No build-time Connect proxy for " + typeof(TService).FullName + " in " + nameof(SmokeServices) + ".");
     }
 
+    /// <summary>Maps every service this container declares onto endpoint routing.</summary>
+    /// <remarks>
+    /// The counterpart of <see cref="CreateClient{TService}"/>, and with it the whole of the surface:
+    /// the method descriptors, the proxy and the bindings are all private, because nothing outside has
+    /// any business naming them. A consumer states a contract and gets two verbs.
+    /// </remarks>
+    public IEndpointConventionBuilder BindServer(IEndpointRouteBuilder endpoints)
+        => endpoints.MapConnectService(new GreeterServerBindings());
+
     /// <summary>
     /// The method descriptors for <see cref="IGreeter"/>, shared by the proxy and the bindings.
     /// </summary>
@@ -55,7 +64,7 @@ internal sealed class SmokeServices
     /// not working around anything: there is no MarshallerCache and no CanSerialize gate on this path
     /// (§18). It simply hoists the model lookup out of every request.
     /// </remarks>
-    internal static class Greeter
+    private static class Greeter
     {
         public const string ServiceName = "aotconnectsmoke.v1.Greeter";
 
@@ -101,11 +110,8 @@ internal sealed class SmokeServices
                 ConnectCallOptions.From(context.CallOptions), context.CancellationToken);
     }
 
-    /// <summary>
-    /// Server bindings: one typed delegate per method, no reflection. Internal rather than private
-    /// only because the registration extension below has to construct it.
-    /// </summary>
-    internal sealed class GreeterServerBindings : IConnectServiceBinder<GreeterService>
+    /// <summary>Server bindings: one typed delegate per method, no reflection.</summary>
+    private sealed class GreeterServerBindings : IConnectServiceBinder<GreeterService>
     {
         public void Bind(ConnectServiceBinderContext<GreeterService> context)
         {
@@ -123,10 +129,13 @@ internal sealed class SmokeServices
     }
 }
 
-/// <summary>Registers everything <see cref="SmokeServices"/> declares, as GrpcProxyGenerator's
-/// <c>AddXxx</c> extension does for gRPC.</summary>
+/// <summary>
+/// The idiomatic front door, as GrpcProxyGenerator's <c>AddXxx</c> extension is for gRPC: ASP.NET Core
+/// consumers reach for <c>app.MapXxx()</c>. It is a one-line alias for
+/// <see cref="SmokeServices.BindServer"/> and adds no capability of its own.
+/// </summary>
 internal static class SmokeServicesEndpointExtensions
 {
     internal static IEndpointConventionBuilder MapSmokeServices(this IEndpointRouteBuilder endpoints)
-        => endpoints.MapConnectService(new SmokeServices.GreeterServerBindings());
+        => SmokeServices.Instance.BindServer(endpoints);
 }

@@ -18,6 +18,11 @@ using ProtoBuf.Grpc;
 //   dotnet run --project src/AotConnectSmoke              # self-check
 //   dotnet run --project src/AotConnectSmoke -- --serve   # just the server, for an external client
 
+// The service name as it must appear on the wire, stated here independently of the implementation.
+// Deriving it from SmokeServices would make the raw-HTTP checks below agree with whatever the bindings
+// happen to do, including a wrong service name.
+const string ServiceOnTheWire = "aotconnectsmoke.v1.Greeter";
+
 var serveOnly = args.Contains("--serve");
 var port = serveOnly ? 8080 : 0;
 
@@ -46,7 +51,7 @@ if (serveOnly)
 {
     Console.WriteLine($"Connect server listening on {address}");
     Console.WriteLine($"  curl -sS --http1.1 -H 'Content-Type: application/proto' \\");
-    Console.WriteLine($"       --data-binary @req.bin {address}/{SmokeServices.Greeter.ServiceName}/SayHello | xxd");
+    Console.WriteLine($"       --data-binary @req.bin {address}/{ServiceOnTheWire}/SayHello | xxd");
     await app.WaitForShutdownAsync();
     return 0;
 }
@@ -66,9 +71,12 @@ await checks.Run("unary round-trip over HTTP/1.1", async () =>
 
 await checks.Run("trailing metadata arrives", async () =>
 {
-    // straight down the transport, since the contract's own signature carries no response metadata
-    var (reply, call) = await channel.UnaryWithMetadataAsync(
-        SmokeServices.Greeter.SayHello, new HelloRequest { Name = "trailers" });
+    // straight down the transport, since the contract's own signature carries no response metadata.
+    // The descriptor is built here rather than borrowed from SmokeServices: those are private, and a
+    // check that borrowed them could not notice the two disagreeing.
+    var sayHello = new ConnectMethod<HelloRequest, HelloReply>(
+        ConnectMethodType.Unary, ServiceOnTheWire, "SayHello");
+    var (reply, call) = await channel.UnaryWithMetadataAsync(sayHello, new HelloRequest { Name = "trailers" });
     Checks.Require(reply.Message is not null, "the call succeeded");
     var trailer = call.Trailers.FirstOrDefault(t => t.Key == "greeter-version");
     Checks.Require(trailer.Value == "1", $"greeter-version=1, was \"{trailer.Value}\"");
@@ -124,7 +132,7 @@ await checks.Run("leading metadata set on a CallContext reaches the service", as
 
 await checks.Run("an unknown codec is 415", async () =>
 {
-    using var request = new HttpRequestMessage(HttpMethod.Post, $"{address}/{SmokeServices.Greeter.ServiceName}/SayHello)".TrimEnd(')'))
+    using var request = new HttpRequestMessage(HttpMethod.Post, $"{address}/{ServiceOnTheWire}/SayHello)".TrimEnd(')'))
     {
         Content = new ByteArrayContent([]) { Headers = { ContentType = new MediaTypeHeaderValue("application/xml") } },
     };
@@ -139,7 +147,7 @@ await checks.Run("an unknown codec is 415", async () =>
 
 await checks.Run("a streaming content-type is declined, not mishandled", async () =>
 {
-    using var request = new HttpRequestMessage(HttpMethod.Post, $"{address}/{SmokeServices.Greeter.ServiceName}/SayHello")
+    using var request = new HttpRequestMessage(HttpMethod.Post, $"{address}/{ServiceOnTheWire}/SayHello")
     {
         Content = new ByteArrayContent([]) { Headers = { ContentType = new MediaTypeHeaderValue("application/connect+proto") } },
     };
@@ -154,7 +162,7 @@ await checks.Run("the wire form is a bare message, no envelope", async () =>
 {
     // HelloRequest { Name = "hi" } is 0a 02 68 69 - written by hand so the assertion is about the
     // protocol rather than about our own serializer agreeing with itself
-    using var request = new HttpRequestMessage(HttpMethod.Post, $"{address}/{SmokeServices.Greeter.ServiceName}/SayHello")
+    using var request = new HttpRequestMessage(HttpMethod.Post, $"{address}/{ServiceOnTheWire}/SayHello")
     {
         Content = new ByteArrayContent([0x0a, 0x02, 0x68, 0x69])
         {
