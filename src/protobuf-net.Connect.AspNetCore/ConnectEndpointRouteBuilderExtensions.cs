@@ -55,7 +55,7 @@ public static class ConnectEndpointRouteBuilderExtensions
         {
             // POST only for now; GET arrives with idempotency, which needs the query-parameter form
             var builder = endpoints
-                .MapPost(method.Path, CreateHandler<TService>(method.Invoker, options))
+                .MapPost(method.Path, CreateHandler(method, options))
                 .WithDisplayName(method.DisplayName);
 
             foreach (var metadata in method.Metadata) builder.WithMetadata(metadata);
@@ -65,7 +65,7 @@ public static class ConnectEndpointRouteBuilderExtensions
         return new CompositeEndpointConventionBuilder(builders);
     }
 
-    private static RequestDelegate CreateHandler<TService>(ConnectInvoker<TService> invoker, ConnectServerOptions options)
+    private static RequestDelegate CreateHandler<TService>(ConnectMethodRegistration<TService> method, ConnectServerOptions options)
         where TService : class
         => async http =>
         {
@@ -86,17 +86,19 @@ public static class ConnectEndpointRouteBuilderExtensions
                 var codec = SelectCodec(http, options);
 
                 var cancellationToken = http.RequestAborted;
-                if (TryGetTimeout(http, out var span))
+                TimeSpan? span = TryGetTimeout(http, out var parsed) ? parsed : null;
+                if (span is { } deadlineIn)
                 {
                     timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-                    timeout.CancelAfter(span);
+                    timeout.CancelAfter(deadlineIn);
                     cancellationToken = timeout.Token;
                 }
 
-                var callContext = new ConnectServerCallContext(http, cancellationToken);
+                var callContext = new ConnectServerCallContext(
+                    http, method.Path, ConnectServerCallContext.DeadlineFrom(span), cancellationToken);
                 var service = http.RequestServices.GetRequiredService<TService>();
 
-                await invoker.InvokeAsync(http, service, codec, callContext).ConfigureAwait(false);
+                await method.Invoker.InvokeAsync(http, service, codec, callContext).ConfigureAwait(false);
             }
             catch (ConnectException ex)
             {

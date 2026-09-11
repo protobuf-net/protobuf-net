@@ -38,8 +38,11 @@ Working notes for a possible Connect implementation, in the same spirit as `note
 > `src/AotConnectSmoke/HandWritten.cs` is the generator's target output, written by hand and ready to
 > review — that review is the next decision point, ahead of §14 stage 2 (the generator).
 >
-> **Still open, and deliberately not pre-empted:** where the contract vocabulary comes from (§9) —
-> the fixture carries no `[Service]` attribute and no `CallContext` for that reason.
+> **The vocabulary is decided — §17.** protobuf-net.Grpc's own `[Service]` and `CallContext`, so
+> **an existing protobuf-net.Grpc contract is served over Connect with no edit**. Cost: zero IL
+> warnings and 25 KB. It needed a `Grpc.Core.ServerCallContext` over `HttpContext`, and the runtime
+> libraries reference only `Grpc.Core.Api` - protobuf-net.Grpc appears in *generated* code, which is
+> what keeps the v2/v3 `TypeModel` collision in the consumer's project where it resolves normally.
 
 ## 1. What Connect is, and why it is interesting here
 
@@ -917,6 +920,104 @@ message and a context, which is protobuf-net.Grpc's shape whichever types end up
   both harnesses are in CI automatically with no registration.
 - **`ConnectException.RawMessage`** exists because `Message` synthesizes a `code (HTTP nnn): ` prefix for
   readability, and relaying an error must not accumulate prefixes. The server writes `RawMessage`.
+
+## 17. The contract vocabulary — decided, and what it cost
+
+**Decided: option (a) of §9 — the contract vocabulary is protobuf-net.Grpc's own.** `[Service]`,
+`[Operation]` and `CallContext`, the same types, not lookalikes. `src/AotConnectSmoke` now declares:
+
+```csharp
+[Service]
+public interface IGreeter
+{
+    Task<HelloReply> SayHelloAsync(HelloRequest request, CallContext context = default);
+}
+```
+
+and serves it over Connect unmodified. Nine checks pass, JIT and native.
+
+**The sell is the reason, and it is better than "it is a dependency":** *your existing protobuf-net.Grpc
+contracts work over Connect, with no edit*. One interface, both transports, no adapter. The client-side
+half of the same sell is §8.1's `ConnectCallInvoker`, which would give an existing protobuf-net.Grpc
+*client* the Connect protocol with no generator changes at all.
+
+Option (c) — lifting the vocabulary into protobuf-net.Core — is ruled out for a concrete reason:
+**protobuf-net.Grpc hard-depends on protobuf-net `2.4.8`**, so it would not see anything added to Core
+v4 without a version bump, which is the cross-repo release loop again. That may change with v4.
+
+### It is not just a package reference: `CallContext` has two constructors
+
+Read off the shipped package rather than assumed. `CallContext` can only be built two ways:
+
+| | |
+| --- | --- |
+| `CallContext(in Grpc.Core.CallOptions, CallContextFlags, object)` | client side |
+| `CallContext(object server, Grpc.Core.ServerCallContext)` | **server side** |
+
+plus implicit conversions from `CallOptions` and from `CancellationToken`. So sharing the vocabulary
+server-side means **implementing `Grpc.Core.ServerCallContext` over `HttpContext`** — twelve abstract
+members. grpc-dotnet does exactly this (`HttpContextServerCallContext`), so the shape is proven, and it
+pays for itself: `Metadata` for headers and trailers in a form consumers already know, and a `Status`
+the handler can set instead of throwing.
+
+`ConnectCode`'s ordinals were aligned with `Grpc.Core.StatusCode` back in §15 on general principle; that
+now pays off, because `StatusCore` → Connect error is a **cast**, not a table.
+
+Two members cannot be answered honestly and say so rather than inventing an answer:
+`CreatePropagationTokenCore` is Grpc.Core-native with no Connect equivalent, and `AuthContextCore`
+describes transport-level peer identity we do not collect — ASP.NET Core authentication lands on
+`HttpContext.User`, which is reachable through the exposed `HttpContext`.
+
+### The v2/v3 `TypeModel` collision, and where it belongs
+
+The first attempt put `protobuf-net.Grpc` on the runtime libraries and **failed to compile**:
+
+```
+error CS0433: The type 'TypeModel' exists in both 'protobuf-net.Core, Version=3.0.0.0' and
+              'protobuf-net, Version=2.4.0.0'
+```
+
+because protobuf-net v2 has `TypeModel` in the **`protobuf-net`** assembly and v3 moved it to
+**`protobuf-net.Core`**. This is the same class of trap `AGENTS.md` records for `AotDifferential`, from
+a different direction.
+
+The resolution is a better structure, and it is the one `GrpcProxyGenerator` already uses — its server
+bindings construct the `CallContext` themselves rather than the runtime doing it:
+
+| assembly | references | why |
+| --- | --- | --- |
+| `protobuf-net.Connect` | `protobuf-net.Core` only | unchanged; still no `RuntimeTypeModel` on the graph |
+| `protobuf-net.Connect.AspNetCore` | **`Grpc.Core.Api`** only | `ServerCallContext` lives there, and that package depends on nothing of ours |
+| *generated code* | `protobuf-net.Grpc` | `new CallContext(service, ctx)` server-side; `CallOptions` → `ConnectCallOptions` client-side |
+
+So the collision lives in the **consumer's** project, where a reference to protobuf-net v3 resolves it
+the ordinary way — exactly as `src/AotGrpcSmoke` already does. The runtime libraries stay clean.
+
+`ConnectCallContextBridge` in `src/AotConnectSmoke/HandWritten.cs` is the client-side half, emitted once
+per assembly: gRPC states an **absolute deadline**, Connect a **relative** `connect-timeout-ms`, and
+`Metadata`'s binary entries become base64 under their `-bin` name. Two of the nine checks exercise it in
+both directions.
+
+### What it cost: nothing measurable
+
+| | before | after |
+| --- | --- | --- |
+| IL warnings (`linux-x64`) | 33 | **33** |
+| native size | 15,405,832 | 15,430,856 (**+25 KB**) |
+| checks | 8/8 | 9/9 |
+
+Note the fixture now also references the **full `protobuf-net`** (v3, with `RuntimeTypeModel`) to resolve
+the collision, and that moved nothing either: ILC trims it entirely, because the generated path never
+calls it. Which is the point of the whole exercise stated from the other end.
+
+### Still not demonstrated
+
+The claim is currently *structural* — the contract uses the real types and is served over Connect. The
+convincing version is **hosting the same `GreeterService` over gRPC and Connect simultaneously** and
+showing both clients work. That needs `Grpc.AspNetCore.Server` + `protobuf-net.Grpc.AspNetCore` and a
+second Kestrel endpoint on HTTP/2, and it should be a **separate project**: protobuf-net.Grpc's
+reflective code-first path is what `GrpcProxyGenerator` exists to replace, so hosting it inside a
+`PublishAot` project would pollute the warning baseline that makes §16's numbers meaningful.
 
 ## 12. Unverified — check before committing to any of this
 

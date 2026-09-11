@@ -19,6 +19,13 @@
 
   <ItemGroup>
     <ProjectReference Include="../protobuf-net.Connect.AspNetCore/protobuf-net.Connect.AspNetCore.csproj" />
+    <!-- the contract vocabulary: [Service] and CallContext, so one interface serves gRPC and Connect.
+         The local protobuf-net (v3) must be referenced alongside it, because protobuf-net.Grpc
+         hard-depends on protobuf-net 2.4.8 where TypeModel lives in the protobuf-net assembly rather
+         than in protobuf-net.Core - without this the consumer gets CS0433 on TypeModel. The project
+         reference supersedes the package, exactly as in src/AotGrpcSmoke. -->
+    <ProjectReference Include="../protobuf-net/protobuf-net.csproj" />
+    <PackageReference Include="protobuf-net.Grpc" />
     <ProjectReference Include="../protobuf-net.BuildTools/protobuf-net.BuildTools.csproj"
                       OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>

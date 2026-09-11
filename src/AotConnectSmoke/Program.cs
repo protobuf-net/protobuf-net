@@ -6,8 +6,10 @@ using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using ProtoBuf.AotConnectSmoke;
+using Grpc.Core;
 using ProtoBuf.Connect;
 using ProtoBuf.Connect.AspNetCore;
+using ProtoBuf.Grpc;
 
 // Stage 1 of notes/connect/findings.md §14: a defined service, a working ASP.NET Core server, and a
 // working client, .NET to .NET. Exits non-zero on any mismatch, and is published with PublishAot so
@@ -95,15 +97,27 @@ await checks.Run("an unhandled exception is not leaked", async () =>
     return "internal, with no detail";
 });
 
-await checks.Run("connect-timeout-ms is honoured", async () =>
+await checks.Run("a gRPC deadline becomes connect-timeout-ms", async () =>
 {
+    // stated the protobuf-net.Grpc way - an absolute deadline on a CallOptions - and translated to the
+    // protocol's relative connect-timeout-ms by the generated bridge. A caller writes gRPC and gets Connect.
+    CallContext context = new CallOptions(deadline: DateTime.UtcNow.AddMilliseconds(300));
     var sw = Stopwatch.StartNew();
-    var ex = await Checks.Throws(() => client.DawdleAsync(
-        new HelloRequest { Name = "slow" }, new ConnectCallOptions { Timeout = TimeSpan.FromMilliseconds(300) }));
+    var ex = await Checks.Throws(() => client.DawdleAsync(new HelloRequest { Name = "slow" }, context));
     sw.Stop();
     Checks.Require(ex.Code == ConnectCode.DeadlineExceeded, $"deadline_exceeded, was {ex.Code.ToWireName()}");
     Checks.Require(sw.ElapsedMilliseconds < 5000, $"it gave up promptly, took {sw.ElapsedMilliseconds}ms");
     return $"{ex.Code.ToWireName()} after {sw.ElapsedMilliseconds}ms";
+});
+
+await checks.Run("leading metadata set on a CallContext reaches the service", async () =>
+{
+    // the other half of the bridge: gRPC Metadata out, Connect request headers on the wire
+    var metadata = new Metadata { { "x-caller", "grpc-shaped" } };
+    CallContext context = new CallOptions(headers: metadata);
+    var reply = await client.SayHelloAsync(new HelloRequest { Name = "metadata" }, context);
+    Checks.Require(reply.Message == "hello metadata", $"the call succeeded, was \"{reply.Message}\"");
+    return "x-caller travelled as an ordinary request header";
 });
 
 await checks.Run("an unknown codec is 415", async () =>

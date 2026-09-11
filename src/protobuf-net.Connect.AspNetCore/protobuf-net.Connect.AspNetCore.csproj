@@ -11,6 +11,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Grpc.Core.Api ONLY, not protobuf-net.Grpc. ServerCallContext lives here, and this package
+         depends on nothing of ours - whereas protobuf-net.Grpc hard-depends on protobuf-net 2.4.8,
+         where TypeModel is in the protobuf-net assembly rather than protobuf-net.Core, so referencing
+         it beside protobuf-net.Core v3 is CS0433 on TypeModel itself. Constructing the CallContext is
+         the *generated* code's job, exactly as in GrpcProxyGenerator's output, which keeps that
+         collision in the consumer's project where referencing protobuf-net v3 resolves it normally.
+         See notes/connect/findings.md §17. -->
+    <PackageReference Include="Grpc.Core.Api" />
     <!-- the ASP.NET Core shared framework, not Kestrel specifically: binding to HttpContext and
          endpoint routing means Kestrel, HTTP.sys, IIS and TestServer all work from one implementation,
          and none of them is named here -->

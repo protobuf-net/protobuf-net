@@ -12,6 +12,12 @@ namespace ProtoBuf.Connect.AspNetCore;
 /// other four method shapes be added by adding delegate types rather than by growing a second pipeline.
 /// The alternative - a generated handler that took a request and returned a response - is unreachable
 /// from any streaming shape.
+/// <para>
+/// The context is a <see cref="ConnectServerCallContext"/>, i.e. a <c>Grpc.Core.ServerCallContext</c>,
+/// rather than protobuf-net.Grpc's <c>CallContext</c>. Constructing that is the generated code's job -
+/// one line, exactly as in <c>GrpcProxyGenerator</c>'s output - which keeps protobuf-net.Grpc out of
+/// this assembly and with it the v2/v3 <c>TypeModel</c> collision.
+/// </para>
 /// </remarks>
 public delegate Task<TResponse> ConnectUnaryHandler<in TService, in TRequest, TResponse>(
     TService service, TRequest request, ConnectServerCallContext context);

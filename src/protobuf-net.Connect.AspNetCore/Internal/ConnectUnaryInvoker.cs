@@ -41,6 +41,15 @@ internal sealed class ConnectUnaryInvoker<TService, TRequest, TResponse> : Conne
     {
         var request = await ReadAsync(http.Request.BodyReader, codec, context.CancellationToken).ConfigureAwait(false);
         var response = await _handler(service, request, context).ConfigureAwait(false);
+
+        // a handler may report failure by setting ServerCallContext.Status rather than by throwing,
+        // which is ordinary gRPC practice and therefore ordinary practice in a shared contract
+        if (context.GetReportedFailure() is { } reported) throw reported;
+
+        // before the body: the response commits on first write, and for a unary call trailing metadata
+        // is a `trailer-` prefixed header - which is how the protocol avoids HTTP trailers, and so HTTP/2
+        context.FlushTrailers();
+
         await WriteAsync(http.Response, codec, response, context.CancellationToken).ConfigureAwait(false);
     }
 
