@@ -5896,15 +5896,56 @@ property and expands a traversal project into its `ProjectReference`s. Read the 
 anything here; two things in it matter to us:
 
 - **the fix is milestoned `11.0-rc1`** and was backported only to `release/11.0.1xx-preview7`. There
-  is **no .NET 10 backport**, and this machine and CI are both on the 10.0.3xx band. So on our SDK
-  the gap is permanent;
+  is **no .NET 10 backport**, and CI is on the 10.0.3xx band. So on that SDK the gap is permanent;
 - the root cause is structural rather than an oversight, which is why no Traversal-side fix exists:
   MTP test apps are launched as child processes with no MSBuild target driving them, while a
   traversal project works *only* by forwarding known targets to its references. The thread records
   an attempt to fix it in `Microsoft.Build.Traversal` and why it cannot be — the only universally
   available target is `VSTest`, which MTP projects do not define.
 
-**So the answer is `-t:Test`, and it is a one-line CI change rather than a container swap.** Probed
+#### The fix DOES work — but only once `IsTraversal` is set, and ours never was
+
+Verified against **SDK 11.0.100-rc.1** in a throwaway worktree (Marc had it installed; `global.json`
+pins 10.x with `allowPrerelease: false`, which is why `dotnet --version` reads 10.0.302 despite it).
+
+The first run on SDK 11 **still said "No test projects were found"** — identical to SDK 10, which
+reads exactly like the fix never shipped. It had; the trap is one line in the Traversal SDK:
+
+```xml
+<!-- Microsoft.Build.Traversal 2.0.19, Sdk.props -->
+<TraversalProjectNames Condition=" '$(TraversalProjectNames)' == '' ">dirs.proj</TraversalProjectNames>
+<IsTraversal Condition=" '$(IsTraversal)' == '' And $(TraversalProjectNames.IndexOf($(MSBuildProjectFile), ...)) >= 0 ">true</IsTraversal>
+```
+
+`IsTraversal` is set **only for a file literally named `dirs.proj`**, and ours is `Build.csproj` — so
+the property is empty, and the SDK-11 fix, which keys on it, never fires. **The symptom of "not
+arranged for" and "not fixed" is the same message**, which is the thing to remember here.
+
+`<IsTraversal>true</IsTraversal>` is now in `Build.csproj` with a comment saying why. It is **inert on
+SDK 10** — nothing in Traversal 2.0.19 reads the property back, and a full Debug build is
+byte-for-byte the same 275 warnings / 0 errors — so it costs nothing today and the whole problem
+disappears when CI's SDK moves to 11. With it set, on SDK 11:
+
+```
+$ dotnet test Build.csproj --no-build --framework net8.0
+  total: 5504   failed: 7 (B53)   succeeded: 5473   skipped: 24
+```
+
+— the **unchanged CI command**, discovering exactly the traversal's set: eight test projects, with
+`BuildToolsSmokeTests` and `VBTest` correctly absent, which is the semantics the container-swap
+options could not preserve. (`--framework net8.0` is a Linux necessity, not part of the answer: SDK 11
+removed the mono launch target, so a net472 leg is `NETSDK1243` off Windows.)
+
+**So there are two routes, and which one applies is decided by the SDK, not by us:**
+
+| | |
+| --- | --- |
+| **SDK 10** (CI today) | `dotnet build Build.csproj -t:Test -p:SkipNonexistentTargets=True` |
+| **SDK 11** | `dotnet test Build.csproj --no-build` — unchanged, now that `IsTraversal` is set |
+
+#### The SDK 10 route: `-t:Test`
+
+Probed
 rather than taken from the thread:
 
 ```sh

@@ -99,10 +99,11 @@ raised shipped floor; a `*.reference.cs` diff owed on the next Windows `AotRefGe
   "what you get today" in `docs/aot.md` is **3.4.21** now, so that column has aged and moving it is a
   decision about the benchmark;
 - **xunit.v3 4.0 — gap B54.** It works, with one line in `global.json` and a one-line CI change.
-  MTP cannot discover a traversal project — that is **dotnet/sdk#51316**, fixed for **.NET 11 only**,
-  with no 10.x backport — so CI moves from `dotnet test Build.csproj` to
-  `dotnet build Build.csproj -t:Test -p:SkipNonexistentTargets=True`, which keeps the traversal and
-  its auto-globbing. A replacement `.slnx` was ruled out: SLNX has no wildcards.
+  MTP cannot discover a traversal project — that is **dotnet/sdk#51316**, fixed for **.NET 11 only**.
+  On SDK 10, CI moves to `dotnet build Build.csproj -t:Test -p:SkipNonexistentTargets=True`; on
+  SDK 11 the CI command does not change at all, now that `Build.csproj` declares `IsTraversal`
+  (the SDK sets it only for a file named `dirs.proj`, which is why the fix appeared not to work).
+  A replacement `.slnx` was ruled out: SLNX has no wildcards.
 
 **Closed since**, so do not go looking for work in them: **#1332** (B51's Reflection stage and
 B52 — the branch this handover previously said was in flight), **#1338/#1339** (a map's nested
