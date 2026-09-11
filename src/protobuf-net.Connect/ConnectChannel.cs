@@ -439,9 +439,13 @@ namespace ProtoBuf.Connect
             var isJson = string.Equals(
                 response.Content.Headers.ContentType?.MediaType, "application/json", StringComparison.OrdinalIgnoreCase);
 
-            if (isJson && ConnectErrorReader.TryParse(payload, out var code, out var message, out var details))
+            if (isJson && ConnectErrorReader.TryParse(payload, out var code, out var message, out var details, out var hasCode))
             {
-                return new ConnectException(code, message, status, details)
+                // an error object that did not name a usable code still owns its message and details;
+                // only the code comes from the status instead
+                return new ConnectException(
+                    hasCode ? code : ConnectCodes.FromHttpStatus(status),
+                    message, status, details, codeWasInferred: !hasCode)
                     { Headers = metadata.Headers, Trailers = metadata.Trailers };
             }
 

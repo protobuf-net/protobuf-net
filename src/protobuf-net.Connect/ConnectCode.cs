@@ -81,6 +81,24 @@ namespace ProtoBuf.Connect
         /// Parses a wire name; an unrecognised name is <see cref="ConnectCode.Unknown"/>, since a future
         /// revision of the protocol may add codes and a client should not fail to report the error at all.
         /// </summary>
+        /// <summary>
+        /// Maps a wire name, reporting whether it was recognised at all.
+        /// </summary>
+        /// <remarks>
+        /// The distinction matters, and <see cref="FromWireName"/> cannot express it: an unrecognised
+        /// name and the literal <c>"unknown"</c> both map to <see cref="ConnectCode.Unknown"/>, but the
+        /// protocol treats them differently - a code it does not recognise is no code at all, and the
+        /// caller falls back to inferring one from the HTTP status. The conformance suite pins this
+        /// ("error/unrecognized-code" expects the status-derived code, not <c>unknown</c>).
+        /// </remarks>
+        public static bool TryFromWireName(string? name, out ConnectCode code)
+        {
+            code = FromWireName(name);
+
+            // every other name maps to Unknown by fallback, so only the literal spelling counts
+            return code != ConnectCode.Unknown || name == "unknown";
+        }
+
         public static ConnectCode FromWireName(string? name) => name switch
         {
             "canceled" => ConnectCode.Cancelled,

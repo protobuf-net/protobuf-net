@@ -46,10 +46,18 @@ namespace ProtoBuf.Connect.Internal
                         if (!reader.Read()) return;
                         if (reader.TokenType != JsonTokenType.StartObject) { reader.Skip(); continue; }
 
-                        if (ConnectErrorReader.TryParseObject(ref reader, out var code, out var message, out var details))
+                        if (ConnectErrorReader.TryParseObject(
+                            ref reader, out var code, out var message, out var details, out var hasCode))
                         {
-                            // no HTTP status: the response said 200 long before this arrived
-                            error = new ConnectException(code, message, httpStatus: null, details);
+                            // The PRESENCE of an error object is the failure; the code merely describes
+                            // it. A terminator carrying {"error":{}} or a code we do not recognise is
+                            // still a failed call, and reporting success there hands the caller a stream
+                            // that simply stopped - which the conformance suite catches as "expecting an
+                            // error but received none". There is no HTTP status to infer from here: the
+                            // response said 200 long before this arrived.
+                            error = new ConnectException(
+                                hasCode ? code : ConnectCode.Unknown, message, httpStatus: null, details,
+                                codeWasInferred: !hasCode);
                         }
                     }
                     else if (reader.ValueTextEquals("metadata"u8))

@@ -16,20 +16,33 @@ namespace ProtoBuf.Connect.Internal
     internal static class ConnectErrorReader
     {
         /// <summary>
-        /// Parses <c>{"code":"...","message":"...","details":[...]}</c>. Returns <c>false</c> when the
-        /// payload is not a usable error object, which the caller must handle by inferring from the HTTP
-        /// status instead - the protocol names several such shapes explicitly invalid, including
-        /// <c>{}</c> and <c>{"code": null}</c>.
+        /// Parses <c>{"code":"...","message":"...","details":[...]}</c>.
         /// </summary>
+        /// <remarks>
+        /// <paramref name="hasCode"/> is separate from the return value on purpose. The protocol names
+        /// several shapes whose <em>code</em> is unusable - <c>{}</c>, <c>{"code": null}</c>, a code it
+        /// does not recognise - but such a body is still an error object, and its <c>message</c> and
+        /// <c>details</c> are still the caller's. Reporting "not parseable" for those threw the message
+        /// away and reported the whole raw body in its place, which is what the conformance suite caught
+        /// ("expected message 'oops'", against a message of <c>{ "message": "oops" }</c>).
+        /// <para>
+        /// So: the return value says whether this was an error object at all; <paramref name="hasCode"/>
+        /// says whether it named its own code, and when it did not, the caller infers one - from the HTTP
+        /// status for a unary body, or <see cref="ConnectCode.Unknown"/> in a terminating envelope, which
+        /// has no status to fall back on.
+        /// </para>
+        /// </remarks>
         public static bool TryParse(
             ReadOnlySpan<byte> utf8,
             out ConnectCode code,
             out string? message,
-            out IReadOnlyList<ConnectErrorDetail> details)
+            out IReadOnlyList<ConnectErrorDetail> details,
+            out bool hasCode)
         {
             code = ConnectCode.Unknown;
             message = null;
             details = Array.Empty<ConnectErrorDetail>();
+            hasCode = false;
 
             try
             {
@@ -40,7 +53,7 @@ namespace ProtoBuf.Connect.Internal
                 });
 
                 if (!reader.Read() || reader.TokenType != JsonTokenType.StartObject) return false;
-                return TryParseObject(ref reader, out code, out message, out details);
+                return TryParseObject(ref reader, out code, out message, out details, out hasCode);
             }
             catch (JsonException)
             {
@@ -59,13 +72,13 @@ namespace ProtoBuf.Connect.Internal
             ref Utf8JsonReader reader,
             out ConnectCode code,
             out string? message,
-            out IReadOnlyList<ConnectErrorDetail> details)
+            out IReadOnlyList<ConnectErrorDetail> details,
+            out bool hasCode)
         {
             code = ConnectCode.Unknown;
             message = null;
             details = Array.Empty<ConnectErrorDetail>();
-
-            var haveCode = false;
+            hasCode = false;
             List<ConnectErrorDetail>? collected = null;
 
             try
@@ -75,9 +88,17 @@ namespace ProtoBuf.Connect.Internal
                     if (reader.ValueTextEquals("code"u8))
                     {
                         if (!reader.Read()) return false;
-                        if (reader.TokenType != JsonTokenType.String) return false; // {"code": null} is invalid
-                        code = ConnectCodes.FromWireName(reader.GetString());
-                        haveCode = true;
+
+                        // {"code": null}, or a name from a protocol revision we do not know, leaves the
+                        // code unusable - but the object is still an error, so parsing continues
+                        if (reader.TokenType == JsonTokenType.String)
+                        {
+                            hasCode = ConnectCodes.TryFromWireName(reader.GetString(), out code);
+                        }
+                        else
+                        {
+                            reader.Skip();
+                        }
                     }
                     else if (reader.ValueTextEquals("message"u8))
                     {
@@ -103,7 +124,6 @@ namespace ProtoBuf.Connect.Internal
                 return false;
             }
 
-            if (!haveCode) return false;
             if (collected is not null) details = collected;
             return true;
         }

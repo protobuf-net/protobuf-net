@@ -158,7 +158,7 @@ internal static class ConformanceClient
                 while (await call.ResponseStream.MoveNext(CancellationToken.None).ConfigureAwait(false))
                 {
                     Record(result, call.ResponseStream.Current.Payload);
-                    if (ShouldCancelAfter(request, result.Payloads.Count)) { cancellation.Cancel(); break; }
+                    if (ShouldCancelAfter(request, result.Payloads.Count)) throw Cancel(cancellation);
                 }
             }).ConfigureAwait(false);
     }
@@ -171,8 +171,8 @@ internal static class ConformanceClient
         await CaptureAsync(call.ResponseHeadersAsync, () => call.GetStatus(), () => call.GetTrailers(), result,
             async () =>
             {
-                var sent = await SendAllAsync(call.RequestStream, request, result, cancellation).ConfigureAwait(false);
-                if (sent) Record(result, (await call.ResponseAsync.ConfigureAwait(false)).Payload);
+                await SendAllAsync(call.RequestStream, request, result, cancellation).ConfigureAwait(false);
+                Record(result, (await call.ResponseAsync.ConfigureAwait(false)).Payload);
             }).ConfigureAwait(false);
     }
 
@@ -198,20 +198,20 @@ internal static class ConformanceClient
 
                         if (!await call.ResponseStream.MoveNext(CancellationToken.None).ConfigureAwait(false)) break;
                         Record(result, call.ResponseStream.Current.Payload);
-                        if (ShouldCancelAfter(request, result.Payloads.Count)) { cancellation.Cancel(); return; }
+                        if (ShouldCancelAfter(request, result.Payloads.Count)) throw Cancel(cancellation);
                     }
 
                     await call.RequestStream.CompleteAsync().ConfigureAwait(false);
                 }
-                else if (!await SendAllAsync(call.RequestStream, request, result, cancellation).ConfigureAwait(false))
+                else
                 {
-                    return;
+                    await SendAllAsync(call.RequestStream, request, result, cancellation).ConfigureAwait(false);
                 }
 
                 while (await call.ResponseStream.MoveNext(CancellationToken.None).ConfigureAwait(false))
                 {
                     Record(result, call.ResponseStream.Current.Payload);
-                    if (ShouldCancelAfter(request, result.Payloads.Count)) { cancellation.Cancel(); return; }
+                    if (ShouldCancelAfter(request, result.Payloads.Count)) throw Cancel(cancellation);
                 }
             }).ConfigureAwait(false);
     }
@@ -221,8 +221,7 @@ internal static class ConformanceClient
     /// <summary>
     /// Sends every request message, honouring the case's cancellation timing.
     /// </summary>
-    /// <returns><c>false</c> when the case asked to be cancelled before the stream was closed.</returns>
-    private static async Task<bool> SendAllAsync<T>(
+    private static async Task SendAllAsync<T>(
         IClientStreamWriter<T> stream, ClientCompatRequest request, ClientResponseResult result,
         CancellationTokenSource cancellation) where T : IMessage, new()
     {
@@ -234,8 +233,7 @@ internal static class ConformanceClient
 
         if (request.Cancel?.CancelTimingCase == ClientCompatRequest.Types.Cancel.CancelTimingOneofCase.BeforeCloseSend)
         {
-            cancellation.Cancel();
-            return false;
+            throw Cancel(cancellation);
         }
 
         await stream.CompleteAsync().ConfigureAwait(false);
@@ -245,8 +243,21 @@ internal static class ConformanceClient
             await Task.Delay((int)request.Cancel.AfterCloseSendMs).ConfigureAwait(false);
             cancellation.Cancel();
         }
+    }
 
-        return true;
+    /// <summary>
+    /// Cancels the call and reports it as a cancellation.
+    /// </summary>
+    /// <remarks>
+    /// Thrown rather than returned, so that a deliberate cancellation takes the same path as one raised
+    /// by the transport and is recorded in exactly one place. Simply breaking out of a read loop looks
+    /// to the suite like a call that ended successfully, which is what it means by "expecting an error
+    /// but received none".
+    /// </remarks>
+    private static OperationCanceledException Cancel(CancellationTokenSource cancellation)
+    {
+        cancellation.Cancel();
+        return new OperationCanceledException(cancellation.Token);
     }
 
     private static bool ShouldCancelAfter(ClientCompatRequest request, int received)
