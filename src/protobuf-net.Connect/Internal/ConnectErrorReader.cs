@@ -43,7 +43,36 @@ namespace ProtoBuf.Connect.Internal
                 });
 
                 if (!reader.Read() || reader.TokenType != JsonTokenType.StartObject) return false;
+                return TryParseObject(ref reader, out code, out message, out details);
+            }
+            catch (JsonException)
+            {
+                return false;
+            }
+        }
 
+        /// <summary>
+        /// Parses the error object itself, with the reader already positioned on its <c>StartObject</c>.
+        /// </summary>
+        /// <remarks>
+        /// Split out because the same object appears in two places: alone in a unary error body, and
+        /// nested under <c>error</c> in a stream's terminating message. One parse, two entry points.
+        /// </remarks>
+        public static bool TryParseObject(
+            ref Utf8JsonReader reader,
+            out ConnectCode code,
+            out string? message,
+            out IReadOnlyList<ConnectErrorDetail> details)
+        {
+            code = ConnectCode.Unknown;
+            message = null;
+            details = Array.Empty<ConnectErrorDetail>();
+
+            var haveCode = false;
+            List<ConnectErrorDetail>? collected = null;
+
+            try
+            {
                 while (reader.Read() && reader.TokenType == JsonTokenType.PropertyName)
                 {
                     if (reader.ValueTextEquals("code"u8))

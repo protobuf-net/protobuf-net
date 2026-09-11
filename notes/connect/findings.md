@@ -1313,6 +1313,54 @@ shapes need anyway.
 the cost of a non-default URL. **We do not support it today** — `ConnectMethod` hard-codes
 `"/" + service + "/" + method` — and it is worth adding regardless of this question.
 
+## 21. Streaming framing, probed against connect-go
+
+Before building it. `demo.connectrpc.com`'s Eliza has a server-streaming `Introduce`, so the wire form
+is observable rather than inferred. Request — an **enveloped** `IntroduceRequest { name = "hi" }` — over
+forced HTTP/1.1:
+
+```
+$ printf '\x00\x00\x00\x00\x04\x0a\x02hi' > intro.bin
+$ curl --http1.1 -H "Content-Type: application/connect+proto" --data-binary @intro.bin \
+       https://demo.connectrpc.com/connectrpc.eliza.v1.ElizaService/Introduce | xxd
+
+00 00000013  0a 11 "Hi hi. I'm Eliza."           <- flags 0, 19 bytes
+00 0000003e  ...                                  <- flags 0, 62 bytes
+00 00000061  ...                                  <- flags 0, 97 bytes
+00 0000001c  0a 1a "How are you feeling today?"   <- flags 0, 28 bytes
+02 00000002  7b 7d                                <- flags 2 = END OF STREAM, payload {}
+```
+
+Confirmed byte for byte, not read off the spec:
+
+- **the request is enveloped too.** So *all three* streaming shapes use identical framing in **both**
+  directions and differ only in cardinality — 1×N for server-streaming, N×1 for client-streaming, N×N
+  for duplex. This is the fact the build order turns on;
+- `EndStreamResponse` is `{}` on clean success, in an envelope whose flag byte is `0x02`;
+- HTTP/1.1 throughout, `200`, and the response carries `connect-accept-encoding` — note the
+  streaming-specific header name, not `accept-encoding`.
+
+### Which settles the build order, and not for the obvious reason
+
+Since the framing is identical across the three shapes, **duplex-first buys no framing coverage that
+server-streaming does not already give**. What it adds is two risks *orthogonal to the protocol* — HTTP/2
+hosting (and the smoke test's HTTP/1.1 plaintext endpoint is load-bearing: it is the demonstration that
+Connect escapes gRPC's constraint) and a duplex `HttpContent`, which is §12's open item. A failure would
+have three suspects.
+
+Ordered by risk introduced per step, each adding exactly one new thing:
+
+| step | what is new | HTTP |
+| --- | --- | --- |
+| **server-streaming** | envelope read+write, `EndStreamResponse`, trailers in the terminator, unknown `Content-Length` on the response, the 200-with-error path | 1.1 |
+| **client-streaming** | an incremental request body — chunked, no `Content-Length` — and `IAsyncEnumerable` in | 1.1 |
+| **duplex** | HTTP/2 and true interleaving; **nothing new in the protocol** | 2 |
+
+Server-streaming alone exercises **every** §14.1 constraint, which is what this stage is for: falsifying
+the design, not adding features. Worth spiking the duplex-`HttpClient` question separately and early
+though — it is orthogonal to Connect, answerable in ~30 lines against an echo endpoint, and better known
+now than after client-streaming lands.
+
 ## 12. Unverified — check before committing to any of this
 
 Everything below is assumption or inference, not measurement:

@@ -29,6 +29,9 @@ var mismatched = new ConnectMethod<WireTypeMismatchRequest, SayResponse>(Connect
 var rawChannel = new ConnectChannel(http, new RawCodec(), new Uri(BaseAddress));
 var rawSay = new ConnectMethod<byte[], SayResponse>(ConnectMethodType.Unary, Service, "Say");
 
+var introduce = new ConnectMethod<IntroduceRequest, IntroduceResponse>(
+    ConnectMethodType.ServerStreaming, Service, "Introduce");
+
 var probe = new Probe();
 
 await probe.Run("unary round-trip, binary codec", async () =>
@@ -84,6 +87,40 @@ await probe.Run("server error object is parsed", async () =>
     Probe.Require(!ex.CodeWasInferred, "the code came from the error object rather than being inferred");
     Probe.Require(ex.Message.Contains(':'), "a server-supplied message survived");
     return ex.Message;
+});
+
+await probe.Run("server-streaming against connect-go", async () =>
+{
+    // the sharp interop check: our envelope reader, our EndStreamResponse parse, and our framing of the
+    // request, all against a reference implementation rather than against ourselves
+    var stream = await channel.ServerStreamingAsync(introduce, new IntroduceRequest { Name = "protobuf-net" });
+    var sentences = new List<string>();
+    await foreach (var response in stream)
+    {
+        Probe.Require(!string.IsNullOrWhiteSpace(response.Sentence), "each message carries a sentence");
+        sentences.Add(response.Sentence!);
+    }
+
+    Probe.Require(sentences.Count >= 2, $"several messages, got {sentences.Count}");
+    Probe.Require(sentences[0].Contains("protobuf-net"), $"the first echoes the name: \"{sentences[0]}\"");
+    // reaching here at all means the terminating envelope was seen: the enumerator throws if the
+    // stream ends without one, so a clean finish is itself the assertion
+    return $"{sentences.Count} messages, {stream.Trailers.Count} trailer(s), terminator seen";
+});
+
+await probe.Run("a stream cannot be enumerated twice", async () =>
+{
+    var stream = await channel.ServerStreamingAsync(introduce, new IntroduceRequest { Name = "once" });
+    await foreach (var _ in stream) { }
+    try
+    {
+        await foreach (var _ in stream) { }
+    }
+    catch (InvalidOperationException ex)
+    {
+        return ex.Message.Length > 0 ? "refused, as a network stream must" : "refused";
+    }
+    throw new InvalidOperationException("expected the second enumeration to be refused");
 });
 
 await probe.Run("an unrouted path is inferred, not parsed", async () =>

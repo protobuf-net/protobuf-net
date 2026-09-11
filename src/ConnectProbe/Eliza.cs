@@ -42,10 +42,27 @@ public class WireTypeMismatchRequest
     public long Sentence { get; set; }
 }
 
+// server-streaming: rpc Introduce(IntroduceRequest) returns (stream IntroduceResponse)
+[ProtoContract]
+public class IntroduceRequest
+{
+    [ProtoMember(1)]
+    public string? Name { get; set; }
+}
+
+[ProtoContract]
+public class IntroduceResponse
+{
+    [ProtoMember(1)]
+    public string? Sentence { get; set; }
+}
+
 [ProtoModel]
 [ProtoSerializable(typeof(SayRequest))]
 [ProtoSerializable(typeof(SayResponse))]
 [ProtoSerializable(typeof(WireTypeMismatchRequest))]
+[ProtoSerializable(typeof(IntroduceRequest))]
+[ProtoSerializable(typeof(IntroduceResponse))]
 public partial class ElizaModel : TypeModel
 {
 }

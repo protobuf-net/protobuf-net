@@ -1,6 +1,7 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Globalization;
 using System.Net.Http;
 using System.Threading;
@@ -91,20 +92,7 @@ namespace ProtoBuf.Connect
                 Content = new MeasuredCodecContent<TRequest>(
                     Codec, request, Codec.ContentTypeFor(method.Type), method.RequestSerializer),
             };
-            httpRequest.Headers.TryAddWithoutValidation(ProtocolVersionHeader, ProtocolVersion);
-
-            if (options?.Timeout is { } timeout)
-            {
-                var ms = (long)Math.Ceiling(timeout.TotalMilliseconds);
-                if (ms < 0) throw new ArgumentOutOfRangeException(nameof(options), "The timeout cannot be negative.");
-                httpRequest.Headers.TryAddWithoutValidation(
-                    TimeoutHeader, ms.ToString(CultureInfo.InvariantCulture));
-            }
-
-            if (options?.Headers is { } headers)
-            {
-                foreach (var header in headers) httpRequest.Headers.TryAddWithoutValidation(header.Key, header.Value);
-            }
+            ApplyOptions(httpRequest, options);
 
             // ResponseHeadersRead throughout, not just where it is needed: it is what a streaming shape
             // requires, and using it for unary too keeps one path rather than two
@@ -135,6 +123,91 @@ namespace ProtoBuf.Connect
             }
 
             return (value, ReadMetadata(httpResponse));
+        }
+
+        /// <summary>
+        /// Invokes a server-streaming RPC. Nothing is sent until the result is enumerated.
+        /// </summary>
+        /// <remarks>
+        /// Deferred, which is what an <see cref="IAsyncEnumerable{T}"/> implies and what a contract's
+        /// signature needs, since it returns synchronously. Use
+        /// <see cref="ServerStreamingAsync{TRequest, TResponse}"/> where the response metadata matters.
+        /// </remarks>
+        public async IAsyncEnumerable<TResponse> ServerStreaming<TRequest, TResponse>(
+            ConnectMethod<TRequest, TResponse> method,
+            TRequest request,
+            ConnectCallOptions? options = null,
+            [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        {
+            var stream = await ServerStreamingAsync(method, request, options, cancellationToken).ConfigureAwait(false);
+            await foreach (var response in stream.WithCancellation(cancellationToken).ConfigureAwait(false))
+            {
+                yield return response;
+            }
+        }
+
+        /// <summary>
+        /// Starts a server-streaming RPC, returning once the response headers have arrived.
+        /// </summary>
+        public async Task<ConnectServerStream<TResponse>> ServerStreamingAsync<TRequest, TResponse>(
+            ConnectMethod<TRequest, TResponse> method,
+            TRequest request,
+            ConnectCallOptions? options = null,
+            CancellationToken cancellationToken = default)
+        {
+            if (method is null) throw new ArgumentNullException(nameof(method));
+            if (method.Type != ConnectMethodType.ServerStreaming)
+            {
+                throw new NotSupportedException(
+                    $"'{method}' is {method.Type}; this call shape is for {nameof(ConnectMethodType.ServerStreaming)}.");
+            }
+
+            using var httpRequest = new HttpRequestMessage(HttpMethod.Post, new Uri(_baseAddress!, method.Path))
+            {
+                // one enveloped message: a streaming RPC frames both directions, whatever the cardinality
+                Content = new EnvelopedCodecContent<TRequest>(
+                    Codec, request, Codec.ContentTypeFor(method.Type), method.RequestSerializer),
+            };
+            ApplyOptions(httpRequest, options);
+
+            var httpResponse = await _http
+                .SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
+                .ConfigureAwait(false);
+
+            // a stream that fails *after* it starts carries 200 and says so in its terminating message;
+            // a non-200 here means it never started, and reads exactly like a failed unary call
+            if (!httpResponse.IsSuccessStatusCode)
+            {
+                try
+                {
+                    throw await ReadErrorAsync(httpResponse, cancellationToken).ConfigureAwait(false);
+                }
+                finally
+                {
+                    httpResponse.Dispose();
+                }
+            }
+
+            var metadata = ReadMetadata(httpResponse);
+            return new ConnectServerStream<TResponse>(
+                httpResponse, Codec, method.ResponseSerializer, method.ToString(), metadata.Headers);
+        }
+
+        private static void ApplyOptions(HttpRequestMessage request, ConnectCallOptions? options)
+        {
+            request.Headers.TryAddWithoutValidation(ProtocolVersionHeader, ProtocolVersion);
+
+            if (options?.Timeout is { } timeout)
+            {
+                var ms = (long)Math.Ceiling(timeout.TotalMilliseconds);
+                if (ms < 0) throw new ArgumentOutOfRangeException(nameof(options), "The timeout cannot be negative.");
+                request.Headers.TryAddWithoutValidation(TimeoutHeader, ms.ToString(CultureInfo.InvariantCulture));
+            }
+
+            if (options?.Headers is { } headers)
+            {
+                foreach (var header in headers) request.Headers.TryAddWithoutValidation(header.Key, header.Value);
+            }
         }
 
         private static ConnectCallResult ReadMetadata(HttpResponseMessage response)
