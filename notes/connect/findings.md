@@ -25,9 +25,12 @@ Working notes for a possible Connect implementation, in the same spirit as `note
 > **HTTP/1.1**, with the bare-body request/response and the JSON error shape confirmed by hexdump.
 > The protocol reading in §2 is correct.
 >
-> **Next step if this proceeds: §14, the staged MVP path.** Stage 0 is ~50 lines of `HttpClient`
-> against the Eliza demo service — no generator, no abstractions — and it de-risks everything
-> downstream for a day's work.
+> **Stage 0 is done — §15.** `src/protobuf-net.Connect` + `src/ConnectProbe` read **7/7** against
+> `demo.connectrpc.com`, as a JIT run *and* as a native AOT binary (7.3 MB, 33 IL warnings, **none of
+> them ours**). Code-first protobuf-net bytes interoperate with connect-go with no `.proto` anywhere.
+>
+> **Next: §14 stage 1** — the hand-written target output, client and ASP.NET Core server, .NET to .NET,
+> then verified against an external Connect *client*.
 
 ## 1. What Connect is, and why it is interesting here
 
@@ -714,6 +717,86 @@ them down before the code exists rather than after.
 - **The `ConnectCallInvoker`** (§8.1). Still high-value and still cheap, but it is a *parallel*
   deliverable for existing protobuf-net.Grpc consumers, not a step on this path — an MVP with two
   client implementations is an MVP with one too many.
+
+## 15. Stage 0 — built and measured, 2026-09-11
+
+`src/protobuf-net.Connect` (the client) and `src/ConnectProbe` (the harness) exist, and the probe reads
+**7 passed, 0 failed** against `demo.connectrpc.com` — both as a JIT run and as a **native AOT binary**.
+
+```
+dotnet run --project src/ConnectProbe          # hits the network; manually run, not a CI test
+```
+
+| check | result |
+| --- | --- |
+| unary round-trip, binary codec | `"Hello there...how are you today?"` |
+| leading metadata surfaced | 8 headers, 0 trailers |
+| custom leading metadata accepted | yes |
+| `connect-timeout-ms` accepted | yes |
+| wire-type mismatch | **tolerated** — see below |
+| server error object parsed | `invalid_argument (HTTP 400)`, message preserved |
+| unrouted path inferred, not parsed | `unimplemented (HTTP 404)`, `CodeWasInferred` true |
+
+So the §2 protocol reading is correct, and protobuf-net's **code-first** bytes interoperate with
+connect-go with no `.proto` anywhere. The contracts were written by hand from the Eliza schema on
+purpose: generating them from the `.proto` would have tested the wrong thing.
+
+### What it is built on, and what that proves
+
+- `protobuf-net.Core` **only**. `protobuf-net` is not referenced, so `RuntimeTypeModel` is not on the
+  graph at all and there is no reflective path to fall into by accident. The model is an ordinary
+  `[ProtoModel]`-generated one.
+- **Native AOT: `linux-x64`, 7,345,320 bytes, 33 IL warnings — none of them ours.** Every one is
+  attributed to `protobuf-net.Core` or to bare ILC; `protobuf-net.Connect` and `ConnectProbe`
+  contribute zero. The native binary passes all seven checks, so this is measured rather than compiled.
+
+### The warning residue is the IO interfaces, and it cannot be fixed from outside Core
+
+Roughly twelve of the 33 (6 × `IL2095`, ~6 × `IL2091`) are one family: the explicit interface
+implementations in `TypeModel.InputOutput.cs`, which forward an **unannotated** interface `T` to
+`TypeModel.Serialize<T>` / `Deserialize<T>` / `Measure<T>`, each of which still carries
+`DynamicAccess.ContractType` on its own `T`.
+
+This is the residue of the cleanup `AGENTS.md` records — the annotations came *off*
+`IProtoInput<TInput>` / `IProtoOutput<TOutput>` / `IMeasuredProtoOutput<TOutput>`, worth 14 warnings and
+808 KB, but stayed on the concrete methods. **Calling the concrete methods directly does not help**: a
+generic codec would then need the annotation itself, which relocates the warnings into the transport
+rather than removing them — precisely what `AGENTS.md` records about `Requires*`.
+
+So a transport built on protobuf-net's public IO surface inherits these, and nothing outside
+`protobuf-net.Core` can do anything about it. The recorded technique that *does* terminate cleanly is a
+**`RuntimeFeature.IsDynamicCodeSupported` feature switch**, which is what took
+`TypeModel.ResolveSerializer<T>` and the writer/reader cluster from 49 → 34. Applying the same to the
+root `Serialize<T>`/`Deserialize<T>`/`Measure<T>` is the obvious follow-up: out of MVP scope, with a
+precedent, and measurable the same way.
+
+### Two things the probe turned up
+
+- **A wire-type mismatch is not an error — it is an unknown field.** Sending a varint on field 1 where
+  the service's schema says `string` succeeds: protobuf skips the field and the service sees an empty
+  sentence. Found by asserting the opposite. Worth pinning, because "the two ends disagree about the
+  schema" failing *silently* is the whole reason field numbers must be managed rather than assumed.
+- **A non-200 does not imply a Connect error object.** An unknown method is answered by the HTTP layer
+  with `404` and `text/plain` — no JSON at all — which is why the spec carries a status → code
+  inference table. A client that assumes every failure carries a parseable error throws on the most
+  ordinary failure there is. `ConnectException.CodeWasInferred` distinguishes the two, so a caller can
+  tell "the service said `unimplemented`" from "something between us returned 404".
+
+### Shape, and where the seams are
+
+Deliberately small, and arranged per §14.1 so the streaming shapes can be added without disturbing it:
+
+| type | why it is shaped that way |
+| --- | --- |
+| `ConnectCodec` / `ProtoConnectCodec` | payload only; framing is *not* its business. `ContentTypeFor(type)` is the one place the two meet — `application/proto` versus `application/connect+proto` |
+| `ConnectMethod<TReq,TResp>` | carries `ConnectMethodType` and `IsIdempotent` from the start, though only `Unary` is implemented — the type selects the framing, and idempotency is what GET will need |
+| `MeasuredCodecContent<T>` | one member of an intended family. Unary can state `Content-Length` because protobuf-net measures before writing; a duplex body cannot, and gets a sibling |
+| `ConnectCallResult.Trailers` | an accessor, not "the `trailer-` headers" — which is where they live for unary and emphatically not for streaming |
+| `ConnectException` | one type for all three failure shapes, decided in one place |
+| `ConnectErrorReader` | hand-written `Utf8JsonReader`. Keeps the honest position that this assembly has no JSON *codec*: it parses the protocol's error envelope, never a payload |
+
+The `RawCodec` in the probe — used to put deliberately malformed bytes on the wire — needed **no**
+change to `ConnectChannel`, which is a small confirmation that the codec seam is in the right place.
 
 ## 12. Unverified — check before committing to any of this
 
