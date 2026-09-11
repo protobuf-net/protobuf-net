@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>ProtoBuf.ConnectConformance</RootNamespace>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <!-- the generated conformance DTOs are protoc's, and carry their own style -->
+    <NoWarn>$(NoWarn);CS8981</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The conformance suite's own contracts, vendored at the runner's version (v1.0.5) so the two
+         cannot drift silently. suite.proto is deliberately absent: it describes the test-suite FILE
+         format, which only the runner reads. -->
+    <Protobuf Include="proto/connectrpc/conformance/v1/config.proto" ProtoRoot="proto" GrpcServices="None" />
+    <Protobuf Include="proto/connectrpc/conformance/v1/server_compat.proto" ProtoRoot="proto" GrpcServices="None" />
+    <!-- Both, now that the CLIENT half is exercised too: the same generated ConformanceServiceClient a
+         gRPC consumer would have, driven through ConnectCallInvoker. -->
+    <Protobuf Include="proto/connectrpc/conformance/v1/service.proto" ProtoRoot="proto" GrpcServices="Both" />
+    <Protobuf Include="proto/connectrpc/conformance/v1/client_compat.proto" ProtoRoot="proto" GrpcServices="None" />
+
+    <PackageReference Include="Grpc.Tools" PrivateAssets="all" />
+    <PackageReference Include="Google.Protobuf" />
+    <PackageReference Include="Grpc.StatusProto" />
+    <ProjectReference Include="../protobuf-net.Connect.AspNetCore/protobuf-net.Connect.AspNetCore.csproj" />
+    <ProjectReference Include="../protobuf-net.Connect.Google/protobuf-net.Connect.Google.csproj" />
+  </ItemGroup>
+
+</Project>

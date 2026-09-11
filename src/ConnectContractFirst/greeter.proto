@@ -1,0 +1,22 @@
+// A purpose-written contract for the contract-first spike: all four method shapes, so the
+// ServiceBinderBase adapter is exercised on each rather than only on unary.
+syntax = "proto3";
+
+package connectcontractfirst.v1;
+
+service Greeter {
+  rpc SayHello (HelloRequest) returns (HelloReply);
+  rpc Subscribe (HelloRequest) returns (stream HelloReply);
+  rpc Collect (stream HelloRequest) returns (HelloReply);
+  rpc Chat (stream HelloRequest) returns (stream HelloReply);
+}
+
+message HelloRequest {
+  string name = 1;
+  int32 repeat = 2;
+}
+
+message HelloReply {
+  string message = 1;
+  int32 length = 2;
+}

@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>ProtoBuf.Connect.AspNetCore</RootNamespace>
+    <AssemblyName>protobuf-net.Connect.AspNetCore</AssemblyName>
+    <Nullable>enable</Nullable>
+    <Description>Connect protocol (connectrpc.com) server for protobuf-net, on ASP.NET Core - experimental</Description>
+    <IsPackable>false</IsPackable>
+    <IsTrimmable>true</IsTrimmable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Grpc.Core.Api ONLY, not protobuf-net.Grpc. ServerCallContext lives here, and this package
+         depends on nothing of ours - whereas protobuf-net.Grpc hard-depends on protobuf-net 2.4.8,
+         where TypeModel is in the protobuf-net assembly rather than protobuf-net.Core, so referencing
+         it beside protobuf-net.Core v3 is CS0433 on TypeModel itself. Constructing the CallContext is
+         the *generated* code's job, exactly as in GrpcProxyGenerator's output, which keeps that
+         collision in the consumer's project where referencing protobuf-net v3 resolves it normally.
+         See notes/connect/findings.md §17. -->
+    <PackageReference Include="Grpc.Core.Api" />
+    <!-- the ASP.NET Core shared framework, not Kestrel specifically: binding to HttpContext and
+         endpoint routing means Kestrel, HTTP.sys, IIS and TestServer all work from one implementation,
+         and none of them is named here -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <!-- PrivateAssets="none": the analyzers have to survive BOTH hops. This is the edge that matters
+         most, because a contract-first consumer references only this package - it has no reason to
+         name protobuf-net at all - and PBN5007 is aimed squarely at that consumer. -->
+    <ProjectReference Include="../protobuf-net.Connect/protobuf-net.Connect.csproj" PrivateAssets="none" />
+  </ItemGroup>
+
+</Project>

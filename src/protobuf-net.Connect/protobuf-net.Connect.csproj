@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- net8.0 only, deliberately: this is new surface with no down-level burden, and the AOT
+         generator's floor (C# 12, [UnsafeAccessor]) is net8.0 anyway. Revisit if a netstandard2.0
+         consumer ever asks; nothing here needs anything newer. -->
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>ProtoBuf.Connect</RootNamespace>
+    <AssemblyName>protobuf-net.Connect</AssemblyName>
+    <Nullable>enable</Nullable>
+    <Description>Connect protocol (connectrpc.com) client for protobuf-net - experimental</Description>
+    <!-- experimental; not on the Packing list in Build.csproj and has no ApiCompat baseline -->
+    <IsPackable>false</IsPackable>
+    <IsTrimmable>true</IsTrimmable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Grpc.Core.Api, for CallOptions: the contract vocabulary is protobuf-net.Grpc's, so converting a
+         caller's CallOptions into transport options is library work rather than something every
+         consuming assembly should have generated into it. NOT protobuf-net.Grpc itself - that
+         hard-depends on protobuf-net 2.4.8, where TypeModel lives in the protobuf-net assembly rather
+         than protobuf-net.Core, and ConnectCodec names TypeModel. Grpc.Core.Api depends on nothing of
+         ours, so there is no collision. -->
+    <PackageReference Include="Grpc.Core.Api" />
+    <!-- PipeReader, for reading a response stream envelope by envelope. On net8.0 System.IO.Pipelines
+         is NOT in the base shared framework - it arrives only via Microsoft.AspNetCore.App, which a
+         client library has no business requiring - so it is referenced explicitly. It is in-box from
+         net10.0, where this reference becomes redundant rather than wrong. -->
+    <PackageReference Include="System.IO.Pipelines" />
+    <!-- protobuf-net.Core, NOT protobuf-net: RuntimeTypeModel is deliberately not referenced, so
+         there is no reflective path to fall back to even by accident. The model is a generated
+         TypeModel; see src/ConnectProbe. -->
+    <!-- PrivateAssets="none" for the same reason protobuf-net opens the same edge: the build-time
+         tooling ships inside protobuf-net.Core, and NuGet's default dependency edge excludes
+         Build,Analyzers - so without this, a consumer referencing only protobuf-net.Connect gets no
+         analyzers, and PBN5007 (authorization silently dropped on a contract-first service) protects
+         nobody. Verified by packing and reading the nuspec, not by reasoning. -->
+    <ProjectReference Include="../protobuf-net.Core/protobuf-net.Core.csproj" PrivateAssets="none" />
+  </ItemGroup>
+
+</Project>

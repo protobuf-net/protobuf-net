@@ -5,3 +5,16 @@
 ; convention someone has to remember. Verified by deleting an entry and watching the build fail.
 ; AGENTS.md still carries the *ownership* table, which this file structurally cannot express: it maps
 ; id -> category/severity/title, never which type declares it - and the PBN40xx block has two owners.
+
+### New Rules
+
+Rule ID  | Category         | Severity | Notes
+---------|------------------|----------|--------------------
+PBN5000  | ProtoBuf.Connect | Warning  | Language version below the C# 12 floor (`ProtoConnectGenerator`)
+PBN5001  | ProtoBuf.Connect | Warning  | Service method shape not emitted (`ProtoConnectGenerator`)
+PBN5002  | ProtoBuf.Connect | Warning  | `[ProtoService]` names a type that is not a service contract
+PBN5003  | ProtoBuf.Connect | Warning  | Service contract declares no recognised operations
+PBN5004  | ProtoBuf.Connect | Warning  | Implementation does not implement the named contract
+PBN5005  | ProtoBuf.Connect | Warning  | Open generic service contract is not supported
+PBN5006  | ProtoBuf.Connect | Warning  | Service contract not emitted, catch-all
+PBN5007  | ProtoBuf.Connect | Warning  | Authorization attributes are not carried onto Connect endpoints (`ConnectContractFirstAnalyzer`)

@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>ProtoBuf.ConnectContractFirst</RootNamespace>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <!-- the sharpest form of the claim: a protoc-generated service AND client, over Connect, compiled
+         natively. It publishes with ZERO trim/AOT warnings, because nothing on this path reflects -
+         Google.Protobuf's marshalling is generated code, and its descriptors are built from typeof and
+         delegates rather than from names. Also enables trim analysis at ordinary build time. -->
+    <PublishAot>true</PublishAot>
+    <TrimmerSingleWarn>false</TrimmerSingleWarn>
+    <SuppressTrimAnalysisWarnings>false</SuppressTrimAnalysisWarnings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- contract-first, the ordinary Microsoft way: protoc generates Google.Protobuf messages and the
+         Greeter.GreeterBase / GreeterClient pair. NOTHING here is protobuf-net - that is the point. -->
+    <Protobuf Include="greeter.proto" GrpcServices="Both" />
+    <PackageReference Include="Grpc.Tools" PrivateAssets="all" />
+    <PackageReference Include="Google.Protobuf" />
+    <PackageReference Include="Grpc.Net.Client" />
+    <ProjectReference Include="../protobuf-net.Connect.AspNetCore/protobuf-net.Connect.AspNetCore.csproj" />
+    <!-- PBN5007 is the one thing on this path that can go silently WRONG rather than merely missing, so
+         the sample carries the analyzer that catches it. Note it does NOT arrive on its own: nothing in
+         the reference chain brings BuildTools to a contract-first consumer, which is a real packaging
+         question - see notes/connect/findings.md §43. -->
+    <ProjectReference Include="../protobuf-net.BuildTools/protobuf-net.BuildTools.csproj"
+                      OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+</Project>

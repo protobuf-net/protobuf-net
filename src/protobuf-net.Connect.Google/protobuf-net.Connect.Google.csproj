@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>ProtoBuf.Connect.Google</RootNamespace>
+    <AssemblyName>protobuf-net.Connect.Google</AssemblyName>
+    <Nullable>enable</Nullable>
+    <Description>Canonical protobuf JSON for Connect, over Google.Protobuf messages - experimental</Description>
+    <IsPackable>false</IsPackable>
+    <IsTrimmable>true</IsTrimmable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Its own assembly for one reason: Google.Protobuf must not land on protobuf-net.Connect's
+         dependency graph. A code-first consumer has no Google.Protobuf messages and no reason to carry
+         the package; a contract-first one already has it. Splitting here is what keeps that true. -->
+    <PackageReference Include="Google.Protobuf" />
+    <PackageReference Include="Grpc.Core.Api" />
+    <ProjectReference Include="../protobuf-net.Connect/protobuf-net.Connect.csproj" PrivateAssets="none" />
+  </ItemGroup>
+
+</Project>

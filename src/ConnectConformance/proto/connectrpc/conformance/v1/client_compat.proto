@@ -1,0 +1,237 @@
+// Copyright 2023-2024 The Connect Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package connectrpc.conformance.v1;
+
+import "connectrpc/conformance/v1/config.proto";
+import "connectrpc/conformance/v1/service.proto";
+import "google/protobuf/any.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/struct.proto";
+
+// Describes one call the client should make. The client reads
+// these from stdin and, for each one, invokes an RPC as directed
+// and writes the results (in the form of a ClientCompatResponse
+// message) to stdout.
+message ClientCompatRequest {
+  // The name of the test that this request is performing.
+  // When writing test cases, this is a required field.
+  string test_name = 1;
+
+  // Test suite YAML definitions should NOT set values for these next
+  // nine fields (fields 2 - 10). They are automatically populated by the test
+  // runner. If a test is specific to one of these values, it should instead be
+  // indicated in the test suite itself (where it defines the required
+  // features and relevant values for these fields).
+  //
+  // The HTTP version to use for the test (i.e. HTTP/1.1, HTTP/2, HTTP/3).
+  HTTPVersion http_version = 2;
+  // The protocol to use for the test (i.e. Connect, gRPC, gRPC-web).
+  Protocol protocol = 3;
+  // The codec to use for the test (i.e. JSON, proto/binary).
+  Codec codec = 4;
+  // The compression to use for the test (i.e. brotli, gzip, identity).
+  Compression compression = 5;
+  // The server host that this request will be sent to.
+  string host = 6;
+  // The server port that this request will be sent to.
+  uint32 port = 7;
+  // If non-empty, the server is using TLS. The bytes are the
+  // server's PEM-encoded certificate, which the client should
+  // verify and trust.
+  bytes server_tls_cert = 8;
+  // If present, the client certificate credentials to use to
+  // authenticate with the server. This will only be present
+  // when server_tls_cert is non-empty.
+  TLSCreds client_tls_creds = 9;
+  // If non-zero, indicates the maximum size in bytes for a message.
+  // If the server sends anything larger, the client should reject it.
+  uint32 message_receive_limit = 10;
+  // The fully-qualified name of the service this test will interact with.
+  // If specified, method must also be specified.
+  // If not specified, defaults to "connectrpc.conformance.v1.ConformanceService".
+  optional string service = 11;
+  // The method on `service` that will be called.
+  // If specified, service must also be specified.
+  // If not specified, the test runner will auto-populate this field based on the stream_type.
+  optional string method = 12;
+  // The stream type of `method` (i.e. unary, client stream, server stream, full-duplex bidi
+  // stream, or half-duplex bidi stream).
+  // When writing test cases, this is a required field.
+  StreamType stream_type = 13;
+  // If protocol indicates Connect and stream type indicates
+  // Unary, this instructs the client to use a GET HTTP method
+  // when making the request.
+  bool use_get_http_method = 14;
+  // Any request headers that should be sent as part of the request.
+  // These include only custom header metadata. Headers that are
+  // part of the relevant protocol (such as "content-type", etc) should
+  // not be stated here.
+  repeated Header request_headers = 15;
+  // The actual request messages that will sent to the server.
+  // The type URL for all entries should be equal to the request type of the
+  // method.
+  // There must be exactly one for unary and server stream methods but
+  // can be zero or more for client and bidi stream methods.
+  // For client and bidi stream methods, all entries will have the
+  // same type URL.
+  repeated google.protobuf.Any request_messages = 16;
+  // The timeout, in milliseconds, for the request. This is equivalent to a
+  // deadline for the request. If unset, there will be no timeout.
+  optional uint32 timeout_ms = 17;
+  // Wait this many milliseconds before sending a request message.
+  // For client or bidi stream methods, this delay should be
+  // applied before each request sent.
+  uint32 request_delay_ms = 18;
+  // If present, the client should cancel the RPC instead of
+  // allowing to complete normally.
+  Cancel cancel = 19;
+  message Cancel {
+    // These fields determine the timing of cancellation.
+    // If none are present, the client should cancel immediately
+    // after all request messages are sent and the send side is
+    // closed (as if the after_close_send_ms field were present
+    // and zero).
+    oneof cancel_timing {
+      // When present, the client should cancel *instead of*
+      // closing the send side of the stream, after all requests
+      // have been sent.
+      //
+      // This applies only to client and bidi stream RPCs.
+      google.protobuf.Empty before_close_send = 1;
+      // When present, the client should delay for this many
+      // milliseconds after closing the send side of the stream
+      // and then cancel.
+      //
+      // This applies to all types of RPCs.
+      //
+      // For unary and server stream RPCs, where the API usually
+      // does not allow explicitly closing the send side, the
+      // cancellation should be done immediately after invoking
+      // the RPC (which should implicitly send the one-and-only
+      // request and then close the send-side).
+      //
+      // For APIs where unary RPCs block until the response
+      // is received, there is no point after the request is
+      // sent but before a response is received to cancel. So
+      // the client must arrange for the RPC to be canceled
+      // asynchronously before invoking the blocking unary call.
+      uint32 after_close_send_ms = 2;
+      // When present, the client should cancel right after
+      // reading this number of response messages from the stream.
+      // When present, this will be greater than zero.
+      //
+      // This applies only to server and bidi stream RPCs.
+      uint32 after_num_responses = 3;
+    }
+  }
+
+  // The following field is only used by the reference client. If
+  // you are implementing a client under test, you may ignore it
+  // or respond with an error if the client receives a request where
+  // it is set.
+  //
+  // When this field is present, it defines the actual HTTP request
+  // that will be sent. The above group of fields must still be
+  // provided and valid so that the reference client knows how it
+  // should try to interpret the server's response.
+  RawHTTPRequest raw_request = 20;
+}
+
+// The outcome of one ClientCompatRequest.
+message ClientCompatResponse {
+  // The test name that this response applies to.
+  string test_name = 1;
+  // These fields determine the outcome of the request.
+  //
+  // With regards to errors, any unexpected errors that prevent the client from
+  // issuing the RPC and following the instructions implied by the request can
+  // be reported as an error. These would be errors creating an RPC client from
+  // the request parameters or unsupported/illegal values in the request
+  // (e.g. a unary request that defines zero or multiple request messages).
+  //
+  // However, once the RPC is issued, any resulting error should instead be encoded in response.
+  oneof result {
+    ClientResponseResult response = 2;
+    ClientErrorResult error = 3;
+  }
+}
+
+// The result of a ClientCompatRequest, which may or may not be successful.
+// The client will build this message and return it back to the test runner.
+message ClientResponseResult {
+  // All response headers read from the response.
+  repeated Header response_headers = 1;
+  // Servers should echo back payloads that they received as part of the request.
+  // This field should contain all the payloads the server echoed back. Note that
+  // There will be zero-to-one for unary and client stream methods and
+  // zero-to-many for server and bidi stream methods.
+  repeated ConformancePayload payloads = 2;
+  // The error received from the actual RPC invocation. Note this is not representative
+  // of a runtime error and should always be the proto equivalent of a Connect
+  // or gRPC error.
+  Error error = 3;
+  // All response headers read from the response.
+  repeated Header response_trailers = 4;
+  // The number of messages that were present in the request but that could not be
+  // sent because an error occurred before finishing the upload.
+  int32 num_unsent_requests = 5;
+  // The following field is only set by the reference client. It communicates
+  // the underlying HTTP status code of the server's response.
+  // If you are implementing a client-under-test, you should ignore this field
+  // and leave it unset.
+  optional int32 http_status_code = 6;
+  // This field is used only by the reference client, and it can be used
+  // to provide additional feedback about problems observed in the server
+  // response or in client processing of the response. If non-empty, the test
+  // case is considered failed even if the result above matches all expectations.
+  // If you are implementing a client-under-test, you should ignore this field
+  // and leave it unset.
+  repeated string feedback = 7;
+}
+
+// The client is not able to fulfill the ClientCompatRequest. This may be due
+// to a runtime error or an unexpected internal error such as the requested protocol
+// not being supported. This is completely independent of the actual RPC invocation.
+message ClientErrorResult {
+  // A message describing the error that occurred. This string will be shown to
+  // users running conformance tests so it should include any relevant details
+  // that may help troubleshoot or remedy the error.
+  string message = 1;
+}
+
+// Details about various values as observed on the wire. This message is used
+// only by the reference client when reporting results and should not be populated
+// by clients under test.
+message WireDetails {
+  // The HTTP status code of the response.
+  int32 actual_status_code = 1;
+  // When processing an error from a Connect server, this should contain
+  // the actual JSON received on the wire.
+  google.protobuf.Struct connect_error_raw = 2;
+  // Any HTTP trailers observed after the response body. These do NOT
+  // include trailers that conveyed via the body, as done in the gRPC-Web
+  // and Connect streaming protocols.
+  repeated Header actual_http_trailers = 3;
+  // Any trailers that were transmitted in the final message of the
+  // response body for a gRPC-Web response. This could differ from the
+  // ClientResponseResult.response_trailers field since the RPC client
+  // library might canonicalize keys and it might choose to remove
+  // "grpc-status" et al from the set of metadata. This field will
+  // capture all of the entries and their exact on-the-wire spelling
+  // and formatting.
+  optional string actual_grpcweb_trailers = 4;
+}
