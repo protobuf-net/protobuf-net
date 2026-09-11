@@ -58,7 +58,7 @@ if (serveOnly)
 
 using var http = new HttpClient();
 var channel = new ConnectChannel(http, new ProtoConnectCodec(SmokeModel.Instance), new Uri(address));
-IGreeter client = SmokeServices.Instance.CreateClient<IGreeter>(channel);
+IGreeter client = SmokeServices.CreateClient<IGreeter>(channel);
 var checks = new Checks();
 
 await checks.Run("unary round-trip over HTTP/1.1", async () =>

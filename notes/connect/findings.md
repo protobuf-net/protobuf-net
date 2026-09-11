@@ -911,7 +911,7 @@ the registration extension hangs off. The first cut had three peer types at name
 container at all**, which review caught: it left the proxy and bindings as visible API, and it was
 missing the type the generator will need anyway.
 
-**The whole visible surface is two verbs**, `CreateClient<TService>` and `BindServer`, plus `Instance`.
+**The whole visible surface is two static verbs**, `CreateClient<TService>` and `BindServer`.
 Everything else is **private**:
 
 | | |
@@ -920,7 +920,26 @@ Everything else is **private**:
 | `GreeterClientProxy` (private) | one call to `channel.UnaryAsync` per method; a consumer reaches it through `CreateClient<TService>` and only ever sees `IGreeter` |
 | `GreeterServerBindings` (private) | `AddUnaryMethod(method, handler)` per operation, the handler a `static` lambda so it allocates nothing |
 
-Getting there was review pushing twice, and the second push found a test smell. `Greeter` had to be
+**The container is `static`**, which took a third round of review to get right. The first cut mirrored
+`GrpcProxyGenerator`'s output — an instance with an `Instance` accessor — but there the instance is
+load-bearing and here it is not: a `[ProtoGrpc]` container derives from the abstract `ClientFactory`,
+holds a `BinderConfiguration` with a marshaller cache, and is `TryAddSingleton`'d into DI. Ours derives
+from nothing, has no fields, and caches nothing — the codec lives on the `ConnectChannel`, the
+serializers in the method holder's static initialiser. So `Instance` was ceremony inherited from a shape
+whose justification does not carry over. **Worth noticing as a pattern: three of the four review
+findings on this file were things copied from the gRPC generator whose reasons did not survive the
+move.**
+
+What would change the answer is a **DI client-factory story** — `services.AddConnectClient<T>()`
+resolving "the thing that makes clients" — which needs an instance implementing some interface, as
+protobuf-net.Grpc's `ClientFactory` does. Open question, and one to answer deliberately rather than by
+pre-emptively inventing an instance: note it would be a consumer-visible break to add later.
+
+Note the generator need not force consumers to write `static partial class` — static members can be
+emitted onto an ordinary partial class, with a private constructor to stop it being instantiated, which
+is what `GrpcProxyGenerator` already emits for its own reasons.
+
+Getting the accessibility right was review pushing twice more, and the second push found a test smell. `Greeter` had to be
 `internal` **only because the harness reached into it** for the service name and a method descriptor —
 a test affordance leaking into the design. Removing it made the checks *better*: the raw-HTTP checks now
 state the expected service name independently, where before they derived it from the implementation's

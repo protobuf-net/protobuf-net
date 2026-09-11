@@ -30,16 +30,32 @@ namespace ProtoBuf.AotConnectSmoke;
 // ---------------------------------------------------------------------------------------------
 
 /// <summary>Stands in for a <c>[ProtoConnect(Model = typeof(SmokeModel))] partial class</c>.</summary>
-internal sealed class SmokeServices
+/// <remarks>
+/// <b>Static, and deliberately so.</b> The first cut mirrored <c>GrpcProxyGenerator</c>'s output, which
+/// is an instance with an <c>Instance</c> accessor - but there the instance is load-bearing and here it
+/// is not. A <c>[ProtoGrpc]</c> container derives from the abstract <c>ClientFactory</c>, holds a
+/// <c>BinderConfiguration</c> with a marshaller cache, and is <c>TryAddSingleton</c>'d into DI. This
+/// one derives from nothing, has no fields, and caches nothing: the codec lives on the
+/// <see cref="ConnectChannel"/> and the serializers live in <see cref="Greeter"/>'s static initialiser.
+/// So an <c>Instance</c> would have been ceremony inherited from a shape whose justification does not
+/// carry over.
+/// <para>
+/// What would change the answer is a DI client-factory story - <c>services.AddConnectClient&lt;T&gt;()</c>
+/// resolving "the thing that makes clients" - which needs an instance implementing some interface, as
+/// protobuf-net.Grpc's <c>ClientFactory</c> does. That is a real question and an open one, but it is not
+/// answered by inventing an instance before anything asks for one; note it would be a
+/// consumer-visible break to add later.
+/// </para>
+/// <para>
+/// The generator need not require consumers to write <c>static partial class</c>: static members can be
+/// emitted onto an ordinary partial class, with a private constructor to stop it being instantiated -
+/// which is what <c>GrpcProxyGenerator</c> already emits, for its own reasons.
+/// </para>
+/// </remarks>
+internal static class SmokeServices
 {
-    /// <summary>Use <see cref="Instance"/>; this holds per-service state and is meant to be shared.</summary>
-    private SmokeServices() { }
-
-    /// <summary>A shared instance; thread-safe, and intended to be reused.</summary>
-    public static SmokeServices Instance { get; } = new SmokeServices();
-
     /// <summary>Creates a client proxy for one of the services this container knows about.</summary>
-    public TService CreateClient<TService>(ConnectChannel channel) where TService : class
+    public static TService CreateClient<TService>(ConnectChannel channel) where TService : class
     {
         if (typeof(TService) == typeof(IGreeter)) return (TService)(object)new GreeterClientProxy(channel);
         throw new InvalidOperationException(
@@ -52,7 +68,7 @@ internal sealed class SmokeServices
     /// the method descriptors, the proxy and the bindings are all private, because nothing outside has
     /// any business naming them. A consumer states a contract and gets two verbs.
     /// </remarks>
-    public IEndpointConventionBuilder BindServer(IEndpointRouteBuilder endpoints)
+    public static IEndpointConventionBuilder BindServer(IEndpointRouteBuilder endpoints)
         => endpoints.MapConnectService(new GreeterServerBindings());
 
     /// <summary>
@@ -137,5 +153,5 @@ internal sealed class SmokeServices
 internal static class SmokeServicesEndpointExtensions
 {
     internal static IEndpointConventionBuilder MapSmokeServices(this IEndpointRouteBuilder endpoints)
-        => SmokeServices.Instance.BindServer(endpoints);
+        => SmokeServices.BindServer(endpoints);
 }
