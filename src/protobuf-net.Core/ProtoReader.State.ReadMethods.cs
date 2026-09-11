@@ -1098,10 +1098,10 @@ namespace ProtoBuf
             /// parsing the message in accordance with the model associated with the reader
             /// </summary>
             [MethodImpl(HotPath)]
-            internal object ReadObject(object value, Type type) => ReadTypedObject(value, type);
+            internal object? ReadObject(object? value, Type type) => ReadTypedObject(value, type);
 
             [MethodImpl(MethodImplOptions.NoInlining)]
-            internal object? ReadTypedObject(object value, Type type)
+            internal object? ReadTypedObject(object? value, Type type)
             {
                 var model = Model;
                 if (model is null) ThrowInvalidOperationException("Cannot deserialize sub-objects unless a model is provided");
@@ -1495,7 +1495,7 @@ namespace ProtoBuf
                 _userState = userState;
             }
             TypeModel ISerializationContext.Model => _model;
-            object ISerializationContext.UserState => _userState;
+            object? ISerializationContext.UserState => _userState;
         }
     }
 }

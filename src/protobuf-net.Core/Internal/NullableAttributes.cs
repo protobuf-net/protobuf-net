@@ -28,6 +28,14 @@ namespace System.Diagnostics.CodeAnalysis
     {
     }
 
+    /// <summary>Specifies that the output will be non-null if the named parameter is non-null.</summary>
+    [AttributeUsage(AttributeTargets.Parameter | AttributeTargets.Property | AttributeTargets.ReturnValue, AllowMultiple = true, Inherited = false)]
+    internal sealed class NotNullIfNotNullAttribute : Attribute
+    {
+        public NotNullIfNotNullAttribute(string parameterName) => ParameterName = parameterName;
+        public string ParameterName { get; }
+    }
+
     /// <summary>Specifies that an output is not null even if the corresponding type allows it.</summary>
     /// <remarks>
     /// On a parameter this is a POST-condition: after the call, the argument is not null. That is

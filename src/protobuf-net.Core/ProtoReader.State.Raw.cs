@@ -150,7 +150,9 @@ public ref partial struct State
     internal bool _internStrings;
     private System.Collections.Generic.Dictionary<string, string>? _stringInterner;
 
-    internal string? Intern(string value)
+    /// <summary>Interns <paramref name="value"/>; null in, null out, and never null otherwise.</summary>
+    [return: System.Diagnostics.CodeAnalysis.NotNullIfNotNull(nameof(value))]
+    internal string? Intern(string? value)
     {
         if (value is null) return null;
         if (value.Length == 0) return "";
