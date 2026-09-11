@@ -2677,6 +2677,88 @@ started as one rather than half-landed.
 - `protobuf-net.BuildTools.Legacy` builds; analyzers are listed there by name, so a new one is
   correctly invisible to it.
 
+## 44. Conformance: 207/207 in server mode
+
+`src/ConnectConformance` runs [`connectrpc/conformance`](https://github.com/connectrpc/conformance)
+v1.0.5. **It passes every case in server mode**, declaring `PROTOCOL_CONNECT`, `CODEC_PROTO`,
+`COMPRESSION_IDENTITY`, HTTP/1.1 and HTTP/2, h2c, all five stream types, and half-duplex bidi over
+HTTP/1.1; declaring **un**supported JSON, compression, TLS and Connect GET.
+
+### It was much smaller than §43 sized it
+
+§43 called this "a project, not an afternoon", on the strength of the client-mode description. **Server
+mode is a fraction of that**: read one length-prefixed `ServerCompatRequest` from stdin, serve
+`ConformanceService`, write back a `ServerCompatResponse` saying where you are listening, exit on
+SIGTERM. The estimate was made without reading `--help`, and that is the whole lesson — the two modes
+are not the same size and the larger one was doing all the talking.
+
+The service is a `.proto` served through the **contract-first** path, which is the honest way round: a
+protobuf-net mirror of someone else's contract would be testing our translation of the suite.
+
+### What it found, and why our own tests could not
+
+Roughly fourteen real defects. The pattern is worth naming: **every one of them was a place where both
+of our ends agreed with each other and neither agreed with the protocol.** A self-test cannot find
+those by construction.
+
+- **Padded base64** in error details. Connect is unpadded, and connect-go decodes with
+  `RawStdEncoding`, which rejects a trailing `=`. Our reader re-pads, so we were lenient in what we
+  accepted and wrong in what we sent — the failure mode that only an outside party sees.
+- **Rich error details were dropped entirely**: gRPC carries them in a `grpc-status-details-bin`
+  trailer as a `google.rpc.Status`, Connect has a first-class `details` array. 66 cases.
+- **Streaming errors were written as a non-200 JSON body.** A streaming caller is reading *envelopes*
+  and looks for the terminating one, so a bare JSON body is not something it can find at all: it
+  reports "unexpected end of JSON input" and falls back to guessing from the HTTP status. A streaming
+  call answers 200 and reports in the terminator **even when it failed before the stream began**.
+- **The terminating envelope was written with the call's own cancellation token** — which on a deadline
+  is already cancelled, so the write threw, the endpoint wrote a *second* terminator, and the caller
+  saw "corrupt response: N extra bytes after end of stream" instead of `deadline_exceeded`. The
+  terminator is how the deadline is reported; it cannot be cancelled by it.
+- **A unary response committed as soon as a handler sent leading metadata**, after which neither status
+  nor content-type could be set, and a late failure aborted a response already in flight — reaching the
+  client as a reset connection. Unary defers the commit; streaming still commits, since a caller may
+  await headers before reading.
+- **Trailing metadata was dropped on every error path**, both shapes.
+- **415 is `unknown`, not `unimplemented`** — it is absent from Connect's status-to-code table, so a
+  caller falling back on the status reads `unknown`, and a caller that parses the body must not read
+  something different. The first fix dropped the body entirely to force the status route; three smoke
+  checks objected, correctly, and keeping the body while fixing the code satisfies both (the suite
+  checks the code, not the message).
+- **Unsupported compression was ignored** rather than refused, and a compressed envelope flag reported
+  `unimplemented` where the peer has contradicted itself — nothing was negotiated — and it is `internal`.
+- **A server-streaming request must carry exactly one message**; zero or several were accepted silently.
+- **`end-stream` metadata wrote one JSON array per entry**, so a repeated name produced duplicate JSON
+  keys rather than one array of values.
+- **Bidi was refused below HTTP/2.** Only *full* duplex needs interleaving; half-duplex bidi over
+  HTTP/1.1 is legal and the suite tests it. The server cannot tell them apart, so the demand belongs on
+  the client — where it already was. `AotConnectSmoke` had pinned the old behaviour and now pins the new.
+
+### Kestrel aborts full-duplex request bodies by default
+
+Worth its own heading, because it is hosting behaviour rather than protocol and nothing in the code
+suggests it. **`MinRequestBodyDataRate` aborts a full-duplex request body as a matter of course**: the
+caller holds the request stream open while waiting for responses, so there are legitimately long gaps
+with no request bytes. Kestrel's answer is *"Reading the request body timed out due to data arriving
+too slowly"*, which faults the HTTP/2 connection and reaches the caller as `GOAWAY` /
+`INTERNAL_ERROR` — losing the status the service was in the middle of reporting.
+
+Relaxed **per request** on duplex endpoints only (`IHttpMinRequestBodyDataRateFeature`), so the
+protection stays on everywhere else.
+
+### Console text is not a count, again
+
+Two of the fixes above were mis-diagnosed first, both by reading console output. The second retraction
+in two days (§43 was the first): **use the SARIF log or the server's own exceptions, not greps of
+stdout.** The opt-in `CONNECT_CONFORMANCE_LOG` in the harness exists because the runner owns stdout and
+shows nothing of the server's stderr, so a server-side fault is otherwise completely silent — and the
+interesting failures here are exactly the ones that abort a response after it has committed.
+
+### Next
+
+- **Client-mode conformance.** The other half, and the one §43's sizing actually described.
+- JSON codec — still the largest single piece.
+- Compression, Connect GET, TLS.
+
 ## 12. Unverified — check before committing to any of this
 
 Everything below is assumption or inference, not measurement:
