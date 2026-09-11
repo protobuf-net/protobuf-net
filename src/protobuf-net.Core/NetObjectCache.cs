@@ -41,7 +41,7 @@ namespace ProtoBuf
         {
             internal static readonly RawLengthComparer Instance = new RawLengthComparer();
             private RawLengthComparer() { }
-            bool IEqualityComparer<object>.Equals(object x, object y) => ReferenceEquals(x, y);
+            bool IEqualityComparer<object>.Equals(object? x, object? y) => ReferenceEquals(x, y);
             int IEqualityComparer<object>.GetHashCode(object obj) => RuntimeHelpers.GetHashCode(obj);
         }
 
@@ -49,9 +49,9 @@ namespace ProtoBuf
         private readonly struct ObjectKey : IEquatable<ObjectKey>
         {
             private readonly object _obj;
-            private readonly Type _subTypeLevel; // null means "root type" (from the perspective of the serializer)
+            private readonly Type? _subTypeLevel; // null means "root type" (from the perspective of the serializer)
             [MethodImpl(ProtoReader.HotPath)]
-            public ObjectKey(object obj, Type subTypeLevel)
+            public ObjectKey(object obj, Type? subTypeLevel)
             {
                 _obj = obj;
                 _subTypeLevel = subTypeLevel;
@@ -61,7 +61,7 @@ namespace ProtoBuf
             [MethodImpl(ProtoReader.HotPath)]
             public override int GetHashCode() => RuntimeHelpers.GetHashCode(_obj) ^ (_subTypeLevel?.GetHashCode() ?? 0);
             [MethodImpl(ProtoReader.HotPath)]
-            public override bool Equals(object obj) => obj is ObjectKey key && Equals(key);
+            public override bool Equals(object? obj) => obj is ObjectKey key && Equals(key);
             [MethodImpl(ProtoReader.HotPath)]
             public bool Equals(ObjectKey other) => this._obj == other._obj & this._subTypeLevel == other._subTypeLevel;
         }
@@ -69,7 +69,7 @@ namespace ProtoBuf
         int _hit, _miss;
 
         [MethodImpl(ProtoReader.HotPath)]
-        public bool TryGetKnownLength(object obj, Type subTypeLevel, out long length)
+        public bool TryGetKnownLength(object obj, Type? subTypeLevel, out long length)
         {
             if (_knownLengths.TryGetValue(new ObjectKey(obj, subTypeLevel), out length))
             {
@@ -84,7 +84,7 @@ namespace ProtoBuf
             }
         }
 
-        public void SetKnownLength(object obj, Type subTypeLevel, long length)
+        public void SetKnownLength(object obj, Type? subTypeLevel, long length)
         {
             var key = new ObjectKey(obj, subTypeLevel);
             _knownLengths[key] = length;
@@ -124,7 +124,7 @@ namespace ProtoBuf
         {
             if (key-- == Root)
             {
-                if (value is null) ThrowHelper.ThrowArgumentNullException(nameof(value));
+                ThrowHelper.ThrowIfNull(value, nameof(value));
                 if (rootObject is object && ((object)rootObject != (object)value)) ThrowHelper.ThrowProtoException("The root object cannot be reassigned");
                 rootObject = value;
             }
@@ -157,7 +157,7 @@ namespace ProtoBuf
         private object rootObject;
         internal int AddObjectKey(object value, out bool existing)
         {
-            if (value is null) ThrowHelper.ThrowArgumentNullException(nameof(value));
+            ThrowHelper.ThrowIfNull(value, nameof(value));
 
             if ((object)value == (object)rootObject) // (object) here is no-op, but should be
             {                                        // preserved even if this was typed - needs ref-check

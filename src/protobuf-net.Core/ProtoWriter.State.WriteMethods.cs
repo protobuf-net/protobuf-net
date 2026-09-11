@@ -828,7 +828,7 @@ namespace ProtoBuf
             /// <param name="instance">The instance to write.</param>
             /// <returns>A token representing the state of the stream; this token is given to EndSubItem.</returns>
             [Obsolete(PreferWriteMessage, false)]
-            public SubItemToken StartSubItem(object instance) => StartSubItem(instance, PrefixStyle.Base128);
+            public SubItemToken StartSubItem(object? instance) => StartSubItem(instance, PrefixStyle.Base128);
 
             /// <summary>
             /// Releases any resources associated with this instance
@@ -841,7 +841,7 @@ namespace ProtoBuf
             }
 
             [Obsolete(PreferWriteMessage, false)]
-            internal SubItemToken StartSubItem(object instance, PrefixStyle style)
+            internal SubItemToken StartSubItem(object? instance, PrefixStyle style)
             {
                 _writer.PreSubItem(ref this, instance);
                 switch (WireType)
@@ -913,7 +913,7 @@ namespace ProtoBuf
             /// </summary>
             public void AppendExtensionData(IExtensible instance)
             {
-                if (instance is null) ThrowHelper.ThrowArgumentNullException(nameof(instance));
+                ThrowHelper.ThrowIfNull(instance, nameof(instance));
                 // we expect the writer to be raw here; the extension data will have the
                 // header detail, so we'll copy it implicitly
                 if (WireType != WireType.None) ThrowInvalidSerializationOperation();
@@ -948,7 +948,7 @@ namespace ProtoBuf
             /// </summary>
             public void AppendExtensionData(ITypedExtensible instance, Type type)
             {
-                if (instance is null) ThrowHelper.ThrowArgumentNullException(nameof(instance));
+                ThrowHelper.ThrowIfNull(instance, nameof(instance));
                 // we expect the writer to be raw here; the extension data will have the
                 // header detail, so we'll copy it implicitly
                 if (WireType != WireType.None) ThrowInvalidSerializationOperation();

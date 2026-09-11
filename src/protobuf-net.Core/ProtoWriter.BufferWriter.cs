@@ -25,7 +25,7 @@ namespace ProtoBuf
         {
             internal static State CreateBufferWriterProtoWriter(IBufferWriter<byte> writer, TypeModel? model, object? userState)
             {
-                if (writer is null) ThrowHelper.ThrowArgumentNullException(nameof(writer));
+                ThrowHelper.ThrowIfNull(writer, nameof(writer));
                 var obj = Pool<BufferWriterProtoWriter>.TryGet() ?? new BufferWriterProtoWriter();
                 obj.Init(model, userState, true);
                 obj._writer = writer;

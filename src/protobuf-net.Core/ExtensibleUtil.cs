@@ -30,7 +30,7 @@ namespace ProtoBuf
             // does them, and going straight to the extension object bypassed them - which
             // Examples.Extensibility's invalid-tag tests caught, since they expect
             // ArgumentOutOfRangeException and were getting an empty result instead.
-            if (instance is null) ThrowHelper.ThrowArgumentNullException(nameof(instance));
+            ThrowHelper.ThrowIfNull(instance, nameof(instance));
             if (tag <= 0) ThrowHelper.ThrowArgumentOutOfRangeException(nameof(tag));
             if (format == DataFormat.Default)
             {
@@ -61,7 +61,7 @@ namespace ProtoBuf
         internal static IEnumerable GetExtendedValues(TypeModel? model, Type type, IExtensible instance, int tag, DataFormat format, bool singleton, bool allowDefinedTag)
 #pragma warning restore RCS1163, IDE0060 // Unused parameter.
         {
-            if (instance is null) ThrowHelper.ThrowArgumentNullException(nameof(instance));
+            ThrowHelper.ThrowIfNull(instance, nameof(instance));
             if (tag <= 0) ThrowHelper.ThrowArgumentOutOfRangeException(nameof(tag));
             return GetExtendedValues(model, type, instance.GetExtensionObject(false), tag, format, singleton);
         }
@@ -244,8 +244,8 @@ namespace ProtoBuf
 
         internal static void AppendExtendValue<TValue>(TypeModel? model, IExtensible instance, int tag, DataFormat format, TValue value)
         {
-            if (instance is null) ThrowHelper.ThrowArgumentNullException(nameof(instance));
-            if (value is null) ThrowHelper.ThrowArgumentNullException(nameof(value));
+            ThrowHelper.ThrowIfNull(instance, nameof(instance));
+            ThrowHelper.ThrowIfNull(value, nameof(value));
             // obtain the extension object and prepare to write
             AppendExtendValue<TValue>(model, instance.GetExtensionObject(true), tag, format, value);
         }

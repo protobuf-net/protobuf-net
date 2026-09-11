@@ -699,7 +699,7 @@ namespace ProtoBuf.Meta
         {
             if (type is null)
             {
-                if (value is null) ThrowHelper.ThrowArgumentNullException(nameof(value));
+                ThrowHelper.ThrowIfNull(value, nameof(value));
                 type = value.GetType();
             }
 
@@ -932,7 +932,12 @@ namespace ProtoBuf.Meta
             return state.DeserializeRootFallback(value, type);
         }
 
-        internal static bool PrepareDeserialize(object? value, ref Type? type)
+        /// <remarks>
+        /// The <c>[NotNull]</c> is a post-condition on the <c>ref</c>: on return <paramref name="type"/>
+        /// is always set, either because the caller supplied it or because it was taken from
+        /// <paramref name="value"/>. Saying so here is what stops every caller repeating the check.
+        /// </remarks>
+        internal static bool PrepareDeserialize(object? value, [NotNull] ref Type? type)
         {
             if (type is null || type == typeof(object))
             {
@@ -1261,7 +1266,7 @@ namespace ProtoBuf.Meta
         internal void ReadAuxValues(ref ProtoReader.State state, DataFormat format, int tag,
             [DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type, List<object> results)
         {
-            if (type is null) ThrowHelper.ThrowArgumentNullException(nameof(type));
+            ThrowHelper.ThrowIfNull(type, nameof(type));
             WireType wiretype = GetWireType(this, format, type);
             if (!DynamicStub.CanSerialize(type, this, out var features))
                 ThrowHelper.ThrowInvalidOperationException("Unable to deserialize aux type: " + type.NormalizeName());
@@ -1324,7 +1329,7 @@ namespace ProtoBuf.Meta
         /// </summary>
         internal bool TryDeserializeAuxiliaryType(ref ProtoReader.State state, DataFormat format, int tag, Type? type, ref object? value, bool skipOtherFields, bool asListItem, bool autoCreate, bool insideList, object? parentListOrType, bool isRoot)
         {
-            if (type is null) ThrowHelper.ThrowArgumentNullException(nameof(type));
+            ThrowHelper.ThrowIfNull(type, nameof(type));
             WireType wiretype = GetWireType(this, format, type);
 
             bool found = false;
@@ -2070,7 +2075,7 @@ namespace ProtoBuf.Meta
 
         internal bool CanSerialize(Type type, bool allowBasic, bool allowContract, bool allowLists, out SerializerFeatures category)
         {
-            if (type is null) ThrowHelper.ThrowArgumentNullException(nameof(type));
+            ThrowHelper.ThrowIfNull(type, nameof(type));
 
             static bool CheckIfNullableT(ref Type type)
             {
@@ -2179,7 +2184,7 @@ namespace ProtoBuf.Meta
             private readonly Type type;
             internal Formatter(TypeModel? model, Type type)
             {
-                if (model is null) ThrowHelper.ThrowArgumentNullException(nameof(model));
+                ThrowHelper.ThrowIfNull(model, nameof(model));
                 if (type is null) ThrowHelper.ThrowArgumentNullException(nameof(model));
                 this.model = model;
                 this.type = type;

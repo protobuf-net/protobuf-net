@@ -100,7 +100,7 @@ namespace ProtoBuf
             {
                 var obj = Pool<StreamProtoWriter>.TryGet() ?? new StreamProtoWriter();
                 obj.Init(model, userState, true);
-                if (dest is null) ThrowHelper.ThrowArgumentNullException(nameof(dest));
+                ThrowHelper.ThrowIfNull(dest, nameof(dest));
                 if (!dest.CanWrite) ThrowHelper.ThrowArgumentException("Cannot write to stream", nameof(dest));
                 //if (model is null) ThrowHelper.ThrowArgumentNullException("model");
                 obj.dest = dest;

@@ -102,7 +102,7 @@ namespace ProtoBuf
 
         private static IExtension GetExtension(ITypedExtensible instance, Type type, bool createIfMissing, ref TypeModel? model)
         {
-            if (instance is null) ThrowHelper.ThrowArgumentNullException(nameof(instance));
+            ThrowHelper.ThrowIfNull(instance, nameof(instance));
 
             var objType = instance.GetType();
             type ??= objType;

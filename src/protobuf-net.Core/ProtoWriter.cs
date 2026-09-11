@@ -100,7 +100,7 @@ namespace ProtoBuf
         /// <returns>A token representing the state of the stream; this token is given to EndSubItem.</returns>
         [MethodImpl(HotPath)]
         [Obsolete(PreferWriteMessage, false)]
-        public static SubItemToken StartSubItem(object instance, ProtoWriter writer)
+        public static SubItemToken StartSubItem(object? instance, ProtoWriter writer)
         {
             var state = writer.DefaultState();
             var result = state.StartSubItem(instance, PrefixStyle.Base128);
@@ -108,7 +108,7 @@ namespace ProtoBuf
             return result;
         }
 
-        private void PreSubItem(ref State state, object instance)
+        private void PreSubItem(ref State state, object? instance)
         {
             if (_depth < 0) state.ThrowInvalidSerializationOperation();
             if (++_depth >= (model is null ? TypeModel.DefaultMaxDepth : model.MaxDepth))
@@ -122,10 +122,12 @@ namespace ProtoBuf
             if (packedFieldNumber != 0) ThrowHelper.ThrowInvalidOperationException("Cannot begin a sub-item while performing packed encoding");
         }
 
-        private List<object>? recursionStack;
-        private void CheckRecursionStackAndPush(object instance)
+        // null is a legitimate entry: the recursion check only applies to reference types with the
+        // check enabled, and every other caller passes null deliberately (see StartSubItem)
+        private List<object?>? recursionStack;
+        private void CheckRecursionStackAndPush(object? instance)
         {
-            if (recursionStack is null) { recursionStack = new List<object>(); }
+            if (recursionStack is null) { recursionStack = new List<object?>(); }
             else if (instance is not null)
             {
                 int hitLevel = 0;

@@ -1139,7 +1139,7 @@ namespace ProtoBuf
             [MethodImpl(MethodImplOptions.NoInlining)]
             public void AppendExtensionData(IExtensible instance)
             {
-                if (instance is null) ThrowHelper.ThrowArgumentNullException(nameof(instance));
+                ThrowHelper.ThrowIfNull(instance, nameof(instance));
                 // reconstruct the tag from state (the join the raw path never splits), then the
                 // raw capture: byte-preserving, allocation-free - replacing the legacy
                 // ProtoWriter-based re-encode outright
@@ -1153,7 +1153,7 @@ namespace ProtoBuf
             [MethodImpl(MethodImplOptions.NoInlining)]
             public void AppendExtensionData(ITypedExtensible instance, Type type)
             {
-                if (instance is null) ThrowHelper.ThrowArgumentNullException(nameof(instance));
+                ThrowHelper.ThrowIfNull(instance, nameof(instance));
                 AppendExtensionData((uint)((_fieldNumber << 3) | ((int)_wireType & 7)), instance, type);
                 _wireType = WireType.None;
             }

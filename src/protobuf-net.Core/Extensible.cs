@@ -61,7 +61,7 @@ namespace ProtoBuf
         /// and true during deserialization upon encountering unexpected fields.</remarks>
         public static IExtension? GetExtensionObject(ref IExtension? extensionObject, Type type, bool createIfMissing)
         {
-            if (type is null) ThrowHelper.ThrowArgumentNullException(nameof(type));
+            ThrowHelper.ThrowIfNull(type, nameof(type));
 
             // look for a pre-existing node that represents the specified type
             BufferExtension? root = extensionObject as BufferExtension, current = root;

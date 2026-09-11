@@ -28,6 +28,18 @@ namespace System.Diagnostics.CodeAnalysis
     {
     }
 
+    /// <summary>Specifies that an output is not null even if the corresponding type allows it.</summary>
+    /// <remarks>
+    /// On a parameter this is a POST-condition: after the call, the argument is not null. That is
+    /// what lets a null-guard helper establish non-nullness for its caller, which a bare
+    /// <c>if (x is null) Throw...</c> cannot - testing for null widens the value to maybe-null for
+    /// the rest of the method, so the guard destroys exactly what it was meant to prove.
+    /// </remarks>
+    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Parameter | AttributeTargets.Property | AttributeTargets.ReturnValue, Inherited = false)]
+    internal sealed class NotNullAttribute : Attribute
+    {
+    }
+
     /// <summary>Specifies that when a method returns <see cref="ReturnValue"/>, the parameter will not be null even if the corresponding type allows it.</summary>
     [AttributeUsage(AttributeTargets.Parameter, Inherited = false)]
     internal sealed class NotNullWhenAttribute : Attribute
