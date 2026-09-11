@@ -2122,6 +2122,55 @@ in step.
   not emitted; it currently falls through to the catch-all. Needs either a Connect answer or an explicit
   refusal.
 
+## 37. Golden tests, and refusing byte streaming
+
+### `Task<Stream>` is refused — but not for the reason it looks
+
+Review's instinct was that byte streaming needs full duplex. **It does not**: `notes/aot/grpc.md` records
+that protobuf-net.Grpc carries `Task<Stream>` as a **server-streaming call of `BytesValue`**, and we have
+server streaming. So this is a *gap*, not an impossibility.
+
+What is actually missing is two things the gRPC runtime supplies: a bytes-carrier message with its own
+marshalling (`BytesValue`, which `MarshallerCache` pre-seeds so it never reaches the `TypeModel`), and
+the `Stream`↔chunks reshape — `Reshape.WriteStream` on the server, `ServerByteStreaming{Task,ValueTask}Async`
+on the client — both of which work against `Grpc.Core`'s writer types rather than ours.
+
+It is now refused through `PBN5001` with a reason saying exactly that. **No separate id**: `PBN5001`'s
+format already carries a per-method reason, and a registered-but-unused id is worse than none. Refusing
+loudly beats emitting something that compiles and then truncates a download.
+
+### The goldens exist, and the first one earned its keep immediately
+
+`src/BuildToolsUnitTests/Connect/` on the same harness as the other two generators — `*.input.cs` paired
+with `*.output.cs` and `*.txt`, both rewritten each run then asserted. **540 tests**, and the first
+fixture covers all five method shapes plus both context kinds.
+
+Two surface snapshots are compiled alongside: the **gRPC** one for the contract vocabulary Connect
+shares (`[Service]`, `[ProtoService]`, `CallContext`) and a new `_ConnectSurface.cs` for the transport.
+The point is that the generated code is **compiled** in the test, and it paid for itself on the first
+run by reporting three errors:
+
+- `ServiceCollectionDescriptorExtensions.TryAddScoped` was not in the snapshot;
+- `ProtoConnectCodec` did not derive from anything `ConnectServerOptions.Codecs` would accept.
+
+Both were snapshot gaps rather than generator bugs — which is the *good* failure mode, and precisely
+what would otherwise have surfaced in a consumer's build.
+
+`CallContext` in the gRPC snapshot also gained `CallOptions` and `CancellationToken`. The real type has
+both; the snapshot simply had not needed them, and the Connect proxy reads them. That makes the shared
+snapshot a more accurate picture of protobuf-net.Grpc than it was, which is the right direction for a
+file whose whole risk is drift.
+
+### Still to do on the generator
+
+- **More fixtures.** One covers the happy path; the refusals and the shapes `ContractOperation`
+  recognises but this fixture does not use - void/`Empty`, `ValueTask`, no context, overloads,
+  `[SubService]` - are unpinned. §29's warning about a uniform fixture applies here with more force now
+  that goldens exist to hold the answers.
+- **Serializer hoisting**, which needs `ProtoModelGenerator` to emit the `Serializer<T>()` accessor (§19).
+- **Contract-name collisions.** `ContractName` takes the simple name; two contracts of the same simple
+  name in one container would collide, and the generator can see that and qualify.
+
 ## 12. Unverified — check before committing to any of this
 
 Everything below is assumption or inference, not measurement:

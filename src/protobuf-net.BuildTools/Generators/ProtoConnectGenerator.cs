@@ -110,7 +110,29 @@ namespace ProtoBuf.BuildTools.Generators
                 // [SubService] walk arrives from here rather than being re-derived
                 var parsed = GrpcProxyGenerator.ParseContract(contract, implementation, cancellationToken);
                 foreach (var diagnostic in parsed.Diagnostics) diagnostics.Add(diagnostic);
-                if (parsed.Model is { } model) services.Add(model);
+                if (parsed.Model is not { } model) continue;
+
+                // Byte streaming is classified by the shared parse but not emitted here. It is NOT a
+                // duplex shape - protobuf-net.Grpc carries Task<Stream> as a *server-streaming* call of
+                // BytesValue - and we do have server streaming, so this is a gap rather than an
+                // impossibility. What is missing is a bytes-carrier message with its own marshalling,
+                // plus the Stream-to-chunks reshape: protobuf-net.Grpc's lives in Reshape.WriteStream
+                // and ServerByteStreaming*Async, which work against Grpc.Core's writer types. Refusing
+                // loudly beats emitting something that compiles and then truncates a download.
+                if (TryFindByteStream(model) is { } offending)
+                {
+                    diagnostics.Add(new DiagnosticInfo(
+                        GrpcDiagnosticKind.UnsupportedMethodShape,
+                        contract.Locations.FirstOrDefault(),
+                        model.InterfaceFullName,
+                        offending,
+                        "it returns a Stream, which is not implemented yet - protobuf-net.Grpc carries "
+                            + "that as a server-streaming call of a bytes message, which needs a "
+                            + "carrier type and a Stream-to-chunks reshape this generator does not have"));
+                    continue;
+                }
+
+                services.Add(model);
             }
 
             var plan = new ConnectContainerPlan(
@@ -124,6 +146,21 @@ namespace ProtoBuf.BuildTools.Generators
                 services: new EquatableArray<GrpcInterfaceModel>(services.ToArray()));
 
             return new ConnectCandidate(plan, new EquatableArray<DiagnosticInfo>(diagnostics.ToArray()));
+        }
+
+        /// <summary>
+        /// The first operation returning a <see cref="System.IO.Stream"/>, if any.
+        /// </summary>
+        private static string? TryFindByteStream(GrpcInterfaceModel model)
+        {
+            foreach (var op in model.Operations)
+            {
+                if (op.ResponseShape is GrpcResultShape.TaskStream or GrpcResultShape.ValueTaskStream)
+                {
+                    return op.MethodName;
+                }
+            }
+            return null;
         }
 
         private static string? ReadModel(ImmutableArray<AttributeData> attributes)
