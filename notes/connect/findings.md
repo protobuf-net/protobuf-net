@@ -2826,6 +2826,99 @@ which is the useful way round.
 - Wiring conformance into CI: it needs the runner binary downloaded, so it is a job step rather than a
   traversal-build target.
 
+## 46. JSON: what it is, and the two halves it splits into
+
+Connect's JSON is not "some JSON". The specification says it outright — *"Choose the `proto` content
+types for binary serialization and the `json` types to use the **canonical JSON mapping**"* — so it is
+Google's protojson, the same mapping every other implementation produces. That single sentence decides
+most of the design, because it means JSON here is a **specified transformation of a protobuf schema**,
+not a serialization of whatever object graph happens to be in front of us.
+
+The transport needs nothing: a codec is selected by name from the content-type, and `ConnectCodec`
+already has exactly the right shape. Everything below is about producing the bytes.
+
+### Contract-first: use Google's, and it is nearly free
+
+**Measured, not assumed** (`scratchpad/jsonaot`, `PublishAot`, linux-x64): `JsonFormatter` and
+`JsonParser` publish with **one** IL warning — `RepeatedField.TryGetArrayAsSpanPinnedUnsafe` using
+`Marshal.SizeOf(Type)`, an unrelated packed-primitive fast path — and the native binary **round-trips
+correctly**. That was worth checking rather than assuming: `ReflectionUtil` builds field accessors and
+looked certain to sink this, and it does not.
+
+The seam problem, and its solution, are worth recording because neither is obvious:
+
+`IConnectMessageCodec<T>` has no `IMessage` constraint and **cannot acquire one** —
+`ServiceBinderBase.AddMethod<TRequest, TResponse>` is constrained to `class`, so nothing downstream of
+a generated `BindService` can be more specific. Google's non-generic entry points get us out of it:
+
+- **write** is `JsonFormatter.Format(IMessage)` — instance-based, no generics at all;
+- **read** is `JsonParser.Parse(string, MessageDescriptor)` — and the descriptor is obtained by
+  materialising **one empty instance through the binary `Marshaller<T>` we already hold**
+  (`marshaller.Deserializer(Array.Empty<byte>())`) and reading `((IMessage)instance).Descriptor`, cached
+  once per method. No reflection, no `Activator`, nothing for ILC to lose.
+
+Verified under native AOT with zero additional warnings.
+
+Note the cost that comes with it: these APIs speak `string`/`TextReader`/`TextWriter`, not UTF-8 spans,
+so there is a transcode on both sides. Fine to start with, and worth measuring before optimising.
+
+### Code-first: the generator emits it, and `System.Text.Json`'s serializer is the wrong tool
+
+Two independent reasons, and the second is the load-bearing one.
+
+**Our generator cannot feed `System.Text.Json`'s generator.** Source generators all run against the
+same input compilation and never see each other's output — the constraint already recorded in
+`notes/aot/` for why `AotSchemaDtos` must be a separate project. Emitting `[JsonSerializable]` would be
+emitting into a void. A *consumer-written* `JsonSerializerContext` would be visible to it, so this alone
+would not be fatal.
+
+**But protobuf JSON is a mapping, not a shape.** `System.Text.Json` serializes a C# object by its C#
+shape; the canonical mapping is specified against the *proto* schema:
+
+- 64-bit integers are **strings**; enums are **names** (readers also accept numbers); `bytes` is base64;
+- field names are lowerCamelCase of the **proto** field name, and a reader must accept the original
+  spelling too;
+- default-valued fields are omitted; `NaN`/`Infinity` are strings; map keys are always strings;
+- the well-known types are special-cased throughout: `Timestamp` → RFC3339 string, `Duration` → `"1.5s"`,
+  the wrappers → a bare value, `FieldMask` → a comma-separated path list, `Struct`/`Value`/`ListValue` →
+  plain JSON, `Any` → `{"@type": ...}`.
+
+For protobuf-net specifically the sharpest of these is the **compatibility-level BCL group**: at level
+240/300 a `DateTime` *is* a `google.protobuf.Timestamp`, so its JSON is an RFC3339 string rather than
+anything `System.Text.Json` would produce for a `DateTime`; likewise `TimeSpan` → `Duration`, `decimal`
+→ `DecimalString`, `Guid` → `GuidString`. Those decisions are already computed by `ProtoModelGenerator`
+for the binary path and are invisible to any POCO serializer.
+
+So the shape is the one `[ProtoModel]` already has: **emit the read and write from the same plan**, over
+`Utf8JsonWriter`/`Utf8JsonReader` — `System.Text.Json`'s *low-level* primitives, which are AOT-safe and
+which this assembly already uses for the error envelope. Doing so gives up the standing position that
+"nothing here is a JSON *codec*"; that should be given up **deliberately**, not drifted out of.
+
+### The risk to settle before writing any of it
+
+**JSON makes the field NAME an interop contract for the first time.** Binary needs only field numbers,
+and a name that differs from another language's expectation costs nothing. Canonical JSON is keyed on
+the proto field name — and code-first protobuf-net *derives* that from the C# member name unless
+`[ProtoMember(Name = ...)]` pins it.
+
+If our JSON writer and `protobuf-net.Reflection`'s schema generator disagree about a member's name, we
+break interop **silently**, against a `.proto` the other side generated from our own schema. §12 lists
+exactly this as unverified ("whether protobuf-net's schema output is faithful enough... it has never
+been the *interop* contract before, and JSON would make it one"). It is no longer hypothetical, and it
+gates the code-first design rather than following from it.
+
+The likely guidance that falls out: a code-first contract wanting JSON interop should pin its names,
+the same way it already pins `[Service("pkg.v1.Name")]` rather than accepting the derived one.
+
+### Order of work
+
+1. **Contract-first JSON** — small, mostly wiring, and proven above.
+2. **Declare `CODEC_JSON` in conformance for that path**, giving a measured number before any generator
+   work is committed to. The suite carries a full JSON matrix and will find every corner of the mapping.
+3. **Settle the name question** against the schema generator. Cheap, and it gates the design.
+4. **Code-first JSON in the generator**, staged: scalars, messages, repeated, maps and enums first; the
+   well-known and compatibility-level types second.
+
 ## 12. Unverified — check before committing to any of this
 
 Everything below is assumption or inference, not measurement:
