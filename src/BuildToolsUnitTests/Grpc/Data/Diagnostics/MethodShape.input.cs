@@ -6,9 +6,12 @@
 // path with it. The alternative, emitting a proxy with some members missing, would turn a contract
 // that works today into a startup failure.
 //
-// Both refused shapes here are deliberate rather than incidental. A Stream payload is a runtime-path
-// shape (protobuf-net.Grpc reshapes it), and a generic method has no fixed request or response type
-// to build a Method<,> from.
+// The refusals here are deliberate rather than incidental. A generic method has no fixed request or
+// response type to build a Method<,> from, and IObservable<T> is a runtime-path shape that no
+// build-time generator can express.
+//
+// Note Task<Stream> is NOT refused and produces no diagnostic: byte streaming was implemented, and it
+// is kept here as the contrast - a shape that once belonged on this list and no longer does.
 using ProtoBuf;
 using ProtoBuf.Grpc;
 using ProtoBuf.Grpc.Configuration;
@@ -40,6 +43,9 @@ public interface IThing
     Task<Stream> DownloadAsync(Request request, CallContext context = default);
 
     Task<T> EchoAsync<T>(T request, CallContext context = default) where T : class;
+
+    // pins the "not a shape the generator can express" wording, which no fixture covered before
+    System.IObservable<Reply> Watch(Request request, CallContext context = default);
 }
 
 [ProtoModel]

@@ -1954,6 +1954,57 @@ all been called.
 **Verified able to fail**, not merely observed to pass: removing the guard gives *"expected exactly one
 codec, found 3"* and a non-zero exit.
 
+## 34. Step one of the generator: making the parse shareable
+
+`GrpcProxyGenerator`'s contract parse is what a Connect generator wants to reuse — it recognises every
+method shape (`GrpcMethodKind`, `GrpcContextKind`, `GrpcArgShape`, `GrpcResultShape`, `VoidRequest`/
+`VoidResponse`, overloads, `[SubService]`, closed generics, WCF markers) and produces plain data with no
+Roslyn references. `AGENTS.md` mandates sharing it rather than forking.
+
+### It was already almost transport-neutral
+
+All ten `"Grpc..."` occurrences in its 753 lines turned out to be, on inspection:
+
+| | |
+| --- | --- |
+| namespace literals for **type matching** — `IsType(type, "Grpc.Core", "CallOptions")` | correct for both generators; **both** reject those types |
+| comments | harmless |
+| **one clause**, at three sites | the only real problem |
+
+My first estimate of "three places need parameterising" was wrong: it is *one* clause appearing three
+times, two of those being the same expression. The genuinely gRPC-worded diagnostics — *"generates gRPC
+proxies"*, *"build-time gRPC proxies"* — all live in `.Diagnostics.cs` and `.Emit.cs`, which a Connect
+generator gets its own copies of.
+
+### The clause, and why a neutral noun would not have fixed it
+
+> *a shape only **the runtime proxy handles** — Stream, `IObservable<T>` and `Grpc.Core`'s own call
+> types are reshaped at run time*
+
+The type list is fine for both — those really are `Grpc.Core` types, and both generators reject them.
+What does not transfer is the assertion that **a fallback exists**: true for gRPC, where the reflective
+`CreateGrpcService` handles them; false for Connect, which has no runtime path at all. So substituting
+"service" or "RPC" for "gRPC" would not have helped — there is no gRPC-flavoured noun, there is a claim
+about a runtime that only one of the two has.
+
+It is now one `private const RuntimeOnlyShapes`, saying what is wrong and nothing about what handles it.
+
+**And gRPC loses nothing**, which is the part worth knowing: `PBN4002`'s own `messageFormat` *already*
+ends *"the whole contract is left to the runtime proxy, which is not trim/AOT-friendly"*. The reason
+string was duplicating it — the old message said "runtime proxy" twice. Neutralising made the gRPC
+diagnostic **better**, not merely compatible.
+
+### The change was unverified until a fixture was added
+
+539 tests passed and **no golden moved** — which is not reassurance, it is the finding. The only PBN4002
+fixture exercises a *different* reason ("it is generic"), and `GrpcDroppedUnderAotTests` asserts only
+the id, so none of the three rejection paths had its wording pinned by anything.
+
+`MethodShape.input.cs` now carries an `IObservable<Reply>` member, which pins it. Its comment was also
+stale: it claimed `Task<Stream>` was refused, which stopped being true when byte streaming landed — the
+fixture now keeps `Task<Stream>` deliberately, as the contrast of a shape that once belonged on the list
+and no longer does.
+
 ## 12. Unverified — check before committing to any of this
 
 Everything below is assumption or inference, not measurement:
