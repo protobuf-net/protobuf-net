@@ -180,7 +180,9 @@ namespace ProtoBuf.Internal
             {
                 try
                 {
-                    return (DynamicStub)Activator.CreateInstance(typeDef.MakeGenericType(args), nonPublic: true);
+                    // a concrete closed generic with a non-public parameterless ctor; Activator cannot
+                    // answer null for it, and the catch below covers every way it can fail
+                    return (DynamicStub)Activator.CreateInstance(typeDef.MakeGenericType(args), nonPublic: true)!;
                 }
                 catch
                 {
@@ -189,7 +191,7 @@ namespace ProtoBuf.Internal
             }
 
             // Applies common proxy scenarios, resolving the actual type to consider
-            static Type ResolveProxies(Type type)
+            static Type? ResolveProxies(Type type)
             {
                 if (type is null) return null;
                 if (type.IsGenericParameter) return null;

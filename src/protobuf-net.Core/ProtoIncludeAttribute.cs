@@ -51,7 +51,7 @@ namespace ProtoBuf
         /// Gets the additional type to serialize/deserialize.
         /// </summary>
         [DynamicallyAccessedMembers(DynamicAccess.ContractType)]
-        public Type KnownType => TypeModel.ResolveKnownType(KnownTypeName, null);
+        public Type? KnownType => TypeModel.ResolveKnownType(KnownTypeName, null);
 
         /// <summary>
         /// Specifies whether the inherited type's sub-message should be

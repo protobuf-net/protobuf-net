@@ -15,7 +15,7 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// The type involved in this map; if this is initially null, a Type is expected to be provided for the string in FormattedName.
         /// </summary>
-        public Type Type
+        public Type? Type
         {
             get { return type; }
             set
@@ -31,7 +31,7 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// The formatted-name involved in this map; if this is initially null, a formatted-name is expected from the type in Type.
         /// </summary>
-        public string FormattedName
+        public string? FormattedName
         {
             get { return formattedName; }
             set
