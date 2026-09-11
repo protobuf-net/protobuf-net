@@ -4,6 +4,8 @@
     <!-- the compile-time model attributes are [Experimental] while the shape settles -->
     <NoWarn>$(NoWarn);PBN9001</NoWarn>
     <TargetFramework>net8.0</TargetFramework>
+    <!-- an MTP test app is its own host, so it must be an exe; Directory.Build.props defaults to Library -->
+    <OutputType>Exe</OutputType>
     <RootNamespace>ProtoBuf.AotConformance</RootNamespace>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <IsPackable>false</IsPackable>
@@ -33,12 +35,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit.v3" />
-    <PackageReference Include="xunit.runner.visualstudio">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-    </PackageReference>
   </ItemGroup>
 
 </Project>
