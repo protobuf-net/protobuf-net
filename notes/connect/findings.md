@@ -21,9 +21,13 @@ Working notes for a possible Connect implementation, in the same spirit as `note
 > server reflection (optional, ecosystem convention rather than protocol, and already an open item
 > against `protobuf-net.Grpc.Reflection`).
 >
-> **Next step if this proceeds:** the §10 phase-0 spike — `ConnectCallInvoker`, unary, binary,
-> pointed at connect-go's reference server. Days, not weeks, and it either validates the reading of
-> the spec or kills the idea cheaply.
+> **§13 is measured, not read**: a live binary-codec unary call to `demo.connectrpc.com` over
+> **HTTP/1.1**, with the bare-body request/response and the JSON error shape confirmed by hexdump.
+> The protocol reading in §2 is correct.
+>
+> **Next step if this proceeds: §14, the staged MVP path.** Stage 0 is ~50 lines of `HttpClient`
+> against the Eliza demo service — no generator, no abstractions — and it de-risks everything
+> downstream for a day's work.
 
 ## 1. What Connect is, and why it is interesting here
 
@@ -572,6 +576,111 @@ Note the protocols axis: the suite would also measure a gRPC or gRPC-Web impleme
 `ConnectCallInvoker` spike works, running it in `PROTOCOL_GRPC` mode is a free external check on the
 *existing* protobuf-net.Grpc client surface, which nothing currently tests from outside.
 
+## 13. Probed live, 2026-09-11 — the protocol reading is correct
+
+The first things in this note that are **measured rather than read**. `demo.connectrpc.com` runs the
+Eliza demo service on connect-go; it is public, always on, and needs no toolchain, which makes it a
+day-one oracle for a .NET client.
+
+**Binary unary, forced HTTP/1.1** — the shape the MVP targets:
+
+```
+$ printf '\x0a\x02hi' > say.bin          # SayRequest { sentence = "hi" }
+$ curl -i --http1.1 -H "Content-Type: application/proto" -H "Connect-Protocol-Version: 1" \
+       --data-binary @say.bin https://demo.connectrpc.com/connectrpc.eliza.v1.ElizaService/Say
+
+HTTP/1.1 200 OK
+content-type: application/proto
+Content-Length: 31
+
+00000000: 0a1d 4869 2074 6865 7265 2e2e 2e68 6f77  ..Hi there...how
+00000010: 2061 7265 2079 6f75 2074 6f64 6179 3f     are you today?
+```
+
+Confirmed by that, rather than inferred:
+
+- **the request body is the bare message.** `0a 02 68 69` is exactly what protobuf-net emits for
+  `[ProtoContract] class SayRequest { [ProtoMember(1)] public string Sentence }`. No envelope, no
+  length prefix, no framing of any kind;
+- **the response is the bare message**, same deal;
+- **HTTP/1.1 works, with `Content-Length` and no trailers anywhere.** This is the claim the whole case
+  rests on, and it is now evidence;
+- `application/json` works on the same endpoint with the same path, returning
+  `{"sentence":"Hello, how are you feeling today?"}` — i.e. codec is purely content-type.
+
+**Errors**, also measured:
+
+| request | response |
+| --- | --- |
+| malformed body | `400`, `content-type: application/json`, `{"code":"invalid_argument","message":"unmarshal message: …"}` |
+| unknown method (`/Nope`) | `404`, `content-type: **text/plain**`, no JSON body at all |
+
+The second row is why the spec carries an HTTP-status → code *inference* table: an unrouted path is
+answered by the HTTP layer, not by Connect, so a client must map `404` → `unimplemented` itself rather
+than expecting an error object. **A client that assumes every non-200 carries a JSON error will throw a
+parse exception on the most ordinary failure there is.** Worth a test.
+
+**Tooling**: `connectconformance` ships as a **single statically-linked binary** per platform on the
+GitHub releases page — no Go toolchain — so the external oracle is CI-gatable, in the same way
+`AotDifferential` is.
+
+## 14. Path to an MVP
+
+Goal: a service defined the way protobuf-net.Grpc defines one, a working ASP.NET Core server, and a
+working client. Staged so that **each stage is falsifiable against something external** before the next
+one depends on it, and so that no Roslyn work happens until the shape it must emit is known to work.
+
+### Stage 0 — client against Eliza. No generator, no abstractions.
+
+~50 lines: `HttpClient`, a protobuf-net `[ProtoContract]` pair, POST the bare body, read the bare body.
+Point it at `demo.connectrpc.com` (§13). Add the error path — including the `text/plain` 404.
+
+What it proves: our serializer's bytes are interoperable with a reference Connect implementation, and
+the request/response/error shapes are understood. What it costs: a day. What it de-risks: everything
+downstream. **If this does not work, nothing else is worth starting.**
+
+### Stage 1 — the hand-written target output.
+
+Write by hand, for one `[Service]` interface, exactly what the generator will eventually emit: the
+client proxy and the server endpoint registration. Get it working .NET → .NET over Kestrel, and *also*
+verify the new server against an external Connect **client** (`buf curl`, or `connectconformance` in
+`--mode server`).
+
+This is the repo's established method rather than a shortcut — `AotRefGen` exists precisely so that
+expected generator output is *derived and reviewable* rather than invented. Here there is no ref-emit to
+derive from, so the substitute is: write it, make it work, review it, *then* freeze it as the target.
+
+Reviewing this file is the real decision point on API shape, and it is much cheaper to change here than
+after a generator emits it.
+
+### Stage 2 — the generator.
+
+`ProtoConnectGenerator` in `protobuf-net.BuildTools`, emitting stage 1's file. Golden fixtures under
+`src/BuildToolsUnitTests/Connect/Data/` on the existing harness (`*.input.cs` → `*.output.cs` +
+`*.txt`, rewritten in-tree on every run). Diagnostics in the free **`PBN5xxx`** block, registered in
+`AnalyzerReleases.Unshipped.md` or the build fails (`RS2000`).
+
+Contract parsing is **shared with `GrpcProxyGenerator`, not forked** — the five method shapes,
+`CallContext`, `[SubService]`, void/`Empty`, overloads, closed generics. That sharing is the single
+largest reason to do this in-repo.
+
+### Stage 3 — conformance, and a smoke test.
+
+`src/AotConnectSmoke` on the `AotSmoke`/`AotGrpcSmoke` pattern: a `PublishAot` app that round-trips and
+exits non-zero on mismatch, published on both RIDs in the existing CI job. Then `connectconformance`
+with a narrow `features` declaration (`codecs: [CODEC_PROTO]`, unary only), widened as stages land.
+
+### What is deliberately *not* in the MVP
+
+- **JSON** (§4) — optional, declarable-away in conformance, and the long pole.
+- **Streaming** — unary is the bare-body form and needs no framing at all; streaming needs the
+  envelope reader/writer and `EndStreamResponse`. Additive, and a clean second increment.
+- **GET/idempotency, compression negotiation, reflection, rich error details.** The last of these is
+  blocked on stable qualified names anyway (§3b).
+- **The `ConnectCallInvoker`** (§8.1). Still high-value and still cheap, but it is a *parallel*
+  deliverable for existing protobuf-net.Grpc consumers, not a step on this path — an MVP with two
+  client implementations is an MVP with one too many.
+
 ## 12. Unverified — check before committing to any of this
 
 Everything below is assumption or inference, not measurement:
@@ -584,8 +693,6 @@ Everything below is assumption or inference, not measurement:
 - protobuf-net map member determinism, which GET-as-cache-key depends on.
 - The exact CORS header set browsers need for Connect (`connect-protocol-version`, `connect-timeout-ms`
   and friends must be allowed, and exposed on responses). Only matters once JSON exists.
-- Whether `connectconformance` is distributed in a form we can invoke from CI without a Go toolchain
-  (release binaries are believed to exist; not checked).
 - Whether protobuf-net's schema output is faithful enough that a `.proto` emitted from a code-first
   model round-trips through another language's codegen to the same field numbers *and names*. Believed
   yes — it is what protobuf-net.Grpc.Reflection already relies on — but it has never been the *interop*
