@@ -31,15 +31,18 @@ namespace ProtoBuf.Internal
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static bool TrySerializeRoot(Type type, TypeModel? model, ref ProtoWriter.State state, object value)
         {
+            // the PARAMETER stays non-null; the walk is what becomes null at the top of the
+            // hierarchy, so it gets its own local rather than widening the argument
+            Type? walk = type;
             do
             {
-                if (Get(type).TrySerializeRoot(model, ref state, value))
+                if (Get(walk).TrySerializeRoot(model, ref state, value))
                 {
                     return true;
                 }
                 // since we might be ignoring sub-types, we need to walk upwards and check all
-                type = type.BaseType;
-            } while (type is not null && type != typeof(object));
+                walk = walk.BaseType;
+            } while (walk is not null && walk != typeof(object));
             return false;
         }
 
@@ -50,31 +53,37 @@ namespace ProtoBuf.Internal
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static bool TrySerializeAny(int fieldNumber, SerializerFeatures features, Type type, TypeModel? model, ref ProtoWriter.State state, object value)
         {
+            // the PARAMETER stays non-null; the walk is what becomes null at the top of the
+            // hierarchy, so it gets its own local rather than widening the argument
+            Type? walk = type;
             do
             {
-                if (Get(type).TrySerializeAny(fieldNumber, features, model, ref state, value))
+                if (Get(walk).TrySerializeAny(fieldNumber, features, model, ref state, value))
                 {
                     return true;
                 }
                 // since we might be ignoring sub-types, we need to walk upwards and check all
-                type = type.BaseType;
-            } while (type is not null && type != typeof(object));
+                walk = walk.BaseType;
+            } while (walk is not null && walk != typeof(object));
             return false;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static bool TryDeepClone(Type type, TypeModel? model, ref object value)
         {
+            // the PARAMETER stays non-null; the walk is what becomes null at the top of the
+            // hierarchy, so it gets its own local rather than widening the argument
+            Type? walk = type;
             do
             {
-                if (Get(type).TryDeepClone(model, ref value))
+                if (Get(walk).TryDeepClone(model, ref value))
                 {
                     return true;
                 }
                 // since we might be ignoring sub-types, we need to walk upwards and check all
-                type = type.BaseType;
+                walk = walk.BaseType;
             }
-            while (type is not null && type != typeof(object));
+            while (walk is not null && walk != typeof(object));
             return false;
         }
 
@@ -129,7 +138,8 @@ namespace ProtoBuf.Internal
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static DynamicStub? SlowGet(Type type)
+        /// <remarks>Never null: every path answers a stub, NilStub.Instance at worst.</remarks>
+        private static DynamicStub SlowGet(Type type)
         {
             
             if (type is null) return NilStub.Instance;
