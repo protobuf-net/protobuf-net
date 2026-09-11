@@ -122,3 +122,25 @@ jobs:
       run: |
         dotnet publish src/AotConnectSmoke/AotConnectSmoke.csproj -c Release -r linux-x64 -o artifacts/aot-connect-smoke
         ./artifacts/aot-connect-smoke/AotConnectSmoke
+    # The only EXTERNAL oracle in this repo: connectrpc/conformance drives a real Connect client against
+    # our server, and our client against its reference server, and checks the wire rather than our
+    # opinion of it. Worth gating because of what it catches - every defect it has found so far was a
+    # place where both of our own ends agreed with each other and neither agreed with the protocol,
+    # which no self-test can find by construction (notes/connect/findings.md §44, §47).
+    #
+    # This is a pinned release artefact with its checksum verified, not a live service - the distinction
+    # that keeps src/ConnectProbe out of CI (it calls demo.connectrpc.com, and a third party's uptime
+    # has no business gating our builds) does not apply to a download that is byte-identical forever.
+    - name: Run the Connect conformance suite
+      run: |
+        set -euo pipefail
+        VERSION=1.0.5
+        SHA=7d4d1f36980debf900b12514c8d51107245e9195b3c581e61fa165fd95c94284
+        curl -sSL --retry 3 -o conformance.tar.gz \
+          "https://github.com/connectrpc/conformance/releases/download/v$VERSION/connectconformance-v$VERSION-Linux-x86_64.tar.gz"
+        echo "$SHA  conformance.tar.gz" | sha256sum -c -
+        tar xzf conformance.tar.gz connectconformance
+        dotnet publish src/ConnectConformance/ConnectConformance.csproj -c Release -o artifacts/conformance
+        CONF=src/ConnectConformance/conformance-config.yaml
+        ./connectconformance --mode server --conf $CONF -- ./artifacts/conformance/ConnectConformance
+        ./connectconformance --mode client --conf $CONF -- ./artifacts/conformance/ConnectConformance --client

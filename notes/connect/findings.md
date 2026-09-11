@@ -2821,9 +2821,10 @@ which is the useful way round.
 
 - JSON codec — now unambiguously the largest remaining piece.
 - Compression, Connect GET, TLS.
-- An HTTP-version option, per the duplex gap above.
-- Wiring conformance into CI: it needs the runner binary downloaded, so it is a job step rather than a
-  traversal-build target.
+- ~~An HTTP-version option, per the duplex gap above.~~ **Done — §49.**
+- ~~Wiring conformance into CI.~~ **Done:** a step on the linux job, which downloads the pinned runner
+  (checksum verified) and runs both modes. It is a release artefact rather than a live service, which is
+  what makes it fair to gate on where `src/ConnectProbe` is not.
 
 ## 46. JSON: what it is, and the two halves it splits into
 
