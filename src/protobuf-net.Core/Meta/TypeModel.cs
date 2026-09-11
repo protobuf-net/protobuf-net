@@ -134,7 +134,9 @@ namespace ProtoBuf.Meta
         protected internal Type MapType(Type type, bool demand) => type;
 
         [SuppressMessage("Style", "IDE0066:Convert switch statement to expression", Justification = "Readability")]
-        internal static WireType GetWireType(TypeModel? model, DataFormat format, Type? type)
+        /// <remarks><paramref name="type"/> is dereferenced on the first line, so it is not optional
+        /// whatever the callers' own parameters say.</remarks>
+        internal static WireType GetWireType(TypeModel? model, DataFormat format, Type type)
         {
             if (type.IsEnum) return WireType.Varint;
 
