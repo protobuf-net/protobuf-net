@@ -1,5 +1,6 @@
-using System.Collections.Generic;
 using Grpc.Core;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Routing;
 using ProtoBuf.Connect;
 using ProtoBuf.Connect.AspNetCore;
 using ProtoBuf.Grpc;
@@ -14,134 +15,118 @@ namespace ProtoBuf.AotConnectSmoke;
 // generator output is derived and reviewable rather than invented - and here there is no ref-emit to
 // derive from, so writing it, making it work and reviewing it is the substitute.
 //
+// The shape mirrors GrpcProxyGenerator's output: everything is nested inside one consumer-declared
+// partial class, which is what a [ProtoConnect(Model = typeof(SmokeModel))] attribute would mark. That
+// container is not decoration - it is where the model is named, where CreateClient<T> lives, and what
+// the registration extension hangs off. SmokeServices stands in for it here.
+//
 // Three properties to preserve when this becomes generated:
 //   - nothing here reflects, and nothing here needs to;
 //   - the service and method names are the only strings, and they come from the contract;
 //   - protobuf-net.Grpc appears HERE, in generated code, and not in the runtime libraries. That is
 //     what keeps the v2/v3 TypeModel collision in the consumer's project, where a reference to
-//     protobuf-net v3 resolves it - and it is exactly what GrpcProxyGenerator already does, whose
-//     server bindings likewise construct the CallContext themselves.
+//     protobuf-net v3 resolves it. Note the collision is per-*usage*, not per-assembly: it fires only
+//     where TypeModel is named, which is why ConnectCallOptions.From can live in the library.
 // ---------------------------------------------------------------------------------------------
 
-/// <summary>The methods of <see cref="IGreeter"/>, shared by the client proxy and the server bindings.</summary>
-/// <remarks>
-/// The serializers are resolved <em>here</em>, once, in the static initialiser - not per message. This
-/// is the closest thing to a marshaller in the design, and unlike protobuf-net.Grpc's it is not working
-/// around anything: there is no MarshallerCache and no CanSerialize gate on this path (§18). It simply
-/// hoists the model lookup - a static field read, a virtual call and a second static field read - out
-/// of every request.
-/// </remarks>
-internal static class GreeterMethods
+/// <summary>Stands in for a <c>[ProtoConnect(Model = typeof(SmokeModel))] partial class</c>.</summary>
+internal sealed class SmokeServices
 {
-    public const string ServiceName = "aotconnectsmoke.v1.Greeter";
+    /// <summary>Use <see cref="Instance"/>; this holds per-service state and is meant to be shared.</summary>
+    private SmokeServices() { }
 
-    public static readonly ConnectMethod<HelloRequest, HelloReply> SayHello =
-        new(ConnectMethodType.Unary, ServiceName, "SayHello",
-            requestSerializer: SmokeModel.Serializer<HelloRequest>(),
-            responseSerializer: SmokeModel.Serializer<HelloReply>());
+    /// <summary>A shared instance; thread-safe, and intended to be reused.</summary>
+    public static SmokeServices Instance { get; } = new SmokeServices();
 
-    public static readonly ConnectMethod<HelloRequest, HelloReply> Refuse =
-        new(ConnectMethodType.Unary, ServiceName, "Refuse",
-            requestSerializer: SmokeModel.Serializer<HelloRequest>(),
-            responseSerializer: SmokeModel.Serializer<HelloReply>());
-
-    public static readonly ConnectMethod<HelloRequest, HelloReply> Explode =
-        new(ConnectMethodType.Unary, ServiceName, "Explode",
-            requestSerializer: SmokeModel.Serializer<HelloRequest>(),
-            responseSerializer: SmokeModel.Serializer<HelloReply>());
-
-    public static readonly ConnectMethod<HelloRequest, HelloReply> Dawdle =
-        new(ConnectMethodType.Unary, ServiceName, "Dawdle",
-            requestSerializer: SmokeModel.Serializer<HelloRequest>(),
-            responseSerializer: SmokeModel.Serializer<HelloReply>());
-}
-
-/// <summary>
-/// Converts between protobuf-net.Grpc's <see cref="CallContext"/> and the Connect transport's own
-/// options. Emitted once per assembly; it is the only place the two vocabularies meet.
-/// </summary>
-internal static class ConnectCallContextBridge
-{
-    /// <summary>Client side: a <see cref="CallContext"/>'s deadline and metadata, as transport options.</summary>
-    public static ConnectCallOptions? ToOptions(in CallContext context)
+    /// <summary>Creates a client proxy for one of the services this container knows about.</summary>
+    public TService CreateClient<TService>(ConnectChannel channel) where TService : class
     {
-        var options = context.CallOptions;
-        var deadline = options.Deadline;
-        var headers = options.Headers;
+        if (typeof(TService) == typeof(IGreeter)) return (TService)(object)new GreeterClientProxy(channel);
+        throw new InvalidOperationException(
+            "No build-time Connect proxy for " + typeof(TService).FullName + " in " + nameof(SmokeServices) + ".");
+    }
 
-        if (deadline is null && (headers is null || headers.Count == 0)) return null;
+    /// <summary>
+    /// The method descriptors for <see cref="IGreeter"/>, shared by the proxy and the bindings.
+    /// </summary>
+    /// <remarks>
+    /// The serializers are resolved <em>here</em>, once, in the static initialiser - not per message.
+    /// This is the closest thing to a marshaller in the design, and unlike protobuf-net.Grpc's it is
+    /// not working around anything: there is no MarshallerCache and no CanSerialize gate on this path
+    /// (§18). It simply hoists the model lookup out of every request.
+    /// </remarks>
+    internal static class Greeter
+    {
+        public const string ServiceName = "aotconnectsmoke.v1.Greeter";
 
-        List<KeyValuePair<string, string>>? converted = null;
-        if (headers is not null)
+        public static readonly ConnectMethod<HelloRequest, HelloReply> SayHello = Unary("SayHello");
+        public static readonly ConnectMethod<HelloRequest, HelloReply> Refuse = Unary("Refuse");
+        public static readonly ConnectMethod<HelloRequest, HelloReply> Explode = Unary("Explode");
+        public static readonly ConnectMethod<HelloRequest, HelloReply> Dawdle = Unary("Dawdle");
+
+        private static ConnectMethod<HelloRequest, HelloReply> Unary(string name)
+            => new(ConnectMethodType.Unary, ServiceName, name,
+                requestSerializer: SmokeModel.Serializer<HelloRequest>(),
+                responseSerializer: SmokeModel.Serializer<HelloReply>());
+    }
+
+    /// <summary>
+    /// Client proxy. Private: a consumer reaches it through <see cref="CreateClient{TService}"/> and
+    /// only ever sees <see cref="IGreeter"/>, so the proxy type itself is not API.
+    /// </summary>
+    /// <remarks>
+    /// The signatures are <see cref="IGreeter"/>'s, unchanged - a caller written against the
+    /// protobuf-net.Grpc client sees no difference at all.
+    /// </remarks>
+    private sealed class GreeterClientProxy : IGreeter
+    {
+        private readonly ConnectChannel _channel;
+
+        public GreeterClientProxy(ConnectChannel channel) => _channel = channel;
+
+        public Task<HelloReply> SayHelloAsync(HelloRequest request, CallContext context = default)
+            => _channel.UnaryAsync(Greeter.SayHello, request,
+                ConnectCallOptions.From(context.CallOptions), context.CancellationToken);
+
+        public Task<HelloReply> RefuseAsync(HelloRequest request, CallContext context = default)
+            => _channel.UnaryAsync(Greeter.Refuse, request,
+                ConnectCallOptions.From(context.CallOptions), context.CancellationToken);
+
+        public Task<HelloReply> ExplodeAsync(HelloRequest request, CallContext context = default)
+            => _channel.UnaryAsync(Greeter.Explode, request,
+                ConnectCallOptions.From(context.CallOptions), context.CancellationToken);
+
+        public Task<HelloReply> DawdleAsync(HelloRequest request, CallContext context = default)
+            => _channel.UnaryAsync(Greeter.Dawdle, request,
+                ConnectCallOptions.From(context.CallOptions), context.CancellationToken);
+    }
+
+    /// <summary>
+    /// Server bindings: one typed delegate per method, no reflection. Internal rather than private
+    /// only because the registration extension below has to construct it.
+    /// </summary>
+    internal sealed class GreeterServerBindings : IConnectServiceBinder<GreeterService>
+    {
+        public void Bind(ConnectServiceBinderContext<GreeterService> context)
         {
-            foreach (var entry in headers)
-            {
-                // binary metadata travels as unpadded base64 under a -bin suffixed name
-                (converted ??= new()).Add(new(
-                    entry.Key, entry.IsBinary ? System.Convert.ToBase64String(entry.ValueBytes) : entry.Value));
-            }
+            // `new CallContext(service, ctx)` is the same line GrpcProxyGenerator emits into its server
+            // bindings; it is what keeps protobuf-net.Grpc out of protobuf-net.Connect.AspNetCore
+            context.AddUnaryMethod(Greeter.SayHello,
+                static (service, request, ctx) => service.SayHelloAsync(request, new CallContext(service, ctx)));
+            context.AddUnaryMethod(Greeter.Refuse,
+                static (service, request, ctx) => service.RefuseAsync(request, new CallContext(service, ctx)));
+            context.AddUnaryMethod(Greeter.Explode,
+                static (service, request, ctx) => service.ExplodeAsync(request, new CallContext(service, ctx)));
+            context.AddUnaryMethod(Greeter.Dawdle,
+                static (service, request, ctx) => service.DawdleAsync(request, new CallContext(service, ctx)));
         }
-
-        return new ConnectCallOptions
-        {
-            // gRPC states an absolute deadline; Connect states a relative timeout
-            Timeout = deadline is { } at && at != System.DateTime.MaxValue
-                ? at - System.DateTime.UtcNow
-                : null,
-            Headers = converted,
-        };
     }
 }
 
-/// <summary>Server-side bindings: one typed delegate per method, no reflection.</summary>
-internal sealed class GreeterBindings : IConnectServiceBinder<GreeterService>
+/// <summary>Registers everything <see cref="SmokeServices"/> declares, as GrpcProxyGenerator's
+/// <c>AddXxx</c> extension does for gRPC.</summary>
+internal static class SmokeServicesEndpointExtensions
 {
-    public void Bind(ConnectServiceBinderContext<GreeterService> context)
-    {
-        // `new CallContext(service, ctx)` is the same line GrpcProxyGenerator emits into its server
-        // bindings; it is what keeps protobuf-net.Grpc out of protobuf-net.Connect.AspNetCore
-        context.AddUnaryMethod(GreeterMethods.SayHello,
-            static (service, request, ctx) => service.SayHelloAsync(request, new CallContext(service, ctx)));
-        context.AddUnaryMethod(GreeterMethods.Refuse,
-            static (service, request, ctx) => service.RefuseAsync(request, new CallContext(service, ctx)));
-        context.AddUnaryMethod(GreeterMethods.Explode,
-            static (service, request, ctx) => service.ExplodeAsync(request, new CallContext(service, ctx)));
-        context.AddUnaryMethod(GreeterMethods.Dawdle,
-            static (service, request, ctx) => service.DawdleAsync(request, new CallContext(service, ctx)));
-    }
-}
-
-/// <summary>
-/// Client proxy: the same contract, over a <see cref="ConnectChannel"/>.
-/// </summary>
-/// <remarks>
-/// Note the signatures are <see cref="IGreeter"/>'s, unchanged - a caller written against the
-/// protobuf-net.Grpc client sees no difference at all.
-/// </remarks>
-internal sealed class GreeterClient : IGreeter
-{
-    private readonly ConnectChannel _channel;
-
-    public GreeterClient(ConnectChannel channel) => _channel = channel;
-
-    public Task<HelloReply> SayHelloAsync(HelloRequest request, CallContext context = default)
-        => _channel.UnaryAsync(GreeterMethods.SayHello, request,
-            ConnectCallContextBridge.ToOptions(context), context.CancellationToken);
-
-    public Task<HelloReply> RefuseAsync(HelloRequest request, CallContext context = default)
-        => _channel.UnaryAsync(GreeterMethods.Refuse, request,
-            ConnectCallContextBridge.ToOptions(context), context.CancellationToken);
-
-    public Task<HelloReply> ExplodeAsync(HelloRequest request, CallContext context = default)
-        => _channel.UnaryAsync(GreeterMethods.Explode, request,
-            ConnectCallContextBridge.ToOptions(context), context.CancellationToken);
-
-    public Task<HelloReply> DawdleAsync(HelloRequest request, CallContext context = default)
-        => _channel.UnaryAsync(GreeterMethods.Dawdle, request,
-            ConnectCallContextBridge.ToOptions(context), context.CancellationToken);
-
-    /// <summary>Exposes the response metadata, which the contract's own signature does not carry.</summary>
-    public Task<(HelloReply Response, ConnectCallResult Call)> SayHelloWithMetadataAsync(
-        HelloRequest request, ConnectCallOptions? options = null)
-        => _channel.UnaryWithMetadataAsync(GreeterMethods.SayHello, request, options);
+    internal static IEndpointConventionBuilder MapSmokeServices(this IEndpointRouteBuilder endpoints)
+        => endpoints.MapConnectService(new SmokeServices.GreeterServerBindings());
 }

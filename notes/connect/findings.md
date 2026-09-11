@@ -901,16 +901,27 @@ reflective, and writing raw request delegates bypasses it entirely — which is 
 `src/AotConnectSmoke/HandWritten.cs` **is** the target output, written by hand and marked as such. This
 is the repo's own method — `AotRefGen` exists so that expected generator output is derived and
 reviewable rather than invented — and since there is no ref-emit to derive Connect output from, writing
-it, making it work and reviewing it is the substitute. It is three things:
+it, making it work and reviewing it is the substitute.
 
-- `GreeterMethods` — a `ConnectMethod<,>` per operation, shared by both sides, so the service and method
-  names exist once;
-- `GreeterBindings : IConnectServiceBinder<GreeterService>` — `AddUnaryMethod(method, handler)` per
-  operation, the handler a `static` lambda so it allocates nothing;
-- `GreeterClient : IGreeter` — each method one call to `channel.UnaryAsync`.
+Everything is nested inside **one consumer-declared partial class**, which is what a
+`[ProtoConnect(Model = typeof(SmokeModel))]` would mark; `SmokeServices` stands in for it. That mirrors
+`GrpcProxyGenerator`, whose proxy and bindings likewise nest inside the `[ProtoGrpc]` type, and the
+container is not decoration — it is where the model is named, where `CreateClient<T>` lives, and what
+the registration extension hangs off. The first cut had three peer types at namespace scope and **no
+container at all**, which review caught: it left the proxy and bindings as visible API, and it was
+missing the type the generator will need anyway.
 
-Server-side registration is `endpoints.MapConnectService(new GreeterBindings())`, which maps one
-endpoint per method (§14.1) and returns a composite `IEndpointConventionBuilder`, so
+Inside it:
+
+| | |
+| --- | --- |
+| `Greeter` (internal static) | a `ConnectMethod<,>` per operation, shared by both sides, so the service and method names exist once — and where the serializers are resolved, in the static initialiser |
+| `GreeterClientProxy` (**private**) | one call to `channel.UnaryAsync` per method. Private because a consumer reaches it through `CreateClient<TService>` and only ever sees `IGreeter` |
+| `GreeterServerBindings` (internal) | `AddUnaryMethod(method, handler)` per operation, the handler a `static` lambda so it allocates nothing. Internal only because the registration extension constructs it |
+
+Registration is `endpoints.MapSmokeServices()`, a generated extension over
+`MapConnectService(new …ServerBindings())` — the counterpart of `GrpcProxyGenerator`'s `AddXxx`. It maps
+one endpoint per method (§14.1) and returns a composite `IEndpointConventionBuilder`, so
 `.RequireAuthorization()` on the service applies to all of them while generated per-method metadata
 still attaches individually.
 
@@ -1011,10 +1022,23 @@ bindings construct the `CallContext` themselves rather than the runtime doing it
 So the collision lives in the **consumer's** project, where a reference to protobuf-net v3 resolves it
 the ordinary way — exactly as `src/AotGrpcSmoke` already does. The runtime libraries stay clean.
 
-`ConnectCallContextBridge` in `src/AotConnectSmoke/HandWritten.cs` is the client-side half, emitted once
-per assembly: gRPC states an **absolute deadline**, Connect a **relative** `connect-timeout-ms`, and
-`Metadata`'s binary entries become base64 under their `-bin` name. Two of the nine checks exercise it in
-both directions.
+**Correction, from review:** the collision is per-**usage**, not per-assembly. `CS0433` fired only on the
+two lines of `ConnectCodec.cs` that *name* `TypeModel`; an assembly that references both and never names
+it compiles fine. So the collision is a weaker constraint than stated above, and the real reason to keep
+protobuf-net.Grpc out of the runtime libraries is **design**: the server runtime takes a plain
+`ServerCallContext`, which leaves it vocabulary-agnostic, and generated code adapts. Were the runtime to
+construct the `CallContext` itself, the vocabulary decision would be baked into the transport.
+
+That distinction matters, because it is what lets the client-side conversion be **library code**:
+`ConnectCallOptions.From(in CallOptions)` takes `Grpc.Core.CallOptions` rather than protobuf-net.Grpc's
+`CallContext`, so it needs only `Grpc.Core.Api` — which depends on nothing of ours. gRPC states an
+**absolute deadline**, Connect a **relative** `connect-timeout-ms`, and `Metadata`'s binary entries
+become base64 under their `-bin` name. Generated code passes `context.CallOptions` and is one expression
+per call site. Two of the nine checks exercise it in both directions.
+
+This was originally emitted per assembly as a `ConnectCallContextBridge`, which review correctly
+questioned: **it is not service-related in any way** — a function of two types and nothing else — so
+generating it was a symptom of a package boundary drawn on the weaker constraint.
 
 ### What it cost: nothing measurable
 

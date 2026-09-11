@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Grpc.Core;
 
 namespace ProtoBuf.Connect
 {
@@ -21,6 +22,46 @@ namespace ProtoBuf.Connect
         /// what the protocol assumes when the header is absent.
         /// </summary>
         public TimeSpan? Timeout { get; init; }
+
+        /// <summary>
+        /// Translates a caller's gRPC-shaped <see cref="CallOptions"/> into transport options.
+        /// </summary>
+        /// <remarks>
+        /// Library code rather than generated code, because it depends on nothing about the service: it
+        /// is a function of two types and nothing else. It takes <see cref="CallOptions"/> rather than
+        /// protobuf-net.Grpc's <c>CallContext</c> deliberately - that keeps the dependency at
+        /// <c>Grpc.Core.Api</c>, which has no protobuf-net dependency of its own, where
+        /// <c>protobuf-net.Grpc</c> would drag in protobuf-net 2.4.8 and collide with
+        /// <c>protobuf-net.Core</c> on <c>TypeModel</c>. Generated code passes
+        /// <c>context.CallOptions</c>.
+        /// <para>
+        /// Returns <c>null</c> where there is nothing to say, so the common case allocates nothing.
+        /// </para>
+        /// </remarks>
+        public static ConnectCallOptions? From(in CallOptions options)
+        {
+            var deadline = options.Deadline;
+            var headers = options.Headers;
+            if (deadline is null && (headers is null || headers.Count == 0)) return null;
+
+            List<KeyValuePair<string, string>>? converted = null;
+            if (headers is not null)
+            {
+                foreach (var entry in headers)
+                {
+                    // binary metadata travels as base64 under its -bin suffixed name
+                    (converted ??= new()).Add(new(
+                        entry.Key, entry.IsBinary ? Convert.ToBase64String(entry.ValueBytes) : entry.Value));
+                }
+            }
+
+            return new ConnectCallOptions
+            {
+                // gRPC states an absolute deadline; Connect states a relative timeout
+                Timeout = deadline is { } at && at != DateTime.MaxValue ? at - DateTime.UtcNow : null,
+                Headers = converted,
+            };
+        }
     }
 
     /// <summary>

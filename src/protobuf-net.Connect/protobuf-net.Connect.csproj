@@ -15,6 +15,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Grpc.Core.Api, for CallOptions: the contract vocabulary is protobuf-net.Grpc's, so converting a
+         caller's CallOptions into transport options is library work rather than something every
+         consuming assembly should have generated into it. NOT protobuf-net.Grpc itself - that
+         hard-depends on protobuf-net 2.4.8, where TypeModel lives in the protobuf-net assembly rather
+         than protobuf-net.Core, and ConnectCodec names TypeModel. Grpc.Core.Api depends on nothing of
+         ours, so there is no collision. -->
+    <PackageReference Include="Grpc.Core.Api" />
     <!-- protobuf-net.Core, NOT protobuf-net: RuntimeTypeModel is deliberately not referenced, so
          there is no reflective path to fall back to even by accident. The model is a generated
          TypeModel; see src/ConnectProbe. -->
