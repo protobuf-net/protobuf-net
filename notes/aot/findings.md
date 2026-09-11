@@ -75,12 +75,25 @@ closed on 2026-09-11**. The live ones:
 
 - **B51 (NRT)** - ServiceModel and `protobuf-net.Reflection` are **done and merged**, and protogen
   now EMITS annotations (C# only; VB has no NRT). **Stage 4, `protobuf-net.Core`, is IN FLIGHT on
-  `nrt-core` and is the live task: 573 -> 369 sites.** The recorded sizing in that entry was ~4x too
+  `nrt-core` and is the live task: 573 -> 225 sites.** The recorded sizing in that entry was ~4x too
   high and has been corrected by measurement - the whole remaining rollout is ~1,250 sites, not
-  5,125. What is left is per-site and semantic; the sweepable phase is over. Two things to carry:
-  a polyfilled attribute **must live in the assembly that uses it** (a shared one is a runtime
-  `TypeLoadException` no build catches), and a method whose only null-return follows a **throw
-  helper** never returns null - annotating it nullable is a false claim that also no gate catches.
+  5,125. What is left is per-site and semantic; the sweepable phase is over.
+
+  **Two things from 2026-09-11 change the plan**, both in B51's "Stage 4, continued" section.
+  **Stage 6 (BuildTools) now has to come first or alongside**, not after: BuildTools compiles Core's
+  sources with `<Nullable>` unset, where `T?` on an unconstrained type parameter resolves as
+  `Nullable<T>` and fails **CS0453** - an *error*, so it breaks that build rather than adding noise -
+  and 49 of the 225 are the unconstrained-generic families that all want exactly that. And **two
+  items are design calls owed to a human rather than annotations**: `ISerializer<T>.Read`'s merge
+  seed (truthfully `T?`, but that lands CS8767 in every consumer's generated code until the generator
+  tranche matches it) and whether `ISerializationContext.Model` may be null (the alternative to
+  annotating is coalescing to `DefaultModel`, a runtime behaviour change).
+
+  Three traps to carry: a polyfilled attribute **must live in the assembly that uses it** (a shared
+  one is a runtime `TypeLoadException` no build catches); a method whose only null-return follows a
+  **throw helper** never returns null, so annotating it nullable is a false claim that no gate
+  catches; and a null **guard** does not establish non-nullness - it destroys it - which is what
+  `ThrowHelper.ThrowIfNull`'s `[NotNull]` post-condition now fixes centrally.
   After Core: `protobuf-net` (~622), then `protobuf-net.BuildTools`, which is what removes the
   `CS8632` `NoWarn` now carried by BuildTools and BuildTools.Legacy;
 - **B48 (trim warnings)** - 23 -> 5, paused there deliberately: *"5 is a defensible preview
