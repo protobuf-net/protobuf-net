@@ -58,9 +58,11 @@ separate worktree before the merge, so it is not merge damage. Seven
 `SchemaSourcedModelEndToEndTests` fail on Linux only; gap **B53** has the diagnosis. Treat 655/662 as
 the current linux baseline and 662/662 as what Windows should report.
 
-**What is open.** `notes/gaps.md` is the entry point and its last entry is **B53**. The live ones,
+**What is open.** `notes/gaps.md` is the entry point and its last entry is **B54**. The live ones,
 current to 2026-09-11:
 
+- **B54 (xunit.v3 4.0)** - new; proven working locally and reverted, pending a decision on the CI
+  test container. The entry carries the whole recipe, so it is an hour's work once that is settled;
 - **B53 (the Linux-only `SchemaSourcedModelEndToEndTests` failures)** - **new, and the only thing
   here that is currently RED.** Seven tests fail on Linux because the fixture hard-codes
   `C:\proj\shop.proto` and `Path.GetFileName` does not treat `\` as a separator off Windows, so the
@@ -87,10 +89,17 @@ current to 2026-09-11:
 - **B21 tier 3** (vectorised LEB128, research-shaped, modern-TFM only) and **B12** (an intermittent
   net472 flake) round it out.
 
-**The dependabot backlog is its own item, and is being taken deliberately rather than PR by PR**
-(Marc, 2026-09-11): sweep the deltas locally, apply everything that does not change a major, see how
-it behaves, and then take the majors one at a time — **xunit especially**, which has resisted a
-straight bump before. `main` is where those land, and they reach here by merge.
+**The dependency sweep is DONE for everything below a major** (2026-09-11): 22 of the 30 packages
+that were behind, applied in one commit and green on every gate. Two majors followed — FSharp.Core 11
+and ICSharpCode.Decompiler 11 — each carrying a consequence the version number does not show (a
+raised shipped floor; a `*.reference.cs` diff owed on the next Windows `AotRefGen` run). What is left:
+
+- `Microsoft.CodeAnalysis.CSharp.Workspaces` 4.3.1 → 5.9.0 — **declined**, and `AGENTS.md` says why;
+- `protobuf-net`/`.Reflection`/`.BuildTools` at 3.2.46 — not stale, the `ReleasedBench` baseline. But
+  "what you get today" in `docs/aot.md` is **3.4.21** now, so that column has aged and moving it is a
+  decision about the benchmark;
+- **xunit.v3 4.0 — gap B54.** It works, with one line in `global.json`; what it needs is a decision
+  about CI's test container, since MTP cannot discover a traversal project.
 
 **Closed since**, so do not go looking for work in them: **#1332** (B51's Reflection stage and
 B52 — the branch this handover previously said was in flight), **#1338/#1339** (a map's nested

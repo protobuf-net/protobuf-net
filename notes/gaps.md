@@ -5856,3 +5856,73 @@ in code that already has a known sharp edge.
 point worth keeping: this repo's gates are Windows-shaped (`AotRefGen` is net472, CI is
 windows-latest), and most of the actual work now happens on Linux. A gate that cannot be read on the
 machine doing the work is a gate that stops being run.
+
+
+### B54. xunit.v3 4.0 is a *migration*, not a bump — **proven working locally; one decision left**
+
+**Tried 2026-09-11** as the careful half of the dependency sweep, and taken far enough to be certain
+it works before writing it down. It is reverted in the tree; this entry is the recipe.
+
+**What blocks a straight bump.** `xunit.v3` 4.0.0 brings Microsoft.Testing.Platform 2.x, and MTP 2.x
+**drops the VSTest bridge on the .NET 10 SDK**. Every `dotnet test` fails identically, before running
+anything:
+
+```
+Microsoft.Testing.Platform.MSBuild.targets(320,5): error : Testing with VSTest target is no longer
+supported by Microsoft.Testing.Platform on .NET 10 SDK and later.
+```
+
+That is the whole of the difficulty, and it is a host-integration change rather than an API break —
+**not one test source file needs touching.**
+
+**The opt-in is in `global.json`, not `dotnet.config`** — which cost a wrong turn, since the error's
+own link points at the `dotnet.config` form. Read the condition in the targets file (it computes
+`_SupportsGlobalJsonTestRunner` from `NETCoreSdkVersion`) rather than the docs:
+
+```json
+{ "sdk": { ... }, "test": { "runner": "Microsoft.Testing.Platform" } }
+```
+
+With that in place **the whole solution passes**: 5573 tests, 5542 passed, 24 skipped, and the only
+failures are B53's seven. Every test project moved without a source change, `protobuf-net.FSharp.Test`
+included.
+
+**The decision that is left is the CI test container, and it is not cosmetic.** Today CI runs
+`dotnet test Build.csproj --no-build`. Under MTP that reports **"No test projects were found"** — the
+new `dotnet test` discovers from a solution or a project, and a `Microsoft.Build.Traversal` project is
+neither. `dotnet test protobuf-net.slnx` *does* work, but the two containers are **not the same set**,
+and both differences matter:
+
+| | in `Build.csproj` | in `protobuf-net.slnx` |
+| --- | :-: | :-: |
+| `BuildToolsSmokeTests` | **excluded** — it consumes the *released* BuildTools package and its readme documents a hand-edited version and a nuget-cache clear | included |
+| `VBTest.vbproj` | **excluded** — the traversal globs `*.csproj` only | included |
+| the ten `Aot*`/bench apps | included | **absent from the solution entirely** |
+
+So swapping the container silently adds two projects CI has never run *and* drops nothing it needs —
+but the first of those two is manual-use-only by design, so it would newly fail or newly pass for
+reasons nobody is watching. Options, in the order I would consider them:
+
+1. **mark `BuildToolsSmokeTests` (and `VBTest`) as not-a-test-project for discovery** and point CI at
+   the slnx. Smallest, and it states in the project file what `Build.csproj`'s `Exclude` states today
+   in a place discovery cannot see;
+2. a dedicated **`Tests.slnx`**. Explicit, but a second list to maintain — and the traversal's
+   auto-globbing (a new `src/` project is picked up by CI for free) is a property `AGENTS.md`
+   deliberately values;
+3. loop `dotnet test` per test project in the workflow. Keeps discovery implicit, loses the single
+   command and the single summary.
+
+**Leaning to 1**, but it is a CI-semantics change and belongs to a human.
+
+**Two pieces of hygiene that fall out either way**, worth doing with it rather than after: under MTP,
+`xunit.runner.visualstudio` (the VSTest adapter), `Microsoft.NET.Test.Sdk` and `coverlet.collector`
+(a VSTest data collector) are all dead weight — nine projects reference the first two. Coverage under
+MTP is `Microsoft.Testing.Extensions.CodeCoverage`; nothing in CI collects coverage today, so that is
+a removal rather than a replacement.
+
+**One trap met on the way, and it will be met again.** `dotnet restore Build.csproj` does not restore
+`BuildToolsSmokeTests` (the traversal excludes it), so its `project.assets.json` goes stale and
+`IsTestingPlatformApplication` evaluates **empty** — which the new `dotnet test` reports as *"the
+following test projects are using VSTest test runner"*, i.e. a message about the wrong thing entirely.
+A per-project `dotnet restore` fixed it. Suspect a stale restore before believing any MTP
+runner-mismatch message.
