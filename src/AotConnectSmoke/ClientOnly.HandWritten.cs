@@ -30,14 +30,13 @@ partial class SmokeClientOnly
         public const string ServiceName = "aotconnectsmoke.v1.Farewell";
 
         public static readonly ConnectMethod<HelloRequest, HelloReply> Goodbye =
-            Method(ConnectMethodType.Unary, "Goodbye");
-        public static readonly ConnectMethod<HelloRequest, HelloReply> Wave =
-            Method(ConnectMethodType.ServerStreaming, "Wave");
-
-        private static ConnectMethod<HelloRequest, HelloReply> Method(ConnectMethodType type, string name)
-            => new(type, ServiceName, name,
+            new(ConnectMethodType.Unary, ServiceName, "Goodbye",
                 requestSerializer: SmokeModel.Serializer<HelloRequest>(),
                 responseSerializer: SmokeModel.Serializer<HelloReply>());
+        public static readonly ConnectMethod<WaveRequest, WaveReply> Wave =
+            new(ConnectMethodType.ServerStreaming, ServiceName, "Wave",
+                requestSerializer: SmokeModel.Serializer<WaveRequest>(),
+                responseSerializer: SmokeModel.Serializer<WaveReply>());
     }
 
     private sealed class FarewellClientProxy : IFarewell
@@ -50,7 +49,7 @@ partial class SmokeClientOnly
             => _channel.UnaryAsync(Farewell.Goodbye, request,
                 ConnectCallOptions.From(context.CallOptions), context.CancellationToken);
 
-        public IAsyncEnumerable<HelloReply> WaveAsync(HelloRequest request, CallContext context = default)
+        public IAsyncEnumerable<WaveReply> WaveAsync(WaveRequest request, CallContext context = default)
             => _channel.ServerStreaming(Farewell.Wave, request,
                 ConnectCallOptions.From(context.CallOptions), context.CancellationToken);
     }

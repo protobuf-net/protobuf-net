@@ -110,29 +110,48 @@ partial class SmokeServices
     // but reads badly in the common case.
     //
     // The serializers are resolved here, once, in the static initialiser - not per message.
+    // Method descriptors, one per operation, shared by the proxy and the bindings so the service and
+    // method names exist once. The serializers are resolved HERE, in the static initialiser - once per
+    // method, not once per message.
+    //
+    // Written out in full rather than through a helper. An earlier draft had `Unary(name)` and
+    // `Streaming(name)` factories, which read better but were not emittable: they only compiled
+    // because every method in this fixture happened to share one request/response pair. A real
+    // contract does not, so a generator must name each method's own types - as Farewell now shows.
     private static class Greeter
     {
         public const string ServiceName = "aotconnectsmoke.v1.Greeter";
 
-        public static readonly ConnectMethod<HelloRequest, HelloReply> SayHello = Unary("SayHello");
-        public static readonly ConnectMethod<HelloRequest, HelloReply> Refuse = Unary("Refuse");
-        public static readonly ConnectMethod<HelloRequest, HelloReply> Explode = Unary("Explode");
-        public static readonly ConnectMethod<HelloRequest, HelloReply> Dawdle = Unary("Dawdle");
-        public static readonly ConnectMethod<HelloRequest, HelloReply> Subscribe = Streaming("Subscribe");
-        public static readonly ConnectMethod<HelloRequest, HelloReply> SubscribeThenFail = Streaming("SubscribeThenFail");
+        public static readonly ConnectMethod<HelloRequest, HelloReply> SayHello =
+            new(ConnectMethodType.Unary, ServiceName, "SayHello",
+                requestSerializer: SmokeModel.Serializer<HelloRequest>(),
+                responseSerializer: SmokeModel.Serializer<HelloReply>());
+        public static readonly ConnectMethod<HelloRequest, HelloReply> Refuse =
+            new(ConnectMethodType.Unary, ServiceName, "Refuse",
+                requestSerializer: SmokeModel.Serializer<HelloRequest>(),
+                responseSerializer: SmokeModel.Serializer<HelloReply>());
+        public static readonly ConnectMethod<HelloRequest, HelloReply> Explode =
+            new(ConnectMethodType.Unary, ServiceName, "Explode",
+                requestSerializer: SmokeModel.Serializer<HelloRequest>(),
+                responseSerializer: SmokeModel.Serializer<HelloReply>());
+        public static readonly ConnectMethod<HelloRequest, HelloReply> Dawdle =
+            new(ConnectMethodType.Unary, ServiceName, "Dawdle",
+                requestSerializer: SmokeModel.Serializer<HelloRequest>(),
+                responseSerializer: SmokeModel.Serializer<HelloReply>());
+        public static readonly ConnectMethod<HelloRequest, HelloReply> Subscribe =
+            new(ConnectMethodType.ServerStreaming, ServiceName, "Subscribe",
+                requestSerializer: SmokeModel.Serializer<HelloRequest>(),
+                responseSerializer: SmokeModel.Serializer<HelloReply>());
+        public static readonly ConnectMethod<HelloRequest, HelloReply> SubscribeThenFail =
+            new(ConnectMethodType.ServerStreaming, ServiceName, "SubscribeThenFail",
+                requestSerializer: SmokeModel.Serializer<HelloRequest>(),
+                responseSerializer: SmokeModel.Serializer<HelloReply>());
         public static readonly ConnectMethod<HelloRequest, HelloReply> Collect =
-            Method(ConnectMethodType.ClientStreaming, "Collect");
+            new(ConnectMethodType.ClientStreaming, ServiceName, "Collect",
+                requestSerializer: SmokeModel.Serializer<HelloRequest>(),
+                responseSerializer: SmokeModel.Serializer<HelloReply>());
         public static readonly ConnectMethod<HelloRequest, HelloReply> Chat =
-            Method(ConnectMethodType.DuplexStreaming, "Chat");
-
-        private static ConnectMethod<HelloRequest, HelloReply> Unary(string name)
-            => Method(ConnectMethodType.Unary, name);
-
-        private static ConnectMethod<HelloRequest, HelloReply> Streaming(string name)
-            => Method(ConnectMethodType.ServerStreaming, name);
-
-        private static ConnectMethod<HelloRequest, HelloReply> Method(ConnectMethodType type, string name)
-            => new(type, ServiceName, name,
+            new(ConnectMethodType.DuplexStreaming, ServiceName, "Chat",
                 requestSerializer: SmokeModel.Serializer<HelloRequest>(),
                 responseSerializer: SmokeModel.Serializer<HelloReply>());
     }
@@ -142,14 +161,13 @@ partial class SmokeServices
         public const string ServiceName = "aotconnectsmoke.v1.Farewell";
 
         public static readonly ConnectMethod<HelloRequest, HelloReply> Goodbye =
-            Method(ConnectMethodType.Unary, "Goodbye");
-        public static readonly ConnectMethod<HelloRequest, HelloReply> Wave =
-            Method(ConnectMethodType.ServerStreaming, "Wave");
-
-        private static ConnectMethod<HelloRequest, HelloReply> Method(ConnectMethodType type, string name)
-            => new(type, ServiceName, name,
+            new(ConnectMethodType.Unary, ServiceName, "Goodbye",
                 requestSerializer: SmokeModel.Serializer<HelloRequest>(),
                 responseSerializer: SmokeModel.Serializer<HelloReply>());
+        public static readonly ConnectMethod<WaveRequest, WaveReply> Wave =
+            new(ConnectMethodType.ServerStreaming, ServiceName, "Wave",
+                requestSerializer: SmokeModel.Serializer<WaveRequest>(),
+                responseSerializer: SmokeModel.Serializer<WaveReply>());
     }
 
     private sealed class GreeterClientProxy : IGreeter
@@ -201,7 +219,7 @@ partial class SmokeServices
             => _channel.UnaryAsync(Farewell.Goodbye, request,
                 ConnectCallOptions.From(context.CallOptions), context.CancellationToken);
 
-        public IAsyncEnumerable<HelloReply> WaveAsync(HelloRequest request, CallContext context = default)
+        public IAsyncEnumerable<WaveReply> WaveAsync(WaveRequest request, CallContext context = default)
             => _channel.ServerStreaming(Farewell.Wave, request,
                 ConnectCallOptions.From(context.CallOptions), context.CancellationToken);
     }

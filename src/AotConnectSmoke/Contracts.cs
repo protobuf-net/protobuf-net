@@ -44,6 +44,23 @@ public interface IGreeter
     IAsyncEnumerable<HelloReply> Chat(IAsyncEnumerable<HelloRequest> requests, CallContext context = default);
 }
 
+// Deliberately NOT HelloRequest/HelloReply. Every other method here happens to share one pair, which
+// is an artefact of the fixture rather than anything real - and an artefact that quietly made a
+// hand-written helper look emittable. A generator has to name each method's own types.
+[ProtoContract]
+public class WaveRequest
+{
+    [ProtoMember(1)]
+    public int Times { get; set; }
+}
+
+[ProtoContract]
+public class WaveReply
+{
+    [ProtoMember(1)]
+    public int Index { get; set; }
+}
+
 [ProtoContract]
 public class HelloRequest
 {
@@ -70,7 +87,7 @@ public interface IFarewell
 {
     Task<HelloReply> GoodbyeAsync(HelloRequest request, CallContext context = default);
 
-    IAsyncEnumerable<HelloReply> WaveAsync(HelloRequest request, CallContext context = default);
+    IAsyncEnumerable<WaveReply> WaveAsync(WaveRequest request, CallContext context = default);
 }
 
 public sealed class FarewellService : IFarewell
@@ -81,11 +98,11 @@ public sealed class FarewellService : IFarewell
         return Task.FromResult(new HelloReply { Message = message, Length = message.Length });
     }
 
-    public async IAsyncEnumerable<HelloReply> WaveAsync(HelloRequest request, CallContext context = default)
+    public async IAsyncEnumerable<WaveReply> WaveAsync(WaveRequest request, CallContext context = default)
     {
-        for (var i = 0; i < 2; i++)
+        for (var i = 1; i <= Math.Max(1, request.Times); i++)
         {
-            yield return new HelloReply { Message = "wave", Length = 4 };
+            yield return new WaveReply { Index = i };
         }
         await Task.CompletedTask;
     }
@@ -171,6 +188,8 @@ public sealed class GreeterService : IGreeter
 [ProtoModel]
 [ProtoSerializable(typeof(HelloRequest))]
 [ProtoSerializable(typeof(HelloReply))]
+[ProtoSerializable(typeof(WaveRequest))]
+[ProtoSerializable(typeof(WaveReply))]
 public partial class SmokeModel : TypeModel
 {
 }

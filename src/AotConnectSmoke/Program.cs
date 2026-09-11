@@ -237,9 +237,12 @@ await checks.Run("a second service in the same container", async () =>
     var reply = await farewell.GoodbyeAsync(new HelloRequest { Name = "marc" });
     Checks.Require(reply.Message == "goodbye marc", $"the unary method answered, was \"{reply.Message}\"");
 
-    var waves = 0;
-    await foreach (var _ in farewell.WaveAsync(new HelloRequest { Name = "marc" })) waves++;
-    Checks.Require(waves == 2, $"and its streaming method, got {waves}");
+    // note the distinct message types: Farewell's two methods do not share a request/response pair,
+    // which is what a real contract looks like and what stops a per-service helper being emittable
+    var waves = new List<int>();
+    await foreach (var wave in farewell.WaveAsync(new WaveRequest { Times = 3 })) waves.Add(wave.Index);
+    Checks.Require(waves.Count == 3, $"and its streaming method, got {waves.Count}");
+    Checks.Require(waves[2] == 3, $"carrying its own message type, last index was {waves[2]}");
 
     // the first service is unaffected - they are separate endpoints under separate service names
     var greeting = await client.SayHelloAsync(new HelloRequest { Name = "still here" });
@@ -274,7 +277,7 @@ await checks.Run("a client-only container talks to a hosting one", async () =>
     Checks.Require(reply.Message == "goodbye from afar", $"it reached the hosting container, was \"{reply.Message}\"");
 
     var waves = 0;
-    await foreach (var _ in farewell.WaveAsync(new HelloRequest { Name = "x" })) waves++;
+    await foreach (var _ in farewell.WaveAsync(new WaveRequest { Times = 2 })) waves++;
     Checks.Require(waves == 2, $"streaming works from a client-only container too, got {waves}");
     return "one verb, no bindings, no registration";
 });

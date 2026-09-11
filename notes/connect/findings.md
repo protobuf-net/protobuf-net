@@ -1740,6 +1740,34 @@ matching an existing API is right where a consumer meets both, and wrong where t
 was itself accidental. The test is whose documentation the consumer would read, not which code looked
 similar.
 
+## 29. The fixture was homogeneous, and it hid an unemittable helper
+
+Review noticed that `Greeter`'s `Unary(name)` / `Streaming(name)` / `Method(type, name)` factories did
+not look like generated code. They are not — and the reason is worse than style.
+
+**They only compiled because every method in the fixture shared one request/response pair.** A helper
+returning `ConnectMethod<HelloRequest, HelloReply>` is expressible only under that accident; a real
+contract has different types per method, so a generator must name each method's own types and can emit
+no such helper. The fixture's homogeneity had quietly made an unemittable shape look emittable.
+
+Both halves fixed:
+
+- **descriptors are written out in full**, one `new(...)` per method, which is what a generator emits;
+- **`IFarewell` is now genuinely heterogeneous** — `Goodbye(HelloRequest) -> HelloReply` beside
+  `Wave(WaveRequest) -> WaveReply` — so the accident cannot return unnoticed.
+
+No bug was found by the change: it compiles, and 20/20 still passes, JIT and native, at 33 IL warnings.
+That is the honest result. What it removes is **structural blindness** — the fixture could not have
+shown a per-method type-variation problem, and a generator written against it would have inherited the
+blind spot.
+
+**This is the same class of thing as "nobody writes `public int @case`"**, recorded in `AGENTS.md`
+about the hand-written AOT corpus: a fixture written by one person around one example is uniform in
+ways real input is not, and the uniformity is invisible until something leans on it. Worth a pass over
+the rest of the fixture on the same question before the generator is written — every method currently
+takes exactly one request parameter and a `CallContext`, for instance, and `ContractOperation` in
+protobuf-net.Grpc recognises far more shapes than that.
+
 ## 12. Unverified — check before committing to any of this
 
 Everything below is assumption or inference, not measurement:
