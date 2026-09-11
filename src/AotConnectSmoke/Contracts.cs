@@ -14,7 +14,10 @@ namespace ProtoBuf.AotConnectSmoke;
 // an existing protobuf-net.Grpc contract is served over Connect with no edit at all. Nothing here is
 // Connect-specific, and this same interface can be hosted over gRPC simultaneously.
 
-[Service]
+// the wire name is pinned rather than derived: [Service] with no name gives
+// "{namespace}.{name-without-I}", which is fine within .NET but is not a name another language's
+// schema would have chosen. Pinning it is what you do for cross-language interop.
+[Service("aotconnectsmoke.v1.Greeter")]
 public interface IGreeter
 {
     Task<HelloReply> SayHelloAsync(HelloRequest request, CallContext context = default);
@@ -82,7 +85,7 @@ public class HelloReply
 }
 
 /// <summary>A second, deliberately unrelated contract, to see what multi-service costs.</summary>
-[Service]
+[Service("aotconnectsmoke.v1.Farewell")]
 public interface IFarewell
 {
     Task<HelloReply> GoodbyeAsync(HelloRequest request, CallContext context = default);

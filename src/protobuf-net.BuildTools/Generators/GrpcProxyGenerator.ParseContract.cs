@@ -64,7 +64,27 @@ namespace ProtoBuf.BuildTools.Generators
         private const string RuntimeOnlyShapes =
             "Stream, IObservable<T> and Grpc.Core's own call types cannot be generated against";
 
-        private static GrpcContractCandidate ParseContract(INamedTypeSymbol iface,
+        /// <summary>
+        /// Classifies a service contract into the transport-neutral model in <c>Internal/Grpc</c>.
+        /// </summary>
+        /// <remarks>
+        /// <b><c>internal</c> because it is shared with the Connect generator</b>, which needs exactly
+        /// this - the method shapes, the context kinds, the void/<c>Empty</c> handling, the
+        /// <c>[SubService]</c> walk - and must not fork it. Nothing it produces mentions a transport:
+        /// <c>GrpcMethodKind</c> maps straight onto <c>ConnectMethodType</c>, and the only gRPC names
+        /// left in this file are namespace literals used to <em>reject</em> types, which both
+        /// generators reject alike.
+        /// <para>
+        /// It stays on <see cref="GrpcProxyGenerator"/> rather than moving to a neutrally-named class
+        /// because the coupling runs both ways and is not worth unpicking for a name: this file needs
+        /// <c>One</c> (Parse.cs), <c>HasAttribute</c> and the three attribute-name constants
+        /// (GrpcProxyGenerator.cs), and <c>EmptyTypeName</c> / <c>BytesValueTypeName</c> - from
+        /// <b>Emit.cs</b> - while the siblings need <c>Display</c> and this method back. Extracting it
+        /// means moving eight members across five files of shipped, CI-gated code. If that is ever
+        /// done, this list is the starting point.
+        /// </para>
+        /// </remarks>
+        internal static GrpcContractCandidate ParseContract(INamedTypeSymbol iface,
             INamedTypeSymbol? implementation, CancellationToken cancellationToken,
             List<ITypeSymbol>? payloadSink = null, Compilation? compilation = null)
         {

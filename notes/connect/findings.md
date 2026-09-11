@@ -687,7 +687,7 @@ derive from, so the substitute is: write it, make it work, review it, *then* fre
 Reviewing this file is the real decision point on API shape, and it is much cheaper to change here than
 after a generator emits it.
 
-### Stage 2 — the generator. **Not started.**
+### Stage 2 — the generator. **Started; emitting, and the hand-written halves are deleted (§36).**
 
 `ProtoConnectGenerator` in `protobuf-net.BuildTools`, emitting stage 1's file. Golden fixtures under
 `src/BuildToolsUnitTests/Connect/Data/` on the existing harness (`*.input.cs` → `*.output.cs` +
@@ -2074,6 +2074,53 @@ It sits alongside `AddGreeter()` (server-side registration) and `GreeterClient(t
 instance. On this reading it does not: the registration can be a generated static that closes over the
 container's static `CreateClient<TService>`, and what DI holds is the resolved `IGreeter`, not the
 container. The container stays static.
+
+## 36. The generator exists, and the hand-written halves are gone
+
+`ProtoConnectGenerator` emits what `Services.HandWritten.cs` and `ClientOnly.HandWritten.cs` used to
+say, and **both files are deleted**. `AotConnectSmoke` now compiles generated code and reads **22/22**,
+JIT and native, at **33 IL warnings** — the same as when it was hand-written, which is the result worth
+having: the generator's output is not merely similar, it passes the same external-wire checks, the
+duplex interleaving proof, the trailers-in-terminator check and the client-only hand-off.
+
+That is the `AotGrpcSmoke` trick: the smoke test now proves the *generator* rather than my typing.
+
+### It reuses the gRPC parse, and that was the whole bet
+
+`ParseContract` is called directly, so every method shape, context kind, void/`Empty` rule,
+`[SubService]` walk, overload and closed generic arrives already classified. The Connect generator is
+an **emitter**, and `GrpcMethodKind` → `ConnectMethodType` is a rename.
+
+`GrpcDiagnosticKind` is reused too, mapped to `PBN5000`–`PBN5006`. Its members describe what is wrong
+with a *contract* — `LanguageVersionTooLow`, `UnsupportedMethodShape`, `NotAServiceContract` — which is
+transport-neutral however the enum is named, so a parallel set would only have been something to keep
+in step.
+
+### Three things the build caught, each a documented trap firing exactly as recorded
+
+- **`RS2000`**: `PBN5000`–`PBN5006` were a build break until listed in `AnalyzerReleases.Unshipped.md`.
+  `AGENTS.md` says release tracking is enforced; it is.
+- **`protobuf-net.BuildTools.Legacy`**: `Internal/**` is a glob there and `Internal/Grpc` is
+  `Compile Remove`d, so the new `Internal/Connect` arrived *without* the `DiagnosticInfo` and
+  `GrpcInterfaceModel` it reuses. Not dead weight — a build break. Same trap
+  `UseAotModelCodeFixProvider` hit, found by the traversal build rather than by remembering.
+- **Service names.** The generated descriptors derive the name from `[Service]`, which with no argument
+  gives `{namespace}.{name-without-I}` — so the raw-HTTP checks 404'd against their hard-coded
+  `aotconnectsmoke.v1.Greeter`. The fixture now **pins** the name, which is what a consumer does for
+  cross-language interop anyway, and the checks stating the wire name independently is exactly what made
+  the mismatch visible rather than silently agreeing.
+
+### Not done
+
+- **Golden tests.** The generator has no `Connect/Data/*.input.cs` fixtures yet; `AotConnectSmoke` is
+  currently the only thing exercising it. That is the next piece, and it needs a `_ConnectSurface.cs`
+  snapshot so the emitted code is *compiled* in the test, as the gRPC goldens do.
+- **Serializers are not hoisted.** The emitted descriptors omit the optional pre-resolved serializers,
+  so the codec resolves per message. Closing that needs `ProtoModelGenerator` to emit the
+  `Serializer<T>()` accessor described in §19 — a model-generator change, not a Connect one.
+- **`Task<Stream>` byte streaming** (`GrpcResultShape.TaskStream`) is classified by the shared parse but
+  not emitted; it currently falls through to the catch-all. Needs either a Connect answer or an explicit
+  refusal.
 
 ## 12. Unverified — check before committing to any of this
 
