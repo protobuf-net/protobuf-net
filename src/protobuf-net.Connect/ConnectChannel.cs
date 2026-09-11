@@ -51,12 +51,18 @@ namespace ProtoBuf.Connect
         {
             _http = http ?? throw new ArgumentNullException(nameof(http));
             Codec = codec ?? throw new ArgumentNullException(nameof(codec));
-            _baseAddress = baseAddress ?? http.BaseAddress;
-            if (_baseAddress is null)
+            var resolved = baseAddress ?? http.BaseAddress;
+            if (resolved is null)
             {
                 throw new ArgumentException(
                     "A base address is required, either here or on the HttpClient.", nameof(baseAddress));
             }
+
+            // a base address carrying a routing prefix must end in "/" or Uri treats the last segment as
+            // a file name and replaces it - so "http://host/connect" would silently become "http://host/"
+            _baseAddress = resolved.AbsolutePath.EndsWith("/", StringComparison.Ordinal)
+                ? resolved
+                : new Uri(resolved.AbsoluteUri + "/");
         }
 
         /// <summary>The codec in use.</summary>
@@ -87,7 +93,7 @@ namespace ProtoBuf.Connect
                     $"'{method}' is {method.Type}; only unary calls are implemented so far.");
             }
 
-            using var httpRequest = new HttpRequestMessage(HttpMethod.Post, new Uri(_baseAddress!, method.Path))
+            using var httpRequest = new HttpRequestMessage(HttpMethod.Post, ResolveUri(method))
             {
                 // the bare message, no envelope - unary framing is the absence of framing
                 Content = new MeasuredCodecContent<TRequest>(
@@ -163,7 +169,7 @@ namespace ProtoBuf.Connect
                     $"'{method}' is {method.Type}; this call shape is for {nameof(ConnectMethodType.ServerStreaming)}.");
             }
 
-            using var httpRequest = new HttpRequestMessage(HttpMethod.Post, new Uri(_baseAddress!, method.Path))
+            using var httpRequest = new HttpRequestMessage(HttpMethod.Post, ResolveUri(method))
             {
                 // one enveloped message: a streaming RPC frames both directions, whatever the cardinality
                 Content = new EnvelopedCodecContent<TRequest>(
@@ -217,7 +223,7 @@ namespace ProtoBuf.Connect
                     $"'{method}' is {method.Type}; this call shape is for {nameof(ConnectMethodType.ClientStreaming)}.");
             }
 
-            using var httpRequest = new HttpRequestMessage(HttpMethod.Post, new Uri(_baseAddress!, method.Path))
+            using var httpRequest = new HttpRequestMessage(HttpMethod.Post, ResolveUri(method))
             {
                 Content = new EnvelopedStreamContent<TRequest>(
                     Codec, requests, Codec.ContentTypeFor(method.Type), method.RequestSerializer, cancellationToken),
@@ -311,7 +317,7 @@ namespace ProtoBuf.Connect
                     $"'{method}' is {method.Type}; this call shape is for {nameof(ConnectMethodType.DuplexStreaming)}.");
             }
 
-            using var httpRequest = new HttpRequestMessage(HttpMethod.Post, new Uri(_baseAddress!, method.Path))
+            using var httpRequest = new HttpRequestMessage(HttpMethod.Post, ResolveUri(method))
             {
                 Content = new EnvelopedStreamContent<TRequest>(
                     Codec, requests, Codec.ContentTypeFor(method.Type), method.RequestSerializer, cancellationToken),
@@ -340,6 +346,12 @@ namespace ProtoBuf.Connect
             return new ConnectServerStream<TResponse>(
                 httpResponse, Codec, method.ResponseSerializer, method.ToString(), metadata.Headers);
         }
+
+        /// <summary>
+        /// Combines the method with the base address, preserving any routing prefix the base carries.
+        /// </summary>
+        private Uri ResolveUri<TRequest, TResponse>(ConnectMethod<TRequest, TResponse> method)
+            => new(_baseAddress!, method.RelativePath);
 
         private static void ApplyOptions(HttpRequestMessage request, ConnectCallOptions? options)
         {

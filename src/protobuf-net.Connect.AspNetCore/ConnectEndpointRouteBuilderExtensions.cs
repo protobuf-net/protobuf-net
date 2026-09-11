@@ -32,13 +32,24 @@ namespace ProtoBuf.Connect.AspNetCore
         /// </typeparam>
         /// <param name="endpoints">The route builder.</param>
         /// <param name="binder">Describes the service's methods; normally generated.</param>
+        /// <param name="routingPrefix">
+        /// An optional prefix in front of every method path. The protocol allows one
+        /// (<c>/[prefix/]package.Service/Method</c>), and it is what lets Connect sit beside gRPC on one
+        /// host - the two use identical paths otherwise, so mapping both at the root puts two endpoints
+        /// on one route, and the duplicated path then answers 500 at request time.
+        /// </param>
         public static IEndpointConventionBuilder MapConnectService<TService>(
             this IEndpointRouteBuilder endpoints,
-            IConnectServiceBinder<TService> binder)
+            IConnectServiceBinder<TService> binder,
+            string? routingPrefix = null)
             where TService : class
         {
             ArgumentNullException.ThrowIfNull(endpoints);
             ArgumentNullException.ThrowIfNull(binder);
+
+            var prefix = string.IsNullOrWhiteSpace(routingPrefix)
+                ? string.Empty
+                : "/" + routingPrefix.Trim('/');
 
             var options = endpoints.ServiceProvider.GetRequiredService<IOptions<ConnectServerOptions>>().Value;
             if (options.Codecs.Count == 0)
@@ -55,7 +66,7 @@ namespace ProtoBuf.Connect.AspNetCore
             {
                 // POST only for now; GET arrives with idempotency, which needs the query-parameter form
                 var builder = endpoints
-                    .MapPost(method.Path, CreateHandler(method, options))
+                    .MapPost(prefix + method.Path, CreateHandler(method, options))
                     .WithDisplayName(method.DisplayName);
 
                 foreach (var metadata in method.Metadata) builder.WithMetadata(metadata);

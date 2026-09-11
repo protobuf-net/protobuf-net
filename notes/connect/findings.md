@@ -33,7 +33,7 @@ Working notes for a possible Connect implementation, in the same spirit as `note
 > `demo.connectrpc.com`, as a JIT run *and* as a native AOT binary (7.3 MB, 33 IL warnings, **none of
 > them ours**). Code-first protobuf-net bytes interoperate with connect-go with no `.proto` anywhere.
 >
-> **All four method shapes work — §22, §23, §24.** `AotConnectSmoke` reads **16/16**, JIT and native,
+> **All four method shapes work — §22, §23, §24 — plus routing prefixes (§25).** `AotConnectSmoke` reads **17/17**, JIT and native,
 > and duplex is proven to *interleave* rather than merely complete. Native AOT is **33 IL warnings
 > across every shape added** - streaming contributed no annotation debt at all.
 >
@@ -1549,6 +1549,33 @@ defensive tidiness: over HTTP/1.1 the client cannot read a response until it has
 the service is waiting for messages that will not come — so the call would hang rather than fail. A
 check pins it, and the client pins `HttpVersionPolicy.RequestVersionExact` for the same reason: a
 plaintext request left to negotiate would silently settle on HTTP/1.1 and deadlock.
+
+## 25. Routing prefix — and a latent bug it exposed
+
+The protocol allows a prefix in front of every method path (`/[prefix/]package.Service/Method`), and
+§20 identified it as the thing that lets Connect share a host with gRPC, since the two use identical
+paths otherwise. Now supported on both sides: `MapConnectService(binder, routingPrefix)` server-side,
+and a base address carrying the prefix client-side. `AotConnectSmoke` maps the same service twice, at
+the root and under `/rpc`, and a check drives both.
+
+**It exposed a latent bug worth knowing about.** The channel resolved each call as
+`new Uri(baseAddress, method.Path)`, and `Path` has a leading slash — which makes it an *absolute-path*
+reference, so `Uri` **discards the base's own path entirely**:
+
+```
+new Uri(new Uri("http://host/connect/"), "/pkg.Svc/M")  ->  http://host/pkg.Svc/M
+```
+
+So any base address with a path was already being silently ignored, prefix feature or not — a caller
+pointing at `http://host/api/` would have had their calls go to `http://host/`. `ConnectMethod` now
+carries `RelativePath` alongside `Path`, and the channel combines with that.
+
+The second half is the same trap one step earlier: a base address must **end in `/`**, or `Uri` treats
+the last segment as a file name and replaces it, so `http://host/connect` becomes `http://host/`. The
+channel normalises rather than requiring callers to know that.
+
+Both are the sort of thing that produces a 404 against a correct server and sends you looking in the
+wrong place.
 
 ## 12. Unverified — check before committing to any of this
 

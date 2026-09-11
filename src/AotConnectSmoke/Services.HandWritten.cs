@@ -73,8 +73,9 @@ partial class SmokeServices
     /// the method descriptors, the proxy and the bindings are all private, because nothing outside has
     /// any business naming them. A consumer states a contract and gets two verbs.
     /// </remarks>
-    public static IEndpointConventionBuilder BindServer(IEndpointRouteBuilder endpoints)
-        => endpoints.MapConnectService(new GreeterServerBindings());
+    public static IEndpointConventionBuilder BindServer(
+        IEndpointRouteBuilder endpoints, string? routingPrefix = null)
+        => endpoints.MapConnectService(new GreeterServerBindings(), routingPrefix);
 
     /// <summary>
     /// The method descriptors for <see cref="IGreeter"/>, shared by the proxy and the bindings.
@@ -197,6 +198,7 @@ partial class SmokeServices
 /// </remarks>
 internal static class SmokeServicesEndpointExtensions
 {
-    internal static IEndpointConventionBuilder MapSmokeServices(this IEndpointRouteBuilder endpoints)
-        => SmokeServices.BindServer(endpoints);
+    internal static IEndpointConventionBuilder MapSmokeServices(
+        this IEndpointRouteBuilder endpoints, string? routingPrefix = null)
+        => SmokeServices.BindServer(endpoints, routingPrefix);
 }

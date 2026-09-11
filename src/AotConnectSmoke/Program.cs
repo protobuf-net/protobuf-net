@@ -60,6 +60,9 @@ builder.Services.AddScoped<GreeterService>();
 
 var app = builder.Build();
 app.MapSmokeServices();
+// the same services again under a routing prefix, which the protocol allows and which is what lets
+// Connect share a host with gRPC - the two use identical paths otherwise
+app.MapSmokeServices("rpc");
 await app.StartAsync();
 
 var address = $"http://127.0.0.1:{httpPort}";
@@ -225,6 +228,23 @@ await checks.Run("client-streaming round-trip, chunked", async () =>
             yield return new HelloRequest { Name = name };
         }
     }
+});
+
+await checks.Run("a routing prefix is honoured on both sides", async () =>
+{
+    // the base address carries the prefix; note it must combine as a RELATIVE reference, since a
+    // leading slash would make it absolute-path and discard the prefix entirely
+    var prefixed = new ConnectChannel(
+        http, new ProtoConnectCodec(SmokeModel.Instance), new Uri($"{address}/rpc"));
+    var client2 = SmokeServices.CreateClient<IGreeter>(prefixed);
+
+    var reply = await client2.SayHelloAsync(new HelloRequest { Name = "prefixed" });
+    Checks.Require(reply.Message == "hello prefixed", $"the call reached /rpc/..., was \"{reply.Message}\"");
+
+    // and the unprefixed mapping still answers, so the two coexist
+    var plain = await client.SayHelloAsync(new HelloRequest { Name = "plain" });
+    Checks.Require(plain.Message == "hello plain", "the root mapping still answers");
+    return "both /rpc/... and /... answer";
 });
 
 await checks.Run("duplex genuinely interleaves", async () =>

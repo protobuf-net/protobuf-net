@@ -57,8 +57,12 @@ namespace ProtoBuf.Connect
             IsIdempotent = idempotent;
             RequestSerializer = requestSerializer;
             ResponseSerializer = responseSerializer;
-            // the Connect path is the gRPC path: "/" package.Service "/" Method, case-sensitive
-            Path = "/" + serviceName + "/" + methodName;
+            // the Connect path is the gRPC path: "/" package.Service "/" Method, case-sensitive.
+            // The protocol also allows a routing PREFIX in front of it, which is what lets Connect sit
+            // beside gRPC on one host - so the relative form is kept too, since that is what combines
+            // with a base address that carries one.
+            RelativePath = serviceName + "/" + methodName;
+            Path = "/" + RelativePath;
         }
 
         /// <summary>The shape of the RPC.</summary>
@@ -70,8 +74,20 @@ namespace ProtoBuf.Connect
         /// <summary>The method name.</summary>
         public string MethodName { get; }
 
-        /// <summary>The request path, relative to the channel's base address.</summary>
+        /// <summary>The canonical request path, with a leading slash and no routing prefix.</summary>
         public string Path { get; }
+
+        /// <summary>
+        /// The path without its leading slash, for combining with a base address that carries a routing
+        /// prefix.
+        /// </summary>
+        /// <remarks>
+        /// The distinction is not cosmetic: <c>new Uri(new Uri("http://host/connect/"), "/pkg.Svc/M")</c>
+        /// yields <c>http://host/pkg.Svc/M</c>, because a leading slash makes the relative reference
+        /// absolute-path and discards the base's own path. Using this form instead yields
+        /// <c>http://host/connect/pkg.Svc/M</c>, which is what the caller asked for.
+        /// </remarks>
+        public string RelativePath { get; }
 
         /// <summary>Whether the RPC is declared free of side effects.</summary>
         public bool IsIdempotent { get; }
