@@ -29,8 +29,17 @@ Working notes for a possible Connect implementation, in the same spirit as `note
 > `demo.connectrpc.com`, as a JIT run *and* as a native AOT binary (7.3 MB, 33 IL warnings, **none of
 > them ours**). Code-first protobuf-net bytes interoperate with connect-go with no `.proto` anywhere.
 >
-> **Next: §14 stage 1** — the hand-written target output, client and ASP.NET Core server, .NET to .NET,
-> then verified against an external Connect *client*.
+> **Stage 1 is done — §16.** `src/protobuf-net.Connect.AspNetCore` + `src/AotConnectSmoke` read
+> **8/8**, JIT and native AOT, and the server is verified from outside .NET with `curl`. It is served
+> over **HTTP/1.1**, from a plaintext Kestrel endpoint that could not serve gRPC at all. The entire
+> ASP.NET Core server added **zero** IL warnings.
+>
+> **So the MVP asked for is met**: a defined service, a working ASP.NET Core server, a working client.
+> `src/AotConnectSmoke/HandWritten.cs` is the generator's target output, written by hand and ready to
+> review — that review is the next decision point, ahead of §14 stage 2 (the generator).
+>
+> **Still open, and deliberately not pre-empted:** where the contract vocabulary comes from (§9) —
+> the fixture carries no `[Service]` attribute and no `CallContext` for that reason.
 
 ## 1. What Connect is, and why it is interesting here
 
@@ -767,8 +776,10 @@ So a transport built on protobuf-net's public IO surface inherits these, and not
 `protobuf-net.Core` can do anything about it. The recorded technique that *does* terminate cleanly is a
 **`RuntimeFeature.IsDynamicCodeSupported` feature switch**, which is what took
 `TypeModel.ResolveSerializer<T>` and the writer/reader cluster from 49 → 34. Applying the same to the
-root `Serialize<T>`/`Deserialize<T>`/`Measure<T>` is the obvious follow-up: out of MVP scope, with a
-precedent, and measurable the same way.
+root `Serialize<T>`/`Deserialize<T>`/`Measure<T>` is the obvious follow-up.
+
+**This is the v4 spike's territory, not Connect's** — recorded here only so the numbers above are
+attributable and so nobody re-derives the cause. Do not chase it from this branch.
 
 ### Two things the probe turned up
 
@@ -797,6 +808,115 @@ Deliberately small, and arranged per §14.1 so the streaming shapes can be added
 
 The `RawCodec` in the probe — used to put deliberately malformed bytes on the wire — needed **no**
 change to `ConnectChannel`, which is a small confirmation that the codec seam is in the right place.
+
+## 16. Stage 1 — a server, and an end-to-end MVP, 2026-09-11
+
+`src/protobuf-net.Connect.AspNetCore` (server) and `src/AotConnectSmoke` (harness) exist. The harness
+reads **8 passed, 0 failed**, as a JIT run *and* as a native AOT binary, and the server has been
+verified from **outside .NET** with `curl`.
+
+```
+dotnet run --project src/AotConnectSmoke              # self-check, exits non-zero on mismatch
+dotnet run --project src/AotConnectSmoke -- --serve   # just the server, on :8080, for an external client
+```
+
+| check | result |
+| --- | --- |
+| unary round-trip over HTTP/1.1 | `hello marc; hello marc`, second field intact |
+| trailing metadata | 1 trailer, `trailer-` prefix stripped, not also reported as a header |
+| a deliberate failure | `permission_denied` / 403, message preserved, `CodeWasInferred` false |
+| an unhandled exception | `internal` / 500, **message not leaked** |
+| `connect-timeout-ms` | `deadline_exceeded` after 300 ms of a 30 s call |
+| an unknown codec | 415 + JSON, naming the codecs the server does have |
+| a streaming content-type | 415, saying *why*, rather than mishandling it |
+| the wire form | bare message, `Content-Length` stated, HTTP/1.1, no envelope |
+
+### Verified from outside .NET
+
+The self-check proves the two halves agree with each other, which is not the same as being a Connect
+server. `curl` against `--serve`:
+
+```
+HTTP/1.1 200 OK
+Content-Length: 14
+Content-Type: application/proto
+trailer-greeter-version: 1
+
+00000000: 0a0a 6865 6c6c 6f20 6375 726c 100a       ..hello curl..
+```
+
+and the failure path:
+
+```
+HTTP/1.1 403 Forbidden
+Content-Type: application/json
+{"code":"permission_denied","message":"\u0027curl\u0027 may not greet."}
+```
+
+That is the protocol's unary shape exactly: bare message both ways, trailing metadata as a `trailer-`
+prefixed header, the error as a JSON object under its mapped HTTP status.
+
+### It is served over HTTP/1.1, and that is the whole point
+
+The harness leaves Kestrel's plaintext endpoint at its default, which is HTTP/1.1. **gRPC could not be
+served from that port at all** — `Grpc.AspNetCore.Server` validates `HttpRequest.Protocol` and answers
+*"Request protocol of 'HTTP/1.1' is not supported"*, and Kestrel cannot negotiate between the two on a
+plaintext port because without TLS there is no ALPN. Nothing here asks for HTTP/2 and everything works.
+
+### Native AOT: 15,405,832 bytes, 33 IL warnings — **the same 33** as the client alone
+
+Adding the entire ASP.NET Core server moved the count **not at all**. Every warning is attributed to
+`protobuf-net.Core` (`TypeModel.cs` 9, `TypeModel.InputOutput.cs` 7, `TypeHelperT.cs` 4, `DynamicStub.cs`
+4, …) or to bare ILC; none to `protobuf-net.Connect`, `protobuf-net.Connect.AspNetCore` or the harness.
+So Kestrel, endpoint routing and the server runtime are AOT-clean, and the residue is the v4 spike's
+(§15) rather than anything this work introduced.
+
+Note `WebApplication.CreateSlimBuilder` and the **`RequestDelegate`** overload of `MapPost` are what make
+that true: minimal APIs are only "partially" AOT-supported because `RequestDelegateFactory` is
+reflective, and writing raw request delegates bypasses it entirely — which is what we want anyway.
+
+### The shape the generator has to emit
+
+`src/AotConnectSmoke/HandWritten.cs` **is** the target output, written by hand and marked as such. This
+is the repo's own method — `AotRefGen` exists so that expected generator output is derived and
+reviewable rather than invented — and since there is no ref-emit to derive Connect output from, writing
+it, making it work and reviewing it is the substitute. It is three things:
+
+- `GreeterMethods` — a `ConnectMethod<,>` per operation, shared by both sides, so the service and method
+  names exist once;
+- `GreeterBindings : IConnectServiceBinder<GreeterService>` — `AddUnaryMethod(method, handler)` per
+  operation, the handler a `static` lambda so it allocates nothing;
+- `GreeterClient : IGreeter` — each method one call to `channel.UnaryAsync`.
+
+Server-side registration is `endpoints.MapConnectService(new GreeterBindings())`, which maps one
+endpoint per method (§14.1) and returns a composite `IEndpointConventionBuilder`, so
+`.RequireAuthorization()` on the service applies to all of them while generated per-method metadata
+still attaches individually.
+
+### The vocabulary decision is still open, and the fixture does not pre-empt it
+
+`IGreeter` carries **no `[Service]` attribute and no protobuf-net.Grpc `CallContext`**. That is
+deliberate: §9's question — whether the contract-facing vocabulary is protobuf-net.Grpc's, a
+Connect-local mirror, or something lifted into Core — is unsettled, and *nothing needs it settled yet*,
+because no attribute is read until the generator exists and the bindings here are hand-written.
+Settling a decision like that by accident, in a fixture, is how it gets made badly.
+
+What the fixture does commit to is the *shape*: an interface of async methods, each taking a request
+message and a context, which is protobuf-net.Grpc's shape whichever types end up filling it.
+
+### Things the build caught, worth keeping
+
+- **`ConnectCodec` is buffer-oriented, not stream-oriented**, and that was forced rather than chosen:
+  ASP.NET Core forbids synchronous stream reads, so a `Read<T>(Stream)` codec would make the server
+  buffer the body for no reason. `IBufferWriter<byte>` and `ReadOnlySequence<byte>` are what both ends
+  actually hold — a `PipeWriter` *is* the former, a `PipeReader` yields the latter — and protobuf-net
+  implements `IProtoOutput<IBufferWriter<byte>>` and `IProtoInput<ReadOnlySequence<byte>>` natively. The
+  server now writes straight to `Response.BodyWriter` with no intermediate buffer.
+- **The traversal build is what caught the refactor**, not a test: `ConnectProbe`'s `RawCodec` still
+  overrode the stream-shaped members. `Build.csproj` globs `src\*\*.csproj`, so both new projects and
+  both harnesses are in CI automatically with no registration.
+- **`ConnectException.RawMessage`** exists because `Message` synthesizes a `code (HTTP nnn): ` prefix for
+  readability, and relaying an error must not accumulate prefixes. The server writes `RawMessage`.
 
 ## 12. Unverified — check before committing to any of this
 

@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Net.Http;
@@ -115,11 +116,13 @@ public sealed class ConnectChannel
             throw await ReadErrorAsync(httpResponse, cancellationToken).ConfigureAwait(false);
         }
 
-        var body = await httpResponse.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
+        // unary is small by construction and the codec reads a whole message, so the body is taken in
+        // one piece; a streaming response reads from the PipeReader incrementally instead
+        var body = await httpResponse.Content.ReadAsByteArrayAsync(cancellationToken).ConfigureAwait(false);
         TResponse value;
         try
         {
-            value = Codec.Read<TResponse>(body);
+            value = Codec.Read<TResponse>(new ReadOnlySequence<byte>(body));
         }
         catch (Exception ex) when (ex is not ConnectException)
         {

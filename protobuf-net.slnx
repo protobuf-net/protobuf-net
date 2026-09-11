@@ -114,6 +114,16 @@
       <BuildType Solution="VS|*" Project="Release" />
     </Project>
   </Folder>
+  <Folder Name="/connect/">
+    <Project Path="src/protobuf-net.Connect/protobuf-net.Connect.csproj" />
+    <Project Path="src/protobuf-net.Connect.AspNetCore/protobuf-net.Connect.AspNetCore.csproj" />
+    <Project Path="src/AotConnectSmoke/AotConnectSmoke.csproj">
+      <BuildType Solution="VS|*" Project="Debug" />
+    </Project>
+    <Project Path="src/ConnectProbe/ConnectProbe.csproj">
+      <BuildType Solution="VS|*" Project="Debug" />
+    </Project>
+  </Folder>
   <Folder Name="/tools/">
     <Project Path="src/AotSmoke/AotSmoke.csproj">
       <BuildType Solution="VS|*" Project="Debug" />

@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Diagnostics;
 using ProtoBuf.Connect;
 using ProtoBuf.ConnectProbe;
@@ -108,13 +109,13 @@ internal sealed class RawCodec : ConnectCodec
 
     public override long? Measure<T>(T value) => value is byte[] bytes ? bytes.Length : null;
 
-    public override void Write<T>(Stream destination, T value)
+    public override void Write<T>(IBufferWriter<byte> destination, T value)
     {
-        if (value is byte[] bytes) destination.Write(bytes, 0, bytes.Length);
+        if (value is byte[] bytes) destination.Write(bytes);
     }
 
     // never reached: every call made through this codec is expected to fail
-    public override T Read<T>(Stream source) => default!;
+    public override T Read<T>(in ReadOnlySequence<byte> source) => default!;
 }
 
 internal sealed class Probe

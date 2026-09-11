@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>ProtoBuf.Connect.AspNetCore</RootNamespace>
+    <AssemblyName>protobuf-net.Connect.AspNetCore</AssemblyName>
+    <Nullable>enable</Nullable>
+    <Description>Connect protocol (connectrpc.com) server for protobuf-net, on ASP.NET Core - experimental</Description>
+    <IsPackable>false</IsPackable>
+    <IsTrimmable>true</IsTrimmable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- the ASP.NET Core shared framework, not Kestrel specifically: binding to HttpContext and
+         endpoint routing means Kestrel, HTTP.sys, IIS and TestServer all work from one implementation,
+         and none of them is named here -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <ProjectReference Include="../protobuf-net.Connect/protobuf-net.Connect.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -38,6 +38,13 @@ public sealed class ConnectException : Exception
     public IReadOnlyList<ConnectErrorDetail> Details { get; }
 
     /// <summary>
+    /// The message exactly as it appeared on the wire, without the code and status that
+    /// <see cref="Exception.Message"/> prefixes for readability. This is what goes back out when an
+    /// error is re-serialized, so that relaying one does not accumulate prefixes.
+    /// </summary>
+    public string? RawMessage { get; }
+
+    /// <summary>
     /// <c>true</c> when the server did not supply a Connect error object and the code was inferred from
     /// the HTTP status - so the code is a guess about an intermediary, not a statement by the service.
     /// </summary>
@@ -54,6 +61,7 @@ public sealed class ConnectException : Exception
         : base(Describe(code, message, httpStatus), innerException)
     {
         Code = code;
+        RawMessage = message;
         HttpStatus = httpStatus;
         Details = details ?? Array.Empty<ConnectErrorDetail>();
         CodeWasInferred = codeWasInferred;
