@@ -410,7 +410,10 @@ namespace ProtoBuf.Internal
             => ReferenceEquals(expected, actual) // since SlowGet checks for proxies etc, we can
             || ReferenceEquals(Get(expected), Get(actual)); // just compare the results
 
-        internal static Type? GetEffectiveType(Type type)
+        /// <remarks>Null in, null out: the <c>?? type</c> means a non-null argument always
+        /// produces a non-null answer, which is what saves every caller a re-test.</remarks>
+        [return: System.Diagnostics.CodeAnalysis.NotNullIfNotNull(nameof(type))]
+        internal static Type? GetEffectiveType(Type? type)
             => type is null ? null : Get(type).GetEffectiveType() ?? type;
 
         /// <summary>The effective type this stub stands for, or null when there is none.</summary>

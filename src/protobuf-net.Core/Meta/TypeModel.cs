@@ -616,7 +616,7 @@ namespace ProtoBuf.Meta
         /// expected and all records are returned).</param>
         /// <returns>The sequence of deserialized objects.</returns>
         /// <param name="context">Additional information about this serialization operation.</param>
-        public IEnumerable<T> DeserializeItems<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(Stream source, PrefixStyle style, int expectedField, SerializationContext context)
+        public IEnumerable<T> DeserializeItems<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(Stream source, PrefixStyle style, int expectedField, SerializationContext? context)
         {
             return new DeserializeItemsIterator<T>(this, source, style, expectedField, context);
         }
@@ -695,7 +695,7 @@ namespace ProtoBuf.Meta
         /// <param name="dest">The destination stream to write to.</param>
         /// <param name="fieldNumber">The tag used as a prefix to each record (only used with base-128 style prefixes).</param>
         /// <param name="context">Additional information about this serialization operation.</param>
-        public void SerializeWithLengthPrefix(Stream dest, object value, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type, PrefixStyle style, int fieldNumber, SerializationContext context)
+        public void SerializeWithLengthPrefix(Stream dest, object value, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type, PrefixStyle style, int fieldNumber, SerializationContext? context)
         {
             if (type is null)
             {
@@ -1219,7 +1219,7 @@ namespace ProtoBuf.Meta
             if (!listType.IsClass || listType.IsAbstract
                 || Helpers.GetConstructor(listType, Type.EmptyTypes, true) is null)
             {
-                string fullName;
+                string? fullName;
                 bool handled = false;
                 if (listType.IsInterface &&
                     (fullName = listType.FullName) is not null && fullName.Contains("Dictionary")) // have to try to be frugal here...
@@ -1338,7 +1338,7 @@ namespace ProtoBuf.Meta
             if (wiretype == WireType.None)
             {
 #pragma warning disable CS0618 // don't matter; we want to kill the entire aux flow
-                if (!TypeHelper.ResolveUniqueEnumerableT(type, out Type itemType))
+                if (!TypeHelper.ResolveUniqueEnumerableT(type, out Type? itemType))
 #pragma warning restore CS0618
                     itemType = null;
 
