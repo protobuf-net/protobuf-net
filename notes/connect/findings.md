@@ -2546,6 +2546,29 @@ HTTP/1.1** — which is the entire argument for Connect, demonstrated through an
 - `BuildToolsUnitTests` — 540/540. Traversal build clean, and the six long-standing warnings in
   `protobuf-net.Connect` are gone.
 
+### It publishes natively, with zero warnings
+
+`src/ConnectContractFirst` is `PublishAot`, and the result is the sharpest form of the whole claim:
+
+```
+dotnet publish src/ConnectContractFirst -c Release -r linux-x64
+-> 16.6 MB native binary, 0 trim/AOT warnings, 27/27 checks pass when RUN
+```
+
+A `protoc`-generated gRPC **service and client**, speaking Connect, compiled natively, with no
+reflection anywhere on the path. Worth stating why it comes out clean, since Google.Protobuf has a
+reputation here and the reputation is about a different part of it:
+
+- **marshalling is generated code**, not reflection — `IBufferMessage.InternalWriteTo`/`InternalMergeFrom`;
+- the `FileDescriptor` a generated file builds in its static constructor uses `typeof` and delegates
+  (`GeneratedClrTypeInfo`), not name-based lookup. The reflection-heavy parts of Google.Protobuf are
+  the JSON formatter and the descriptor/reflection APIs, and this path touches neither;
+- our adapter contributes none of its own: the two-phase bind was chosen precisely to avoid the
+  name-based `GetMethod` that `Grpc.AspNetCore.Server` needs.
+
+**It was run, not just published.** A clean warning count says nothing about whether the binary works —
+this repo has a section on exactly that mistake — so the native binary executes the same 27 checks.
+
 ### Next
 
 - **Endpoint metadata for contract-first** (§41): `[Authorize]` is still not inferred, and that is the

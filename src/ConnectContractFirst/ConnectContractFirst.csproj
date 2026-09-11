@@ -9,6 +9,13 @@
     <IsPackable>false</IsPackable>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <InvariantGlobalization>true</InvariantGlobalization>
+    <!-- the sharpest form of the claim: a protoc-generated service AND client, over Connect, compiled
+         natively. It publishes with ZERO trim/AOT warnings, because nothing on this path reflects -
+         Google.Protobuf's marshalling is generated code, and its descriptors are built from typeof and
+         delegates rather than from names. Also enables trim analysis at ordinary build time. -->
+    <PublishAot>true</PublishAot>
+    <TrimmerSingleWarn>false</TrimmerSingleWarn>
+    <SuppressTrimAnalysisWarnings>false</SuppressTrimAnalysisWarnings>
   </PropertyGroup>
 
   <ItemGroup>
