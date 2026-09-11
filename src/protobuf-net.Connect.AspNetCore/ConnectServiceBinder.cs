@@ -19,8 +19,8 @@ namespace ProtoBuf.Connect.AspNetCore
     /// this assembly.
     /// </para>
     /// </remarks>
-    public delegate Task<TResponse> ConnectUnaryHandler<in TService, in TRequest, TResponse>(
-        TService service, TRequest request, ConnectServerCallContext context);
+    public delegate Task<TResponse> ConnectUnaryHandler<in TImplementation, in TRequest, TResponse>(
+        TImplementation service, TRequest request, ConnectServerCallContext context);
 
     /// <summary>
     /// Handles one server-streaming call: one request in, a sequence of responses out.
@@ -29,42 +29,50 @@ namespace ProtoBuf.Connect.AspNetCore
     /// A second delegate type rather than a second pipeline, which is exactly what §14.1 of
     /// <c>notes/connect/findings.md</c> required the shape to allow. It did.
     /// </remarks>
-    public delegate IAsyncEnumerable<TResponse> ConnectServerStreamingHandler<in TService, in TRequest, out TResponse>(
-        TService service, TRequest request, ConnectServerCallContext context);
+    public delegate IAsyncEnumerable<TResponse> ConnectServerStreamingHandler<in TImplementation, in TRequest, out TResponse>(
+        TImplementation service, TRequest request, ConnectServerCallContext context);
 
     /// <summary>
     /// Handles one client-streaming call: a sequence of requests in, one response out.
     /// </summary>
-    public delegate Task<TResponse> ConnectClientStreamingHandler<in TService, TRequest, TResponse>(
-        TService service, IAsyncEnumerable<TRequest> requests, ConnectServerCallContext context);
+    public delegate Task<TResponse> ConnectClientStreamingHandler<in TImplementation, TRequest, TResponse>(
+        TImplementation service, IAsyncEnumerable<TRequest> requests, ConnectServerCallContext context);
 
     /// <summary>
     /// Handles one bidirectional-streaming call.
     /// </summary>
-    public delegate IAsyncEnumerable<TResponse> ConnectDuplexHandler<in TService, TRequest, out TResponse>(
-        TService service, IAsyncEnumerable<TRequest> requests, ConnectServerCallContext context);
+    public delegate IAsyncEnumerable<TResponse> ConnectDuplexHandler<in TImplementation, TRequest, out TResponse>(
+        TImplementation service, IAsyncEnumerable<TRequest> requests, ConnectServerCallContext context);
 
     /// <summary>
     /// Implemented by generated code to describe a service's methods to the runtime.
     /// </summary>
-    /// <typeparam name="TService">The service implementation type, resolved per call from DI.</typeparam>
-    public interface IConnectServiceBinder<TService> where TService : class
+    /// <remarks>
+    /// The type parameter is <c>TImplementation</c> rather than <c>TService</c> deliberately, and the
+    /// distinction is worth keeping: protobuf-net.Grpc's <c>ClientFactory.CreateClient&lt;TService&gt;</c>
+    /// means the <em>contract</em>, while grpc-dotnet's <c>IServiceMethodProvider&lt;TService&gt;</c>
+    /// means the <em>implementation</em> - two things under one name, in adjacent lines of the same
+    /// generated file. The consumer-facing verbs here follow protobuf-net.Grpc and use
+    /// <c>TService</c> for the contract; this type is ours, so it says what it means.
+    /// </remarks>
+    /// <typeparam name="TImplementation">The service implementation type, resolved per call from DI.</typeparam>
+    public interface IConnectServiceBinder<TImplementation> where TImplementation : class
     {
         /// <summary>Called once at startup to enumerate the service's methods.</summary>
-        void Bind(ConnectServiceBinderContext<TService> context);
+        void Bind(ConnectServiceBinderContext<TImplementation> context);
     }
 
     /// <summary>
     /// Collects the methods a service declares. One instance per <c>MapConnectService</c> call.
     /// </summary>
-    /// <typeparam name="TService">The service implementation type.</typeparam>
-    public sealed class ConnectServiceBinderContext<TService> where TService : class
+    /// <typeparam name="TImplementation">The service implementation type.</typeparam>
+    public sealed class ConnectServiceBinderContext<TImplementation> where TImplementation : class
     {
-        private readonly List<ConnectMethodRegistration<TService>> _methods = new();
+        private readonly List<ConnectMethodRegistration<TImplementation>> _methods = new();
 
         internal ConnectServiceBinderContext() { }
 
-        internal IReadOnlyList<ConnectMethodRegistration<TService>> Methods => _methods;
+        internal IReadOnlyList<ConnectMethodRegistration<TImplementation>> Methods => _methods;
 
         /// <summary>Declares a unary method.</summary>
         /// <param name="method">The method's name and shape.</param>
@@ -77,7 +85,7 @@ namespace ProtoBuf.Connect.AspNetCore
         /// </param>
         public void AddUnaryMethod<TRequest, TResponse>(
             ConnectMethod<TRequest, TResponse> method,
-            ConnectUnaryHandler<TService, TRequest, TResponse> handler,
+            ConnectUnaryHandler<TImplementation, TRequest, TResponse> handler,
             IReadOnlyList<object>? metadata = null)
             => Add(method, ConnectMethodType.Unary, metadata,
                 Internal.ConnectUnaryInvoker.Create(method, Require(handler)));
@@ -86,7 +94,7 @@ namespace ProtoBuf.Connect.AspNetCore
         /// <inheritdoc cref="AddUnaryMethod{TRequest, TResponse}" path="/param"/>
         public void AddServerStreamingMethod<TRequest, TResponse>(
             ConnectMethod<TRequest, TResponse> method,
-            ConnectServerStreamingHandler<TService, TRequest, TResponse> handler,
+            ConnectServerStreamingHandler<TImplementation, TRequest, TResponse> handler,
             IReadOnlyList<object>? metadata = null)
             => Add(method, ConnectMethodType.ServerStreaming, metadata,
                 Internal.ConnectServerStreamingInvoker.Create(method, Require(handler)));
@@ -95,7 +103,7 @@ namespace ProtoBuf.Connect.AspNetCore
         /// <inheritdoc cref="AddUnaryMethod{TRequest, TResponse}" path="/param"/>
         public void AddClientStreamingMethod<TRequest, TResponse>(
             ConnectMethod<TRequest, TResponse> method,
-            ConnectClientStreamingHandler<TService, TRequest, TResponse> handler,
+            ConnectClientStreamingHandler<TImplementation, TRequest, TResponse> handler,
             IReadOnlyList<object>? metadata = null)
             => Add(method, ConnectMethodType.ClientStreaming, metadata,
                 Internal.ConnectClientStreamingInvoker.Create(method, Require(handler)));
@@ -104,7 +112,7 @@ namespace ProtoBuf.Connect.AspNetCore
         /// <inheritdoc cref="AddUnaryMethod{TRequest, TResponse}" path="/param"/>
         public void AddDuplexMethod<TRequest, TResponse>(
             ConnectMethod<TRequest, TResponse> method,
-            ConnectDuplexHandler<TService, TRequest, TResponse> handler,
+            ConnectDuplexHandler<TImplementation, TRequest, TResponse> handler,
             IReadOnlyList<object>? metadata = null)
             => Add(method, ConnectMethodType.DuplexStreaming, metadata,
                 Internal.ConnectDuplexInvoker.Create(method, Require(handler)));
@@ -113,7 +121,7 @@ namespace ProtoBuf.Connect.AspNetCore
             ConnectMethod<TRequest, TResponse> method,
             ConnectMethodType expected,
             IReadOnlyList<object>? metadata,
-            Internal.ConnectInvoker<TService> invoker)
+            Internal.ConnectInvoker<TImplementation> invoker)
         {
             ArgumentNullException.ThrowIfNull(method);
             if (method.Type != expected)
@@ -121,7 +129,7 @@ namespace ProtoBuf.Connect.AspNetCore
                 throw new ArgumentException($"'{method}' is {method.Type}, not {expected}.", nameof(method));
             }
 
-            _methods.Add(new ConnectMethodRegistration<TService>(
+            _methods.Add(new ConnectMethodRegistration<TImplementation>(
                 method.Path, method.ToString(), expected, metadata ?? Array.Empty<object>(), invoker));
         }
 
@@ -129,10 +137,10 @@ namespace ProtoBuf.Connect.AspNetCore
             => handler ?? throw new ArgumentNullException(nameof(handler));
     }
 
-    internal sealed record ConnectMethodRegistration<TService>(
+    internal sealed record ConnectMethodRegistration<TImplementation>(
         string Path,
         string DisplayName,
         ConnectMethodType Type,
         IReadOnlyList<object> Metadata,
-        Internal.ConnectInvoker<TService> Invoker) where TService : class;
+        Internal.ConnectInvoker<TImplementation> Invoker) where TImplementation : class;
 }

@@ -249,7 +249,7 @@ await checks.Run("a second service in the same container", async () =>
 
 await checks.Run("services can be bound separately when conventions differ", async () =>
 {
-    // BindServer<TContract> exists so one service can carry conventions the other does not; here the
+    // BindServer<TService> exists so one service can carry conventions the other does not; here the
     // proof is simply that a single service can be mapped alone, under its own prefix
     var solo = new ConnectChannel(http, new ProtoConnectCodec(SmokeModel.Instance), new Uri($"{address}/solo"));
     var farewell = SmokeServices.CreateClient<IFarewell>(solo);

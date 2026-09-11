@@ -10,11 +10,11 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
 {
     internal static class ConnectServerStreamingInvoker
     {
-        public static ConnectInvoker<TService> Create<TService, TRequest, TResponse>(
+        public static ConnectInvoker<TImplementation> Create<TImplementation, TRequest, TResponse>(
             ConnectMethod<TRequest, TResponse> method,
-            ConnectServerStreamingHandler<TService, TRequest, TResponse> handler)
-            where TService : class
-            => new ConnectServerStreamingInvoker<TService, TRequest, TResponse>(method, handler);
+            ConnectServerStreamingHandler<TImplementation, TRequest, TResponse> handler)
+            where TImplementation : class
+            => new ConnectServerStreamingInvoker<TImplementation, TRequest, TResponse>(method, handler);
     }
 
     /// <summary>
@@ -28,22 +28,22 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
     /// terminating message describes a failed call. This invoker therefore catches its own failures
     /// rather than letting them reach the endpoint's error path, which would have nowhere to put them.
     /// </remarks>
-    internal sealed class ConnectServerStreamingInvoker<TService, TRequest, TResponse> : ConnectInvoker<TService>
-        where TService : class
+    internal sealed class ConnectServerStreamingInvoker<TImplementation, TRequest, TResponse> : ConnectInvoker<TImplementation>
+        where TImplementation : class
     {
         private readonly ConnectMethod<TRequest, TResponse> _method;
-        private readonly ConnectServerStreamingHandler<TService, TRequest, TResponse> _handler;
+        private readonly ConnectServerStreamingHandler<TImplementation, TRequest, TResponse> _handler;
 
         public ConnectServerStreamingInvoker(
             ConnectMethod<TRequest, TResponse> method,
-            ConnectServerStreamingHandler<TService, TRequest, TResponse> handler)
+            ConnectServerStreamingHandler<TImplementation, TRequest, TResponse> handler)
         {
             _method = method;
             _handler = handler;
         }
 
         public override async Task InvokeAsync(
-            HttpContext http, TService service, ConnectCodec codec, ConnectServerCallContext context)
+            HttpContext http, TImplementation service, ConnectCodec codec, ConnectServerCallContext context)
         {
             // read BEFORE committing the status: a request we cannot read never starts a stream, and so
             // is reportable the ordinary way, as a non-200 with a JSON error

@@ -27,7 +27,7 @@ namespace ProtoBuf.Connect.AspNetCore
         /// <c>[Authorize]</c> at all, and the alternative would be re-implementing authorization inside the
         /// handler. Emitting N registrations instead of one costs nothing, since it is generated.
         /// </remarks>
-        /// <typeparam name="TService">
+        /// <typeparam name="TImplementation">
         /// The service implementation, resolved from the request's services on each call.
         /// </typeparam>
         /// <param name="endpoints">The route builder.</param>
@@ -38,11 +38,11 @@ namespace ProtoBuf.Connect.AspNetCore
         /// host - the two use identical paths otherwise, so mapping both at the root puts two endpoints
         /// on one route, and the duplicated path then answers 500 at request time.
         /// </param>
-        public static IEndpointConventionBuilder MapConnectService<TService>(
+        public static IEndpointConventionBuilder MapConnectService<TImplementation>(
             this IEndpointRouteBuilder endpoints,
-            IConnectServiceBinder<TService> binder,
+            IConnectServiceBinder<TImplementation> binder,
             string? routingPrefix = null)
-            where TService : class
+            where TImplementation : class
         {
             ArgumentNullException.ThrowIfNull(endpoints);
             ArgumentNullException.ThrowIfNull(binder);
@@ -58,7 +58,7 @@ namespace ProtoBuf.Connect.AspNetCore
                     "No Connect codec is registered. Call services.AddConnect(o => o.Codecs.Add(new ProtoConnectCodec(MyModel.Instance))).");
             }
 
-            var context = new ConnectServiceBinderContext<TService>();
+            var context = new ConnectServiceBinderContext<TImplementation>();
             binder.Bind(context);
 
             var builders = new List<IEndpointConventionBuilder>(context.Methods.Count);
@@ -76,8 +76,8 @@ namespace ProtoBuf.Connect.AspNetCore
             return new CompositeEndpointConventionBuilder(builders);
         }
 
-        private static RequestDelegate CreateHandler<TService>(ConnectMethodRegistration<TService> method, ConnectServerOptions options)
-            where TService : class
+        private static RequestDelegate CreateHandler<TImplementation>(ConnectMethodRegistration<TImplementation> method, ConnectServerOptions options)
+            where TImplementation : class
             => async http =>
             {
                 // One error path for the whole call, per the constraint recorded in notes/connect/findings.md:
@@ -107,7 +107,7 @@ namespace ProtoBuf.Connect.AspNetCore
 
                     var callContext = new ConnectServerCallContext(
                         http, method.Path, ConnectServerCallContext.DeadlineFrom(span), cancellationToken);
-                    var service = http.RequestServices.GetRequiredService<TService>();
+                    var service = http.RequestServices.GetRequiredService<TImplementation>();
 
                     await method.Invoker.InvokeAsync(http, service, codec, callContext).ConfigureAwait(false);
                 }

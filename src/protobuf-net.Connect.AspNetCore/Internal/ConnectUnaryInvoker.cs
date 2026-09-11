@@ -11,33 +11,33 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
     /// Serves one method. The runtime owns reading and writing; the generated code supplies only a typed
     /// delegate that calls the service.
     /// </summary>
-    internal abstract class ConnectInvoker<TService> where TService : class
+    internal abstract class ConnectInvoker<TImplementation> where TImplementation : class
     {
-        public abstract Task InvokeAsync(HttpContext http, TService service, ConnectCodec codec, ConnectServerCallContext context);
+        public abstract Task InvokeAsync(HttpContext http, TImplementation service, ConnectCodec codec, ConnectServerCallContext context);
     }
 
     internal static class ConnectUnaryInvoker
     {
-        public static ConnectInvoker<TService> Create<TService, TRequest, TResponse>(
+        public static ConnectInvoker<TImplementation> Create<TImplementation, TRequest, TResponse>(
             ConnectMethod<TRequest, TResponse> method,
-            ConnectUnaryHandler<TService, TRequest, TResponse> handler)
-            where TService : class
-            => new ConnectUnaryInvoker<TService, TRequest, TResponse>(method, handler);
+            ConnectUnaryHandler<TImplementation, TRequest, TResponse> handler)
+            where TImplementation : class
+            => new ConnectUnaryInvoker<TImplementation, TRequest, TResponse>(method, handler);
     }
 
-    internal sealed class ConnectUnaryInvoker<TService, TRequest, TResponse> : ConnectInvoker<TService>
-        where TService : class
+    internal sealed class ConnectUnaryInvoker<TImplementation, TRequest, TResponse> : ConnectInvoker<TImplementation>
+        where TImplementation : class
     {
         private readonly ConnectMethod<TRequest, TResponse> _method;
-        private readonly ConnectUnaryHandler<TService, TRequest, TResponse> _handler;
+        private readonly ConnectUnaryHandler<TImplementation, TRequest, TResponse> _handler;
 
-        public ConnectUnaryInvoker(ConnectMethod<TRequest, TResponse> method, ConnectUnaryHandler<TService, TRequest, TResponse> handler)
+        public ConnectUnaryInvoker(ConnectMethod<TRequest, TResponse> method, ConnectUnaryHandler<TImplementation, TRequest, TResponse> handler)
         {
             _method = method;
             _handler = handler;
         }
 
-        public override async Task InvokeAsync(HttpContext http, TService service, ConnectCodec codec, ConnectServerCallContext context)
+        public override async Task InvokeAsync(HttpContext http, TImplementation service, ConnectCodec codec, ConnectServerCallContext context)
         {
             var request = await ReadAsync(http.Request.BodyReader, codec, context.CancellationToken).ConfigureAwait(false);
             var response = await _handler(service, request, context).ConfigureAwait(false);

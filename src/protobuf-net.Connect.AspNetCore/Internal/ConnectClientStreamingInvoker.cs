@@ -8,11 +8,11 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
 {
     internal static class ConnectClientStreamingInvoker
     {
-        public static ConnectInvoker<TService> Create<TService, TRequest, TResponse>(
+        public static ConnectInvoker<TImplementation> Create<TImplementation, TRequest, TResponse>(
             ConnectMethod<TRequest, TResponse> method,
-            ConnectClientStreamingHandler<TService, TRequest, TResponse> handler)
-            where TService : class
-            => new ConnectClientStreamingInvoker<TService, TRequest, TResponse>(method, handler);
+            ConnectClientStreamingHandler<TImplementation, TRequest, TResponse> handler)
+            where TImplementation : class
+            => new ConnectClientStreamingInvoker<TImplementation, TRequest, TResponse>(method, handler);
     }
 
     /// <summary>
@@ -26,22 +26,22 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
     /// almost every failure is reportable the ordinary way - but the terminator still has to be written,
     /// because that is what says the stream ended cleanly.
     /// </remarks>
-    internal sealed class ConnectClientStreamingInvoker<TService, TRequest, TResponse> : ConnectInvoker<TService>
-        where TService : class
+    internal sealed class ConnectClientStreamingInvoker<TImplementation, TRequest, TResponse> : ConnectInvoker<TImplementation>
+        where TImplementation : class
     {
         private readonly ConnectMethod<TRequest, TResponse> _method;
-        private readonly ConnectClientStreamingHandler<TService, TRequest, TResponse> _handler;
+        private readonly ConnectClientStreamingHandler<TImplementation, TRequest, TResponse> _handler;
 
         public ConnectClientStreamingInvoker(
             ConnectMethod<TRequest, TResponse> method,
-            ConnectClientStreamingHandler<TService, TRequest, TResponse> handler)
+            ConnectClientStreamingHandler<TImplementation, TRequest, TResponse> handler)
         {
             _method = method;
             _handler = handler;
         }
 
         public override async Task InvokeAsync(
-            HttpContext http, TService service, ConnectCodec codec, ConnectServerCallContext context)
+            HttpContext http, TImplementation service, ConnectCodec codec, ConnectServerCallContext context)
         {
             var requests = EnvelopedRequestReader.ReadAllAsync(
                 http.Request.BodyReader, codec, _method.RequestSerializer, _method.ToString(), context.CancellationToken);

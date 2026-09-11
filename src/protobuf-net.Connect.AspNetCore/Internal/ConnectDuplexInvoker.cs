@@ -8,11 +8,11 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
 {
     internal static class ConnectDuplexInvoker
     {
-        public static ConnectInvoker<TService> Create<TService, TRequest, TResponse>(
+        public static ConnectInvoker<TImplementation> Create<TImplementation, TRequest, TResponse>(
             ConnectMethod<TRequest, TResponse> method,
-            ConnectDuplexHandler<TService, TRequest, TResponse> handler)
-            where TService : class
-            => new ConnectDuplexInvoker<TService, TRequest, TResponse>(method, handler);
+            ConnectDuplexHandler<TImplementation, TRequest, TResponse> handler)
+            where TImplementation : class
+            => new ConnectDuplexInvoker<TImplementation, TRequest, TResponse>(method, handler);
     }
 
     /// <summary>
@@ -24,22 +24,22 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
     /// shared. Nothing about duplex is new to the *protocol* - it is new only to the transport, which
     /// must interleave, and therefore must be HTTP/2.
     /// </remarks>
-    internal sealed class ConnectDuplexInvoker<TService, TRequest, TResponse> : ConnectInvoker<TService>
-        where TService : class
+    internal sealed class ConnectDuplexInvoker<TImplementation, TRequest, TResponse> : ConnectInvoker<TImplementation>
+        where TImplementation : class
     {
         private readonly ConnectMethod<TRequest, TResponse> _method;
-        private readonly ConnectDuplexHandler<TService, TRequest, TResponse> _handler;
+        private readonly ConnectDuplexHandler<TImplementation, TRequest, TResponse> _handler;
 
         public ConnectDuplexInvoker(
             ConnectMethod<TRequest, TResponse> method,
-            ConnectDuplexHandler<TService, TRequest, TResponse> handler)
+            ConnectDuplexHandler<TImplementation, TRequest, TResponse> handler)
         {
             _method = method;
             _handler = handler;
         }
 
         public override async Task InvokeAsync(
-            HttpContext http, TService service, ConnectCodec codec, ConnectServerCallContext context)
+            HttpContext http, TImplementation service, ConnectCodec codec, ConnectServerCallContext context)
         {
             if (!HttpProtocol.IsHttp2(http.Request.Protocol) && !HttpProtocol.IsHttp3(http.Request.Protocol))
             {

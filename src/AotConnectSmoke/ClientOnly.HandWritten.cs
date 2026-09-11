@@ -18,11 +18,11 @@ partial class SmokeClientOnly
     private SmokeClientOnly() { }
 
     /// <summary>Creates a client proxy for one of the contracts this container declares.</summary>
-    public static TContract CreateClient<TContract>(ConnectChannel channel) where TContract : class
+    public static TService CreateClient<TService>(ConnectChannel channel) where TService : class
     {
-        if (typeof(TContract) == typeof(IFarewell)) return (TContract)(object)new FarewellClientProxy(channel);
+        if (typeof(TService) == typeof(IFarewell)) return (TService)(object)new FarewellClientProxy(channel);
         throw new InvalidOperationException(
-            "No build-time Connect proxy for " + typeof(TContract).FullName + " in " + nameof(SmokeClientOnly) + ".");
+            "No build-time Connect proxy for " + typeof(TService).FullName + " in " + nameof(SmokeClientOnly) + ".");
     }
 
     private static class Farewell

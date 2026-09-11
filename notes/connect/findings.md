@@ -1706,6 +1706,40 @@ generic "no bindings" it would otherwise say. Better still, the generator can ca
 when the call names the contract as a literal type argument; worth a `PBN5xxx` when the generator is
 written.
 
+## 28. `TService` or `TContract`? — and the ambiguity it exposed
+
+Review asked whether `TContract` was justified against the codebase's `TService`. **It was not** — but
+checking turned up something worth keeping.
+
+`TService` already means two different things, in **adjacent lines of the same generated file**
+(`Basic.output.cs`):
+
+| | means |
+| --- | --- |
+| `ClientFactory.CreateClient<TService>` (line 63) | the **contract** — tested against `typeof(IGreeter)` |
+| `IServiceMethodProvider<TService>` (line 127) | the **implementation** — `GreeterService` |
+
+The first is protobuf-net.Grpc's own API and the direct analogue of ours; the second is grpc-dotnet's,
+and no Connect consumer ever sees it. So inventing `TContract` disambiguated in the **wrong place**: it
+diverged from the API a consumer actually meets, to avoid a collision inherited from someone else's.
+
+The fix is the other way round — match protobuf-net.Grpc on the consumer-facing verbs, and rename the
+type **we** control to say what it means:
+
+| | |
+| --- | --- |
+| `CreateClient<TService>`, `BindServer<TService>` | the contract, matching `ClientFactory.CreateClient<TService>` |
+| `IConnectServiceBinder<TImplementation>`, the handler delegates, `MapConnectService<TImplementation>` | the implementation |
+
+`IConnectServiceBinder` was named to mirror `IServiceMethodProvider<TService>`, which is why it
+inherited the ambiguity in the first place. Mirroring a neighbour's *shape* is worth doing; mirroring
+its naming mistake is not.
+
+**The general rule this is an instance of**, since it has now come up repeatedly with this fixture:
+matching an existing API is right where a consumer meets both, and wrong where the existing API's choice
+was itself accidental. The test is whose documentation the consumer would read, not which code looked
+similar.
+
 ## 12. Unverified — check before committing to any of this
 
 Everything below is assumption or inference, not measurement:

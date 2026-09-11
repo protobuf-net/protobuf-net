@@ -33,12 +33,12 @@ partial class SmokeServices
     private SmokeServices() { }
 
     /// <summary>Creates a client proxy for one of the contracts this container declares.</summary>
-    public static TContract CreateClient<TContract>(ConnectChannel channel) where TContract : class
+    public static TService CreateClient<TService>(ConnectChannel channel) where TService : class
     {
-        if (typeof(TContract) == typeof(IGreeter)) return (TContract)(object)new GreeterClientProxy(channel);
-        if (typeof(TContract) == typeof(IFarewell)) return (TContract)(object)new FarewellClientProxy(channel);
+        if (typeof(TService) == typeof(IGreeter)) return (TService)(object)new GreeterClientProxy(channel);
+        if (typeof(TService) == typeof(IFarewell)) return (TService)(object)new FarewellClientProxy(channel);
         throw new InvalidOperationException(
-            "No build-time Connect proxy for " + typeof(TContract).FullName + " in " + nameof(SmokeServices) + ".");
+            "No build-time Connect proxy for " + typeof(TService).FullName + " in " + nameof(SmokeServices) + ".");
     }
 
     /// <summary>Maps every service this container declares.</summary>
@@ -58,25 +58,25 @@ partial class SmokeServices
 
     /// <summary>Maps one service, so that conventions can differ between them.</summary>
     /// <remarks>
-    /// Keyed on the <em>contract</em>, matching <see cref="CreateClient{TContract}"/>, even though the
+    /// Keyed on the <em>contract</em>, matching <see cref="CreateClient{TService}"/>, even though the
     /// runtime binds by implementation type - the consumer named the pairing once in Services.cs and
     /// should not have to remember which side each API wants.
     /// </remarks>
-    public static IEndpointConventionBuilder BindServer<TContract>(
+    public static IEndpointConventionBuilder BindServer<TService>(
         IEndpointRouteBuilder endpoints, string? routingPrefix = null)
     {
-        if (typeof(TContract) == typeof(IGreeter))
+        if (typeof(TService) == typeof(IGreeter))
         {
             return endpoints.MapConnectService(new GreeterServerBindings(), routingPrefix);
         }
 
-        if (typeof(TContract) == typeof(IFarewell))
+        if (typeof(TService) == typeof(IFarewell))
         {
             return endpoints.MapConnectService(new FarewellServerBindings(), routingPrefix);
         }
 
         throw new InvalidOperationException(
-            "No build-time Connect bindings for " + typeof(TContract).FullName + " in " + nameof(SmokeServices) + ".");
+            "No build-time Connect bindings for " + typeof(TService).FullName + " in " + nameof(SmokeServices) + ".");
     }
 
     /// <summary>
