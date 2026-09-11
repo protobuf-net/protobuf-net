@@ -300,7 +300,7 @@ namespace ProtoBuf
         private const int RetainedEntryCap = 1024;
 
         private static void ClearAndMaybeTrim<TKey, TValue>(ref Dictionary<TKey, TValue> map,
-            bool pressure, Func<Dictionary<TKey, TValue>> create)
+            bool pressure, Func<Dictionary<TKey, TValue>> create) where TKey : notnull
         {
             var count = map.Count;
             map.Clear();

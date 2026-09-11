@@ -46,7 +46,9 @@ namespace ProtoBuf
             this.tag = tag;
         }
 
-        internal MemberInfo Member, BackingMember;
+        // assigned by the model builder after construction, not by the attribute itself - the
+        // attribute is what the consumer writes, and these are how the model annotates it
+        internal MemberInfo Member = null!, BackingMember = null!;
         internal bool TagIsPinned;
 
         /// <summary>

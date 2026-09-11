@@ -2004,7 +2004,7 @@ namespace ProtoBuf.Meta
         {
             if (model is not null)
             {
-                TypeFormatEventHandler handler = model.DynamicTypeFormatting;
+                TypeFormatEventHandler? handler = model.DynamicTypeFormatting;
                 if (handler is not null)
                 {
                     TypeFormatEventArgs args = new TypeFormatEventArgs(type);
@@ -2019,7 +2019,7 @@ namespace ProtoBuf.Meta
         {
             if (model is not null)
             {
-                TypeFormatEventHandler handler = model.DynamicTypeFormatting;
+                TypeFormatEventHandler? handler = model.DynamicTypeFormatting;
                 if (handler is not null)
                 {
                     TypeFormatEventArgs args = new TypeFormatEventArgs(value);
@@ -2164,7 +2164,7 @@ namespace ProtoBuf.Meta
         /// Used to provide custom services for writing and parsing type names when using dynamic types. Both parsing and formatting
         /// are provided on a single API as it is essential that both are mapped identically at all times.
         /// </summary>
-        public event TypeFormatEventHandler DynamicTypeFormatting;
+        public event TypeFormatEventHandler? DynamicTypeFormatting;
 
 #pragma warning disable SYSLIB0011 // binary formatter - legacy only
 
@@ -2185,7 +2185,7 @@ namespace ProtoBuf.Meta
             internal Formatter(TypeModel? model, Type type)
             {
                 ThrowHelper.ThrowIfNull(model, nameof(model));
-                if (type is null) ThrowHelper.ThrowArgumentNullException(nameof(model));
+                ThrowHelper.ThrowIfNull(type, nameof(type)); // was nameof(model) - the guard named the wrong parameter
                 this.model = model;
                 this.type = type;
             }

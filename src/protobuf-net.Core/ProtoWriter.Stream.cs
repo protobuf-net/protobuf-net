@@ -43,7 +43,7 @@ namespace ProtoBuf
             // cleared in Cleanup, which is the pooled-object window. Declared non-nullable so the
             // ~30 uses do not each carry a null test for a state they cannot be in; the one place
             // it is untrue says so with null!.
-            private Stream dest;
+            private Stream dest = null!;
             private int flushLock;
 
             private protected override bool ImplDemandFlushOnDispose => true;
@@ -151,7 +151,7 @@ namespace ProtoBuf
             // active over the buffer, which is the museum API's world (one State per call, see
             // the bridge on ProtoWriter). Everything else asks Pending.
 
-            private byte[] ioBuffer; // non-null while active - see dest
+            private byte[] ioBuffer = null!; // non-null while active - see dest
             private int ioIndex;
 
             /// <summary>
