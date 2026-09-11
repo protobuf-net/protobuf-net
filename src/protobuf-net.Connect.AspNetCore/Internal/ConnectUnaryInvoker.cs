@@ -50,7 +50,7 @@ internal sealed class ConnectUnaryInvoker<TService, TRequest, TResponse> : Conne
         // is a `trailer-` prefixed header - which is how the protocol avoids HTTP trailers, and so HTTP/2
         context.FlushTrailers();
 
-        await WriteAsync(http.Response, codec, response, context.CancellationToken).ConfigureAwait(false);
+        await WriteAsync(http.Response, codec, response, _method.ResponseSerializer, context.CancellationToken).ConfigureAwait(false);
     }
 
     private async Task<TRequest> ReadAsync(PipeReader reader, ConnectCodec codec, CancellationToken cancellationToken)
@@ -86,7 +86,7 @@ internal sealed class ConnectUnaryInvoker<TService, TRequest, TResponse> : Conne
     {
         try
         {
-            return codec.Read<TRequest>(buffer);
+            return codec.Read(buffer, _method.RequestSerializer);
         }
         catch (Exception ex) when (ex is not ConnectException)
         {
@@ -99,7 +99,8 @@ internal sealed class ConnectUnaryInvoker<TService, TRequest, TResponse> : Conne
         }
     }
 
-    private static async Task WriteAsync(HttpResponse response, ConnectCodec codec, TResponse value, CancellationToken cancellationToken)
+    private static async Task WriteAsync(HttpResponse response, ConnectCodec codec, TResponse value,
+        global::ProtoBuf.Serializers.ISerializer<TResponse>? serializer, CancellationToken cancellationToken)
     {
         // headers first: the response is committed on the first write, so anything the handler added -
         // including trailing metadata, which for unary is a `trailer-` prefixed header - is already set
@@ -107,7 +108,7 @@ internal sealed class ConnectUnaryInvoker<TService, TRequest, TResponse> : Conne
         response.ContentType = codec.ContentTypeFor(ConnectMethodType.Unary);
         if (codec.Measure(value) is { } length) response.ContentLength = length;
 
-        codec.Write(response.BodyWriter, value);
+        codec.Write(response.BodyWriter, value, serializer);
         await response.BodyWriter.FlushAsync(cancellationToken).ConfigureAwait(false);
     }
 }

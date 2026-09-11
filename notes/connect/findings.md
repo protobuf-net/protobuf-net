@@ -1077,6 +1077,88 @@ Hence `ConnectCodec` holds the `TypeModel`, and lives on the channel (client) or
 rather than limiting, but it is the design's one visible constraint and should be a deliberate choice
 if it ever changes.
 
+## 19. Hoisting serializer resolution out of the per-message path
+
+§18 established that there are no marshallers and that nothing on this path enters `MarshallerCache`
+or `DynamicStub`. What remained was a genuine, if small, per-message resolution. It is now hoisted to
+static-initialiser time, and the *how* is the interesting part.
+
+### What the lookup actually was
+
+Measured against the source rather than guessed. `TypeModel.Deserialize<T>` →
+`state.DeserializeRootImpl<T>` → `TypeModel.TryGetSerializer<T>(model)`, which is:
+
+```csharp
+=> SerializerCache<PrimaryTypeProvider, T>.InstanceField   // static generic field; null for a contract
+ ?? model?.GetSerializer<T>();                             // virtual → SerializerCache<Generated, T>.InstanceField
+```
+
+So: a static field read, a **virtual call**, a second static field read. No dictionary, no reflection.
+Small — but it is per message, and "the model is closed at compile time" ought to mean the binding is
+made at compile time too.
+
+### The mechanism needs no change to protobuf-net.Core
+
+Four things are already public, which together are enough:
+
+| | |
+| --- | --- |
+| `SerializerCache.Get<TProvider, T>()` | public |
+| `ProtoReader.State.Create(ReadOnlySequence<byte>, model)` / `ProtoWriter.State.Create(IBufferWriter<byte>, model)` | public |
+| `state.DeserializeRoot<T>(value, serializer)` / `state.SerializeRoot<T>(value, serializer)` | public, and both take an `ISerializer<T>` |
+
+The missing link looked like `TProvider`: `ProtoModelGenerator` emits `ProtoBufGeneratedServices` as a
+**private nested class of the model**, and `TypeModel.GetSerializer<T>()` is `protected`, so no
+consumer can name either. **But the model is `partial`** — so another part of the same class *can*
+name the nested type:
+
+```csharp
+public partial class SmokeModel
+{
+    public static ISerializer<T> Serializer<T>() => SerializerCache.Get<ProtoBufGeneratedServices, T>();
+}
+```
+
+That is `src/AotConnectSmoke/ModelAccessor.cs`, hand-written for now. **It should become a
+`ProtoModelGenerator` emit** — a one-line addition to the model, useful to anything that wants to bind
+a serializer once rather than per call, not only to Connect.
+
+`ConnectMethod<,>` then carries the pair, resolved in the static initialiser, and the codec's
+`Write`/`Read` take an optional `ISerializer<T>` with the `serializer ??= …` idiom protobuf-net uses
+throughout — so a codec for which a binary serializer is meaningless (a JSON one) ignores it.
+
+### The annotation trap, which is the part worth remembering
+
+Annotating the codec's `Read<T>`/`Write<T>` with `DynamicAccess.ContractType` — the obvious fix for the
+`IL2091` that `DeserializeRoot`/`SerializeRoot` raise — **propagates the demand across the entire public
+generic surface**: it immediately reached `ConnectChannel.UnaryWithMetadataAsync<TRequest, TResponse>`
+and `MeasuredCodecContent<T>`, and would have carried on to `ConnectMethod<,>` and thence to every
+consumer's payload types.
+
+That is precisely the mistake `AGENTS.md` records against `ISerializer<T>`, whose removal took
+`AotSmoke` from **200 warnings to 33**. Repeating it to save a virtual call would be a poor trade.
+
+The right answer is a **local `UnconditionalSuppressMessage`**, which is what Core itself does in
+`GetSerializerAllowingReflection`, and the justification is exact rather than hand-waving: both methods
+are `serializer ?? TypeModel.GetSerializer<T>(Model)`, and `??` does not evaluate its right-hand side,
+so a supplied serializer means the reflective arm is unreachable. Verified by reading both bodies, not
+inferred from the names.
+
+The one annotation that *is* correct is on `SmokeModel.Serializer<T>()`, because it terminates
+immediately — every caller is a static initialiser naming a concrete contract type.
+
+### Measured
+
+| | before | after |
+| --- | --- | --- |
+| IL warnings (`linux-x64`) | 33 | **33** |
+| native size | 15,430,856 | 15,443,448 (**+12 KB**) |
+| checks | 9/9 | 9/9, JIT and native |
+
+**One resolution remains, on the write path only:** `TypeModel.Measure<T>` takes no serializer, so
+there is nothing to hand it. It buys `Content-Length`, which is worth more than it costs. A
+`Measure<T>(T, ISerializer<T>)` overload would close it, and that *would* be a Core change.
+
 ## 12. Unverified — check before committing to any of this
 
 Everything below is assumption or inference, not measurement:

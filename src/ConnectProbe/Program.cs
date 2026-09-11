@@ -109,13 +109,13 @@ internal sealed class RawCodec : ConnectCodec
 
     public override long? Measure<T>(T value) => value is byte[] bytes ? bytes.Length : null;
 
-    public override void Write<T>(IBufferWriter<byte> destination, T value)
+    public override void Write<T>(IBufferWriter<byte> destination, T value, ProtoBuf.Serializers.ISerializer<T>? serializer = null)
     {
         if (value is byte[] bytes) destination.Write(bytes);
     }
 
     // never reached: every call made through this codec is expected to fail
-    public override T Read<T>(in ReadOnlySequence<byte> source) => default!;
+    public override T Read<T>(in ReadOnlySequence<byte> source, ProtoBuf.Serializers.ISerializer<T>? serializer = null) => default!;
 }
 
 internal sealed class Probe

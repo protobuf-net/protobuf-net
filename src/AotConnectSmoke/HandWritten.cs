@@ -24,21 +24,36 @@ namespace ProtoBuf.AotConnectSmoke;
 // ---------------------------------------------------------------------------------------------
 
 /// <summary>The methods of <see cref="IGreeter"/>, shared by the client proxy and the server bindings.</summary>
+/// <remarks>
+/// The serializers are resolved <em>here</em>, once, in the static initialiser - not per message. This
+/// is the closest thing to a marshaller in the design, and unlike protobuf-net.Grpc's it is not working
+/// around anything: there is no MarshallerCache and no CanSerialize gate on this path (§18). It simply
+/// hoists the model lookup - a static field read, a virtual call and a second static field read - out
+/// of every request.
+/// </remarks>
 internal static class GreeterMethods
 {
     public const string ServiceName = "aotconnectsmoke.v1.Greeter";
 
     public static readonly ConnectMethod<HelloRequest, HelloReply> SayHello =
-        new(ConnectMethodType.Unary, ServiceName, "SayHello");
+        new(ConnectMethodType.Unary, ServiceName, "SayHello",
+            requestSerializer: SmokeModel.Serializer<HelloRequest>(),
+            responseSerializer: SmokeModel.Serializer<HelloReply>());
 
     public static readonly ConnectMethod<HelloRequest, HelloReply> Refuse =
-        new(ConnectMethodType.Unary, ServiceName, "Refuse");
+        new(ConnectMethodType.Unary, ServiceName, "Refuse",
+            requestSerializer: SmokeModel.Serializer<HelloRequest>(),
+            responseSerializer: SmokeModel.Serializer<HelloReply>());
 
     public static readonly ConnectMethod<HelloRequest, HelloReply> Explode =
-        new(ConnectMethodType.Unary, ServiceName, "Explode");
+        new(ConnectMethodType.Unary, ServiceName, "Explode",
+            requestSerializer: SmokeModel.Serializer<HelloRequest>(),
+            responseSerializer: SmokeModel.Serializer<HelloReply>());
 
     public static readonly ConnectMethod<HelloRequest, HelloReply> Dawdle =
-        new(ConnectMethodType.Unary, ServiceName, "Dawdle");
+        new(ConnectMethodType.Unary, ServiceName, "Dawdle",
+            requestSerializer: SmokeModel.Serializer<HelloRequest>(),
+            responseSerializer: SmokeModel.Serializer<HelloReply>());
 }
 
 /// <summary>

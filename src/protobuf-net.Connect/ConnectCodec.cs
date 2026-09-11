@@ -1,6 +1,9 @@
 using System;
 using System.Buffers;
+using System.Diagnostics.CodeAnalysis;
+using ProtoBuf.Connect.Internal;
 using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
 
 namespace ProtoBuf.Connect;
 
@@ -28,7 +31,11 @@ public abstract class ConnectCodec
     public abstract string Name { get; }
 
     /// <summary>Serializes a message, with no framing.</summary>
-    public abstract void Write<T>(IBufferWriter<byte> destination, T value);
+    /// <param name="serializer">
+    /// The model's serializer for <typeparamref name="T"/>, where the caller resolved it once at build
+    /// time rather than per message. A codec for which it is meaningless ignores it.
+    /// </param>
+    public abstract void Write<T>(IBufferWriter<byte> destination, T value, ISerializer<T>? serializer = null);
 
     /// <summary>
     /// Measures a message, where the codec can do so without serializing twice; <c>null</c> when it
@@ -38,7 +45,8 @@ public abstract class ConnectCodec
     public abstract long? Measure<T>(T value);
 
     /// <summary>Deserializes a whole message.</summary>
-    public abstract T Read<T>(in ReadOnlySequence<byte> source);
+    /// <param name="serializer">As for <see cref="Write"/>: resolved once, not per message.</param>
+    public abstract T Read<T>(in ReadOnlySequence<byte> source, ISerializer<T>? serializer = null);
 
     /// <summary>
     /// The content-type for an RPC of the given shape: <c>application/{name}</c> for unary, and
@@ -70,15 +78,40 @@ public sealed class ProtoConnectCodec : ConnectCodec
     /// <inheritdoc/>
     public override long? Measure<T>(T value)
     {
+        // the one remaining per-message resolution: TypeModel.Measure<T> takes no serializer, so there
+        // is nothing to hand it. It buys Content-Length, which is worth more than it costs.
         using var measured = ((IMeasuredProtoOutput<IBufferWriter<byte>>)_model).Measure(value);
         return measured.Length;
     }
 
     /// <inheritdoc/>
-    public override void Write<T>(IBufferWriter<byte> destination, T value)
-        => ((IProtoOutput<IBufferWriter<byte>>)_model).Serialize(destination, value);
+    [UnconditionalSuppressMessage("Trimming", "IL2091",
+        Justification = "SerializeRoot's annotation exists for its 'serializer ?? TypeModel.GetSerializer<T>(Model)' "
+            + "fallback; a non-null serializer short-circuits it, so nothing on this path reflects over T. "
+            + "Suppressed here rather than annotated, because annotating would push the demand onto every "
+            + "public generic on this assembly and thence onto every consumer's payload types - which is the "
+            + "mistake AGENTS.md records against ISerializer<T>.")]
+    public override void Write<T>(IBufferWriter<byte> destination, T value, ISerializer<T>? serializer = null)
+    {
+        if (serializer is null)
+        {
+            ((IProtoOutput<IBufferWriter<byte>>)_model).Serialize(destination, value);
+            return;
+        }
+
+        using var state = ProtoWriter.State.Create(destination, _model);
+        state.SerializeRoot(value, serializer);
+    }
 
     /// <inheritdoc/>
-    public override T Read<T>(in ReadOnlySequence<byte> source)
-        => ((IProtoInput<ReadOnlySequence<byte>>)_model).Deserialize<T>(source);
+    [UnconditionalSuppressMessage("Trimming", "IL2091",
+        Justification = "As for Write: DeserializeRoot's annotation covers a fallback a non-null serializer "
+            + "short-circuits, and annotating instead would propagate the demand across the whole surface.")]
+    public override T Read<T>(in ReadOnlySequence<byte> source, ISerializer<T>? serializer = null)
+    {
+        if (serializer is null) return ((IProtoInput<ReadOnlySequence<byte>>)_model).Deserialize<T>(source);
+
+        using var state = ProtoReader.State.Create(source, _model);
+        return state.DeserializeRoot(default(T), serializer);
+    }
 }

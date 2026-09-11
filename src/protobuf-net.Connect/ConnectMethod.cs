@@ -1,4 +1,5 @@
 using System;
+using ProtoBuf.Serializers;
 
 namespace ProtoBuf.Connect;
 
@@ -37,7 +38,15 @@ public sealed class ConnectMethod<TRequest, TResponse>
     /// Whether the RPC is free of side effects, i.e. <c>idempotency_level = NO_SIDE_EFFECTS</c>. Only
     /// such an RPC may be invoked with GET. Recorded but not yet acted on.
     /// </param>
-    public ConnectMethod(ConnectMethodType type, string serviceName, string methodName, bool idempotent = false)
+    /// <param name="requestSerializer">
+    /// The model's serializer for <typeparamref name="TRequest"/>, resolved once here rather than per
+    /// message. Optional: omitted, the codec resolves it each time. A generated model can hand these
+    /// out because <c>SerializerCache.Get&lt;TProvider, T&gt;()</c> is public and the provider is a
+    /// nested type of the model, so another part of the same partial class can name it.
+    /// </param>
+    /// <param name="responseSerializer">As <paramref name="requestSerializer"/>, for the response.</param>
+    public ConnectMethod(ConnectMethodType type, string serviceName, string methodName, bool idempotent = false,
+        ISerializer<TRequest>? requestSerializer = null, ISerializer<TResponse>? responseSerializer = null)
     {
         if (string.IsNullOrWhiteSpace(serviceName)) throw new ArgumentException("A service name is required.", nameof(serviceName));
         if (string.IsNullOrWhiteSpace(methodName)) throw new ArgumentException("A method name is required.", nameof(methodName));
@@ -46,6 +55,8 @@ public sealed class ConnectMethod<TRequest, TResponse>
         ServiceName = serviceName;
         MethodName = methodName;
         IsIdempotent = idempotent;
+        RequestSerializer = requestSerializer;
+        ResponseSerializer = responseSerializer;
         // the Connect path is the gRPC path: "/" package.Service "/" Method, case-sensitive
         Path = "/" + serviceName + "/" + methodName;
     }
@@ -64,6 +75,17 @@ public sealed class ConnectMethod<TRequest, TResponse>
 
     /// <summary>Whether the RPC is declared free of side effects.</summary>
     public bool IsIdempotent { get; }
+
+    /// <summary>The pre-resolved request serializer, if one was supplied.</summary>
+    /// <remarks>
+    /// Binary-specific by nature, so it is a fast path rather than the mechanism: a codec that cannot
+    /// use it - a JSON one - ignores it and resolves its own. That is the same
+    /// <c>serializer ??= ...</c> idiom protobuf-net uses throughout.
+    /// </remarks>
+    public ISerializer<TRequest>? RequestSerializer { get; }
+
+    /// <summary>The pre-resolved response serializer, if one was supplied.</summary>
+    public ISerializer<TResponse>? ResponseSerializer { get; }
 
     /// <inheritdoc/>
     public override string ToString() => Path;

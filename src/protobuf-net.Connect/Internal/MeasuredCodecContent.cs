@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
+using ProtoBuf.Serializers;
 
 namespace ProtoBuf.Connect.Internal;
 
@@ -25,7 +26,7 @@ internal sealed class MeasuredCodecContent<T> : HttpContent
 {
     private PooledBufferWriter? _payload;
 
-    public MeasuredCodecContent(ConnectCodec codec, T value, string contentType)
+    public MeasuredCodecContent(ConnectCodec codec, T value, string contentType, ISerializer<T>? serializer = null)
     {
         // Measure first where the codec can: it sizes the buffer exactly, and it is the same call the
         // server uses to set Content-Length. A codec that cannot measure simply grows the writer.
@@ -33,7 +34,7 @@ internal sealed class MeasuredCodecContent<T> : HttpContent
         var payload = new PooledBufferWriter(hint);
         try
         {
-            codec.Write(payload, value);
+            codec.Write(payload, value, serializer);
         }
         catch
         {

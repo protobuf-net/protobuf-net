@@ -88,7 +88,8 @@ public sealed class ConnectChannel
         using var httpRequest = new HttpRequestMessage(HttpMethod.Post, new Uri(_baseAddress!, method.Path))
         {
             // the bare message, no envelope - unary framing is the absence of framing
-            Content = new MeasuredCodecContent<TRequest>(Codec, request, Codec.ContentTypeFor(method.Type)),
+            Content = new MeasuredCodecContent<TRequest>(
+                Codec, request, Codec.ContentTypeFor(method.Type), method.RequestSerializer),
         };
         httpRequest.Headers.TryAddWithoutValidation(ProtocolVersionHeader, ProtocolVersion);
 
@@ -122,7 +123,7 @@ public sealed class ConnectChannel
         TResponse value;
         try
         {
-            value = Codec.Read<TResponse>(new ReadOnlySequence<byte>(body));
+            value = Codec.Read(new ReadOnlySequence<byte>(body), method.ResponseSerializer);
         }
         catch (Exception ex) when (ex is not ConnectException)
         {
