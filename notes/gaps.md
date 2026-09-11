@@ -5808,11 +5808,25 @@ under both. Ruled out by measurement rather than by reasoning:
 | `IProtoInputT.cs` excluded? | no | no |
 | result | **CS0453** | compiles |
 
-So the two compile the same files with the same flags and disagree. Whatever the cause is, it is
-something else about that compilation - `DefineConstants` (BuildTools defines `BUILD_TOOLS`), the
-reference set, or the polyfilled nullable attributes Core's sources bring in. **Start from that
-difference, not from an explanation of it**; an earlier commit message asserted the nullable context
-was the mechanism and that claim is retracted.
+**There is a minimal repro, and it involves none of our types.** Drop this in a file and build it in
+each project; it compiles in `protobuf-net.Core` and is three errors in `protobuf-net.BuildTools`:
+
+```csharp
+internal interface INrtProbe<TIn> { T Go<T>(TIn source, T? value = default); }
+internal sealed class NrtProbe : INrtProbe<string>
+{
+    T INrtProbe<string>.Go<T>(string source, T? value) => value!;   // CS0453 + CS0539 (+CS0535)
+}
+```
+
+Narrowed to this much: **`T?` on an unconstrained `T` is fine in BuildTools on an ordinary method** -
+`static T? Echo<T>(T? value) => value;` compiles there - so the compilation supports the feature. It
+is the **explicit interface implementation** that fails, and only in that project.
+
+**Read errors by owning project when testing this.** Building Core builds BuildTools first (it is
+Core's analyzer), so Core's build reports BuildTools' errors and looks broken when it is not; filter
+on the `[...csproj]` suffix. That cost two wrong readings, including an earlier claim - now retracted
+- that the nullable context was the mechanism.
 
 That is not a detail, it is the shape of what is left. **49 of the remaining 225 sites are the
 unconstrained-generic families** - `RepeatedSerializer` (+`.Immutable`), `MapSerializer`,
