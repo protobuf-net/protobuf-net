@@ -657,7 +657,13 @@ Goal: a service defined the way protobuf-net.Grpc defines one, a working ASP.NET
 working client. Staged so that **each stage is falsifiable against something external** before the next
 one depends on it, and so that no Roslyn work happens until the shape it must emit is known to work.
 
-### Stage 0 — client against Eliza. No generator, no abstractions.
+> **Status, 2026-09-11.** Stages 0 and 1 are done, and stage 1 grew well past its original scope:
+> all four method shapes work, plus routing prefixes. Stage 3's smoke half is done and CI-gated;
+> its conformance half is not started. Stage 2 - the generator - has not been started, deliberately:
+> the target output it must emit is now complete, and reviewing that is cheaper than reworking a
+> generator written to a shape that then moves.
+
+### Stage 0 — client against Eliza. No generator, no abstractions. **Done (§15).**
 
 ~50 lines: `HttpClient`, a protobuf-net `[ProtoContract]` pair, POST the bare body, read the bare body.
 Point it at `demo.connectrpc.com` (§13). Add the error path — including the `text/plain` 404.
@@ -666,7 +672,7 @@ What it proves: our serializer's bytes are interoperable with a reference Connec
 the request/response/error shapes are understood. What it costs: a day. What it de-risks: everything
 downstream. **If this does not work, nothing else is worth starting.**
 
-### Stage 1 — the hand-written target output.
+### Stage 1 — the hand-written target output. **Done (§16, §22–§25).**
 
 Write by hand, for one `[Service]` interface, exactly what the generator will eventually emit: the
 client proxy and the server endpoint registration. Get it working .NET → .NET over Kestrel, and *also*
@@ -680,7 +686,7 @@ derive from, so the substitute is: write it, make it work, review it, *then* fre
 Reviewing this file is the real decision point on API shape, and it is much cheaper to change here than
 after a generator emits it.
 
-### Stage 2 — the generator.
+### Stage 2 — the generator. **Not started.**
 
 `ProtoConnectGenerator` in `protobuf-net.BuildTools`, emitting stage 1's file. Golden fixtures under
 `src/BuildToolsUnitTests/Connect/Data/` on the existing harness (`*.input.cs` → `*.output.cs` +
@@ -691,7 +697,7 @@ Contract parsing is **shared with `GrpcProxyGenerator`, not forked** — the fiv
 `CallContext`, `[SubService]`, void/`Empty`, overloads, closed generics. That sharing is the single
 largest reason to do this in-repo.
 
-### Stage 3 — conformance, and a smoke test.
+### Stage 3 — conformance, and a smoke test. **Smoke done and CI-gated; conformance not started.**
 
 `src/AotConnectSmoke` on the `AotSmoke`/`AotGrpcSmoke` pattern: a `PublishAot` app that round-trips and
 exits non-zero on mismatch, published on both RIDs in the existing CI job. Then `connectconformance`
@@ -731,6 +737,10 @@ None of these costs anything at stage 1 if known in advance, which is the entire
 them down before the code exists rather than after.
 
 ### What is deliberately *not* in the MVP
+
+> Written when the MVP was unary-only. **Streaming is no longer on this list** - all four shapes
+> landed in stage 1, because §14.1's constraints turned out to hold and each shape cost little once
+> the framing existed. What remains excluded is as follows.
 
 - **JSON** (§4) — optional, declarable-away in conformance, and the long pole.
 - **Streaming** — unary is the bare-body form and needs no framing at all; streaming needs the
