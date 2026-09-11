@@ -360,6 +360,33 @@ await checks.Run("duplex genuinely interleaves", async () =>
     return $"{received.Count} round-trips, each awaiting the previous";
 });
 
+await checks.Run("a client can drive half-duplex bidi over HTTP/1.1", async () =>
+{
+    // The other half of the server-side check below. Duplex pins HTTP/2 by default because a FULL-duplex
+    // call deadlocks without it - the caller waits for a response the server cannot send until the
+    // request body ends - but half duplex is every request, then every response, which HTTP/1.1 does
+    // perfectly well. Only the caller knows which it is doing, so the caller says.
+    var halfDuplex = new ConnectChannel(
+        http, new ProtoConnectCodec(SmokeModel.Instance), new Uri(address), System.Net.HttpVersion.Version11);
+    var halfDuplexClient = SmokeServices.CreateClient<IGreeter>(halfDuplex);
+
+    static async IAsyncEnumerable<HelloRequest> Three()
+    {
+        for (var i = 1; i <= 3; i++) yield return new HelloRequest { Name = $"half{i}" };
+    }
+
+    using var guard = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+    var received = new List<string>();
+    await foreach (var reply in halfDuplexClient.Chat(Three()).WithCancellation(guard.Token))
+    {
+        received.Add(reply.Message!);
+    }
+
+    Checks.Require(received.Count == 3, $"three echoes, got {received.Count}");
+    Checks.Require(received[2] == "echo half3", $"in order, last was \"{received[2]}\"");
+    return $"{received.Count} echoes over HTTP/1.1, no HTTP/2 anywhere";
+});
+
 await checks.Run("half-duplex bidi works over HTTP/1.1", async () =>
 {
     // This used to assert the OPPOSITE - that the server answered 505 - and the conformance suite

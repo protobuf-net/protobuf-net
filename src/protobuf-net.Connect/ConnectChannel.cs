@@ -47,8 +47,21 @@ namespace ProtoBuf.Connect
         /// <param name="baseAddress">
         /// The server's base address. May be omitted when <paramref name="http"/> already has one.
         /// </param>
-        public ConnectChannel(HttpClient http, ConnectCodec codec, Uri? baseAddress = null)
+        /// <param name="httpVersion">
+        /// Pins the HTTP version for every call on this channel, for callers that cannot state it per
+        /// call.
+        /// </param>
+        /// <remarks>
+        /// The version is worth pinning because a plaintext endpoint has no ALPN, so it is a decision
+        /// rather than an outcome. The case that needs it is <c>HttpVersion.Version11</c> with
+        /// <b>half-duplex</b> bidi: <c>Duplex</c> defaults to HTTP/2 because a <em>full</em>-duplex call
+        /// deadlocks without it, and half-duplex neither needs nor wants that. A generated code-first
+        /// client goes through <c>CallContext</c>, which has no HTTP-version concept to carry - so for
+        /// that consumer the channel is the only place to say it.
+        /// </remarks>
+        public ConnectChannel(HttpClient http, ConnectCodec codec, Uri? baseAddress = null, Version? httpVersion = null)
         {
+            _httpVersion = httpVersion;
             _http = http ?? throw new ArgumentNullException(nameof(http));
             Codec = codec ?? throw new ArgumentNullException(nameof(codec));
             var resolved = baseAddress ?? http.BaseAddress;
@@ -64,6 +77,8 @@ namespace ProtoBuf.Connect
                 ? resolved
                 : new Uri(resolved.AbsoluteUri + "/");
         }
+
+        private readonly Version? _httpVersion;
 
         /// <summary>The codec in use.</summary>
         public ConnectCodec Codec { get; }
@@ -396,7 +411,10 @@ namespace ProtoBuf.Connect
             {
                 Content = new EnvelopedStreamContent<TRequest>(
                     Codec, requests, Codec.ContentTypeFor(method.Type), method.RequestCodec, cancellationToken),
-                Version = HttpVersion.Version20,
+
+                // the DEFAULT, not the rule: full duplex needs HTTP/2, half duplex does not, and only the
+                // caller knows which this is. ApplyOptions overrides it when the caller said so.
+                Version = System.Net.HttpVersion.Version20,
                 VersionPolicy = HttpVersionPolicy.RequestVersionExact,
             };
             ApplyOptions(httpRequest, options);
@@ -472,9 +490,18 @@ namespace ProtoBuf.Connect
                 ConnectCode.DeadlineExceeded, $"The call to '{method}' exceeded its deadline.", innerException: exception);
         }
 
-        private static void ApplyOptions(HttpRequestMessage request, ConnectCallOptions? options)
+        private void ApplyOptions(HttpRequestMessage request, ConnectCallOptions? options)
         {
             request.Headers.TryAddWithoutValidation(ProtocolVersionHeader, ProtocolVersion);
+
+            // a stated version wins over anything the call shape chose for itself, and is pinned exactly:
+            // a plaintext endpoint has no ALPN, so a version left to negotiate silently becomes HTTP/1.1.
+            // Per call first, then the channel's default.
+            if ((options?.HttpVersion ?? _httpVersion) is { } version)
+            {
+                request.Version = version;
+                request.VersionPolicy = HttpVersionPolicy.RequestVersionExact;
+            }
 
             if (options?.Timeout is { } timeout)
             {

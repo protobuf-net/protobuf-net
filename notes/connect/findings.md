@@ -2808,9 +2808,8 @@ where it advertised an intention it did not act on. None was reachable from a se
   cancellation we caused on the same path as one raised by the transport, recorded in one place.
 - **`DuplexAsync` pins HTTP/2, and that cannot be the last word.** Full duplex deadlocks without it, but
   half-duplex bidi over HTTP/1.1 is legal and the suite tests it — so the harness overrides the pin with
-  a `DelegatingHandler`. **This is a real gap**: a consumer wanting half-duplex bidi over HTTP/1.1 has
-  no supported way to ask for it, and a handler is the only route. Worth an option on
-  `ConnectCallOptions`; not built.
+  a `DelegatingHandler`. That was recorded here as a real gap with no supported way to ask for it;
+  **it is now closed** — see below.
 
 ### Sizing, one more time
 
@@ -3033,6 +3032,27 @@ The advice in §46 — "a code-first contract wanting JSON interop should pin it
 from necessary to stylistic**. Pinning `[ProtoMember(Name = "user_name")]` gives a `.proto` that reads
 like everyone else's, and a JSON name of `userName`; not pinning gives `UserName` on both sides and
 interoperates just as correctly. It is a schema-aesthetics choice, not a correctness one.
+
+## 49. The HTTP version is a decision, not an outcome
+
+Closing the gap §45 recorded. `Duplex` pinned HTTP/2 unconditionally, which is right for *full* duplex
+— the caller waits for a response the server cannot send until the request body ends — and wrong for
+*half* duplex, which is every request then every response and which HTTP/1.1 serves perfectly well.
+Only the caller knows which it is about to do.
+
+So it is now stated rather than assumed, at two scopes:
+
+- **`ConnectCallOptions.HttpVersion`** — per call, for a caller holding the channel API directly;
+- **`ConnectChannel(..., httpVersion:)`** — per channel, which is the only place a **generated
+  code-first client** can say it, since those go through protobuf-net.Grpc's `CallContext` and gRPC has
+  no HTTP-version concept to carry. Per-call wins where both are set.
+
+Either way it is pinned with `RequestVersionExact`, because a plaintext endpoint has no ALPN: a version
+left to negotiate is not negotiated, it silently becomes HTTP/1.1.
+
+`AotConnectSmoke` now drives half-duplex bidi over HTTP/1.1 through a generated client against our own
+server, with **no HTTP/2 anywhere** — the client-side counterpart of the server-side check added in §44.
+The server still does not refuse HTTP/1.1 for bidi and still should not: it cannot tell the two apart.
 
 ## 12. Unverified — check before committing to any of this
 

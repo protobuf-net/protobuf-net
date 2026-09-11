@@ -24,6 +24,25 @@ namespace ProtoBuf.Connect
         public TimeSpan? Timeout { get; init; }
 
         /// <summary>
+        /// The HTTP version to send this call over, pinned exactly. Omitted leaves it to the
+        /// <see cref="System.Net.Http.HttpClient"/>.
+        /// </summary>
+        /// <remarks>
+        /// Worth having because a plaintext endpoint has no ALPN to negotiate with, so the version is a
+        /// decision rather than an outcome - and because the one call shape that pins a version for you
+        /// gets it wrong for half the cases.
+        /// <para>
+        /// <c>Duplex</c> defaults to HTTP/2, since a <em>full</em>-duplex call deadlocks without it: the
+        /// caller waits for a response the server cannot send until the request body completes. But a
+        /// <em>half</em>-duplex bidi call - every request sent, then every response read - is ordinary
+        /// over HTTP/1.1, is explicitly allowed, and is exercised by the conformance suite. Only the
+        /// caller knows which it is about to do, so only the caller can say. Setting this to
+        /// <c>HttpVersion.Version11</c> is how.
+        /// </para>
+        /// </remarks>
+        public Version? HttpVersion { get; init; }
+
+        /// <summary>
         /// Translates a caller's gRPC-shaped <see cref="CallOptions"/> into transport options.
         /// </summary>
         /// <remarks>
