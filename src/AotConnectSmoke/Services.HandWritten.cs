@@ -27,11 +27,10 @@ namespace ProtoBuf.AotConnectSmoke;
 //   - no accessibility or `static` is restated on the partial: both are the consumer's to choose.
 // ---------------------------------------------------------------------------------------------
 
-// The consumer declared this container `static` (Services.cs), so the generated half mirrors that: no
-// constructor - a static class cannot have one - and the registration and binding methods carry `this`,
-// making them extension methods. That is what lets a consumer write `app.BindSmokeServices()` rather
-// than `SmokeServices.BindSmokeServices(app)`, and it removes the separate extensions class that a
-// non-static container needs. See ClientOnly.HandWritten.cs for the other branch.
+// The consumer declared this container `static` (Services.cs), so no constructor is emitted - a static
+// class cannot have one. That is the ONLY thing `static` changes: everything fluent lives in the
+// companion SmokeServicesExtensions below, which is emitted either way, so the generator does not
+// branch on where things go. See ClientOnly.HandWritten.cs for a non-static container.
 static partial class SmokeServices
 {
 
@@ -51,12 +50,12 @@ static partial class SmokeServices
     /// every method of every service. Where that is too broad, bind the services separately with the
     /// generic overload.
     /// </remarks>
-    public static IEndpointConventionBuilder BindSmokeServices(
-        this IEndpointRouteBuilder endpoints, string? routingPrefix = null)
+    public static IEndpointConventionBuilder BindServices(
+        IEndpointRouteBuilder endpoints, string? routingPrefix = null)
         => new CompositeConventionBuilder(
         [
-            endpoints.BindSmokeServices<IGreeter>(routingPrefix),
-            endpoints.BindSmokeServices<IFarewell>(routingPrefix),
+            BindService<IGreeter>(endpoints, routingPrefix),
+            BindService<IFarewell>(endpoints, routingPrefix),
         ]);
 
     /// <summary>Maps one service, so that conventions can differ between them.</summary>
@@ -65,8 +64,8 @@ static partial class SmokeServices
     /// runtime binds by implementation type - the consumer named the pairing once in Services.cs and
     /// should not have to remember which side each API wants.
     /// </remarks>
-    public static IEndpointConventionBuilder BindSmokeServices<TService>(
-        this IEndpointRouteBuilder endpoints, string? routingPrefix = null)
+    public static IEndpointConventionBuilder BindService<TService>(
+        IEndpointRouteBuilder endpoints, string? routingPrefix = null)
     {
         if (typeof(TService) == typeof(IGreeter))
         {
@@ -96,7 +95,7 @@ static partial class SmokeServices
     /// different lifetime, or a decorator - keeps theirs.
     /// </para>
     /// </remarks>
-    public static IServiceCollection AddSmokeServices(this IServiceCollection services)
+    public static IServiceCollection AddServices(IServiceCollection services)
     {
         services.AddConnect(options =>
         {
@@ -280,4 +279,43 @@ static partial class SmokeServices
             foreach (var builder in _inner) builder.Finally(finallyConvention);
         }
     }
+}
+
+/// <summary>
+/// The fluent surface for <see cref="SmokeServices"/>, emitted alongside it.
+/// </summary>
+/// <remarks>
+/// Always emitted, whether or not the container is <c>static</c>, so that the fluent form does not
+/// depend on how the consumer declared their half. Accessibility mirrors the container's.
+/// <para>
+/// Client factories are named <b>per contract</b> rather than generic, and that is what makes them
+/// safe as extensions: a generic <c>CreateClient&lt;TService&gt;(this ConnectChannel)</c> is ambiguous
+/// between <em>any</em> two containers in scope, whereas <c>GreeterClient</c> can only collide with
+/// another container declaring the same contract. The generic form stays on the container itself,
+/// where it cannot be ambiguous at all.
+/// </para>
+/// </remarks>
+internal static class SmokeServicesExtensions
+{
+    /// <summary>Registers the codec and every service implementation this container declares.</summary>
+    public static IServiceCollection AddSmokeServices(this IServiceCollection services)
+        => SmokeServices.AddServices(services);
+
+    /// <summary>Maps every service this container declares.</summary>
+    public static IEndpointConventionBuilder BindSmokeServices(
+        this IEndpointRouteBuilder endpoints, string? routingPrefix = null)
+        => SmokeServices.BindServices(endpoints, routingPrefix);
+
+    /// <summary>Maps one service, so conventions can differ between them.</summary>
+    public static IEndpointConventionBuilder BindSmokeService<TService>(
+        this IEndpointRouteBuilder endpoints, string? routingPrefix = null)
+        => SmokeServices.BindService<TService>(endpoints, routingPrefix);
+
+    /// <summary>Creates an <see cref="IGreeter"/> client over the channel.</summary>
+    public static IGreeter GreeterClient(this ConnectChannel channel)
+        => SmokeServices.CreateClient<IGreeter>(channel);
+
+    /// <summary>Creates an <see cref="IFarewell"/> client over the channel.</summary>
+    public static IFarewell FarewellClient(this ConnectChannel channel)
+        => SmokeServices.CreateClient<IFarewell>(channel);
 }

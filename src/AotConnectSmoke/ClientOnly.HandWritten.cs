@@ -54,3 +54,19 @@ partial class SmokeClientOnly
                 ConnectCallOptions.From(context.CallOptions), context.CancellationToken);
     }
 }
+
+/// <summary>
+/// The fluent surface for <see cref="SmokeClientOnly"/>, emitted even though the container is not
+/// <c>static</c> - which is the point of always emitting it.
+/// </summary>
+/// <remarks>
+/// A client-only container has no registration or binding to offer, so this carries only the client
+/// factory. Note it names the same contract as <see cref="SmokeServicesExtensions"/>, which is the
+/// collision case worth knowing about - see notes/connect/findings.md §31.
+/// </remarks>
+internal static class SmokeClientOnlyExtensions
+{
+    /// <summary>Creates an <see cref="IFarewell"/> client over the channel.</summary>
+    public static IFarewell FarewellClient(this ConnectChannel channel)
+        => SmokeClientOnly.CreateClient<IFarewell>(channel);
+}

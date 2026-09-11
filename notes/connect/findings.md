@@ -1768,7 +1768,7 @@ the rest of the fixture on the same question before the generator is written —
 takes exactly one request parameter and a `CallContext`, for instance, and `ContractOperation` in
 protobuf-net.Grpc recognises far more shapes than that.
 
-## 30. `static` on the consumer's half should change what is generated
+## 30. `static` on the consumer's half should change what is generated — *superseded by §31*
 
 Review's suggestion, and it is a good one: if the consumer declares the container `static`, the
 generated methods can carry `this` and become **extension methods**, so binding reads the way .NET
@@ -1816,6 +1816,65 @@ arity. Singularising the one-service form (`BindSmokeService<T>`) reads better, 
 from "SmokeServices" means stripping a trailing "s" — string surgery on a consumer's identifier, which
 breaks or reads oddly for a container named `Backend`, `Rpc` or `Api`. The arity split needs no
 guessing and is unambiguous to the compiler. Open to revisiting; it is a one-line change in the emitter.
+
+## 31. Always emit a companion `{Root}Extensions`, with per-contract client factories
+
+Supersedes §30's conclusion. Review's refinement, and it is better: emit the fluent surface into a
+static `{Root}Extensions` type **always**, rather than inlining it when the container happens to be
+`static`.
+
+Two things improve. The generator stops branching on **where** members go — `static` on the consumer's
+half now decides only whether a private constructor is emitted, which is a much smaller thing to get
+right. And the fluent form works for a non-`static` container too, which §30's shape could not offer at
+all.
+
+```csharp
+builder.Services.AddSmokeServices();
+app.BindSmokeServices();                   // every service
+app.BindSmokeService<IFarewell>("solo");   // one, with its own conventions
+var greeter = channel.GreeterClient();     // per-contract client factory
+```
+
+| | |
+| --- | --- |
+| the container | `CreateClient<TService>`, `AddServices`, `BindServices`, `BindService<TService>` — plain statics, never ambiguous |
+| `{Root}Extensions` | the same four as extensions, plus **one client factory per contract** |
+
+### Per-contract client factories are what make this safe — measured
+
+§30 established that a generic `CreateClient<TService>(this ConnectChannel)` is unusable: it is
+ambiguous between **any** two containers in scope, whatever they declare. Naming the factory after the
+contract narrows that sharply, and the fixture pins both sides by declaring `IGreeter` in one container
+and `IFarewell` in two:
+
+| call | result |
+| --- | --- |
+| `channel.GreeterClient()` — one container declares it | **works** |
+| `channel.FarewellClient()` — two containers declare it | `CS0121`, naming both |
+
+Three properties worth having, all confirmed rather than assumed:
+
+- **Declaring both is fine.** Extension ambiguity is a *call-site* error, so two containers can emit
+  colliding factories and nothing breaks until someone uses the fluent form for a shared contract.
+- **The failure is a compile error naming both candidates**, not a runtime surprise.
+- **There is an unambiguous escape hatch**: `SmokeServices.CreateClient<IFarewell>(channel)`, which is
+  why the generic form stays on the container rather than moving out.
+
+### The diagnostic this implies
+
+Within one compilation the generator sees every container and every contract, so it can warn when two
+declare the same one: *"`IFarewell` is declared by both `X` and `Y`; `channel.FarewellClient()` will be
+ambiguous — use `X.CreateClient<IFarewell>(channel)`"*. Worth a `PBN5xxx`.
+
+Across assemblies it cannot know, and does not need to: the consumer gets `CS0121` naming both
+candidates, which is self-explanatory. Emitting always and warning where we can see beats suppressing.
+
+### Naming
+
+`AddSmokeServices` / `BindSmokeServices` / `BindSmokeService<T>` — the container's name carries, so
+these cannot collide between containers however many there are. The singular/plural split is now
+natural rather than surgical, since the extension names are built from the container name plus a
+literal suffix rather than by stripping anything.
 
 ## 12. Unverified — check before committing to any of this
 

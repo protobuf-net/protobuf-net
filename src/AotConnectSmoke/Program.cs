@@ -62,7 +62,7 @@ app.BindSmokeServices();
 // Connect share a host with gRPC - the two use identical paths otherwise
 app.BindSmokeServices("rpc");
 // and just one of them, alone, to show conventions can differ between services
-app.BindSmokeServices<IFarewell>("solo");
+app.BindSmokeService<IFarewell>("solo");
 await app.StartAsync();
 
 var address = $"http://127.0.0.1:{httpPort}";
@@ -252,7 +252,7 @@ await checks.Run("a second service in the same container", async () =>
 
 await checks.Run("services can be bound separately when conventions differ", async () =>
 {
-    // BindSmokeServices<TService> exists so one service can carry conventions the other does not; here the
+    // BindSmokeService<TService> exists so one service can carry conventions the other does not; here the
     // proof is simply that a single service can be mapped alone, under its own prefix
     var solo = new ConnectChannel(http, new ProtoConnectCodec(SmokeModel.Instance), new Uri($"{address}/solo"));
     var farewell = SmokeServices.CreateClient<IFarewell>(solo);
@@ -264,6 +264,22 @@ await checks.Run("services can be bound separately when conventions differ", asy
     var ex = await Checks.Throws(() => greeter.SayHelloAsync(new HelloRequest { Name = "nope" }));
     Checks.Require(ex.Code == ConnectCode.Unimplemented, $"404 infers unimplemented, was {ex.Code.ToWireName()}");
     return "Farewell alone at /solo; Greeter absent, as bound";
+});
+
+await checks.Run("the fluent client factory", async () =>
+{
+    // per-contract, so the name is not generic and does not collide with every other container's
+    var fluent = channel.GreeterClient();
+    var reply = await fluent.SayHelloAsync(new HelloRequest { Name = "fluent" });
+    Checks.Require(reply.Message == "hello fluent", $"channel.GreeterClient() works, was \"{reply.Message}\"");
+
+    // IFarewell is declared by BOTH containers here, so channel.FarewellClient() would be CS0121 -
+    // a compile error naming both, not a runtime surprise. The generic form on the container is the
+    // unambiguous way through, and is why it stays there.
+    var explicitly = SmokeServices.CreateClient<IFarewell>(channel);
+    var bye = await explicitly.GoodbyeAsync(new HelloRequest { Name = "explicit" });
+    Checks.Require(bye.Message == "goodbye explicit", "and the explicit form disambiguates");
+    return "channel.GreeterClient(); CreateClient<T> where two containers share a contract";
 });
 
 await checks.Run("a client-only container talks to a hosting one", async () =>
