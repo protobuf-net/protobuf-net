@@ -246,7 +246,7 @@ namespace ProtoBuf
         {
             internal static readonly ReferenceComparer Instance = new ReferenceComparer();
             private ReferenceComparer() { }
-            bool IEqualityComparer<object>.Equals(object x, object y) => ReferenceEquals(x, y);
+            bool IEqualityComparer<object>.Equals(object? x, object? y) => ReferenceEquals(x, y);
             int IEqualityComparer<object>.GetHashCode(object obj) => RuntimeHelpers.GetHashCode(obj);
         }
     }

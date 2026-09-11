@@ -401,6 +401,8 @@ namespace ProtoBuf.Internal
         internal static Type? GetEffectiveType(Type type)
             => type is null ? null : Get(type).GetEffectiveType() ?? type;
 
-        protected abstract Type GetEffectiveType();
+        /// <summary>The effective type this stub stands for, or null when there is none.</summary>
+        /// <remarks>Null is the NilStub answer, and <see cref="GetEffectiveType(Type)"/> coalesces it.</remarks>
+        protected abstract Type? GetEffectiveType();
     }
 }

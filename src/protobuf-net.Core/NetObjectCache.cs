@@ -247,7 +247,7 @@ namespace ProtoBuf
             public readonly static ReferenceComparer Default = new ReferenceComparer();
             private ReferenceComparer() { }
 
-            bool IEqualityComparer<object>.Equals(object x, object y)
+            bool IEqualityComparer<object>.Equals(object? x, object? y)
             {
                 return x == y; // ref equality
             }

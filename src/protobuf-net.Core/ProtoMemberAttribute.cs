@@ -20,7 +20,7 @@ namespace ProtoBuf
         /// <summary>
         /// Compare with another ProtoMemberAttribute for sorting purposes
         /// </summary>
-        public int CompareTo(object other) => CompareTo(other as ProtoMemberAttribute);
+        public int CompareTo(object? other) => CompareTo(other as ProtoMemberAttribute);
         /// <summary>
         /// Compare with another ProtoMemberAttribute for sorting purposes
         /// </summary>
