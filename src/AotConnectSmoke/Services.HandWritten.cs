@@ -29,9 +29,9 @@ namespace ProtoBuf.AotConnectSmoke;
 //     where TypeModel is named, which is why ConnectCallOptions.From can live in the library.
 // ---------------------------------------------------------------------------------------------
 
-/// <summary>Stands in for a <c>[ProtoConnect(Model = typeof(SmokeModel))] partial class</c>.</summary>
+/// <summary>The generated half of <c>SmokeServices</c>; the consumer's half is in Services.cs.</summary>
 /// <remarks>
-/// <b>Static, and deliberately so.</b> The first cut mirrored <c>GrpcProxyGenerator</c>'s output, which
+/// <b>Every member is static, and deliberately so.</b> The first cut mirrored <c>GrpcProxyGenerator</c>'s output, which
 /// is an instance with an <c>Instance</c> accessor - but there the instance is load-bearing and here it
 /// is not. A <c>[ProtoGrpc]</c> container derives from the abstract <c>ClientFactory</c>, holds a
 /// <c>BinderConfiguration</c> with a marshaller cache, and is <c>TryAddSingleton</c>'d into DI. This
@@ -47,13 +47,18 @@ namespace ProtoBuf.AotConnectSmoke;
 /// consumer-visible break to add later.
 /// </para>
 /// <para>
-/// The generator need not require consumers to write <c>static partial class</c>: static members can be
-/// emitted onto an ordinary partial class, with a private constructor to stop it being instantiated -
-/// which is what <c>GrpcProxyGenerator</c> already emits, for its own reasons.
+/// Note the class itself is not declared <c>static</c>, and no accessibility is restated: both are the
+/// consumer's to choose in Services.cs, and a generated part that restated either would either fight
+/// them or force them. Static members plus a private constructor get the same effect without the
+/// consumer having to think about it - which is what <c>GrpcProxyGenerator</c> already emits, for its
+/// own reasons.
 /// </para>
 /// </remarks>
-internal static class SmokeServices
+partial class SmokeServices
 {
+    /// <summary>There is nothing to construct: every member here is static.</summary>
+    private SmokeServices() { }
+
     /// <summary>Creates a client proxy for one of the services this container knows about.</summary>
     public static TService CreateClient<TService>(ConnectChannel channel) where TService : class
     {
@@ -150,6 +155,10 @@ internal static class SmokeServices
 /// consumers reach for <c>app.MapXxx()</c>. It is a one-line alias for
 /// <see cref="SmokeServices.BindServer"/> and adds no capability of its own.
 /// </summary>
+/// <remarks>
+/// <c>internal</c> because the container is: the generated surface mirrors whatever the consumer
+/// declared in Services.cs rather than picking for them.
+/// </remarks>
 internal static class SmokeServicesEndpointExtensions
 {
     internal static IEndpointConventionBuilder MapSmokeServices(this IEndpointRouteBuilder endpoints)

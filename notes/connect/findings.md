@@ -896,6 +896,42 @@ Note `WebApplication.CreateSlimBuilder` and the **`RequestDelegate`** overload o
 that true: minimal APIs are only "partially" AOT-supported because `RequestDelegateFactory` is
 reflective, and writing raw request delegates bypasses it entirely — which is what we want anyway.
 
+### The route in — what a consumer actually writes
+
+Review asked "what's the route in to all of this?", and the honest answer was that there wasn't one
+visible: the container was written as though entirely generated, so the consumer's side was invisible.
+The two halves are now separate files, which is the only way to see how much someone is signing up for.
+
+**`src/AotConnectSmoke/Services.cs` — the whole of it:**
+
+```csharp
+[ProtoConnect(Model = typeof(SmokeModel))]
+[ProtoService(typeof(IGreeter), typeof(GreeterService))]
+internal partial class SmokeServices { }
+```
+
+Three lines, beside the contract itself. Two things about it are decisions rather than incidentals:
+
+- **`[ProtoService]` is protobuf-net.Grpc's own, unchanged.** It is real API there
+  (`ProtoBuf.Grpc.Configuration.ProtoServiceAttribute`, taking contract and implementation) and already
+  says exactly what is needed, so a Connect-specific copy would be a second spelling to keep in step.
+  **Only the container attribute selects the transport** — and the same `[ProtoService]` declarations
+  would serve a `[ProtoGrpc]` container, which is the "your existing contracts just work" claim applied
+  one level up.
+- **`[ProtoConnect]` is real API in `protobuf-net.Connect`**, not a fixture stub, mirroring how
+  `[ProtoGrpc]` is real API in protobuf-net.Grpc. Matched by **full name** like every other trigger
+  attribute here.
+
+**Accessibility mirrors the consumer's declaration.** The generated part is a bare `partial class
+SmokeServices` restating no modifier, so `public` in Services.cs yields a public surface and `internal`
+an internal one. Verified rather than asserted: flipping the declaration to `public` compiles and the
+surface becomes reachable from code that could not see an internal one.
+
+**`static` is deliberately not required of the consumer.** The generated half emits static members plus
+a `private SmokeServices()`, which gets the same effect without making anyone think about it — the same
+thing `GrpcProxyGenerator` emits, for its own reasons. A generated part that restated `static` or an
+accessibility would either fight the consumer or force them.
+
 ### The shape the generator has to emit
 
 `src/AotConnectSmoke/HandWritten.cs` **is** the target output, written by hand and marked as such. This
