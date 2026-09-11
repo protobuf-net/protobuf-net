@@ -25,7 +25,7 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
     {
         /// <summary>Reads exactly one message; anything less is a truncated request.</summary>
         public static async Task<T> ReadOneAsync<T>(
-            PipeReader reader, ConnectCodec codec, ISerializer<T>? serializer, string method, CancellationToken cancellationToken)
+            PipeReader reader, ConnectCodec codec, IConnectMessageCodec<T>? serializer, string method, CancellationToken cancellationToken)
         {
             while (true)
             {
@@ -55,7 +55,7 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
         public static async IAsyncEnumerable<T> ReadAllAsync<T>(
             PipeReader reader,
             ConnectCodec codec,
-            ISerializer<T>? serializer,
+            IConnectMessageCodec<T>? serializer,
             string method,
             [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
@@ -88,7 +88,7 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
         }
 
         private static T Decode<T>(
-            ConnectCodec codec, ISerializer<T>? serializer, string method, byte flags, in ReadOnlySequence<byte> payload)
+            ConnectCodec codec, IConnectMessageCodec<T>? serializer, string method, byte flags, in ReadOnlySequence<byte> payload)
         {
             if ((flags & ConnectEnvelope.FlagCompressed) != 0)
             {

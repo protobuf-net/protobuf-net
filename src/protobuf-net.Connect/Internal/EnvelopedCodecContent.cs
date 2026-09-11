@@ -23,7 +23,7 @@ namespace ProtoBuf.Connect.Internal
     {
         private PooledBufferWriter? _payload;
 
-        public EnvelopedCodecContent(ConnectCodec codec, T value, string contentType, ISerializer<T>? serializer = null)
+        public EnvelopedCodecContent(ConnectCodec codec, T value, string contentType, IConnectMessageCodec<T>? over = null)
         {
             var hint = codec.Measure(value) is { } length && length <= int.MaxValue ? (int)length : 256;
             var payload = new PooledBufferWriter(hint + ConnectEnvelope.HeaderLength);
@@ -39,7 +39,7 @@ namespace ProtoBuf.Connect.Internal
                 }
 
                 ConnectEnvelope.WriteHeader(payload, flags: 0, checked((int)measured.Value));
-                codec.Write(payload, value, serializer);
+                codec.Write(payload, value, over);
             }
             catch
             {

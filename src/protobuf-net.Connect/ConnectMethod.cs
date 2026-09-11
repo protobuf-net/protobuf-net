@@ -38,15 +38,15 @@ namespace ProtoBuf.Connect
         /// Whether the RPC is free of side effects, i.e. <c>idempotency_level = NO_SIDE_EFFECTS</c>. Only
         /// such an RPC may be invoked with GET. Recorded but not yet acted on.
         /// </param>
-        /// <param name="requestSerializer">
+        /// <param name="requestCodec">
         /// The model's serializer for <typeparamref name="TRequest"/>, resolved once here rather than per
         /// message. Optional: omitted, the codec resolves it each time. A generated model can hand these
         /// out because <c>SerializerCache.Get&lt;TProvider, T&gt;()</c> is public and the provider is a
         /// nested type of the model, so another part of the same partial class can name it.
         /// </param>
-        /// <param name="responseSerializer">As <paramref name="requestSerializer"/>, for the response.</param>
+        /// <param name="responseCodec">As <paramref name="requestCodec"/>, for the response.</param>
         public ConnectMethod(ConnectMethodType type, string serviceName, string methodName, bool idempotent = false,
-            ISerializer<TRequest>? requestSerializer = null, ISerializer<TResponse>? responseSerializer = null)
+            IConnectMessageCodec<TRequest>? requestCodec = null, IConnectMessageCodec<TResponse>? responseCodec = null)
         {
             if (string.IsNullOrWhiteSpace(serviceName)) throw new ArgumentException("A service name is required.", nameof(serviceName));
             if (string.IsNullOrWhiteSpace(methodName)) throw new ArgumentException("A method name is required.", nameof(methodName));
@@ -55,8 +55,8 @@ namespace ProtoBuf.Connect
             ServiceName = serviceName;
             MethodName = methodName;
             IsIdempotent = idempotent;
-            RequestSerializer = requestSerializer;
-            ResponseSerializer = responseSerializer;
+            RequestCodec = requestCodec;
+            ResponseCodec = responseCodec;
             // the Connect path is the gRPC path: "/" package.Service "/" Method, case-sensitive.
             // The protocol also allows a routing PREFIX in front of it, which is what lets Connect sit
             // beside gRPC on one host - so the relative form is kept too, since that is what combines
@@ -98,10 +98,10 @@ namespace ProtoBuf.Connect
         /// use it - a JSON one - ignores it and resolves its own. That is the same
         /// <c>serializer ??= ...</c> idiom protobuf-net uses throughout.
         /// </remarks>
-        public ISerializer<TRequest>? RequestSerializer { get; }
+        public IConnectMessageCodec<TRequest>? RequestCodec { get; }
 
         /// <summary>The pre-resolved response serializer, if one was supplied.</summary>
-        public ISerializer<TResponse>? ResponseSerializer { get; }
+        public IConnectMessageCodec<TResponse>? ResponseCodec { get; }
 
         /// <inheritdoc/>
         public override string ToString() => Path;

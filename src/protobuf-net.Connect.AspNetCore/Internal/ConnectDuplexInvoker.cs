@@ -52,7 +52,7 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
             }
 
             var requests = EnvelopedRequestReader.ReadAllAsync(
-                http.Request.BodyReader, codec, _method.RequestSerializer, _method.ToString(), context.CancellationToken);
+                http.Request.BodyReader, codec, _method.RequestCodec, _method.ToString(), context.CancellationToken);
 
             var response = http.Response;
             response.StatusCode = StatusCodes.Status200OK;
@@ -69,7 +69,7 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
                             ConnectCode.Internal, $"The '{codec.Name}' codec cannot measure a message, which framing requires.");
 
                     ConnectEnvelope.WriteHeader(response.BodyWriter, flags: 0, checked((int)length));
-                    codec.Write(response.BodyWriter, message, _method.ResponseSerializer);
+                    codec.Write(response.BodyWriter, message, _method.ResponseCodec);
                     await response.BodyWriter.FlushAsync(context.CancellationToken).ConfigureAwait(false);
                 }
 

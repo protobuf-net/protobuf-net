@@ -97,7 +97,7 @@ namespace ProtoBuf.Connect
             {
                 // the bare message, no envelope - unary framing is the absence of framing
                 Content = new MeasuredCodecContent<TRequest>(
-                    Codec, request, Codec.ContentTypeFor(method.Type), method.RequestSerializer),
+                    Codec, request, Codec.ContentTypeFor(method.Type), method.RequestCodec),
             };
             ApplyOptions(httpRequest, options);
 
@@ -118,7 +118,7 @@ namespace ProtoBuf.Connect
             TResponse value;
             try
             {
-                value = Codec.Read(new ReadOnlySequence<byte>(body), method.ResponseSerializer);
+                value = Codec.Read(new ReadOnlySequence<byte>(body), method.ResponseCodec);
             }
             catch (Exception ex) when (ex is not ConnectException)
             {
@@ -173,7 +173,7 @@ namespace ProtoBuf.Connect
             {
                 // one enveloped message: a streaming RPC frames both directions, whatever the cardinality
                 Content = new EnvelopedCodecContent<TRequest>(
-                    Codec, request, Codec.ContentTypeFor(method.Type), method.RequestSerializer),
+                    Codec, request, Codec.ContentTypeFor(method.Type), method.RequestCodec),
             };
             ApplyOptions(httpRequest, options);
 
@@ -197,7 +197,7 @@ namespace ProtoBuf.Connect
 
             var metadata = ReadMetadata(httpResponse);
             return new ConnectServerStream<TResponse>(
-                httpResponse, Codec, method.ResponseSerializer, method.ToString(), metadata.Headers);
+                httpResponse, Codec, method.ResponseCodec, method.ToString(), metadata.Headers);
         }
 
         /// <summary>
@@ -226,7 +226,7 @@ namespace ProtoBuf.Connect
             using var httpRequest = new HttpRequestMessage(HttpMethod.Post, ResolveUri(method))
             {
                 Content = new EnvelopedStreamContent<TRequest>(
-                    Codec, requests, Codec.ContentTypeFor(method.Type), method.RequestSerializer, cancellationToken),
+                    Codec, requests, Codec.ContentTypeFor(method.Type), method.RequestCodec, cancellationToken),
             };
             ApplyOptions(httpRequest, options);
 
@@ -248,7 +248,7 @@ namespace ProtoBuf.Connect
 
             var metadata = ReadMetadata(httpResponse);
             var stream = new ConnectServerStream<TResponse>(
-                httpResponse, Codec, method.ResponseSerializer, method.ToString(), metadata.Headers);
+                httpResponse, Codec, method.ResponseCodec, method.ToString(), metadata.Headers);
 
             TResponse? response = default;
             var count = 0;
@@ -320,7 +320,7 @@ namespace ProtoBuf.Connect
             using var httpRequest = new HttpRequestMessage(HttpMethod.Post, ResolveUri(method))
             {
                 Content = new EnvelopedStreamContent<TRequest>(
-                    Codec, requests, Codec.ContentTypeFor(method.Type), method.RequestSerializer, cancellationToken),
+                    Codec, requests, Codec.ContentTypeFor(method.Type), method.RequestCodec, cancellationToken),
                 Version = HttpVersion.Version20,
                 VersionPolicy = HttpVersionPolicy.RequestVersionExact,
             };
@@ -344,7 +344,7 @@ namespace ProtoBuf.Connect
 
             var metadata = ReadMetadata(httpResponse);
             return new ConnectServerStream<TResponse>(
-                httpResponse, Codec, method.ResponseSerializer, method.ToString(), metadata.Headers);
+                httpResponse, Codec, method.ResponseCodec, method.ToString(), metadata.Headers);
         }
 
         /// <summary>

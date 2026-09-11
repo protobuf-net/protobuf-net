@@ -26,7 +26,7 @@ namespace ProtoBuf.Connect.Internal
     {
         private PooledBufferWriter? _payload;
 
-        public MeasuredCodecContent(ConnectCodec codec, T value, string contentType, ISerializer<T>? serializer = null)
+        public MeasuredCodecContent(ConnectCodec codec, T value, string contentType, IConnectMessageCodec<T>? over = null)
         {
             // Measure first where the codec can: it sizes the buffer exactly, and it is the same call the
             // server uses to set Content-Length. A codec that cannot measure simply grows the writer.
@@ -34,7 +34,7 @@ namespace ProtoBuf.Connect.Internal
             var payload = new PooledBufferWriter(hint);
             try
             {
-                codec.Write(payload, value, serializer);
+                codec.Write(payload, value, over);
             }
             catch
             {

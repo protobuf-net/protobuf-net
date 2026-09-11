@@ -28,7 +28,7 @@ namespace ProtoBuf.Connect
     {
         private readonly HttpResponseMessage _response;
         private readonly ConnectCodec _codec;
-        private readonly ISerializer<TResponse>? _serializer;
+        private readonly IConnectMessageCodec<TResponse>? _serializer;
         private readonly string _method;
         private int _enumerated;
         private ConnectException? _failure;
@@ -36,7 +36,7 @@ namespace ProtoBuf.Connect
         internal ConnectServerStream(
             HttpResponseMessage response,
             ConnectCodec codec,
-            ISerializer<TResponse>? serializer,
+            IConnectMessageCodec<TResponse>? serializer,
             string method,
             IReadOnlyList<KeyValuePair<string, string>> headers)
         {

@@ -48,7 +48,7 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
             // read BEFORE committing the status: a request we cannot read never starts a stream, and so
             // is reportable the ordinary way, as a non-200 with a JSON error
             var request = await EnvelopedRequestReader
-                .ReadOneAsync(http.Request.BodyReader, codec, _method.RequestSerializer, _method.ToString(), context.CancellationToken)
+                .ReadOneAsync(http.Request.BodyReader, codec, _method.RequestCodec, _method.ToString(), context.CancellationToken)
                 .ConfigureAwait(false);
 
             var response = http.Response;
@@ -96,7 +96,7 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
                     ConnectCode.Internal, $"The '{codec.Name}' codec cannot measure a message, which framing requires.");
 
             ConnectEnvelope.WriteHeader(writer, flags: 0, checked((int)length));
-            codec.Write(writer, message, _method.ResponseSerializer);
+            codec.Write(writer, message, _method.ResponseCodec);
         }
 
     }

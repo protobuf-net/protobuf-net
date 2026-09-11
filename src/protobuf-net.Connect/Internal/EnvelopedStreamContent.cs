@@ -30,7 +30,7 @@ namespace ProtoBuf.Connect.Internal
     {
         private readonly ConnectCodec _codec;
         private readonly IAsyncEnumerable<T> _messages;
-        private readonly ISerializer<T>? _serializer;
+        private readonly IConnectMessageCodec<T>? _serializer;
         private readonly CancellationToken _cancellationToken;
         private int _sent;
 
@@ -38,7 +38,7 @@ namespace ProtoBuf.Connect.Internal
             ConnectCodec codec,
             IAsyncEnumerable<T> messages,
             string contentType,
-            ISerializer<T>? serializer,
+            IConnectMessageCodec<T>? serializer,
             CancellationToken cancellationToken)
         {
             _codec = codec;

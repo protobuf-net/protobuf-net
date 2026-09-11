@@ -44,7 +44,7 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
             HttpContext http, TImplementation service, ConnectCodec codec, ConnectServerCallContext context)
         {
             var requests = EnvelopedRequestReader.ReadAllAsync(
-                http.Request.BodyReader, codec, _method.RequestSerializer, _method.ToString(), context.CancellationToken);
+                http.Request.BodyReader, codec, _method.RequestCodec, _method.ToString(), context.CancellationToken);
 
             // the handler consumes the request stream; nothing is written until it returns, so a failure
             // here still reaches the endpoint's ordinary error path as a non-200
@@ -60,7 +60,7 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
                     ConnectCode.Internal, $"The '{codec.Name}' codec cannot measure a message, which framing requires.");
 
             ConnectEnvelope.WriteHeader(http2.BodyWriter, flags: 0, checked((int)length));
-            codec.Write(http2.BodyWriter, response, _method.ResponseSerializer);
+            codec.Write(http2.BodyWriter, response, _method.ResponseCodec);
 
             await EndStreamWriter
                 .WriteAsync(http2.BodyWriter, error: null, context.ResponseTrailers, context.CancellationToken)

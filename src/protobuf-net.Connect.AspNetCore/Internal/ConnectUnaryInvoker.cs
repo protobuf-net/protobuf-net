@@ -50,7 +50,7 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
             // is a `trailer-` prefixed header - which is how the protocol avoids HTTP trailers, and so HTTP/2
             context.FlushTrailers();
 
-            await WriteAsync(http.Response, codec, response, _method.ResponseSerializer, context.CancellationToken).ConfigureAwait(false);
+            await WriteAsync(http.Response, codec, response, _method.ResponseCodec, context.CancellationToken).ConfigureAwait(false);
         }
 
         private async Task<TRequest> ReadAsync(PipeReader reader, ConnectCodec codec, CancellationToken cancellationToken)
@@ -86,7 +86,7 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
         {
             try
             {
-                return codec.Read(buffer, _method.RequestSerializer);
+                return codec.Read(buffer, _method.RequestCodec);
             }
             catch (Exception ex) when (ex is not ConnectException)
             {
@@ -100,7 +100,7 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
         }
 
         private static async Task WriteAsync(HttpResponse response, ConnectCodec codec, TResponse value,
-            global::ProtoBuf.Serializers.ISerializer<TResponse>? serializer, CancellationToken cancellationToken)
+            global::ProtoBuf.Connect.IConnectMessageCodec<TResponse>? serializer, CancellationToken cancellationToken)
         {
             // headers first: the response is committed on the first write, so anything the handler added -
             // including trailing metadata, which for unary is a `trailer-` prefixed header - is already set
