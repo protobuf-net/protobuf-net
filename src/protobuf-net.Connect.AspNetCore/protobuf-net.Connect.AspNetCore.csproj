@@ -23,7 +23,10 @@
          endpoint routing means Kestrel, HTTP.sys, IIS and TestServer all work from one implementation,
          and none of them is named here -->
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <ProjectReference Include="../protobuf-net.Connect/protobuf-net.Connect.csproj" />
+    <!-- PrivateAssets="none": the analyzers have to survive BOTH hops. This is the edge that matters
+         most, because a contract-first consumer references only this package - it has no reason to
+         name protobuf-net at all - and PBN5007 is aimed squarely at that consumer. -->
+    <ProjectReference Include="../protobuf-net.Connect/protobuf-net.Connect.csproj" PrivateAssets="none" />
   </ItemGroup>
 
 </Project>

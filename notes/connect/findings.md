@@ -2615,19 +2615,51 @@ reported it while six passed anyway**. `RunAsync` now asserts the fixture compil
 negative cases are also written as controlled pairs differing in one token (`, "rpc"` versus
 `, metadata: ...`; chained versus not), so each negative result is attributable.
 
-### Two findings about delivery, both measured
+### Delivery: the analyzer did not reach a contract-first consumer. **Fixed.**
 
-- **The analyzer does not reach a contract-first consumer on its own.** Nothing in the
-  `protobuf-net.Connect.AspNetCore` → `protobuf-net.Connect` → `protobuf-net.Core` chain brings
-  BuildTools with it; removing the sample's explicit analyzer reference took the csc `/analyzer:` count
-  to zero and the diagnostic with it. So **`PBN5007` protects nobody unless packaging delivers it**, and
-  that is a real question for whenever these projects become packages — a contract-first consumer has
-  no reason to reference protobuf-net at all.
-- **A single `OutputItemType="Analyzer"` project reference reaches csc twice**, so every diagnostic in
-  such a project is reported twice. Pre-existing and repo-wide — `AotConnectSmoke` does it too — and
-  invisible until now only because those projects emit no diagnostics. Not fixed here; recorded because
-  "why is my warning doubled" is otherwise a puzzle, and because it means a diagnostic *count* from one
-  of these projects is not a count of anything.
+`PBN5007` protects nobody if it is not installed, and it was not going to be. The chain is worth
+stating because the mechanism is invisible from the csproj:
+
+- the build-time tooling ships **inside `protobuf-net.Core`**, which packs `protobuf-net.BuildTools.dll`
+  into `analyzers/dotnet/cs` and `protobuf-net.BuildTools.props` into `build/protobuf-net.Core.props`
+  (renamed, because a package's build props is auto-imported only when named after the package);
+- **NuGet's default dependency edge excludes `Build,Analyzers`**, so analyzer assets stop at the first
+  hop. `protobuf-net` already opens its own edge with `PrivateAssets="none"` for exactly this reason —
+  that comment in `protobuf-net.csproj` is the whole story, and neither Connect project had followed it.
+
+Measured rather than reasoned. Packing `protobuf-net.Connect` before the change:
+
+```xml
+<dependency id="protobuf-net.Core" version="..." exclude="Build,Analyzers" />
+```
+
+Both edges now carry `PrivateAssets="none"` — `protobuf-net.Connect` → `protobuf-net.Core`, and
+`protobuf-net.Connect.AspNetCore` → `protobuf-net.Connect` — and pack as `include="All"`. The
+**second** hop is the one that matters most: a contract-first consumer references only
+`protobuf-net.Connect.AspNetCore` and has no reason to name protobuf-net at all, and that consumer is
+exactly who `PBN5007` is aimed at. The third-party edges (`Grpc.Core.Api`, `System.IO.Pipelines`)
+correctly keep the exclusion.
+
+Note this also carries `build/`, which is *required* rather than incidental: the props declares the
+`CompilerVisibleProperty` entries, so without it `ProtoBufDisableBuildTools` and the AOT properties
+would be invisible to the analyzers that read them.
+
+### Retracted: "a single `OutputItemType="Analyzer"` reference reaches csc twice"
+
+**It does not.** This was recorded here as a repo-wide wart and it was a measurement error, so it is
+retracted rather than deleted — the way it looked true is the useful part:
+
+- `dotnet build -v n | grep -c /analyzer:...BuildTools` gives **2**, because MSBuild logs one `Csc`
+  invocation twice: once as the command line and once as `BuildResponseFile`. One invocation, one
+  analyzer.
+- the diagnostic also *appeared* twice at `-v q`, which is the **"Build succeeded" summary block**
+  re-printing it — and that same block says **"1 Warning(s)"**, which was on screen the whole time.
+- `-p:ErrorLog=...sarif` settles it: **one** result. `ResolveReferences` likewise shows one `Analyzer`
+  item.
+
+The lesson is the one this repo keeps writing down: **count diagnostics from SARIF or from the
+compiler's own tally, never by grepping console text**, which interleaves at least three renderings of
+the same event.
 
 ### Sizing `connectconformance`, since it is the obvious next thing and looks smaller than it is
 

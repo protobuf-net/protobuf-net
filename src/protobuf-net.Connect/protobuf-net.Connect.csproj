@@ -30,7 +30,12 @@
     <!-- protobuf-net.Core, NOT protobuf-net: RuntimeTypeModel is deliberately not referenced, so
          there is no reflective path to fall back to even by accident. The model is a generated
          TypeModel; see src/ConnectProbe. -->
-    <ProjectReference Include="../protobuf-net.Core/protobuf-net.Core.csproj" />
+    <!-- PrivateAssets="none" for the same reason protobuf-net opens the same edge: the build-time
+         tooling ships inside protobuf-net.Core, and NuGet's default dependency edge excludes
+         Build,Analyzers - so without this, a consumer referencing only protobuf-net.Connect gets no
+         analyzers, and PBN5007 (authorization silently dropped on a contract-first service) protects
+         nobody. Verified by packing and reading the nuspec, not by reasoning. -->
+    <ProjectReference Include="../protobuf-net.Core/protobuf-net.Core.csproj" PrivateAssets="none" />
   </ItemGroup>
 
 </Project>
