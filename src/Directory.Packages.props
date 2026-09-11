@@ -16,6 +16,10 @@
     <PackageVersion Include="FSharp.Core" Version="11.0.100" />
     <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
     <PackageVersion Include="Google.Protobuf" Version="3.36.1" />
+    <!-- protoc plus grpc_csharp_plugin, for the contract-first spike: it generates Google.Protobuf
+         messages and the Greeter.GreeterBase/GreeterClient pair, which is what a non-protobuf-net gRPC
+         customer actually has. Build-time only. -->
+    <PackageVersion Include="Grpc.Tools" Version="2.83.0" />
     <PackageVersion Include="ICSharpCode.Decompiler" Version="11.0.0.9375" />
     <!-- ServerCallContext for the Connect server; Grpc.Core.Api depends on nothing of ours, unlike
          protobuf-net.Grpc, which hard-depends on protobuf-net 2.4.8 and so collides on TypeModel.

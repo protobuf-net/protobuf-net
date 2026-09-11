@@ -2242,6 +2242,77 @@ Unverified: that `protoc`'s C# output emits `BindService(ServiceBinderBase, TBas
 `Grpc.Tools` (strongly implied by `ServiceBinderBase`'s documentation and by how
 `BinderServiceMethodProvider` works, but not checked here - there is no `Grpc.Tools` in this tree).
 
+## 39. Contract-first, probed — the hook is confirmed; the codec is the work
+
+`src/ConnectContractFirst` exists: a `.proto`, `Grpc.Tools`, and `protoc` generating ordinary
+Google.Protobuf messages plus `Greeter.GreeterBase`/`GreeterClient`. Nothing protobuf-net anywhere,
+which is the point. `Grpc.Tools` is now centrally versioned; it restores and generates without trouble.
+
+### The binding hook is exactly what §38 predicted
+
+```csharp
+public static void BindService(grpc::ServiceBinderBase serviceBinder, GreeterBase serviceImpl)
+{
+  serviceBinder.AddMethod(__Method_SayHello, serviceImpl == null ? null
+      : new grpc::UnaryServerMethod<HelloRequest, HelloReply>(serviceImpl.SayHello));
+  ...
+}
+```
+
+Public, static, one `AddMethod` per operation, all four shapes — and the `serviceImpl == null` branch
+confirms the descriptors-only mode that `BinderServiceMethodProvider` uses. A consumer can hand it over
+as a delegate, so **no reflection is needed**.
+
+**Caveat, from its own doc comment:** *"part of an experimental API that can change or be removed
+without any prior notice."* Worth knowing before building a product on it — though grpc-dotnet's own
+server binding depends on it too, which limits how freely it can move.
+
+### But the payload codec is per-method, and that is the actual work
+
+§38 said payloads need no conversion, which is true, and then under-read what follows from it. The
+generated descriptors carry their own marshallers:
+
+```csharp
+static readonly Marshaller<HelloRequest> __Marshaller_..._HelloRequest =
+    Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, HelloRequest.Parser));
+
+static readonly Method<HelloRequest, HelloReply> __Method_SayHello =
+    new(MethodType.Unary, __ServiceName, "SayHello", __Marshaller_..._HelloRequest, __Marshaller_..._HelloReply);
+```
+
+So the codec is **per method**, and Google.Protobuf's, whereas `ConnectCodec` today is **per channel**
+and protobuf-net's. A Google.Protobuf message is not a protobuf-net contract, so `ProtoConnectCodec`
+cannot serialize one at all.
+
+### Which points at a generalisation worth having anyway
+
+`ConnectMethod<TRequest, TResponse>` should carry **optional per-message codecs** rather than
+protobuf-net `ISerializer<T>`s specifically — something as small as
+`{ long? Measure(T); void Write(IBufferWriter<byte>, T); T Read(in ReadOnlySequence<byte>); }`. Then:
+
+- the channel codec stays the default, for code-first;
+- a marshaller-backed codec plugs in per method, for contract-first;
+- the §19 serializer hoist becomes a *case* of this rather than a separate hook;
+- and a **JSON** codec becomes per-method too, which is how contract-first would reach
+  `JsonFormatter`/`JsonParser` without a protobuf-net JSON codec existing.
+
+That is a real refactor of `ConnectMethod` and `ConnectCodec`, but it is the same refactor three
+different things want, which is usually the sign it is the right one.
+
+### One more shared piece
+
+`Marshallers.Create` takes the *contextual* form — `Action<T, SerializationContext>` and
+`Func<DeserializationContext, T>` — so using a marshaller means implementing `SerializationContext` and
+`DeserializationContext`. **That is the same machinery §8.1's `ConnectCallInvoker` needs**, and §12 lists
+it as unverified. So the two items share a prerequisite and should probably be done together.
+
+### Revised estimate
+
+The *binding* is easy and confirmed. The *codec* is a day or two of real design, and it is shared work
+rather than contract-first-specific. §38's "easier than code-first" still looks right for the server
+shape, but not for the total: what contract-first buys is JSON, and what it costs is the per-method
+codec seam that code-first has so far not needed.
+
 ## 12. Unverified — check before committing to any of this
 
 Everything below is assumption or inference, not measurement:
