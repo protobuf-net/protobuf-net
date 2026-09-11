@@ -86,6 +86,26 @@ namespace ProtoBuf.Connect
             ConnectCallOptions? options = null,
             CancellationToken cancellationToken = default)
         {
+            // the deadline is owned here and torn down with the call, which for a unary shape is the
+            // whole of it - a streaming shape hands the source to its stream instead
+            using var deadline = StartDeadlineSource(options, cancellationToken);
+            try
+            {
+                return await UnaryCoreAsync(
+                    method, request, options, deadline?.Token ?? cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException ex)
+            {
+                throw Translate(ex, deadline, cancellationToken, method!);
+            }
+        }
+
+        private async Task<(TResponse Response, ConnectCallResult Call)> UnaryCoreAsync<TRequest, TResponse>(
+            ConnectMethod<TRequest, TResponse> method,
+            TRequest request,
+            ConnectCallOptions? options,
+            CancellationToken cancellationToken)
+        {
             if (method is null) throw new ArgumentNullException(nameof(method));
             if (method.Type != ConnectMethodType.Unary)
             {
@@ -162,6 +182,9 @@ namespace ProtoBuf.Connect
             ConnectCallOptions? options = null,
             CancellationToken cancellationToken = default)
         {
+            var deadline = StartDeadlineSource(options, cancellationToken);
+            if (deadline is not null) cancellationToken = deadline.Token;
+
             if (method is null) throw new ArgumentNullException(nameof(method));
             if (method.Type != ConnectMethodType.ServerStreaming)
             {
@@ -197,7 +220,7 @@ namespace ProtoBuf.Connect
 
             var metadata = ReadMetadata(httpResponse);
             return new ConnectServerStream<TResponse>(
-                httpResponse, Codec, method.ResponseCodec, method.ToString(), metadata.Headers);
+                httpResponse, Codec, method.ResponseCodec, method.ToString(), metadata.Headers, deadline);
         }
 
         /// <summary>
@@ -233,6 +256,24 @@ namespace ProtoBuf.Connect
             IAsyncEnumerable<TRequest> requests,
             ConnectCallOptions? options = null,
             CancellationToken cancellationToken = default)
+        {
+            using var deadline = StartDeadlineSource(options, cancellationToken);
+            try
+            {
+                return await ClientStreamingCoreAsync(
+                    method, requests, options, deadline?.Token ?? cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException ex)
+            {
+                throw Translate(ex, deadline, cancellationToken, method!);
+            }
+        }
+
+        private async Task<(TResponse Response, ConnectCallResult Call)> ClientStreamingCoreAsync<TRequest, TResponse>(
+            ConnectMethod<TRequest, TResponse> method,
+            IAsyncEnumerable<TRequest> requests,
+            ConnectCallOptions? options,
+            CancellationToken cancellationToken)
         {
             if (method is null) throw new ArgumentNullException(nameof(method));
             if (requests is null) throw new ArgumentNullException(nameof(requests));
@@ -328,6 +369,9 @@ namespace ProtoBuf.Connect
             ConnectCallOptions? options = null,
             CancellationToken cancellationToken = default)
         {
+            var deadline = StartDeadlineSource(options, cancellationToken);
+            if (deadline is not null) cancellationToken = deadline.Token;
+
             if (method is null) throw new ArgumentNullException(nameof(method));
             if (requests is null) throw new ArgumentNullException(nameof(requests));
             if (method.Type != ConnectMethodType.DuplexStreaming)
@@ -363,7 +407,7 @@ namespace ProtoBuf.Connect
 
             var metadata = ReadMetadata(httpResponse);
             return new ConnectServerStream<TResponse>(
-                httpResponse, Codec, method.ResponseCodec, method.ToString(), metadata.Headers);
+                httpResponse, Codec, method.ResponseCodec, method.ToString(), metadata.Headers, deadline);
         }
 
         /// <summary>
@@ -371,6 +415,47 @@ namespace ProtoBuf.Connect
         /// </summary>
         private Uri ResolveUri<TRequest, TResponse>(ConnectMethod<TRequest, TResponse> method)
             => new(_baseAddress!, method.RelativePath);
+
+        /// <summary>
+        /// Starts the call's deadline, returning the token every step of it should observe.
+        /// </summary>
+        /// <remarks>
+        /// <b>A deadline has to be enforced, not merely advertised.</b> <c>connect-timeout-ms</c> tells the
+        /// server what we are willing to wait for, and a well-behaved one honours it - but a caller that
+        /// sets a deadline is asking for the call to end by then, whatever the server does. gRPC clients
+        /// enforce it locally for exactly this reason, and the conformance suite's reference server tests
+        /// the point directly: it delays past the deadline and expects the client to give up on its own.
+        /// <para>
+        /// The source is returned so the caller can dispose it - or, for a streaming shape, hand it to the
+        /// stream, whose reads outlive the method that started them.
+        /// </para>
+        /// </remarks>
+        private static CancellationTokenSource? StartDeadlineSource(
+            ConnectCallOptions? options, CancellationToken cancellationToken)
+        {
+            if (options?.Timeout is not { } timeout) return null;
+
+            var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            deadline.CancelAfter(timeout);
+            return deadline;
+        }
+
+        /// <summary>
+        /// Reports a cancellation as a lapsed deadline where that is what it was.
+        /// </summary>
+        /// <remarks>
+        /// The caller's own cancellation is checked first and left alone: it is not a deadline, and
+        /// saying so would be wrong in the one direction a caller would notice.
+        /// </remarks>
+        private static Exception Translate(
+            OperationCanceledException exception, CancellationTokenSource? deadline,
+            CancellationToken cancellationToken, object method)
+        {
+            if (cancellationToken.IsCancellationRequested || deadline?.IsCancellationRequested != true) return exception;
+
+            return new ConnectException(
+                ConnectCode.DeadlineExceeded, $"The call to '{method}' exceeded its deadline.", innerException: exception);
+        }
 
         private static void ApplyOptions(HttpRequestMessage request, ConnectCallOptions? options)
         {

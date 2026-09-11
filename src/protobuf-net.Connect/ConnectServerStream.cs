@@ -5,6 +5,7 @@ using System.IO.Pipelines;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Threading.Tasks;
 using ProtoBuf.Connect.Internal;
 using ProtoBuf.Serializers;
 
@@ -32,14 +33,17 @@ namespace ProtoBuf.Connect
         private readonly string _method;
         private int _enumerated;
         private ConnectException? _failure;
+        private readonly CancellationTokenSource? _deadline;
 
         internal ConnectServerStream(
             HttpResponseMessage response,
             ConnectCodec codec,
             IConnectMessageCodec<TResponse>? serializer,
             string method,
-            IReadOnlyList<KeyValuePair<string, string>> headers)
+            IReadOnlyList<KeyValuePair<string, string>> headers,
+            CancellationTokenSource? deadline = null)
         {
+            _deadline = deadline;
             _response = response;
             _codec = codec;
             _serializer = serializer;
@@ -64,6 +68,11 @@ namespace ProtoBuf.Connect
             }
 
             using var response = _response;
+
+            // the call's deadline outlives the method that started it, so the timer is owned here and
+            // stops when enumeration does
+            using var deadline = _deadline;
+
             var body = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
             var reader = PipeReader.Create(body);
 
@@ -72,7 +81,7 @@ namespace ProtoBuf.Connect
             {
                 while (!sawTerminator)
                 {
-                    var result = await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
+                    var result = await ReadAsync(reader, cancellationToken).ConfigureAwait(false);
                     var buffer = result.Buffer;
 
                     while (!sawTerminator && ConnectEnvelope.TryRead(ref buffer, out var flags, out var payload))
@@ -107,6 +116,32 @@ namespace ProtoBuf.Connect
             }
 
             if (_failure is not null) throw _failure;
+        }
+
+        /// <summary>
+        /// Reads, reporting a lapsed deadline as one.
+        /// </summary>
+        /// <remarks>
+        /// Its own method because the enumerator cannot catch around its loop - a <c>yield return</c>
+        /// may not appear inside a <c>try</c> that has a <c>catch</c> - so the translation has to wrap
+        /// the individual await instead.
+        /// <para>
+        /// Without it a deadline surfaces as a bare <see cref="OperationCanceledException"/>, which is
+        /// indistinguishable from the caller cancelling and is not what a caller that set a deadline
+        /// asked to be told.
+        /// </para>
+        /// </remarks>
+        private async ValueTask<ReadResult> ReadAsync(PipeReader reader, CancellationToken cancellationToken)
+        {
+            try
+            {
+                return await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException ex) when (_deadline?.IsCancellationRequested == true)
+            {
+                throw new ConnectException(
+                    ConnectCode.DeadlineExceeded, $"The call to '{_method}' exceeded its deadline.", innerException: ex);
+            }
         }
 
         private TResponse ReadMessage(byte flags, in ReadOnlySequence<byte> payload)
