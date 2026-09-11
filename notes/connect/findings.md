@@ -1,0 +1,595 @@
+# Connect (connectrpc.com) for protobuf-net — findings
+
+Working notes for a possible Connect implementation, in the same spirit as `notes/aot/findings.md`.
+
+> **Handover** (2026-09-11). Branch `marc/connect`. **Nothing has been built or run** — this is a
+> desk investigation only, and no code exists. Protocol facts are from the published spec and from
+> connect-go's source, cited inline; everything about *our* side is either read out of this repo or
+> flagged as an assumption. **§12 lists what is unverified; read it before acting on any of this.**
+>
+> **The four findings that would change a decision:**
+>
+> | | |
+> | --- | --- |
+> | gRPC's HTTP/2 requirement is *only* trailers | Connect uses none — `trailer-` headers on unary, a final enveloped JSON message on streams. Unary and single-direction streaming run on HTTP/1.1; only bidi needs HTTP/2 |
+> | **there is no .NET implementation** | official: Go, ES/Node, Swift, Kotlin, Python, Dart; community: Scala. Searched specifically; nothing for .NET |
+> | **JSON is optional, and binary is the default** | connect-go *clients* default to binary; the conformance suite takes `features.codecs: [CODEC_PROTO]` and skips the JSON matrix. So the long pole is off the critical path — §4 |
+> | the existing gRPC proxies are protocol-blind | every generated proxy calls `Reshape.*(…, this.CallInvoker, …)`. A `ConnectCallInvoker : CallInvoker` gives Connect to every existing protobuf-net.Grpc client with **zero** generator or consumer changes — §8(1) |
+>
+> **Considered and dropped**, so they are not rediscovered as oversights — both in §3b:
+> build-time descriptor/schema emission (nothing in Connect consumes a schema at run time), and
+> server reflection (optional, ecosystem convention rather than protocol, and already an open item
+> against `protobuf-net.Grpc.Reflection`).
+>
+> **Next step if this proceeds:** the §10 phase-0 spike — `ConnectCallInvoker`, unary, binary,
+> pointed at connect-go's reference server. Days, not weeks, and it either validates the reading of
+> the spec or kills the idea cheaply.
+
+## 1. What Connect is, and why it is interesting here
+
+Connect is a CNCF sandbox project from Buf: a small RPC protocol, plus implementations, designed so
+that one server can speak **Connect, gRPC and gRPC-Web** on the same port, and so that the Connect
+protocol itself is plain HTTP — POST a body, get a body back, errors are HTTP status codes plus a
+JSON object. Official implementations: Go, TypeScript/JS (web and Node), Swift, Kotlin, Python, Dart.
+
+The reason it is worth our attention is narrower than "another RPC framework", and it is this:
+
+> **gRPC's hard dependency on HTTP/2 comes from exactly one thing — HTTP trailers — and Connect
+> removes it.** Connect carries trailing metadata as `trailer-`-prefixed *response headers* on unary
+> calls, and inside a final enveloped JSON message on streams. It uses no HTTP trailers anywhere.
+
+Every operational complaint about gRPC in .NET descends from that one requirement: the proxy that
+won't forward it, the load balancer that downgrades, the browser that can't reach it, and — concretely
+in Kestrel — the fact that a **plaintext** endpoint cannot serve HTTP/1.1 and HTTP/2 at once, because
+without TLS there is no ALPN to negotiate with, so you must pick one for the port. Connect makes all of
+that go away for unary, client-streaming and server-streaming. Only bidirectional streaming still needs
+HTTP/2.
+
+The second reason: **there is no .NET implementation, official or community.** Searched for one
+specifically; found Go, ES, Swift, Kotlin, Python, Dart officially and a Scala community port
+(`connect-rpc-scala`), and nothing for .NET. Buf's own roadmap has historically solicited collaborators
+for other languages. So this is a real hole, and protobuf-net is a plausible occupant of it: we already
+have the code-first contract model, the `[Service]` shape analysis, and — since the AOT work — a Roslyn
+generator that emits both client proxies and server bindings.
+
+## 2. The protocol, in enough detail to size the work
+
+From <https://connectrpc.com/docs/protocol/>.
+
+### Unary
+
+- `POST /[prefix/][package.]ServiceName/MethodName` — **the same path shape gRPC uses.**
+- `content-type: application/proto` or `application/json`.
+- Request body is the **bare message**. No envelope, no length prefix. (gRPC always has the 5-byte
+  prefix; gRPC-Web unary does too. Connect unary is simpler than both.)
+- `connect-protocol-version: 1` — recommended on clients; servers/proxies *may* reject requests without
+  it with 400.
+- `connect-timeout-ms` — positive integer, ≤10 digits. Absent means infinite.
+- `content-encoding` / `accept-encoding`: `identity`, `gzip`, `br`, `zstd`, or custom. An unsupported
+  request encoding is answered `unimplemented` with the supported list.
+- Custom metadata is ordinary headers; binary metadata is a `-bin`-suffixed name with unpadded base64.
+  `connect-` prefixed names are reserved.
+- Success: 200, same content-type, bare response message. Trailing metadata arrives as `trailer-`
+  prefixed response headers.
+- Failure: non-200, `content-type: application/json`, body is
+  `{"code": "...", "message": "...", "details": [{"type","value","debug"}]}`.
+
+### Errors
+
+Sixteen codes, the gRPC set, spelled snake_case (`invalid_argument`, `deadline_exceeded`,
+`failed_precondition`, …), each with a fixed HTTP status (`not_found`→404, `permission_denied`→403,
+`resource_exhausted`→429, `unimplemented`→501, `canceled`→**499**, …). There is also an inference table
+for the other direction, so a bare 502 from an intermediary becomes `unavailable` rather than a parse
+failure. `details[].value` is base64 of a serialized protobuf message identified by `type`.
+
+### Streaming
+
+- `content-type: application/connect+proto` or `application/connect+json`. Anything else beginning
+  `application/connect+` that we don't know is 415.
+- `connect-content-encoding` / `connect-accept-encoding` — note the *different header names* from unary.
+- **Response status is always 200**, even on failure. The error is in the terminating message.
+- Body is a sequence of envelopes:
+
+  ```
+  [1 byte flags][4 bytes length, big-endian][length bytes of message]
+  ```
+
+  **That is byte-identical in layout to gRPC's framing.** The flag byte differs in meaning: bit 0 is
+  "compressed" (as gRPC's whole byte is), bit 1 is "end of stream", bits 2–7 reserved zero. So a framing
+  reader/writer is shared between the two protocols, which matters if we ever do both.
+- The final envelope (flags = 2) carries `EndStreamResponse`: `{"error": {...}, "metadata": {"name":
+  ["v1","v2"]}}`, or `{}` on clean success. This is where trailers live for streams.
+- Compression contexts are **not** carried across message boundaries.
+
+### HTTP versions
+
+Unary, client-streaming and server-streaming: HTTP/1.1 or HTTP/2. Bidirectional: HTTP/2 required.
+
+### GET, and why it needs schema metadata
+
+An RPC annotated `idempotency_level = NO_SIDE_EFFECTS` may be invoked with GET:
+`?connect=v1&encoding=proto&base64=1&message=<base64url>` (plus `compression=`). `connect-timeout-ms`
+stays a header. Servers must tolerate unknown query parameters. Clients opt in.
+
+Two things follow that matter to us:
+
+- This is the **only** part of the Connect protocol that depends on proto-level schema metadata. It is a
+  method option, i.e. a compile-time property of the contract. Code-first would need an attribute of our
+  own (there is no protobuf-net.Grpc equivalent today).
+- The spec asks for **deterministic** codec output so the URL is a stable cache key. protobuf-net is
+  deterministic in field order, but **map members are not obviously deterministic** — `Dictionary<K,V>`
+  enumeration order is not a documented guarantee. Flag this before claiming GET+caching works; it may
+  mean refusing GET for contracts containing maps, or sorting keys on that path.
+- Caching is *not* automatic: `Cache-Control` is the handler's job.
+
+## 3. How services are defined — proto-first tooling, schema-free protocol
+
+Asked directly, and the answer is good for us.
+
+**The tooling is proto-first**: `protoc-gen-connect-go`, `@connectrpc/protoc-gen-connect-es`, etc., and
+the docs consistently present Protobuf as "the specification and documentation".
+
+**The protocol is not.** On the wire, a Connect call is a path, a content-type and a body. The service
+and method names are strings in a URL; the message shape is whatever the named codec says it is. There
+is no descriptor exchange, no schema negotiation, and no reflection requirement. That is exactly the
+position we are already in with gRPC, where protobuf-net.Grpc has shipped code-first for years against a
+proto-first ecosystem.
+
+So **code-first is very likely to work, and for the same reasons it works today** — the interop contract
+is "both ends agree on field numbers and method names", not "both ends parsed the same .proto". Three
+caveats, in order of seriousness:
+
+1. **`application/json` moves the agreement from field *numbers* to field *names*.** Canonical Protobuf
+   JSON is defined against a schema: lowerCamelCase field names (accepting the original), enums by name,
+   64-bit integers as strings, `bytes` as base64, special forms for the well-known types. Code-first
+   would derive those names from C# members instead of from a .proto. That is fine and self-consistent,
+   but it means cross-language JSON interop needs the .proto to be *shared*, precisely as binary interop
+   needs the field numbers to be shared. Not a new problem, but a more visible one — JSON is the format
+   people read, so a name mismatch is louder than a number mismatch.
+2. **`idempotency_level` has no code-first spelling.** Needs an attribute. Small.
+3. **We cannot currently emit a .proto from an AOT model.** `TypeModel.GetSchema(SchemaGenerationOptions)`
+   is `virtual` and the base **throws `NotSupportedException`** (`protobuf-net.Core/Meta/TypeModel.cs`
+   around line 1940); only `RuntimeTypeModel` implements it. A `[ProtoModel]`-generated model therefore
+   has no schema. **The fix is small and attractive: have the generator emit the schema as a `const
+   string` / static property at build time.** It is pure build-time work, needs no reflection, and it is
+   independently useful — it is what lets a code-first .NET service hand a `.proto` to the TypeScript
+   team, and what would back a Connect/gRPC server-reflection endpoint. I would treat this as a
+   standalone task worth doing regardless of whether Connect happens.
+
+## 3b. Is there an inbuilt metadata API? No — and the convention is gRPC's
+
+Asked specifically, because a WCF-style `mex` endpoint would change the schema-emit calculus.
+
+**There is nothing schema-related in the Connect protocol.** No descriptor exchange, no negotiation, no
+capability document. A call is a path, a content-type and a body; that is the whole contract. Nothing in
+the spec obliges a server to be able to describe itself.
+
+**The ecosystem convention is gRPC server reflection, mounted as an ordinary service.** In Go it is a
+separate module, `connectrpc.com/grpcreflect`, which handles `grpc.reflection.v1.ServerReflection` over
+any of the three protocols. Two details worth carrying:
+
+- there are **two versions** and the guidance is to mount **both** (`NewHandlerV1` *and*
+  `NewHandlerV1Alpha`), because grpcurl and much other tooling still ask for the older one;
+- it is what `buf curl`, `grpcurl`, `grpcui` and Buf Studio use to call a service without a local copy
+  of the schema. Optional in every sense — services without it are simply called with a schema in hand.
+
+### So the schema workstream evaporates, and that is the useful finding
+
+The first draft of this note used the absence of a `mex`-style API to argue *for* build-time descriptor
+emission. That was backwards, and it is worth recording why, because the reasoning is what generalises:
+**a schema is only needed at run time by something that serves it, and Connect has nothing that does.**
+
+Walking every candidate consumer:
+
+| wants a schema | when | needs it from the running process? |
+| --- | --- | --- |
+| the Connect protocol | — | **no** — nothing schema-related is on the wire, ever |
+| generating a client in another language | build time | no — an out-of-band `.proto`, consumed by codegen |
+| documentation, `buf breaking`, review | build time | no |
+| `buf curl` / `grpcurl` with no local schema | run time | yes — **but only via server reflection** |
+
+Only the last row survives, and it is an optional add-on service that is **already owned elsewhere**:
+`protobuf-net.Grpc.Reflection` exists (1.2.2, pinned in `src/Directory.Packages.props`) and
+`notes/aot/grpc.md` already carries it as an open AOT item. It is not Connect work and should not be
+funded as Connect work.
+
+**And the AOT model's missing `GetSchema` does not block the build-time artifact**, which was the other
+half of the bad argument. The `.proto` is derived from the *contracts* — attributed POCOs — not from the
+model; `RuntimeTypeModel.Create()` + `Add(typeof(Foo))` + `GetSchema()` on a dev machine or in a test
+produces it today, on a JIT runtime, whatever the shipping model looks like. A consumer who has gone
+all-in on `[ProtoModel]` has not lost the ability to emit a schema; they have only lost the ability to
+ask the *model* for one, which nothing needs to do.
+
+Having `dotnet build` drop a `.proto` beside the assembly would be pleasant, and emitting descriptor
+bytes rather than text would be the right shape for it if it ever happens (server reflection serves
+`FileDescriptorProto` bytes, not `.proto` text; protobuf-net.Reflection can already go text →
+`FileDescriptorSet` in-process via `Parsers.cs` + `Descriptor.cs`, which is how protogen works). But it
+is a protobuf-net convenience with no Connect dependency, and it comes out of this plan entirely.
+
+### The one schema-adjacent thing Connect *does* need, and it is small
+
+Error details are `{"type": "fully.qualified.Protobuf.MessageName", "value": "<base64 proto>"}`. So rich
+errors need a **name ↔ type map**, in both directions: the producing side needs each detail type's
+fully-qualified protobuf name, and the consuming side needs to turn a name back into something it can
+deserialize.
+
+It is only needed for *rich* errors; `code` and `message` alone need nothing. But it is worth knowing
+exactly what that name is, because it is **not ours to define**.
+
+#### It is `Any`'s namespace, with the URL prefix stripped
+
+Read out of connect-go's `error.go` rather than inferred:
+
+```go
+type ErrorDetail struct {
+	pbAny    *anypb.Any
+	pbInner  proto.Message
+	wireJSON string
+}
+
+func (d *ErrorDetail) Type() string {
+	return typeNameForURL(d.pbAny.GetTypeUrl())
+}
+
+func typeNameForURL(url string) string {
+	return url[strings.LastIndexByte(url, '/')+1:]
+}
+```
+
+with `defaultAnyResolverPrefix = "type.googleapis.com/"`, and the comment *"proto.Any tries to make
+messages self-describing by using type URLs rather than plain type names… To hide this from users, we
+should trim the URL prefix"*.
+
+So, precisely:
+
+- a Connect error detail **is a `google.protobuf.Any`**. The JSON `type`/`value` pair is a *rendering*
+  of one, not a parallel concept;
+- the `type` string is the **global protobuf fully-qualified name** — `package.Message`, from the
+  `.proto` namespace. It is **not** relative to a local model, registry or schema, and there is no
+  scoping or aliasing;
+- the trim is `LastIndexByte('/')`, so it is **lossy with respect to `Any`**: a custom (non-
+  `type.googleapis.com`) type-URL prefix collapses and cannot be reconstructed. The reverse direction
+  necessarily re-prepends the default prefix;
+- and it has to be an `Any`, because the same details must survive a **gRPC** hop — gRPC's rich error
+  model is `google.rpc.Status { repeated google.protobuf.Any details }`, and Connect servers speak both.
+
+**Therefore doing Connect error details properly is doing `Any` properly, minus the prefix** — it is the
+same gap, not a Connect-shaped extra.
+
+#### Which lands on a real weakness: our fully-qualified names are not stable
+
+Probed, and it is worse than "we allow a name to be set":
+
+- **protobuf-net has no `Any` support whatsoever.** `grep -rn "type.googleapis.com\|TypeUrl\|type_url"
+  src --include=*.cs` returns **nothing**.
+- `[ProtoContract]` exposes `Name` and `Origin` — **there is no `Package`**.
+- A name counts as qualified **only if it starts with a dot**. `MetaType.GuessPackage()` is four lines,
+  commented *"very speculative; turns .Foo.Bar.Blap into Foo.Bar"*, and returns `null` outright when
+  `s[0] != '.'`.
+- Otherwise the package comes from `SchemaGenerationOptions.Package`, or is inferred **across the whole
+  requested type set** at `GetSchema` time — and `RuntimeTypeModel.GetSchema` sets `package = null` when
+  the candidates disagree.
+
+So the fully-qualified name protobuf-net produces today is **a function of which types you asked about,
+computed per `GetSchema` call**, and may legitimately come out with no package at all. That is fine for
+"suggest me a `.proto`". It is not fine for an identity that goes on the wire, where two ends must agree
+and the value must not depend on the caller's type set.
+
+Fixing that is a protobuf-net change with no Connect dependency — most likely a `Package` on
+`[ProtoContract]` (and/or an assembly-level default, following the `[CompatibilityLevel]` precedent of
+type → module → assembly resolution), plus a per-type qualified name that does not consult the rest of
+the model. It is the prerequisite for `Any`, for gRPC rich errors, and for Connect error details alike,
+which is three reasons to do it once.
+
+
+## 4. JSON: optional, and binary is the *expected* default
+
+`grep -ril json src/protobuf-net.Core src/protobuf-net --include=*.cs` returns **nothing**. protobuf-net
+has no JSON support of any kind. This turns out to matter much less than it first looks.
+
+**Binary is not a degraded mode.** Checked deliberately, because the first pass of this note overstated
+it:
+
+- **The protocol negotiates.** `content-type` names the codec; a codec the server does not have is
+  answered **415**. A proto-only server is a legal Connect server, not a fudge.
+- **connect-go clients default to binary Protobuf.** JSON is opt-in on the client (`WithProtoJSON()`);
+  handlers accept both automatically *when the runtime has both*. So for service-to-service — .NET to
+  .NET, .NET to Go — binary is the path callers take by default, and JSON never enters it.
+- **The conformance suite has an explicit declaration for this.** Its config has a `features` block with
+  a `codecs` axis (`CODEC_PROTO`, `CODEC_JSON`); *"If not configured, support is assumed for both"*, so
+  declaring `codecs: [CODEC_PROTO]` **excludes the JSON cases from the generated matrix**. A binary-only
+  implementation can therefore claim a real, externally-measured conformance result rather than an
+  asterisked one.
+
+So JSON buys exactly one thing, and it is a big thing but a *separable* one: **browsers, `curl`, and the
+network inspector.** That is the "open devtools and read it" pitch, and it is the reason Connect-for-Web
+exists. Without JSON we have a Connect implementation that is fully useful for services and unusable
+from a browser — which is a coherent v1, and reorders the plan below considerably.
+
+When it is built, it means canonical Protobuf JSON, emitted by the same Roslyn generator, as a **third
+emit shape in `ProtoModelGenerator`** alongside the binary read/write. The rules are well-defined and finite, and
+most of the hard cases in general proto-JSON (`Any`, `Struct`/`Value`, `FieldMask`) do not arise in
+code-first contracts. The ones that do: name mapping, enum-by-name, 64-bit-as-string, bytes-as-base64,
+`Nullable<T>`/presence, the compatibility-level BCL types (`DateTime`→`Timestamp` RFC3339 string,
+`TimeSpan`→`Duration` `"1.5s"`), maps as JSON objects with stringified keys, and repeated as arrays.
+
+**It belongs in protobuf-net, not in a Connect package.** JSON is a serializer feature; people would
+want `MyModel.Instance` to round-trip JSON with no RPC anywhere near it. That also means it is separable:
+Connect can ship binary-only first and gain JSON when the codec lands.
+
+Sizing honestly: smaller than the binary AOT generator, larger than any single feature in it. Assume it
+is the majority of the total effort of "Connect in .NET, done properly" — which is precisely why it being
+*optional* is the most useful fact in this document.
+
+## 5. Client: `HttpClient`, not raw
+
+Unambiguous. Connect is HTTP-native, so a raw-socket client would mean reimplementing HTTP for no gain,
+and would throw away HTTP/1.1+2+3, proxies, `DelegatingHandler` pipelines, `SocketsHttpHandler` pooling,
+`IHttpClientFactory`, auth handlers and every diagnostic anyone has. The entire argument for Connect is
+that it is ordinary HTTP; a client that does not use the ordinary HTTP stack is not taking the win.
+
+Details worth planning for:
+
+- **Unary maps onto our existing serialization shape almost exactly.** The generated gRPC marshaller in
+  `Basic.output.cs` already does `IMeasuredProtoOutput<IBufferWriter<byte>>.Measure(value)` →
+  `SetPayloadLength(length)` → `GetBufferWriter()` → `Serialize`. A custom `HttpContent` overriding
+  `TryComputeLength` and `SerializeToStream(Async)` wants precisely that: known length, then write into
+  the stream/writer. So `Content-Length` is free and there is no buffering.
+- **Streaming needs `HttpCompletionOption.ResponseHeadersRead`** and, for client-streaming and duplex, a
+  request `HttpContent` that writes incrementally. `SocketsHttpHandler` supports duplex over HTTP/2.
+  Over HTTP/1.1 you get client-streaming and server-streaming but not full duplex — which matches what
+  the protocol says anyway.
+- **Browser (Blazor WASM) is a separate risk.** The fetch-based handler's streaming support is narrower
+  than `SocketsHttpHandler`'s; assume server-streaming works and treat client-streaming as unverified.
+- Cancellation → `connect-timeout-ms` plus `CancellationToken`; deadline maps cleanly.
+
+## 6. Server: Kestrel, but target ASP.NET Core rather than Kestrel
+
+**HttpListener is not an option.** It is explicitly compat-only in .NET — critical fixes, no new work,
+no modern protocol support, and the standing guidance is to use Kestrel. No HTTP/2 means no bidi, and no
+future means no reason to start.
+
+**HTTP.sys is a real second**, but you get it for free and should not think about it: if we sit on
+ASP.NET Core's abstractions (`HttpContext`, endpoint routing) rather than on Kestrel's internals, then
+Kestrel, HTTP.sys, IIS *and* `TestServer` all work with one implementation. That is the actual design
+guidance here — **"Kestrel is a must" resolves to "ASP.NET Core is a must", and Kestrel comes with it.**
+
+**A "raw" option is still worth offering, cheaply**: expose the handler as a bare `RequestDelegate`
+(or a `Func<HttpContext, Task>`) so it can be hung off `WebApplication.CreateEmptyBuilder`, a
+hand-configured `KestrelServer`, or someone's existing middleware graph with no `MapXxx` involved.
+That costs nothing if the core is written as a handler and the routing is a thin layer over it.
+
+The AOT position is good: ASP.NET Core Native AOT support covers Kestrel, routing, CORS, auth, rate
+limiting, output caching and WebSockets; the unsupported list is MVC, Blazor Server, SignalR, Session.
+Minimal APIs are "partial" because `RequestDelegateFactory` is reflective — **writing raw
+`RequestDelegate` handlers bypasses that entirely**, which is what we want anyway. `CreateSlimBuilder`
+is the template, noting it excludes HTTPS and HTTP/3 by default.
+
+And the thing Connect gets that gRPC does not: **a Connect endpoint is an ordinary HTTP endpoint**, so
+CORS, `[Authorize]`, rate limiting, output caching (interesting for GET RPCs), response compression,
+YARP and everything else compose with it without special cases, and it does not need the HTTP/2
+enforcement that makes `Grpc.AspNetCore.Server` reject an HTTP/1.1 request.
+
+## 7. Bindings and registration
+
+Reuse the shape people already know. The gRPC generator's surface is
+`[ProtoGrpc(Model = typeof(MyModel))] partial class MyServices : ClientFactory` seeded by
+`[ProtoService(typeof(IContract), typeof(Impl))]`, producing `MyServices.Instance.CreateClient<T>(...)`
+and an `AddMyServices()` extension. A Connect equivalent should be the same shape —
+`[ProtoConnect(Model = typeof(MyModel))]` — differing only where the protocol forces it.
+
+Two decisions I would make up front:
+
+- **One endpoint per method, not one per service.** The *cost* of this is nil — we generate the wiring,
+  so emitting N `Map` calls instead of one is the same amount of consumer-visible work, and the choice
+  is invisible to anyone using it. But the choice still matters, and not for the reason it looks:
+
+  **ASP.NET Core's per-request features attach to the matched `Endpoint` object, and the middleware that
+  reads them runs before our handler does.** Authorization, CORS policy selection, rate limiting and
+  output caching all resolve their configuration from `HttpContext.GetEndpoint()?.Metadata` in
+  middleware. Route a whole service through one `/{service}/{method}` endpoint and every method shares
+  one metadata set — so a per-method `[Authorize]` cannot be expressed through the framework at all, and
+  we would have to re-implement authorization inside the handler against `IAuthorizationService`. That
+  is not a thing we control by wiring it ourselves; it is upstream of us.
+
+  Output caching on idempotent GET RPCs is the other one, and it is one of Connect's actual selling
+  points. `Grpc.AspNetCore` maps per method for exactly these reasons.
+
+  So: per method, it is free, and it means the existing endpoint-metadata machinery (`MetadataGather`,
+  `AttributeRenderer`, `PBN4019`, and the `src/AotGrpcMetadataDiff` oracle) is directly reusable — a
+  large amount of already-solved, already-CI-gated work.
+- **Registration emits routing entries directly**, i.e. a generated `MapMyServices(this
+  IEndpointRouteBuilder)` that calls `endpoints.Map(pattern, handler)` per method, with the handler a
+  static generated `RequestDelegate`. No `IServiceMethodProvider`, no `Grpc.AspNetCore.Server`, no
+  reflection, nothing to discover at startup.
+
+Contract parsing — the five method shapes, `CallContext`, `[SubService]`, void/`Empty`, overloads,
+closed generics, the WCF markers — is the single biggest reusable asset and should be **shared with
+`GrpcProxyGenerator`, not forked**. `Internal/Grpc/` is already under the no-Roslyn-references rule, so
+the model types are already in the right shape to be shared; the thing to avoid is a copy that drifts.
+
+Diagnostics: `PBN5xxx` is free. Per the id table in `AGENTS.md`, taken blocks are `PBN0001`–`PBN0026`,
+`PBN1000+`, `PBN2001`–`PBN2010`, `PBN3000`–`PBN3013`, `PBN4000`–`PBN4018`. New ids must go in
+`AnalyzerReleases.Unshipped.md` or the build fails (`RS2000`).
+
+## 8. Crossover with protobuf-net.Grpc — three distinct levels
+
+This is the part where the existing investment pays, and the three levels are genuinely separable.
+
+### (1) A `CallInvoker`. Highest value, lowest cost — do this first.
+
+Reading `src/BuildToolsUnitTests/Grpc/Data/Basic.output.cs`: every generated client proxy derives from
+`Grpc.Core.ClientBase`, holds `Grpc.Core.Method<TReq,TResp>` built from `Grpc.Core.Marshaller<T>`, and
+calls `Reshape.UnaryTaskAsync(in context, this.CallInvoker, __op0, request, null)` and friends. The
+protocol never appears. **Everything goes through `Grpc.Core.CallInvoker`.**
+
+So a `ConnectCallInvoker : CallInvoker` over `HttpClient` gives the Connect protocol to *every existing
+protobuf-net.Grpc client* — reflective and AOT-generated alike — with **zero generator changes and zero
+consumer code changes** beyond constructing a different channel. Interceptors, `CallContext`, deadlines,
+DI registration and the `[ProtoGrpc]` migration story all come along unaltered.
+
+Cost: implementing `AsyncUnaryCall<T>` and the three streaming call types, plus `SerializationContext` /
+`DeserializationContext` subclasses (both are public abstract in `Grpc.Core.Api` and Grpc.Net.Client does
+exactly this internally). Small and well-bounded. It is also the ideal first spike, because it can be
+pointed at connect-go's reference server on day one.
+
+Limit: `Marshaller<T>` is codec-fixed, so this is **binary only** — no JSON, no content negotiation,
+no GET. Service-to-service, not browsers. And it keeps a dependency on `Grpc.Core.Api` (small, AOT-clean).
+
+### (2) A server middleware over existing gRPC endpoints. Cheap, but not the destination.
+
+The precedent is `Grpc.AspNetCore.Web`, which translates gRPC-Web ↔ gRPC in front of unmodified gRPC
+endpoints, including relaxing the HTTP/2 check that otherwise answers *"Request protocol of 'HTTP/1.1'
+is not supported"*. A `ConnectMiddleware` doing the same translation — add/strip the 5-byte prefix,
+convert `Status` to the JSON error body, move trailers into `trailer-` headers — would give Connect to
+*any* grpc-dotnet service, including Google.Protobuf ones, for very little code.
+
+But the same `Marshaller<T>` limitation bites harder here: by the time the request reaches the endpoint,
+the codec is fixed, so JSON and content negotiation are not reachable, and neither is GET. It is an
+adoption ramp, not an architecture. I would build it as a sample or not at all.
+
+### (3) First-class Connect: own generator, own endpoints, no `Grpc.*` dependency.
+
+This is where JSON, GET, browser support and true AOT cleanliness live. Nothing on the path needs
+`Grpc.Core.Api`, `Grpc.AspNetCore.Server`, `CallInvoker`, `DynamicStub` or `MakeGenericType`. It is the
+version that matches "done with ref-emit and reflection" completely, and it is the version worth
+shipping.
+
+**Recommendation: do (1) and (3); skip (2).** Share the contract model between the Connect and gRPC
+generators.
+
+## 9. Where it should live
+
+The generator half should live **here**, in `protobuf-net.BuildTools`, for the reason a third generator
+in that assembly is nearly free: the golden-test harness, the fixture conventions, the incremental-cache
+discipline, the `Internal/*` no-Roslyn-references rule, the release-tracking gate and the contract
+parsing all already exist. Forking them into another repo would duplicate a great deal of hard-won
+machinery.
+
+The runtime half (`protobuf-net.Connect`, `protobuf-net.Connect.AspNetCore`) can live either place.
+There is precedent for splitting it — `[ProtoGrpc]`/`[ProtoService]` are real API in **protobuf-net.Grpc**
+and the generator here matches them **by full name**, exactly so that the generator need not reference
+the runtime. The same trick works for `[ProtoConnect]`.
+
+Package shape: `protobuf-net.Connect` (client, `HttpClient`-based, no ASP.NET Core dependency) and
+`protobuf-net.Connect.AspNetCore` (server). Keeping the client free of the ASP.NET Core shared framework
+matters — a console/mobile/WASM client must not drag it in. The JSON codec, if and when it happens, is
+a protobuf-net feature and belongs in **this** repo regardless: `protobuf-net.Core` plus a third emit
+shape in `ProtoModelGenerator`.
+
+### Single repo now, split later — and the repo's own history says so
+
+**Work in this repo, on a branch, and split only when there is a reason to.** The end state may well be
+a sibling repo; starting there would be paying the cost of the split before earning any of its benefit.
+
+The decisive argument is the cross-repo release loop, and it is documented in this repo rather than
+hypothesised. `src/AotGrpcSmoke` takes `protobuf-net.Grpc` as a **`PackageReference`**, deliberately —
+its comment says *"protobuf-net.Grpc comes from the package, which is the point - this proves the
+generated code binds to the shipped runtime surface"*. That is exactly right for a **settled** API. For
+an **unsettled** one it is a hard serialisation of the work: `notes/aot/grpc.md`'s handover has a whole
+table headed *"Landed elsewhere, and this branch depends on it"*, gating the gRPC generator on
+protobuf-net.Grpc 1.3.6 plus three merged PRs. Every API adjustment becomes release-a-package-then-
+consume-it, and `Directory.Packages.props` still carries the floor comment explaining which version
+introduced what.
+
+The same conclusion is already recorded as a *decision* in `AGENTS.md`: `[ProtoModel]`/`[ProtoSerializable]`
+were **generator-owned** — emitted via `RegisterPostInitializationOutput`, one internal copy per
+assembly — *"while the shape was still moving"*, and became real Core API only once a cross-assembly
+requirement forced it. A Connect trigger attribute is in precisely that position now.
+
+The split stays cheap because of three properties that already hold:
+
+- **the generator never moves.** It has to be in `protobuf-net.BuildTools` either way, so the split is
+  only ever about the runtime half;
+- **the generator matches trigger attributes by full name, not by symbol** — a rule `AGENTS.md` insists
+  on keeping. So moving `[ProtoConnect]` between assemblies is invisible to it, provided the namespace
+  and name are stable;
+- **CI globs `src\*\*.csproj`**, so new projects here are picked up automatically, and removing them
+  later is equally automatic.
+
+And the incremental cost of hosting it here is close to zero: this repo already builds ASP.NET Core
+projects (`protobuf-net.AspNetCore`, `protobuf-net.TestWeb`, `AotGrpcSmoke` on `Microsoft.NET.Sdk.Web`)
+and already runs native-AOT smoke tests on two RIDs in CI. A `src/AotConnectSmoke` slots into an
+existing pattern rather than inventing one.
+
+Concretely: `src/protobuf-net.Connect`, `src/protobuf-net.Connect.AspNetCore`, `src/AotConnectSmoke`,
+`src/BuildToolsUnitTests/Connect/Data/*` — with the trigger attributes **generator-owned (post-init,
+internal) at first**, exactly as `[ProtoModel]` began, so that no packaging decision is forced until the
+shape stops moving. Revisit the split when there is an actual trigger: a divergent release cadence, or a
+dependency this repo should not carry.
+
+## 10. Suggested phasing
+
+Reordered from the first draft, now that JSON is known to be declarable-optional: the long pole moves
+out of the critical path, and there is a shippable product before it.
+
+0. **Spike: `ConnectCallInvoker`, unary, binary.** Point it at connect-go's reference server. Proves the
+   protocol reading is right, and immediately gives every existing protobuf-net.Grpc client Connect.
+   Days, not weeks.
+1. **Server: generated endpoints, unary + server-streaming, `application/proto`.** Run the official
+   conformance suite with `features.codecs: [CODEC_PROTO]`.
+2. **Streaming complete + compression + GET/idempotency.** Conformance green *for the declared feature
+   set*, across HTTP/1.1 and HTTP/2. **This is a shippable v1** — a fully conformant, fully AOT,
+   service-to-service Connect implementation for .NET, which is a thing that does not exist today.
+3. **JSON codec in protobuf-net.** The long pole, now taken by choice rather than by necessity. Unlocks
+   browsers, `curl` and the network inspector — i.e. Connect-for-Web. Flip `CODEC_JSON` on in the
+   conformance config and watch the matrix grow.
+
+**Not on this plan**, having been considered and dropped — see §3b: build-time descriptor/schema
+emission (nothing in Connect consumes a schema at run time, and the build-time `.proto` is already
+reachable through `RuntimeTypeModel` on a dev machine), and server reflection (optional, ecosystem
+convention rather than protocol, and already an open item against `protobuf-net.Grpc.Reflection`).
+
+## 11. The external oracle, which suits how this repo works
+
+`connectrpc/conformance` is an open-source suite that drives *your* client against a reference
+connect-go server, and *your* server from a reference connect-go client, across Connect, gRPC and
+gRPC-Web. It is a process plus a set of protos, so it is usable from .NET.
+
+That is worth calling out because it is the same shape as the things this repo already trusts —
+`AotDifferential`'s corpus, `AotGrpcMetadataDiff`'s oracle: an **external** source of truth that can be
+CI-gated and that is capable of failing. A Connect implementation with a conformance percentage is a
+very different claim from one with a passing unit-test suite.
+
+It is run as `connectconformance --mode client -- <client>`, `--mode server -- <server>`, or
+`--mode both -- <client> ---- <server>`, driven by a YAML config with three top-level keys: `features`
+(what we support), `include_cases` and `exclude_cases`. The runner *"first processes your configuration
+and uses that to select which test cases are relevant"* — so the declared feature set is the honest
+denominator, in the same way `AotDifferential` reports "of the N actually compared".
+
+The axes, which double as a roadmap since each one is a dial we can turn up:
+
+| axis | values |
+| --- | --- |
+| protocols | `PROTOCOL_CONNECT`, `PROTOCOL_GRPC`, `PROTOCOL_GRPC_WEB` |
+| HTTP versions | `HTTP_VERSION_1`, `HTTP_VERSION_2`, `HTTP_VERSION_3` |
+| codecs | `CODEC_PROTO`, `CODEC_JSON` — *"if not configured, support is assumed for both"* |
+| compressions | `COMPRESSION_IDENTITY`, `_GZIP`, `_BR`, `_ZSTD`, `_DEFLATE`, `_SNAPPY` |
+| stream types | `STREAM_TYPE_UNARY`, `_CLIENT_STREAM`, `_SERVER_STREAM`, `_HALF_DUPLEX_BIDI_STREAM`, `_FULL_DUPLEX_BIDI_STREAM` |
+| other | TLS, h2c, client certificates, trailers, message receive limits |
+
+Note the protocols axis: the suite would also measure a gRPC or gRPC-Web implementation. If the
+`ConnectCallInvoker` spike works, running it in `PROTOCOL_GRPC` mode is a free external check on the
+*existing* protobuf-net.Grpc client surface, which nothing currently tests from outside.
+
+## 12. Unverified — check before committing to any of this
+
+Everything below is assumption or inference, not measurement:
+
+- That `SerializationContext`/`DeserializationContext` can be subclassed outside `Grpc.Net.Client`
+  cleanly enough for a `ConnectCallInvoker`. Believed yes (both are public abstract in `Grpc.Core.Api`);
+  not tried.
+- Duplex request content over `SocketsHttpHandler` on HTTP/2 — believed fine, not tried. Blazor WASM's
+  handler is the real question mark.
+- protobuf-net map member determinism, which GET-as-cache-key depends on.
+- The exact CORS header set browsers need for Connect (`connect-protocol-version`, `connect-timeout-ms`
+  and friends must be allowed, and exposed on responses). Only matters once JSON exists.
+- Whether `connectconformance` is distributed in a form we can invoke from CI without a Go toolchain
+  (release binaries are believed to exist; not checked).
+- Whether protobuf-net's schema output is faithful enough that a `.proto` emitted from a code-first
+  model round-trips through another language's codegen to the same field numbers *and names*. Believed
+  yes — it is what protobuf-net.Grpc.Reflection already relies on — but it has never been the *interop*
+  contract before, and JSON would make it one. Irrelevant unless JSON happens.
+- Whether `Grpc.AspNetCore.Web`'s HTTP/2-check relaxation is reachable by a third-party middleware, which
+  option (2) would depend on. Only matters if (2) is pursued, and I recommend it is not.
+- Sizing of the JSON codec. Called "the majority of the effort" on judgement, not on a spike.
