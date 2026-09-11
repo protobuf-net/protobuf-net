@@ -5751,6 +5751,79 @@ replaces a silent data change with a compile error, for the one shape that could
 `src/protobuf-net.Core/CompatibilitySuppressions.xml`, which explains itself and warns against
 regenerating it wholesale to make a build pass.
 
+#### Stage 4, continued (2026-09-11): 372 -> 225, and what the remainder is made of
+
+Picked up after merging current `v4` in (the branch predates the main merge, xunit/MTP, the .NET 11
+SDK and B53; that merge cost **3** sites). Five techniques did most of the work, and the first three
+generalise to stages 5 and 6:
+
+- **a null guard the compiler believes.** `if (x is null) ThrowHelper.ThrowArgumentNullException(...)`
+  does not establish non-nullness, it **destroys** it: testing a value for null widens it to
+  maybe-null for the rest of the method, so the guard whose purpose is to prove the value is there is
+  exactly what makes the compiler doubt it. `[DoesNotReturn]` is the usual answer and is closed to us
+  (B48 measured it as 4 warnings and 47 KB worse), but **`[NotNull]` as a post-condition costs
+  nothing** - it is flow analysis only and emits no IL. `ThrowHelper.ThrowIfNull<T>([NotNull] T?,
+  string)` now carries it, with one CS8777 suppression inside that single method standing in for the
+  warning at every call site. 24 guards swept across 11 files. The same tool works on a `ref`:
+  `PrepareDeserialize(object?, [NotNull] ref Type?)` retired the repeat check in four Deserialize
+  overloads;
+- **a pooled field is not nullable, it has a null WINDOW.** `StreamProtoWriter.dest`/`ioBuffer` were
+  `?` to describe the gap between `Cleanup` and the next rent, which put a null test on ~30 uses for
+  a state none of them can be in. Declared non-nullable with one `null!` at the clearing site - the
+  convention `ProtoReader.State.Raw.cs` already set for its leased `_buffer`. **30 sites for two
+  declarations**, the best ratio found;
+- **a loop that walks a chain must not walk the parameter.** `type = type.BaseType` inside three
+  `DynamicStub` loops is what made each method's own argument maybe-null. The walk gets a local;
+  the parameter keeps meaning what it says;
+- **check whether the `?` was ever true.** `SlowGet` was declared `DynamicStub?` and returns a stub on
+  every path, which was also why `Get` could not promise one. One wrong `?` cost two warnings and
+  made a hot path look fallible;
+- **`!` to assert an invariant the compiler cannot see is not the same as `!` to hide one it can.**
+  The `ISerializer<T?>` forwarders call `.Value` deliberately - the writer only reaches them when the
+  value is present, and `GetValueOrDefault()` would silently write a zero. That decision was already
+  written in `PrimaryTypeProvider.Primitives.cs`; its suppression simply closed in the wrong place,
+  at `char?`, leaving the identical shape warning in eleven other files.
+
+**A real bug fell out**, in `TypeModel.Formatter`: the guard on `type` reported `nameof(model)`. It
+survived the sweep precisely because the sweep only rewrote guards whose tested variable and `nameof`
+agreed - a mismatch was the one thing it would not touch.
+
+##### The blocker: `T?` on an unconstrained type parameter cannot be used yet
+
+**`protobuf-net.BuildTools` compiles Core's sources in with `<Nullable>` unset**, and there `T?` on an
+unconstrained `T` resolves as `Nullable<T>` and fails **CS0453** - an *error*, so it breaks that build
+rather than adding noise. Found by trying it on `TypeModel.InputOutput.cs`'s three
+`IProtoInput<T>.Deserialize` implementations; reverted.
+
+That is not a detail, it is the shape of what is left. **49 of the remaining 225 sites are the
+unconstrained-generic families** - `RepeatedSerializer` (+`.Immutable`), `MapSerializer`,
+`TypeHelperT`, `KeyValuePairSerializer` - and they all want the same tool. **Stage 6 (BuildTools)
+therefore has to come before the end of stage 4**, which inverts the sequencing below; the
+`CS8632` `NoWarn` those projects carry is the same knot.
+
+##### Two questions that are design calls, not annotations - owed to a human
+
+- **`ISerializer<T>.Read(ref State state, T value)`.** `value` is the merge seed and is routinely
+  `default`/null, so `T?` is the truthful annotation - and it is the single most common callee in
+  what remains. The cost is that every implementor that declares `T value` gets **CS8767**, and the
+  implementors include **every generated model**, so the warning would land in consumers' builds
+  until the generator emits the matching annotation. The sequencing already defers the generator
+  ("a separate later tranche, also Marc's call"), so this belongs with it rather than here;
+- **`ISerializationContext.Model` is declared `TypeModel` and the implementations store a
+  `TypeModel?`.** Null is genuinely reachable - the constructors take `TypeModel? model`, the null
+  writer is built from one, and `ResolveSerializer` handles a null model - so either the interface
+  should say `TypeModel?`, or the implementations should coalesce to `DefaultModel`, which is a
+  **runtime behaviour change** rather than an annotation. Left alone deliberately; annotating the
+  backing fields alone just moves the warning to the property.
+
+##### Where the rest sits
+
+`Meta/TypeModel.cs` (47), `ProtoReader.State.ReadMethods.cs` (26), `Internal/DynamicStub.cs` (13),
+then a tail. `CS8604` is still the largest code at 89, spread thin; the leverage is spent and what
+is left really is one question at a time, which is what the 2026-08-26 note predicted.
+
+Gates at 225: traversal 0 errors, `dotnet test Build.csproj` **5504 / 0 failed**.
+
 #### Sequencing
 
 1. ~~pilot on a small library~~ — **done**, ServiceModel;
