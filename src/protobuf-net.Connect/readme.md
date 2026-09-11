@@ -128,7 +128,7 @@ server mode, declaring binary (`CODEC_PROTO`) support over HTTP/1.1 and HTTP/2:
 
 | | |
 | --- | --- |
-| **200 / 207** | passing |
+| **207 / 207** | passing |
 
 Declared unsupported, and therefore not counted: JSON, compression, TLS, and Connect GET. Those are
 recorded as gaps rather than hidden — see `notes/connect/findings.md`.

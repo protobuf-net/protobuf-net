@@ -104,6 +104,13 @@ public sealed class ConformanceServiceImpl : ConformanceService.ConformanceServi
 
             pending.Add(message);
 
+            // In FULL DUPLEX the caller sends a request and then waits for its response before sending
+            // more - so a server that keeps reading until the request stream ends waits forever for
+            // messages the caller will not send until it hears back. When there is nothing left to send
+            // and a failure is defined, that failure IS the response, and it has to go out now rather
+            // than after a stream end that never comes.
+            if (fullDuplex && responses.Count == 0 && definition?.Error is not null) break;
+
             // interleaved: one response per request, as they arrive
             if (fullDuplex && responses.Count > 0)
             {

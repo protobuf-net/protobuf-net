@@ -81,6 +81,12 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
             {
                 return;
             }
+            catch (OperationCanceledException ex)
+            {
+                // ...whereas this one is our own connect-timeout-ms firing, which the caller asked for
+                failure = new ConnectException(
+                    ConnectCode.DeadlineExceeded, "The call exceeded its deadline.", innerException: ex);
+            }
             catch (Exception ex)
             {
                 failure = new ConnectException(ConnectCode.Internal, null, innerException: ex);
@@ -92,8 +98,14 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
                 ConnectEnvelope.WriteMessage(response.BodyWriter, codec, reply!, _method.ResponseCodec);
             }
 
+            // http.RequestAborted, NOT the call's token. The call's token carries the deadline, so on a
+            // timeout it is already cancelled - and the terminating envelope is precisely how the
+            // deadline gets reported. Writing it with that token throws, the endpoint's catch writes a
+            // SECOND terminator, and the caller sees "corrupt response: N extra bytes after end of
+            // stream" instead of deadline_exceeded. RequestAborted fires only when the client has gone,
+            // at which point there is nobody left to tell.
             await EndStreamWriter
-                .WriteAsync(response.BodyWriter, failure, context.ResponseTrailers, context.CancellationToken)
+                .WriteAsync(response.BodyWriter, failure, context.ResponseTrailers, http.RequestAborted)
                 .ConfigureAwait(false);
         }
     }

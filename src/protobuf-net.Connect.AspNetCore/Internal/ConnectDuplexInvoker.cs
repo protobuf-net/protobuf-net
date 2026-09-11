@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO.Pipelines;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Server.Kestrel.Core.Features;
 
 namespace ProtoBuf.Connect.AspNetCore.Internal
 {
@@ -53,6 +54,21 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
         public override async Task InvokeAsync(
             HttpContext http, TImplementation service, ConnectCodec codec, ConnectServerCallContext context)
         {
+            // Kestrel enforces a MINIMUM REQUEST BODY DATA RATE, and a full-duplex call violates it as a
+            // matter of course: the caller holds the request stream open while it waits for responses, so
+            // there are legitimately long gaps with no request bytes. Kestrel's answer is to abort the
+            // body - "Reading the request body timed out due to data arriving too slowly" - which faults
+            // the HTTP/2 connection and reaches the caller as a GOAWAY with INTERNAL_ERROR, losing the
+            // status the service was in the middle of reporting.
+            //
+            // Relaxed per REQUEST rather than per server, so the protection stays on for every other
+            // endpoint; this is the same accommodation long-running streaming needs generally, and is
+            // exactly what the rate limit was not designed for.
+            if (http.Features.Get<IHttpMinRequestBodyDataRateFeature>() is { } dataRate)
+            {
+                dataRate.MinDataRate = null;
+            }
+
             var requests = EnvelopedRequestReader.ReadAllAsync(
                 http.Request.BodyReader, codec, _method.RequestCodec, _method.ToString(), context.CancellationToken);
 
@@ -86,13 +102,25 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
             {
                 return;
             }
+            catch (OperationCanceledException ex)
+            {
+                // ...whereas this one is our own connect-timeout-ms firing, which the caller asked for
+                failure = new ConnectException(
+                    ConnectCode.DeadlineExceeded, "The call exceeded its deadline.", innerException: ex);
+            }
             catch (Exception ex)
             {
                 failure = new ConnectException(ConnectCode.Internal, null, innerException: ex);
             }
 
+            // http.RequestAborted, NOT the call's token. The call's token carries the deadline, so on a
+            // timeout it is already cancelled - and the terminating envelope is precisely how the
+            // deadline gets reported. Writing it with that token throws, the endpoint's catch writes a
+            // SECOND terminator, and the caller sees "corrupt response: N extra bytes after end of
+            // stream" instead of deadline_exceeded. RequestAborted fires only when the client has gone,
+            // at which point there is nobody left to tell.
             await EndStreamWriter
-                .WriteAsync(response.BodyWriter, failure, context.ResponseTrailers, context.CancellationToken)
+                .WriteAsync(response.BodyWriter, failure, context.ResponseTrailers, http.RequestAborted)
                 .ConfigureAwait(false);
         }
     }
