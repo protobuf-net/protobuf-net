@@ -73,8 +73,11 @@ namespace ProtoBuf.Internal
         int IMeasuringSerializer<DateOnly>.Measure(ISerializationContext context, WireType wireType, DateOnly value)
             => ProtoWriter.MeasureInt32(value.DayNumber);
 
+        // the nullable forwarder is only reached when the value is PRESENT, so `!` asserts rather
+        // than hides: GetValueOrDefault() here would silently write a zero. See the long-form note in
+        // Internal/PrimaryTypeProvider.Primitives.cs.
         int IMeasuringSerializer<DateOnly?>.Measure(ISerializationContext context, WireType wireType, DateOnly? value)
-            => ProtoWriter.MeasureInt32(value.Value.DayNumber);
+            => ProtoWriter.MeasureInt32(value!.Value.DayNumber);
 
         bool IValueChecker<TimeOnly>.HasNonTrivialValue(TimeOnly value) => value.Ticks != 0;
         bool IValueChecker<TimeOnly>.IsNull(TimeOnly value) => false;
@@ -85,7 +88,7 @@ namespace ProtoBuf.Internal
             => ProtoWriter.MeasureInt64(value.Ticks);
 
         int IMeasuringSerializer<TimeOnly?>.Measure(ISerializationContext context, WireType wireType, TimeOnly? value)
-            => ProtoWriter.MeasureInt64(value.Value.Ticks);
+            => ProtoWriter.MeasureInt64(value!.Value.Ticks);
     }
 }
 #endif

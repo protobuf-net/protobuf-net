@@ -89,8 +89,11 @@ namespace ProtoBuf.Serializers
         TEnum? ISerializer<TEnum?>.Read(ref ProtoReader.State state, TEnum? value)
             => Read(ref state, default);
         [MethodImpl(ProtoReader.HotPath)]
+        // the nullable forwarder is only reached when the value is PRESENT, so `!` asserts rather
+        // than hides: GetValueOrDefault() here would silently write a zero. See the long-form note in
+        // Internal/PrimaryTypeProvider.Primitives.cs.
         void ISerializer<TEnum?>.Write(ref ProtoWriter.State state, TEnum? value)
-            => Write(ref state, value.Value);
+            => Write(ref state, value!.Value);
 
         /// <summary>
         /// Deserialize an enum
@@ -151,7 +154,7 @@ namespace ProtoBuf.Serializers
         };
 
         int IMeasuringSerializer<TEnum?>.Measure(ISerializationContext context, WireType wireType, TEnum? value)
-            => Measure(context, wireType, value.Value);
+            => Measure(context, wireType, value!.Value);
     }
 
     internal sealed class EnumSerializerSByte<T> : EnumSerializer<T, sbyte> where T : unmanaged

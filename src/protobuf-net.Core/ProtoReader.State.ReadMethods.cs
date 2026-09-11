@@ -1462,9 +1462,17 @@ namespace ProtoBuf
                 throw AddErrorData(new ProtoException("No " + desc + " enum is mapped to the wire-value " + value.ToString()), ref this);
             }
 
-            internal static Exception? AddErrorData(Exception exception, ref State state)
+            /// <remarks>
+            /// Returns the same exception it was given, so the callers can <c>throw</c> the result.
+            /// The former <c>exception is not null</c> test is gone: the parameter is not nullable,
+            /// every caller passes a freshly constructed or freshly caught exception, and the test
+            /// was what made the RETURN nullable - which turned all six `throw AddErrorData(...)`
+            /// sites into CS8597 "thrown value may be null". A null argument now faults here rather
+            /// than at the `throw`, which is the same NullReferenceException either way.
+            /// </remarks>
+            internal static Exception AddErrorData(Exception exception, ref State state)
             {
-                if (exception is not null && !exception.Data.Contains("protoSource"))
+                if (!exception.Data.Contains("protoSource"))
                 {
                     exception.Data.Add("protoSource", string.Format("tag={0}; wire-type={1}; offset={2}; depth={3}",
                         state._fieldNumber, state._wireType, state.GetPosition(), state._depth));
