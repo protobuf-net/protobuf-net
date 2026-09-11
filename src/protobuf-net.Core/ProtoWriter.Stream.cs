@@ -39,7 +39,11 @@ namespace ProtoBuf
 
         private class StreamProtoWriter : ProtoWriter
         {
-            private Stream? dest;
+            // non-null for the whole life of an ACTIVE writer: set by CreateStreamProtoWriter and
+            // cleared in Cleanup, which is the pooled-object window. Declared non-nullable so the
+            // ~30 uses do not each carry a null test for a state they cannot be in; the one place
+            // it is untrue says so with null!.
+            private Stream dest;
             private int flushLock;
 
             private protected override bool ImplDemandFlushOnDispose => true;
@@ -123,7 +127,7 @@ namespace ProtoBuf
                 base.Cleanup();
                 // importantly, this does **not** own the stream, and does not dispose it
                 _nullWriter.Cleanup();
-                dest = null;
+                dest = null!; // dead until the next CreateStreamProtoWriter
                 BufferPool.ReleaseBufferToPool(ref ioBuffer);
             }
 
@@ -147,7 +151,7 @@ namespace ProtoBuf
             // active over the buffer, which is the museum API's world (one State per call, see
             // the bridge on ProtoWriter). Everything else asks Pending.
 
-            private byte[]? ioBuffer;
+            private byte[] ioBuffer; // non-null while active - see dest
             private int ioIndex;
 
             /// <summary>

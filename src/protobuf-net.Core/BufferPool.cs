@@ -54,10 +54,20 @@ namespace ProtoBuf
             buffer = newBuffer;
         }
 
+        /// <summary>
+        /// Returns <paramref name="buffer"/> to the pool and clears the caller's reference.
+        /// </summary>
+        /// <remarks>
+        /// The parameter is deliberately NOT <c>ref byte[]?</c>: callers hold the buffer in a field
+        /// that is non-null for the whole life of an active object, and widening it here would push
+        /// a null check onto every one of their uses. The null written back is the pooled-object
+        /// convention - the field is null only between teardown and the next rent - so it is stated
+        /// once, here, with <c>null!</c>.
+        /// </remarks>
         internal static void ReleaseBufferToPool(ref byte[] buffer)
         {
             var tmp = buffer;
-            buffer = null;
+            buffer = null!;
             if (tmp is not null) _pool.Return(tmp);
         }
     }
