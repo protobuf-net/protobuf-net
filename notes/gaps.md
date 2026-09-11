@@ -5751,7 +5751,7 @@ replaces a silent data change with a compile error, for the one shape that could
 `src/protobuf-net.Core/CompatibilitySuppressions.xml`, which explains itself and warns against
 regenerating it wholesale to make a build pass.
 
-#### Stage 4, continued (2026-09-11): 372 -> 219, and what the remainder is made of
+#### Stage 4, continued (2026-09-11): 372 -> 182, and what the remainder is made of
 
 Picked up after merging current `v4` in (the branch predates the main merge, xunit/MTP, the .NET 11
 SDK and B53; that merge cost **3** sites). Five techniques did most of the work, and the first three
@@ -5849,11 +5849,30 @@ therefore has to come before the end of stage 4**, which inverts the sequencing 
   **runtime behaviour change** rather than an annotation. Left alone deliberately; annotating the
   backing fields alone just moves the warning to the property.
 
+##### Three more tools, added as the grind went on
+
+- **`[return: NotNullIfNotNull(nameof(x))]`** for null-in-null-out, which is checkable and travels
+  with the method instead of with one of its callers. `Intern` and `DynamicStub.GetEffectiveType`
+  both had a `?` return whose only null path was unreachable for a non-null argument; the attribute
+  retired a `!` at the call site *and*, for `GetEffectiveType`, the CS8777 that
+  `PrepareDeserialize`'s own `[NotNull]` was failing;
+- **`[NotNullWhen(true)] out T?`** for the `TryGet` shape - `ResolveUniqueEnumerableT` assigns its out
+  parameter only on success, and saying so retires the re-test in every caller. The rest of Core's
+  `Try*`/`Can*` methods hand back value types, where there is nothing to annotate;
+- **check whether the `?` was ever true**, which keeps paying: `Singleton` was `ref T?` over `T[]`
+  storage (12 sites for one line), `SlowGet` never returned null, and `GetWireType` dereferenced its
+  `Type?` on the first line with no guard.
+
 ##### Where the rest sits
 
-`Meta/TypeModel.cs` (47), `ProtoReader.State.ReadMethods.cs` (26), `Internal/DynamicStub.cs` (13),
-then a tail. `CS8604` is still the largest code at 89, spread thin; the leverage is spent and what
-is left really is one question at a time, which is what the 2026-08-26 note predicted.
+`Meta/TypeModel.cs` (35), `ProtoReader.State.ReadMethods.cs` (23), `Internal/DynamicStub.cs` (13),
+`MapSerializer` (12), then a tail. Of the 182, **21 are the two deferred widens** and **7 are the
+`Model` question**; the other ~154 are one question at a time, which is what the 2026-08-26 note
+predicted.
+
+**The CS0453 blocker turned out to be far narrower than first feared** - it hits only *explicit
+interface implementations*, not `T?` generally - so the collection families were never blocked by it
+at all, and most of them are now done.
 
 **BuildTools and Legacy are in a nullable ANNOTATION context now** (`<Nullable>annotations</Nullable>`),
 which retired the `CS8632` `NoWarn` both carried and revealed four latent mismatches, all fixed:
@@ -5865,7 +5884,7 @@ which retired the `CS8632` `NoWarn` both carried and revealed four latent mismat
 `--no-incremental` and ~275 incrementally, because a project that does not recompile reports nothing.
 The low number is the artefact, and it is reassuring in exactly the wrong direction.
 
-Gates at 219: traversal 0 errors; `dotnet test Build.csproj` **5504 / 0 failed**; `AotDifferential`
+Gates at 182: traversal 0 errors; `dotnet test Build.csproj` **5504 / 0 failed**; `AotDifferential`
 3137 compared, 100% match; `AotGrpcMetadataDiff` 0 failing; `AotSmoke`, `AotNodaTimeSmoke` and
 `AotGrpcSmoke` all passed; Release packing build with package validation clean.
 

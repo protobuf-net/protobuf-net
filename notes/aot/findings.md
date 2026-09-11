@@ -75,14 +75,14 @@ closed on 2026-09-11**. The live ones:
 
 - **B51 (NRT)** - ServiceModel and `protobuf-net.Reflection` are **done and merged**, and protogen
   now EMITS annotations (C# only; VB has no NRT). **Stage 4, `protobuf-net.Core`, is IN FLIGHT on
-  `nrt-core` and is the live task: 573 -> 225 sites.** The recorded sizing in that entry was ~4x too
+  `nrt-core` and is the live task: 573 -> 182 sites.** The recorded sizing in that entry was ~4x too
   high and has been corrected by measurement - the whole remaining rollout is ~1,250 sites, not
   5,125. What is left is per-site and semantic; the sweepable phase is over.
 
   **Two things from 2026-09-11 change the plan**, both in B51's "Stage 4, continued" section.
   **`T?` on an unconstrained type parameter fails CS0453 in BuildTools and compiles in Core, on the
   identical source, and nobody knows why yet** - `/nullable:enable /langversion:latest` in both, no
-  directives, one interface definition. That blocks 49 of the 219 (the generic collection families).
+  directives, one interface definition. It hits only EXPLICIT INTERFACE IMPLEMENTATIONS, not T? generally, so it blocks far less than first thought - the collection families were never blocked by it and are now done.
   The nullable context was the obvious culprit and has been ruled out by test; BuildTools is in an
   annotation context now regardless, which retired the `CS8632` `NoWarn`. And **two
   items are design calls owed to a human rather than annotations**: `ISerializer<T>.Read`'s merge
