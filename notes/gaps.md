@@ -6036,3 +6036,35 @@ The change would be one line — glob `*.fsproj`/`*.vbproj` too — but it newly
 every CI run, which is a different thing from a one-line diff: `VBTest` is `netstandard2.0` at
 `LangVersion 14` and has never been built by anything automated, so "add it and see" is a fair
 description of the risk. If it is ever done, do the two separately.
+
+
+### B56. Two dependabot asks closed themselves undecided — **won't do** (Marc, 2026-09-11)
+
+When #1347 merged, dependabot closed **#1342** and **#1343** on its own with *"Looks like X is no
+longer updatable, so this is no longer needed"* — an inference from the manifest having changed
+under it, not from either ask being satisfied. Neither was overtaken. Recorded here because a PR
+that closes itself leaves nothing behind, and dependabot will raise both again.
+
+Both are major bumps arriving awkwardly, which is the reason for declining them:
+
+- **#1343 — `System.ServiceModel.Primitives` `[8.1.2]` → `[10.0.652802]`.** Not an API question. WCF
+  Client majors track .NET **LTS majors** rather than semver, so v8 *is* the net8.0 package and v10
+  *is* the net10.0 one; each ships only its own TFM's asset plus a netstandard2.0 stub with no usable
+  surface. Point net8.0 at v10 and it restores happily, then fails to compile against
+  `System.ServiceModel.Description`/`.Dispatcher` — which reads as "the types were deleted" and is
+  really "you were handed the stub". v4 answers it by **multi-targeting** (#1341,
+  `net462;net8.0;net10.0`, with net8.0 held at `[8.1.2]` by `VersionOverride`), which is a design
+  change rather than a bump. `main` stays on 8.1.2.
+- **#1342 — `System.Collections.Immutable` 6.0.0 → 10.0.11 in `protobuf-net.BuildTools`.** The 6.0.0
+  is **transitive**, not declared: verified from `project.assets.json`, it is
+  `Microsoft.CodeAnalysis.Common/4.3.1` that asks for it — i.e. it is a property of the Roslyn
+  baseline this file elsewhere forbids revving speculatively. Dependabot's proposed fix is to *add*
+  an explicit `PackageReference` to force it up, and that is the awkward part: this is an
+  **analyzer**, loaded into the compiler's own load context alongside whatever
+  `System.Collections.Immutable` the host already has. Forcing a newer one there is the class of
+  change that works locally and breaks in someone's IDE, and it buys nothing — nothing in BuildTools
+  needs an API added after 6.0.0.
+
+The general rule these two illustrate, worth more than either: **a transitive version is usually a
+fact about a pinned dependency, not a thing to override.** The lever is the pin, and here the pin is
+deliberate.
