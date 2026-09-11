@@ -10,7 +10,7 @@
     <PackageVersion Include="System.Reflection.Emit.Lightweight" Version="4.7.0" />
     <PackageVersion Include="System.IO.Pipelines" Version="10.0.12" />
     <!-- note: some key types get removed in 10.* -->
-    <PackageVersion Include="System.ServiceModel.Primitives" Version="[8.1.2]" />
+    <PackageVersion Include="System.ServiceModel.Primitives" Version="[10.0.652802]" />
   </ItemGroup>
   <ItemGroup>
     <PackageVersion Include="FSharp.Core" Version="11.0.100" />
