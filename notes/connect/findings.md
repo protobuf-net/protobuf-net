@@ -2977,6 +2977,63 @@ Code-first JSON, which is the harder half and unchanged by any of this — §46 
 field-name risk that gates it. `GoogleJsonConnectCodec` refuses a non-`IMessage` payload with a message
 saying so, rather than producing something plausible and wrong.
 
+## 48. The field-name risk is real but inverted — and the trap is the "obvious" fix
+
+§46 recorded that JSON makes the proto field **name** an interop contract for the first time, and that
+this gates the code-first design. Settled, by measurement, and the answer is better than feared in a way
+that depends on one detail almost everyone gets wrong.
+
+**What protobuf-net emits.** `Serializer.GetProto<T>()` puts the **C# member name verbatim** into the
+schema — not snake_case:
+
+```proto
+message Shapes {
+   string UserName = 1;
+   int64 BigNumber = 5;
+   repeated int32 Many = 8 [packed = false];
+}
+```
+
+**What protojson derives from a field name.** Measured against Google.Protobuf, with the spellings
+protobuf-net actually produces:
+
+| proto field | JSON name |
+| --- | --- |
+| `UserName` | `UserName` |
+| `already_snake` | `alreadySnake` |
+| `lowerCamel` | `lowerCamel` |
+| `Mixed_Case_Name` | `MixedCaseName` |
+
+**`ToJsonName` does not lowercase the first letter.** It removes underscores and uppercases the letter
+after each one; that is the whole algorithm. A field already named `UserName` keeps `UserName` in JSON.
+
+### Why that resolves the risk
+
+The JSON name is derived *mechanically from the proto field name*, and both ends see the same proto
+field name — ours from the model, theirs from the `.proto` we generated. So the two agree **whatever
+the spelling is**, without anyone having to choose a convention.
+
+So the requirement on a code-first JSON writer is exact rather than vague: **implement `ToJsonName` as
+protoc does, and apply it to the same name `GetProto` emits.**
+
+### The trap, which is the obvious thing to write
+
+"Canonical JSON is lowerCamelCase" is the universal summary, and it is wrong at the first character.
+Writing the obvious `char.ToLowerInvariant(name[0]) + name[1..]` gives `userName` where every other
+implementation produces `UserName` — a silent interop break against a `.proto` generated from our own
+schema, on every field of every code-first contract. It would pass any round-trip test we wrote
+against ourselves, which is exactly the class of bug conformance exists to catch (§44, §47).
+
+Also confirmed in the same run, and worth having pinned: **`int64` really is a JSON string**
+(`"BigNumber": "42"`), so the scalar rules are not optional decoration either.
+
+### Consequence for the guidance
+
+The advice in §46 — "a code-first contract wanting JSON interop should pin its names" — is **downgraded
+from necessary to stylistic**. Pinning `[ProtoMember(Name = "user_name")]` gives a `.proto` that reads
+like everyone else's, and a JSON name of `userName`; not pinning gives `UserName` on both sides and
+interoperates just as correctly. It is a schema-aesthetics choice, not a correctness one.
+
 ## 12. Unverified — check before committing to any of this
 
 Everything below is assumption or inference, not measurement:
@@ -2989,10 +3046,11 @@ Everything below is assumption or inference, not measurement:
 - protobuf-net map member determinism, which GET-as-cache-key depends on.
 - The exact CORS header set browsers need for Connect (`connect-protocol-version`, `connect-timeout-ms`
   and friends must be allowed, and exposed on responses). Only matters once JSON exists.
-- Whether protobuf-net's schema output is faithful enough that a `.proto` emitted from a code-first
-  model round-trips through another language's codegen to the same field numbers *and names*. Believed
-  yes — it is what protobuf-net.Grpc.Reflection already relies on — but it has never been the *interop*
-  contract before, and JSON would make it one. Irrelevant unless JSON happens.
+- ~~Whether protobuf-net's schema output is faithful enough that a `.proto` emitted from a code-first
+  model round-trips through another language's codegen to the same field numbers *and names*.~~
+  **Settled in §48**: the names agree automatically, because both ends derive the JSON name
+  mechanically from the same proto field name. The requirement is to implement protoc's `ToJsonName`
+  exactly — which notably does *not* lowercase the first letter.
 - Whether `Grpc.AspNetCore.Web`'s HTTP/2-check relaxation is reachable by a third-party middleware, which
   option (2) would depend on. Only matters if (2) is pursued, and I recommend it is not.
 - Sizing of the JSON codec. Called "the majority of the effort" on judgement, not on a spike.
