@@ -409,7 +409,11 @@ await checks.Run("an unknown codec is 415", async () =>
     Checks.Require((int)response.StatusCode == 415, $"HTTP 415, was {(int)response.StatusCode}");
     Checks.Require(response.Content.Headers.ContentType?.MediaType == "application/json", "the error is JSON");
     var body = await response.Content.ReadAsStringAsync();
-    Checks.Require(body.Contains("\"unimplemented\""), $"code unimplemented, body was {body}");
+    // `unknown`, not `unimplemented`, and that is the protocol's choice rather than ours: 415 is absent
+    // from Connect's status-to-code table, so a caller that falls back on the status reads `unknown` -
+    // and a caller that parses the body must not read something different. The conformance suite pins
+    // it ("unknown, mapped from 415 status code"). The explanatory message is kept either way.
+    Checks.Require(body.Contains("\"unknown\""), $"code unknown, body was {body}");
     Checks.Require(body.Contains("proto"), "the supported codecs are named");
     return body;
 });

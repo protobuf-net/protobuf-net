@@ -83,6 +83,8 @@ namespace ProtoBuf.Connect.AspNetCore
                 // One error path for the whole call, per the constraint recorded in notes/connect/findings.md:
                 // three separate throw sites would not converge once streaming exists.
                 CancellationTokenSource? timeout = null;
+                ConnectCodec? codec = null;
+                ConnectServerCallContext? callContext = null;
                 try
                 {
                     if (options.RequireProtocolVersionHeader
@@ -94,7 +96,8 @@ namespace ProtoBuf.Connect.AspNetCore
                             StatusCodes.Status400BadRequest);
                     }
 
-                    var codec = SelectCodec(http, options, method.Type);
+                    codec = SelectCodec(http, options, method.Type);
+                    RejectUnsupportedCompression(http, method.Type);
 
                     var cancellationToken = http.RequestAborted;
                     TimeSpan? span = TryGetTimeout(http, out var parsed) ? parsed : null;
@@ -105,7 +108,7 @@ namespace ProtoBuf.Connect.AspNetCore
                         cancellationToken = timeout.Token;
                     }
 
-                    var callContext = new ConnectServerCallContext(
+                    callContext = new ConnectServerCallContext(
                         http, method.Path, ConnectServerCallContext.DeadlineFrom(span), cancellationToken,
                         isUnary: method.Type == ConnectMethodType.Unary);
                     var service = http.RequestServices.GetRequiredService<TImplementation>();
@@ -114,13 +117,13 @@ namespace ProtoBuf.Connect.AspNetCore
                 }
                 catch (ConnectException ex)
                 {
-                    await TryWriteError(http, ex).ConfigureAwait(false);
+                    await TryWriteError(http, ex, method.Type, codec, callContext).ConfigureAwait(false);
                 }
                 catch (Grpc.Core.RpcException ex)
                 {
                     // how a contract-first service states a failure; it is a deliberate status, not a fault,
                     // so it must not fall through to the Internal catch-all below
-                    await TryWriteError(http, ConnectException.FromRpcException(ex)).ConfigureAwait(false);
+                    await TryWriteError(http, ConnectException.FromRpcException(ex), method.Type, codec, callContext).ConfigureAwait(false);
                 }
                 catch (OperationCanceledException) when (http.RequestAborted.IsCancellationRequested)
                 {
@@ -130,7 +133,8 @@ namespace ProtoBuf.Connect.AspNetCore
                 {
                     // ...whereas this one is our own connect-timeout-ms firing, which the caller asked for
                     await TryWriteError(http, new ConnectException(
-                        ConnectCode.DeadlineExceeded, "The call exceeded its deadline.", innerException: ex)).ConfigureAwait(false);
+                        ConnectCode.DeadlineExceeded, "The call exceeded its deadline.", innerException: ex),
+                        method.Type, codec, callContext).ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {
@@ -138,7 +142,7 @@ namespace ProtoBuf.Connect.AspNetCore
                         ? ex.GetType().Name + ": " + ex.Message
                         : null; // an unhandled exception's message is not for the caller to read
                     await TryWriteError(http, new ConnectException(
-                        ConnectCode.Internal, message, innerException: ex)).ConfigureAwait(false);
+                        ConnectCode.Internal, message, innerException: ex), method.Type, codec, callContext).ConfigureAwait(false);
                 }
                 finally
                 {
@@ -151,10 +155,7 @@ namespace ProtoBuf.Connect.AspNetCore
             var contentType = http.Request.ContentType;
             if (!ConnectContentType.TryParse(contentType, out var parsed))
             {
-                throw new ConnectException(
-                    ConnectCode.Unimplemented,
-                    $"'{contentType}' is not a Connect content-type.",
-                    StatusCodes.Status415UnsupportedMediaType);
+                throw ConnectException.UnsupportedMediaType($"'{contentType}' is not a Connect content-type.");
             }
 
             // the content-type states the framing, and it has to agree with the method's shape: unary is
@@ -162,12 +163,10 @@ namespace ProtoBuf.Connect.AspNetCore
             var wantsEnvelopes = type != ConnectMethodType.Unary;
             if (parsed.IsEnveloped != wantsEnvelopes)
             {
-                throw new ConnectException(
-                    ConnectCode.Unimplemented,
+                throw ConnectException.UnsupportedMediaType(
                     wantsEnvelopes
                         ? $"'{contentType}' is the unary framing, but this method is {type}; use 'application/connect+{parsed.CodecName}'."
-                        : $"'{contentType}' asks for enveloped framing, but this method is unary; use 'application/{parsed.CodecName}'.",
-                    StatusCodes.Status415UnsupportedMediaType);
+                        : $"'{contentType}' asks for enveloped framing, but this method is unary; use 'application/{parsed.CodecName}'.");
             }
 
             foreach (var codec in options.Codecs)
@@ -175,10 +174,8 @@ namespace ProtoBuf.Connect.AspNetCore
                 if (string.Equals(codec.Name, parsed.CodecName, StringComparison.OrdinalIgnoreCase)) return codec;
             }
 
-            throw new ConnectException(
-                ConnectCode.Unimplemented,
-                $"The codec '{parsed.CodecName}' is not supported; this server accepts: {string.Join(", ", Names(options))}.",
-                StatusCodes.Status415UnsupportedMediaType);
+            throw ConnectException.UnsupportedMediaType(
+                $"The codec '{parsed.CodecName}' is not supported; this server accepts: {string.Join(", ", Names(options))}.");
 
             static IEnumerable<string> Names(ConnectServerOptions options)
             {
@@ -207,7 +204,26 @@ namespace ProtoBuf.Connect.AspNetCore
             return true;
         }
 
-        private static async Task TryWriteError(HttpContext http, ConnectException error)
+        /// <summary>
+        /// Reports a failure in whichever form the caller is able to read.
+        /// </summary>
+        /// <remarks>
+        /// <b>The shape decides the form, and getting this wrong is invisible from our side.</b> A unary
+        /// caller reads a non-200 with a JSON error body. A <em>streaming</em> caller is reading
+        /// envelopes: it looks for the terminating one and parses the error out of that, so a bare JSON
+        /// body is not something it can find at all - it reports "unexpected end of JSON input" and falls
+        /// back to guessing from the HTTP status, which is how a deliberate <c>unimplemented</c> reached
+        /// the conformance suite as <c>internal</c>.
+        /// <para>
+        /// So a streaming call answers <c>200</c> and puts the error in a terminating envelope <em>even
+        /// when it failed before the stream began</em> - a request that could not be read, a message that
+        /// arrived compressed, a cardinality the method does not allow. There is no "too early for the
+        /// stream" case; there is only the framing the caller is reading.
+        /// </para>
+        /// </remarks>
+        private static async Task TryWriteError(
+            HttpContext http, ConnectException error, ConnectMethodType type, ConnectCodec? codec,
+            ConnectServerCallContext? context)
         {
             if (http.Response.HasStarted)
             {
@@ -217,7 +233,52 @@ namespace ProtoBuf.Connect.AspNetCore
                 return;
             }
 
-            await ConnectErrorWriter.WriteAsync(http.Response, error).ConfigureAwait(false);
+            // no codec means content negotiation itself failed, and that is answered by status alone -
+            // there is no agreed framing to answer in
+            if (type == ConnectMethodType.Unary || codec is null)
+            {
+                // a failed call still carries whatever trailing metadata the handler set, and for a unary
+                // call that is a `trailer-` prefixed header - so it has to be written before the body
+                // commits, exactly as on the success path
+                context?.FlushTrailers();
+                await ConnectErrorWriter.WriteAsync(http.Response, error).ConfigureAwait(false);
+                return;
+            }
+
+            http.Response.StatusCode = StatusCodes.Status200OK;
+            http.Response.ContentType = codec.ContentTypeFor(type);
+
+            // ...and for a streaming call the same values travel in the terminating envelope
+            await EndStreamWriter
+                .WriteAsync(http.Response.BodyWriter, error, context?.ResponseTrailers, http.RequestAborted)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Refuses a request whose body is compressed, since no compression is implemented yet.
+        /// </summary>
+        /// <remarks>
+        /// The header differs by shape - <c>content-encoding</c> for a unary body, and Connect's own
+        /// <c>connect-content-encoding</c> for the enveloped shapes, which exists precisely so that the
+        /// envelope payloads can be compressed independently of the HTTP body. Ignoring either means
+        /// handing compressed bytes to a codec and reporting the resulting garbage as a parse error.
+        /// </remarks>
+        private static void RejectUnsupportedCompression(HttpContext http, ConnectMethodType type)
+        {
+            var name = type == ConnectMethodType.Unary ? "content-encoding" : "connect-content-encoding";
+            var header = http.Request.Headers[name];
+            if (header.Count == 0) return;
+
+            var encoding = header.ToString();
+            if (string.IsNullOrEmpty(encoding)
+                || string.Equals(encoding, "identity", StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            throw new ConnectException(
+                ConnectCode.Unimplemented,
+                $"The '{encoding}' compression is not supported; this server accepts 'identity' only.");
         }
 
         private sealed class CompositeEndpointConventionBuilder : IEndpointConventionBuilder

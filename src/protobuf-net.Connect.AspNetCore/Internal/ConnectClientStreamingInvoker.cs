@@ -46,6 +46,16 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
             var requests = EnvelopedRequestReader.ReadAllAsync(
                 http.Request.BodyReader, codec, _method.RequestCodec, _method.ToString(), context.CancellationToken);
 
+            // Status and content-type are set BEFORE the handler runs, and that ordering is load-bearing
+            // rather than tidy: a handler may send leading metadata, which commits the response, after
+            // which neither can be assigned - "StatusCode cannot be set because the response has already
+            // started", thrown after the response was under way and reaching the client as a reset
+            // connection. Setting them early is free, because assigning them does not itself commit; and
+            // there is nothing to decide later, since a streaming call answers 200 whatever happens.
+            var response = http.Response;
+            response.StatusCode = StatusCodes.Status200OK;
+            response.ContentType = codec.ContentTypeFor(ConnectMethodType.ClientStreaming);
+
             // A STREAMING call answers 200 whatever happens, and reports failure in its terminating
             // envelope - even when it fails before producing anything. It is tempting to let the
             // exception reach the endpoint's error path, since nothing has been written yet and that path
@@ -53,10 +63,10 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
             // explicit about it ("error-returns-success-http-code"). A client reading a streaming
             // response is looking for envelopes, and a bare JSON body is not one.
             ConnectException? failure = null;
-            TResponse? response = default;
+            TResponse? reply = default;
             try
             {
-                response = await _handler(service, requests, context).ConfigureAwait(false);
+                reply = await _handler(service, requests, context).ConfigureAwait(false);
                 failure = context.GetReportedFailure();
             }
             catch (ConnectException ex)
@@ -76,18 +86,14 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
                 failure = new ConnectException(ConnectCode.Internal, null, innerException: ex);
             }
 
-            var response2 = http.Response;
-            response2.StatusCode = StatusCodes.Status200OK;
-            response2.ContentType = codec.ContentTypeFor(ConnectMethodType.ClientStreaming);
-
             // the message only if the call succeeded; a failed one carries no payload at all
             if (failure is null)
             {
-                ConnectEnvelope.WriteMessage(response2.BodyWriter, codec, response!, _method.ResponseCodec);
+                ConnectEnvelope.WriteMessage(response.BodyWriter, codec, reply!, _method.ResponseCodec);
             }
 
             await EndStreamWriter
-                .WriteAsync(response2.BodyWriter, failure, context.ResponseTrailers, context.CancellationToken)
+                .WriteAsync(response.BodyWriter, failure, context.ResponseTrailers, context.CancellationToken)
                 .ConfigureAwait(false);
         }
     }

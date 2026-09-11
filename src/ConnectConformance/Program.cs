@@ -68,6 +68,19 @@ builder.Services.AddConnect(o =>
 builder.Services.AddSingleton<ConformanceServiceImpl>();
 
 var app = builder.Build();
+
+if (!string.IsNullOrEmpty(logPath))
+{
+    app.Use(async (ctx, next) =>
+    {
+        ctx.Response.OnStarting(() =>
+        {
+            try { lock (logPath!) File.AppendAllText(logPath, $"RESPONSE {ctx.Response.StatusCode} headers=[{string.Join(", ", ctx.Response.Headers.Keys)}]\n"); } catch { }
+            return Task.CompletedTask;
+        });
+        await next();
+    });
+}
 app.MapConnectService<ConformanceServiceImpl>(ConformanceService.BindService);
 
 await app.StartAsync();

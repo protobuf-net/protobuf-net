@@ -50,6 +50,23 @@ namespace ProtoBuf.Connect
         /// </summary>
         public bool CodeWasInferred { get; }
 
+        /// <summary>
+        /// A content-negotiation failure: HTTP 415, reported as <see cref="ConnectCode.Unknown"/>.
+        /// </summary>
+        /// <remarks>
+        /// The code is the protocol's, not a choice: 415 is absent from Connect's status-to-code table,
+        /// so a caller that has to fall back on the status reads <c>unknown</c> - the conformance suite
+        /// annotates the expectation "unknown, mapped from 415 status code". Reporting anything else here
+        /// hands one caller a different code than another, depending only on whether it parsed the body.
+        /// <para>
+        /// The explanatory body is kept regardless, and that is worth doing: both routes now agree on
+        /// <c>unknown</c>, so the message costs nothing in correctness and is the only thing that tells a
+        /// developer <em>which</em> content-type they should have sent.
+        /// </para>
+        /// </remarks>
+        internal static ConnectException UnsupportedMediaType(string message)
+            => new(ConnectCode.Unknown, message, 415);
+
         /// <summary>Creates a new <see cref="ConnectException"/>.</summary>
         public ConnectException(
             ConnectCode code,

@@ -34,20 +34,28 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
 
                 if (ConnectEnvelope.TryRead(ref buffer, out var flags, out var payload))
                 {
+                    T message;
                     try
                     {
-                        return Decode(codec, serializer, method, flags, payload);
+                        message = Decode(codec, serializer, method, flags, payload);
                     }
                     finally
                     {
-                        // anything after the single message is ignored: this shape declares one, and
-                        // reading further would be inventing cardinality the contract did not state
                         reader.AdvanceTo(buffer.Start, buffer.End);
                     }
+
+                    // ...and then confirm there is nothing after it. This shape declares exactly one
+                    // message, so a second is a protocol violation rather than something to ignore -
+                    // the suite tests for it by name ("server-stream/multiple-requests").
+                    await EnsureEndOfBodyAsync(reader, method, cancellationToken).ConfigureAwait(false);
+                    return message;
                 }
 
                 reader.AdvanceTo(buffer.Start, buffer.End);
-                if (result.IsCompleted) throw Truncated(method);
+
+                // an empty body is not a truncated message; it is a request with no message at all, which
+                // this shape also requires exactly one of ("server-stream/no-request")
+                if (result.IsCompleted) throw buffer.IsEmpty ? Missing(method) : Truncated(method);
             }
         }
 
@@ -92,8 +100,12 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
         {
             if ((flags & ConnectEnvelope.FlagCompressed) != 0)
             {
+                // `internal`, not `unimplemented`: the envelope claims compression that no
+                // connect-content-encoding negotiated, so the peer has contradicted itself rather than
+                // asked for something we lack. The conformance suite pins the distinction.
                 throw new ConnectException(
-                    ConnectCode.Unimplemented, "Compressed request messages are not implemented yet.");
+                    ConnectCode.Internal,
+                    $"A request message for '{method}' is flagged compressed, but no compression was negotiated.");
             }
 
             if ((flags & (ConnectEnvelope.FlagEndOfStream | ConnectEnvelope.FlagReserved)) != 0)
@@ -115,6 +127,38 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
                     innerException: ex);
             }
         }
+
+        /// <summary>Verifies the request body holds nothing beyond the message already read.</summary>
+        private static async Task EnsureEndOfBodyAsync(PipeReader reader, string method, CancellationToken cancellationToken)
+        {
+            while (true)
+            {
+                var result = await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
+                var buffer = result.Buffer;
+
+                if (ConnectEnvelope.TryRead(ref buffer, out _, out _))
+                {
+                    reader.AdvanceTo(buffer.Start, buffer.End);
+                    throw TooMany(method);
+                }
+
+                reader.AdvanceTo(buffer.Start, buffer.End);
+                if (result.IsCompleted)
+                {
+                    // trailing bytes that are not a whole envelope: still more than the one message
+                    if (!buffer.IsEmpty) throw TooMany(method);
+                    return;
+                }
+            }
+        }
+
+        private static ConnectException Missing(string method)
+            => new(ConnectCode.Unimplemented,
+                $"The request to '{method}' carried no message; this method requires exactly one.");
+
+        private static ConnectException TooMany(string method)
+            => new(ConnectCode.Unimplemented,
+                $"The request to '{method}' carried more than one message; this method requires exactly one.");
 
         private static ConnectException Truncated(string method)
             => new(ConnectCode.InvalidArgument,
