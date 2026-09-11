@@ -33,8 +33,9 @@ Working notes for a possible Connect implementation, in the same spirit as `note
 > `demo.connectrpc.com`, as a JIT run *and* as a native AOT binary (7.3 MB, 33 IL warnings, **none of
 > them ours**). Code-first protobuf-net bytes interoperate with connect-go with no `.proto` anywhere.
 >
-> **Client-streaming is done too — §23.** `AotConnectSmoke` 14/14. Only duplex remains, and it adds
-> HTTP/2 and interleaving rather than anything in the protocol.
+> **All four method shapes work — §22, §23, §24.** `AotConnectSmoke` reads **16/16**, JIT and native,
+> and duplex is proven to *interleave* rather than merely complete. Native AOT is **33 IL warnings
+> across every shape added** - streaming contributed no annotation debt at all.
 >
 > **Server-streaming is done — §22**, verified in both directions against connect-go. Four of the five
 > §14.1 constraints held unchanged; the fifth ("one error path") held in substance but was phrased
@@ -1485,6 +1486,70 @@ terminator, trailers and error paths are all now shared and proven. The duplex-`
 is the real remaining unknown, and `Grpc.Net.Client` doing exactly this over HTTP/2 is reason to expect
 it works.
 
+## 24. Duplex — all four shapes now work
+
+`AotConnectSmoke` reads **16/16**, JIT and native. Native AOT is **33 IL warnings, unchanged** across
+every shape added; the binary has grown 15,443,448 → 15,755,160 across all three streaming shapes.
+
+### Interleaving is proven, not assumed
+
+A duplex test that sends everything then reads everything proves nothing — it would pass over HTTP/1.1
+against a server that drained the request first. So the check makes the **request producer wait for the
+echo of the previous message before yielding the next**:
+
+```csharp
+async IAsyncEnumerable<HelloRequest> PingsAwaitingEchoes()
+{
+    for (var i = 1; i <= 3; i++)
+    {
+        yield return new HelloRequest { Name = $"ping{i}" };
+        await echoes.Reader.ReadAsync();   // ... filled by the response loop
+    }
+}
+```
+
+If `HttpClient` buffered the request body, or the service drained before replying, this **deadlocks**
+rather than failing. It completes: three round-trips. So `SocketsHttpHandler` does duplex request bodies
+over HTTP/2, and the service echoes as messages arrive — which also closes §12's open question about
+duplex `HttpContent`.
+
+### Duplex added no protocol machinery at all
+
+As §21 predicted. The client is composition: the request body is the same `EnvelopedStreamContent` that
+client-streaming uses, the response is the same `ConnectServerStream<TResponse>` that server-streaming
+returns. The server invoker is the server-streaming one with a sequence in place of a single request.
+Framing, terminator, trailers and error handling are shared verbatim across all three streaming shapes.
+
+**Which is the real vindication of §21's build order.** Doing duplex first would have exercised the same
+framing while bundling two orthogonal risks; doing it last, the only genuinely new thing was HTTP/2.
+
+### Kestrel will not serve h2c on a mixed plaintext endpoint — measured
+
+The first attempt put `HttpProtocols.Http1AndHttp2` on the single plaintext endpoint, hoping Kestrel
+would sniff the HTTP/2 connection preface. It does not:
+
+```
+HttpRequestException: The HTTP/2 server closed the connection.
+HTTP/2 error code 'HTTP_1_1_REQUIRED' (0xd).
+```
+
+Kestrel answers a prior-knowledge h2c attempt by actively telling the client to downgrade. So a plaintext
+deployment wanting duplex needs **two listeners** — `Http1` and `Http2` — which is what the harness now
+does, and which is what a real deployment would do anyway. With TLS this does not arise, since ALPN
+negotiates.
+
+This does **not** weaken the "Connect does not need HTTP/2" claim, and the harness is arranged to keep
+that honest: everything except duplex runs on the HTTP/1.1 listener, and the wire-form check still
+asserts `HTTP/1.1`. Only the one shape that genuinely requires HTTP/2 uses the second endpoint.
+
+### Failing beats deadlocking
+
+The duplex invoker checks `HttpRequest.Protocol` and answers **505** rather than proceeding. That is not
+defensive tidiness: over HTTP/1.1 the client cannot read a response until it has finished sending, while
+the service is waiting for messages that will not come — so the call would hang rather than fail. A
+check pins it, and the client pins `HttpVersionPolicy.RequestVersionExact` for the same reason: a
+plaintext request left to negotiate would silently settle on HTTP/1.1 and deadlock.
+
 ## 12. Unverified — check before committing to any of this
 
 Everything below is assumption or inference, not measurement:
@@ -1492,8 +1557,8 @@ Everything below is assumption or inference, not measurement:
 - That `SerializationContext`/`DeserializationContext` can be subclassed outside `Grpc.Net.Client`
   cleanly enough for a `ConnectCallInvoker`. Believed yes (both are public abstract in `Grpc.Core.Api`);
   not tried.
-- Duplex request content over `SocketsHttpHandler` on HTTP/2 — believed fine, not tried. Blazor WASM's
-  handler is the real question mark.
+- Blazor WASM's handler and streaming. (Duplex over `SocketsHttpHandler` **is** answered — §24 proves
+  it interleaves — but the browser handler is a different implementation.)
 - protobuf-net map member determinism, which GET-as-cache-key depends on.
 - The exact CORS header set browsers need for Connect (`connect-protocol-version`, `connect-timeout-ms`
   and friends must be allowed, and exposed on responses). Only matters once JSON exists.

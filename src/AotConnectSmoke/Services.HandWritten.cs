@@ -97,6 +97,8 @@ partial class SmokeServices
         public static readonly ConnectMethod<HelloRequest, HelloReply> SubscribeThenFail = Streaming("SubscribeThenFail");
         public static readonly ConnectMethod<HelloRequest, HelloReply> Collect =
             Method(ConnectMethodType.ClientStreaming, "Collect");
+        public static readonly ConnectMethod<HelloRequest, HelloReply> Chat =
+            Method(ConnectMethodType.DuplexStreaming, "Chat");
 
         private static ConnectMethod<HelloRequest, HelloReply> Unary(string name)
             => Method(ConnectMethodType.Unary, name);
@@ -151,6 +153,10 @@ partial class SmokeServices
         public Task<HelloReply> CollectAsync(IAsyncEnumerable<HelloRequest> requests, CallContext context = default)
             => _channel.ClientStreamingAsync(Greeter.Collect, requests,
                 ConnectCallOptions.From(context.CallOptions), context.CancellationToken);
+
+        public IAsyncEnumerable<HelloReply> Chat(IAsyncEnumerable<HelloRequest> requests, CallContext context = default)
+            => _channel.Duplex(Greeter.Chat, requests,
+                ConnectCallOptions.From(context.CallOptions), context.CancellationToken);
     }
 
     /// <summary>Server bindings: one typed delegate per method, no reflection.</summary>
@@ -174,6 +180,8 @@ partial class SmokeServices
                 static (service, request, ctx) => service.SubscribeThenFail(request, new CallContext(service, ctx)));
             context.AddClientStreamingMethod(Greeter.Collect,
                 static (service, requests, ctx) => service.CollectAsync(requests, new CallContext(service, ctx)));
+            context.AddDuplexMethod(Greeter.Chat,
+                static (service, requests, ctx) => service.Chat(requests, new CallContext(service, ctx)));
         }
     }
 }

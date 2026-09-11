@@ -39,6 +39,9 @@ public interface IGreeter
 
     /// <summary>Client-streaming: many requests, one reply.</summary>
     Task<HelloReply> CollectAsync(IAsyncEnumerable<HelloRequest> requests, CallContext context = default);
+
+    /// <summary>Bidirectional: echoes each request as it arrives. HTTP/2 only.</summary>
+    IAsyncEnumerable<HelloReply> Chat(IAsyncEnumerable<HelloRequest> requests, CallContext context = default);
 }
 
 [ProtoContract]
@@ -118,6 +121,17 @@ public sealed class GreeterService : IGreeter
         // length, because the messages do not exist when the headers are sent.
         var declared = (context.ServerCallContext as ConnectServerCallContext)?.HttpContext.Request.ContentLength;
         return new HelloReply { Message = string.Join("+", names), Length = (int)(declared ?? -1) };
+    }
+
+    public async IAsyncEnumerable<HelloReply> Chat(IAsyncEnumerable<HelloRequest> requests, CallContext context = default)
+    {
+        // echo each message as it arrives rather than draining first: a server that buffered the whole
+        // request stream would work over HTTP/1.1 too, and would prove nothing about interleaving
+        await foreach (var request in requests.WithCancellation(context.CancellationToken))
+        {
+            var message = $"echo {request.Name}";
+            yield return new HelloReply { Message = message, Length = message.Length };
+        }
     }
 
     public async Task<HelloReply> DawdleAsync(HelloRequest request, CallContext context = default)

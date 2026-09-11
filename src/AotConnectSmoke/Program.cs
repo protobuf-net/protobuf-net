@@ -24,11 +24,29 @@ using ProtoBuf.Grpc;
 const string ServiceOnTheWire = "aotconnectsmoke.v1.Greeter";
 
 var serveOnly = args.Contains("--serve");
-var port = serveOnly ? 8080 : 0;
+
+// Two listeners, because a PLAINTEXT endpoint cannot serve both protocols: there is no ALPN to
+// negotiate with, and Kestrel answers an h2c prior-knowledge attempt on an Http1AndHttp2 endpoint with
+// HTTP_1_1_REQUIRED rather than sniffing the connection preface (measured - see notes §24).
+// So: HTTP/1.1 for everything, and a second HTTP/2 endpoint for the one shape that needs it.
+var (httpPort, http2Port) = serveOnly ? (8080, 8081) : (FreePort(), FreePort());
+
+static int FreePort()
+{
+    using var probe = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Loopback, 0);
+    probe.Start();
+    var port = ((System.Net.IPEndPoint)probe.LocalEndpoint).Port;
+    probe.Stop();
+    return port;
+}
 
 var builder = WebApplication.CreateSlimBuilder(args);
 builder.Logging.ClearProviders();
-builder.WebHost.UseUrls($"http://127.0.0.1:{port}");
+builder.WebHost.ConfigureKestrel(o =>
+{
+    o.ListenLocalhost(httpPort, l => l.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1);
+    o.ListenLocalhost(http2Port, l => l.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http2);
+});
 
 // HTTP/1.1 is the default for a plaintext Kestrel endpoint, and this test deliberately leaves it that
 // way: gRPC could not be served here at all without switching the port to HTTP/2, which is the whole
@@ -44,12 +62,12 @@ var app = builder.Build();
 app.MapSmokeServices();
 await app.StartAsync();
 
-var address = app.Services.GetRequiredService<IServer>().Features
-    .Get<IServerAddressesFeature>()!.Addresses.First();
+var address = $"http://127.0.0.1:{httpPort}";
+var http2Address = $"http://127.0.0.1:{http2Port}";
 
 if (serveOnly)
 {
-    Console.WriteLine($"Connect server listening on {address}");
+    Console.WriteLine($"Connect server listening on {address} (HTTP/1.1) and {http2Address} (HTTP/2, for duplex)");
     Console.WriteLine($"  curl -sS --http1.1 -H 'Content-Type: application/proto' \\");
     Console.WriteLine($"       --data-binary @req.bin {address}/{ServiceOnTheWire}/SayHello | xxd");
     await app.WaitForShutdownAsync();
@@ -59,6 +77,11 @@ if (serveOnly)
 using var http = new HttpClient();
 var channel = new ConnectChannel(http, new ProtoConnectCodec(SmokeModel.Instance), new Uri(address));
 IGreeter client = SmokeServices.CreateClient<IGreeter>(channel);
+
+// a second client over the HTTP/2 endpoint, for the one shape that needs it. Everything else stays on
+// HTTP/1.1, which is what the wire-form check asserts.
+var http2Channel = new ConnectChannel(http, new ProtoConnectCodec(SmokeModel.Instance), new Uri(http2Address));
+IGreeter duplexClient = SmokeServices.CreateClient<IGreeter>(http2Channel);
 var checks = new Checks();
 
 await checks.Run("unary round-trip over HTTP/1.1", async () =>
@@ -202,6 +225,51 @@ await checks.Run("client-streaming round-trip, chunked", async () =>
             yield return new HelloRequest { Name = name };
         }
     }
+});
+
+await checks.Run("duplex genuinely interleaves", async () =>
+{
+    // the decisive test: the request producer will not yield its next message until the echo of the
+    // previous one has come back. If HttpClient buffered the request body, or the server drained it
+    // before replying, this deadlocks rather than passing.
+    var echoes = System.Threading.Channels.Channel.CreateUnbounded<HelloReply>();
+    var received = new List<string>();
+
+    async IAsyncEnumerable<HelloRequest> PingsAwaitingEchoes()
+    {
+        for (var i = 1; i <= 3; i++)
+        {
+            yield return new HelloRequest { Name = $"ping{i}" };
+            await echoes.Reader.ReadAsync();
+        }
+    }
+
+    using var guard = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+    await foreach (var reply in duplexClient.Chat(PingsAwaitingEchoes()).WithCancellation(guard.Token))
+    {
+        received.Add(reply.Message!);
+        echoes.Writer.TryWrite(reply);
+    }
+
+    Checks.Require(received.Count == 3, $"three echoes, got {received.Count}");
+    Checks.Require(received[2] == "echo ping3", $"in order, last was \"{received[2]}\"");
+    return $"{received.Count} round-trips, each awaiting the previous";
+});
+
+await checks.Run("duplex over HTTP/1.1 is refused, not deadlocked", async () =>
+{
+    // a client that did not pin HTTP/2 would hang here; the server answers instead
+    using var request = new HttpRequestMessage(HttpMethod.Post, $"{address}/{ServiceOnTheWire}/Chat")
+    {
+        Content = new ByteArrayContent([]) { Headers = { ContentType = new MediaTypeHeaderValue("application/connect+proto") } },
+        Version = System.Net.HttpVersion.Version11,
+        VersionPolicy = System.Net.Http.HttpVersionPolicy.RequestVersionExact,
+    };
+    using var response = await http.SendAsync(request);
+    Checks.Require((int)response.StatusCode == 505, $"HTTP 505, was {(int)response.StatusCode}");
+    var body = await response.Content.ReadAsStringAsync();
+    Checks.Require(body.Contains("HTTP/1.1"), $"it names the protocol it got, body was {body}");
+    return body;
 });
 
 await checks.Run("framing must match the method's shape", async () =>

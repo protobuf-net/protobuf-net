@@ -3,6 +3,7 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Globalization;
+using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -261,6 +262,83 @@ namespace ProtoBuf.Connect
             }
 
             return response!;
+        }
+
+        /// <summary>
+        /// Invokes a bidirectional-streaming RPC. Nothing is sent until the result is enumerated.
+        /// </summary>
+        public async IAsyncEnumerable<TResponse> Duplex<TRequest, TResponse>(
+            ConnectMethod<TRequest, TResponse> method,
+            IAsyncEnumerable<TRequest> requests,
+            ConnectCallOptions? options = null,
+            [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        {
+            var stream = await DuplexAsync(method, requests, options, cancellationToken).ConfigureAwait(false);
+            await foreach (var response in stream.WithCancellation(cancellationToken).ConfigureAwait(false))
+            {
+                yield return response;
+            }
+        }
+
+        /// <summary>
+        /// Starts a bidirectional-streaming RPC, returning once the response headers have arrived.
+        /// </summary>
+        /// <remarks>
+        /// <b>HTTP/2 only</b>, and the one shape for which that is true: interleaving a request body
+        /// with a response body is something HTTP/1.1 cannot express. The request is pinned to
+        /// <see cref="HttpVersionPolicy.RequestVersionExact"/> rather than left to negotiate, because a
+        /// plaintext endpoint has no ALPN and would otherwise silently settle on HTTP/1.1 - at which
+        /// point the call deadlocks rather than failing, since the client waits for a response the
+        /// server cannot send until the request completes.
+        /// <para>
+        /// Everything else is composition: the request body is the same
+        /// <see cref="Internal.EnvelopedStreamContent{T}"/> client-streaming uses, and the response is
+        /// the same <see cref="ConnectServerStream{TResponse}"/> server-streaming returns. Duplex adds
+        /// no framing of its own, which is exactly what probing the protocol predicted.
+        /// </para>
+        /// </remarks>
+        public async Task<ConnectServerStream<TResponse>> DuplexAsync<TRequest, TResponse>(
+            ConnectMethod<TRequest, TResponse> method,
+            IAsyncEnumerable<TRequest> requests,
+            ConnectCallOptions? options = null,
+            CancellationToken cancellationToken = default)
+        {
+            if (method is null) throw new ArgumentNullException(nameof(method));
+            if (requests is null) throw new ArgumentNullException(nameof(requests));
+            if (method.Type != ConnectMethodType.DuplexStreaming)
+            {
+                throw new NotSupportedException(
+                    $"'{method}' is {method.Type}; this call shape is for {nameof(ConnectMethodType.DuplexStreaming)}.");
+            }
+
+            using var httpRequest = new HttpRequestMessage(HttpMethod.Post, new Uri(_baseAddress!, method.Path))
+            {
+                Content = new EnvelopedStreamContent<TRequest>(
+                    Codec, requests, Codec.ContentTypeFor(method.Type), method.RequestSerializer, cancellationToken),
+                Version = HttpVersion.Version20,
+                VersionPolicy = HttpVersionPolicy.RequestVersionExact,
+            };
+            ApplyOptions(httpRequest, options);
+
+            var httpResponse = await _http
+                .SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (!httpResponse.IsSuccessStatusCode)
+            {
+                try
+                {
+                    throw await ReadErrorAsync(httpResponse, cancellationToken).ConfigureAwait(false);
+                }
+                finally
+                {
+                    httpResponse.Dispose();
+                }
+            }
+
+            var metadata = ReadMetadata(httpResponse);
+            return new ConnectServerStream<TResponse>(
+                httpResponse, Codec, method.ResponseSerializer, method.ToString(), metadata.Headers);
         }
 
         private static void ApplyOptions(HttpRequestMessage request, ConnectCallOptions? options)

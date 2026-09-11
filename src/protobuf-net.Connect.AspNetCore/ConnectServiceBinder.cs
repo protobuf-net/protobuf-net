@@ -39,6 +39,12 @@ namespace ProtoBuf.Connect.AspNetCore
         TService service, IAsyncEnumerable<TRequest> requests, ConnectServerCallContext context);
 
     /// <summary>
+    /// Handles one bidirectional-streaming call.
+    /// </summary>
+    public delegate IAsyncEnumerable<TResponse> ConnectDuplexHandler<in TService, TRequest, out TResponse>(
+        TService service, IAsyncEnumerable<TRequest> requests, ConnectServerCallContext context);
+
+    /// <summary>
     /// Implemented by generated code to describe a service's methods to the runtime.
     /// </summary>
     /// <typeparam name="TService">The service implementation type, resolved per call from DI.</typeparam>
@@ -93,6 +99,15 @@ namespace ProtoBuf.Connect.AspNetCore
             IReadOnlyList<object>? metadata = null)
             => Add(method, ConnectMethodType.ClientStreaming, metadata,
                 Internal.ConnectClientStreamingInvoker.Create(method, Require(handler)));
+
+        /// <summary>Declares a bidirectional-streaming method. Requires HTTP/2 at call time.</summary>
+        /// <inheritdoc cref="AddUnaryMethod{TRequest, TResponse}" path="/param"/>
+        public void AddDuplexMethod<TRequest, TResponse>(
+            ConnectMethod<TRequest, TResponse> method,
+            ConnectDuplexHandler<TService, TRequest, TResponse> handler,
+            IReadOnlyList<object>? metadata = null)
+            => Add(method, ConnectMethodType.DuplexStreaming, metadata,
+                Internal.ConnectDuplexInvoker.Create(method, Require(handler)));
 
         private void Add<TRequest, TResponse>(
             ConnectMethod<TRequest, TResponse> method,
