@@ -193,6 +193,76 @@ namespace ProtoBuf.Connect
                 httpResponse, Codec, method.ResponseSerializer, method.ToString(), metadata.Headers);
         }
 
+        /// <summary>
+        /// Invokes a client-streaming RPC: a sequence of requests, one response.
+        /// </summary>
+        /// <remarks>
+        /// The response side is exactly a server-streaming response that happens to carry one message,
+        /// so it reuses <see cref="ConnectServerStream{TResponse}"/> rather than repeating the
+        /// envelope-and-terminator handling. What is new is the request: it is produced as it is sent,
+        /// so it cannot state a <c>Content-Length</c> and goes out chunked.
+        /// </remarks>
+        public async Task<TResponse> ClientStreamingAsync<TRequest, TResponse>(
+            ConnectMethod<TRequest, TResponse> method,
+            IAsyncEnumerable<TRequest> requests,
+            ConnectCallOptions? options = null,
+            CancellationToken cancellationToken = default)
+        {
+            if (method is null) throw new ArgumentNullException(nameof(method));
+            if (requests is null) throw new ArgumentNullException(nameof(requests));
+            if (method.Type != ConnectMethodType.ClientStreaming)
+            {
+                throw new NotSupportedException(
+                    $"'{method}' is {method.Type}; this call shape is for {nameof(ConnectMethodType.ClientStreaming)}.");
+            }
+
+            using var httpRequest = new HttpRequestMessage(HttpMethod.Post, new Uri(_baseAddress!, method.Path))
+            {
+                Content = new EnvelopedStreamContent<TRequest>(
+                    Codec, requests, Codec.ContentTypeFor(method.Type), method.RequestSerializer, cancellationToken),
+            };
+            ApplyOptions(httpRequest, options);
+
+            var httpResponse = await _http
+                .SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (!httpResponse.IsSuccessStatusCode)
+            {
+                try
+                {
+                    throw await ReadErrorAsync(httpResponse, cancellationToken).ConfigureAwait(false);
+                }
+                finally
+                {
+                    httpResponse.Dispose();
+                }
+            }
+
+            var metadata = ReadMetadata(httpResponse);
+            var stream = new ConnectServerStream<TResponse>(
+                httpResponse, Codec, method.ResponseSerializer, method.ToString(), metadata.Headers);
+
+            TResponse? response = default;
+            var count = 0;
+            await foreach (var message in stream.WithCancellation(cancellationToken).ConfigureAwait(false))
+            {
+                response = message;
+                count++;
+            }
+
+            // exactly one, by the shape's definition; anything else is the peer disagreeing with us
+            // about what this method is
+            if (count != 1)
+            {
+                throw new ConnectException(
+                    ConnectCode.Internal,
+                    $"'{method}' is client-streaming and must answer with exactly one message; {count} arrived.");
+            }
+
+            return response!;
+        }
+
         private static void ApplyOptions(HttpRequestMessage request, ConnectCallOptions? options)
         {
             request.Headers.TryAddWithoutValidation(ProtocolVersionHeader, ProtocolVersion);

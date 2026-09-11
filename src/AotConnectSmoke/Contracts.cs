@@ -1,5 +1,6 @@
 using ProtoBuf;
 using ProtoBuf.Connect;
+using ProtoBuf.Connect.AspNetCore;
 using ProtoBuf.Grpc;
 using ProtoBuf.Grpc.Configuration;
 using ProtoBuf.Meta;
@@ -35,6 +36,9 @@ public interface IGreeter
     /// to 200 with the first message, so the failure has to travel in the terminating message.
     /// </summary>
     IAsyncEnumerable<HelloReply> SubscribeThenFail(HelloRequest request, CallContext context = default);
+
+    /// <summary>Client-streaming: many requests, one reply.</summary>
+    Task<HelloReply> CollectAsync(IAsyncEnumerable<HelloRequest> requests, CallContext context = default);
 }
 
 [ProtoContract]
@@ -99,6 +103,21 @@ public sealed class GreeterService : IGreeter
         yield return new HelloReply { Message = "second", Length = 6 };
         await Task.CompletedTask;
         throw new ConnectException(ConnectCode.ResourceExhausted, "the well ran dry");
+    }
+
+    public async Task<HelloReply> CollectAsync(IAsyncEnumerable<HelloRequest> requests, CallContext context = default)
+    {
+        var names = new List<string>();
+        await foreach (var request in requests.WithCancellation(context.CancellationToken))
+        {
+            names.Add(request.Name ?? "?");
+        }
+
+        // Length carries what the server saw for Content-Length: -1 proves the request went out
+        // chunked, which is the point of the whole shape. A client-streaming body cannot state a
+        // length, because the messages do not exist when the headers are sent.
+        var declared = (context.ServerCallContext as ConnectServerCallContext)?.HttpContext.Request.ContentLength;
+        return new HelloReply { Message = string.Join("+", names), Length = (int)(declared ?? -1) };
     }
 
     public async Task<HelloReply> DawdleAsync(HelloRequest request, CallContext context = default)

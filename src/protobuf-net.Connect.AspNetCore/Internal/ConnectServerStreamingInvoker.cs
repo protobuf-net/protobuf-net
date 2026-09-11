@@ -47,7 +47,8 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
         {
             // read BEFORE committing the status: a request we cannot read never starts a stream, and so
             // is reportable the ordinary way, as a non-200 with a JSON error
-            var request = await ReadRequestAsync(http.Request.BodyReader, codec, context.CancellationToken)
+            var request = await EnvelopedRequestReader
+                .ReadOneAsync(http.Request.BodyReader, codec, _method.RequestSerializer, _method.ToString(), context.CancellationToken)
                 .ConfigureAwait(false);
 
             var response = http.Response;
@@ -98,63 +99,5 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
             codec.Write(writer, message, _method.ResponseSerializer);
         }
 
-        private async Task<TRequest> ReadRequestAsync(PipeReader reader, ConnectCodec codec, CancellationToken cancellationToken)
-        {
-            while (true)
-            {
-                var result = await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
-                var buffer = result.Buffer;
-
-                if (ConnectEnvelope.TryRead(ref buffer, out var flags, out var payload))
-                {
-                    try
-                    {
-                        return Decode(codec, flags, payload);
-                    }
-                    finally
-                    {
-                        // everything after the single request message is ignored; a server-streaming
-                        // call declares one, and reading further would be inventing cardinality
-                        reader.AdvanceTo(buffer.Start, buffer.End);
-                    }
-                }
-
-                reader.AdvanceTo(buffer.Start, buffer.End);
-
-                if (result.IsCompleted)
-                {
-                    throw new ConnectException(
-                        ConnectCode.InvalidArgument,
-                        $"The request to '{_method}' ended before a complete enveloped message arrived.");
-                }
-            }
-        }
-
-        private TRequest Decode(ConnectCodec codec, byte flags, in ReadOnlySequence<byte> payload)
-        {
-            if ((flags & ConnectEnvelope.FlagCompressed) != 0)
-            {
-                throw new ConnectException(
-                    ConnectCode.Unimplemented, "Compressed request messages are not implemented yet.");
-            }
-
-            if ((flags & (ConnectEnvelope.FlagEndOfStream | ConnectEnvelope.FlagReserved)) != 0)
-            {
-                throw new ConnectException(
-                    ConnectCode.InvalidArgument, $"The request's enveloped message set unexpected flags (0x{flags:x2}).");
-            }
-
-            try
-            {
-                return codec.Read(payload, _method.RequestSerializer);
-            }
-            catch (Exception ex) when (ex is not ConnectException)
-            {
-                throw new ConnectException(
-                    ConnectCode.InvalidArgument,
-                    $"The request to '{_method}' could not be read as '{codec.Name}': {ex.Message}",
-                    innerException: ex);
-            }
-        }
     }
 }

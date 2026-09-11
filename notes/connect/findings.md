@@ -33,6 +33,9 @@ Working notes for a possible Connect implementation, in the same spirit as `note
 > `demo.connectrpc.com`, as a JIT run *and* as a native AOT binary (7.3 MB, 33 IL warnings, **none of
 > them ours**). Code-first protobuf-net bytes interoperate with connect-go with no `.proto` anywhere.
 >
+> **Client-streaming is done too — §23.** `AotConnectSmoke` 14/14. Only duplex remains, and it adds
+> HTTP/2 and interleaving rather than anything in the protocol.
+>
 > **Server-streaming is done — §22**, verified in both directions against connect-go. Four of the five
 > §14.1 constraints held unchanged; the fifth ("one error path") held in substance but was phrased
 > wrongly — see §22. `AotConnectSmoke` 13/13, `ConnectProbe` 9/9, native AOT still 33 IL warnings.
@@ -1431,6 +1434,56 @@ a 500". One of the checks asserts exactly that.
 Client-streaming, which adds exactly one thing: an incremental request body with no `Content-Length`.
 Then duplex, which adds only HTTP/2 and interleaving. The duplex-`HttpClient` spike (§21) is still worth
 doing out of order, since it is the one genuinely unknown environmental risk.
+
+## 23. Client-streaming — and the last §14.1 constraint properly tested
+
+Built. `AotConnectSmoke` reads **14/14**, JIT and native; native AOT is **33 IL warnings, unchanged**.
+
+### `Content-Length` was the half-tested constraint, and now is not
+
+§22 could only half-exercise it: a streaming *response* states no length, but a server-streaming
+*request* still can, being one message. Client-streaming is the shape that cannot.
+
+Rather than assert this from the client — which cannot see its own headers — the **service reports what
+it saw**: `CollectAsync` returns `HttpContext.Request.ContentLength ?? -1`, and the check requires `-1`.
+So "the request went out chunked" is measured at the far end of a real socket. `TryComputeLength`
+returning `false` is what makes that happen, and it is the whole difference between
+`EnvelopedStreamContent` and its two siblings.
+
+### What client-streaming cost, which was almost nothing
+
+- **The response side is server-streaming's**, reused rather than rewritten:
+  `ClientStreamingAsync` builds a `ConnectServerStream<TResponse>` and takes the single message from
+  it, so envelope reading, the terminator, trailers and the error path are shared verbatim. A count
+  other than one throws, since that is the peer disagreeing about what the method is.
+- **The request side is one new `HttpContent`** and one new invoker — the delegate-per-shape rule
+  continuing to pay.
+- `EnvelopedRequestReader` now serves both streaming invokers; server-streaming's bespoke reader was
+  deleted in favour of it.
+
+### Two asymmetries worth remembering
+
+- **A request stream has no terminating message.** End-of-stream is a *response-only* flag, so a request
+  simply ends. Reading one therefore has no "clean end" marker to check, and a partial envelope at the
+  end is the only detectable truncation — which `ReadAllAsync` treats as `invalid_argument`.
+- **A client-streaming body is not re-sendable.** It is backed by an `IAsyncEnumerable<T>` a caller may
+  not be able to replay, so a retrying `DelegatingHandler` fails on the second attempt rather than
+  sending a partial body. That is the better of the two outcomes, and is why `MeasuredCodecContent`
+  buffers eagerly while this one does not.
+
+### A `ReadOnlySequence` cannot cross a `yield`
+
+`ReadAllAsync` decodes each read's messages into a list before advancing the reader and yielding them.
+Both halves are required and for different reasons: a `ReadOnlySequence<byte>` cannot live across a
+`yield return` at all, and the payloads reference the reader's buffer, so advancing before the caller
+has consumed them would hand out freed memory. Obvious once written down, easy to get wrong.
+
+### Remaining
+
+Duplex only, which adds **HTTP/2 and interleaving and nothing else in the protocol** — the framing,
+terminator, trailers and error paths are all now shared and proven. The duplex-`HttpClient` spike (§21)
+is the real remaining unknown, and `Grpc.Net.Client` doing exactly this over HTTP/2 is reason to expect
+it works.
 
 ## 12. Unverified — check before committing to any of this
 

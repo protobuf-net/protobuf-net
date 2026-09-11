@@ -184,6 +184,26 @@ await checks.Run("a mid-stream failure arrives under HTTP 200", async () =>
     return $"{received.Count} messages, then {ex.Code.ToWireName()} from the terminator";
 });
 
+await checks.Run("client-streaming round-trip, chunked", async () =>
+{
+    var reply = await client.CollectAsync(Names());
+
+    Checks.Require(reply.Message == "a+b+c", $"all three arrived in order, was \"{reply.Message}\"");
+    // the service reports what Content-Length it saw: -1 means the header was absent, which is the
+    // whole point - a body produced as it is sent cannot state a length
+    Checks.Require(reply.Length == -1, $"the request went out chunked, server saw Content-Length {reply.Length}");
+    return "3 messages, no Content-Length";
+
+    static async IAsyncEnumerable<HelloRequest> Names()
+    {
+        foreach (var name in new[] { "a", "b", "c" })
+        {
+            await Task.Yield();
+            yield return new HelloRequest { Name = name };
+        }
+    }
+});
+
 await checks.Run("framing must match the method's shape", async () =>
 {
     // unary framing at a streaming method: the content-type states the framing, and disagreeing is 415

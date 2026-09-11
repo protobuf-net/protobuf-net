@@ -152,11 +152,11 @@ namespace ProtoBuf.Connect.AspNetCore
                     StatusCodes.Status415UnsupportedMediaType);
             }
 
-            if (type is ConnectMethodType.ClientStreaming or ConnectMethodType.DuplexStreaming)
+            if (type is ConnectMethodType.DuplexStreaming)
             {
                 throw new ConnectException(
                     ConnectCode.Unimplemented,
-                    $"'{type}' is not implemented yet; unary and server-streaming are.",
+                    $"'{type}' is not implemented yet; unary, server-streaming and client-streaming are.",
                     StatusCodes.Status501NotImplemented);
             }
 

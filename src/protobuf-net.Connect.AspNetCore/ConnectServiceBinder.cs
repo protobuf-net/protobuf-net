@@ -33,6 +33,12 @@ namespace ProtoBuf.Connect.AspNetCore
         TService service, TRequest request, ConnectServerCallContext context);
 
     /// <summary>
+    /// Handles one client-streaming call: a sequence of requests in, one response out.
+    /// </summary>
+    public delegate Task<TResponse> ConnectClientStreamingHandler<in TService, TRequest, TResponse>(
+        TService service, IAsyncEnumerable<TRequest> requests, ConnectServerCallContext context);
+
+    /// <summary>
     /// Implemented by generated code to describe a service's methods to the runtime.
     /// </summary>
     /// <typeparam name="TService">The service implementation type, resolved per call from DI.</typeparam>
@@ -78,6 +84,15 @@ namespace ProtoBuf.Connect.AspNetCore
             IReadOnlyList<object>? metadata = null)
             => Add(method, ConnectMethodType.ServerStreaming, metadata,
                 Internal.ConnectServerStreamingInvoker.Create(method, Require(handler)));
+
+        /// <summary>Declares a client-streaming method.</summary>
+        /// <inheritdoc cref="AddUnaryMethod{TRequest, TResponse}" path="/param"/>
+        public void AddClientStreamingMethod<TRequest, TResponse>(
+            ConnectMethod<TRequest, TResponse> method,
+            ConnectClientStreamingHandler<TService, TRequest, TResponse> handler,
+            IReadOnlyList<object>? metadata = null)
+            => Add(method, ConnectMethodType.ClientStreaming, metadata,
+                Internal.ConnectClientStreamingInvoker.Create(method, Require(handler)));
 
         private void Add<TRequest, TResponse>(
             ConnectMethod<TRequest, TResponse> method,
