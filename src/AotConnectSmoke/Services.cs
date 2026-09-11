@@ -16,14 +16,18 @@ namespace ProtoBuf.AotConnectSmoke;
 // services is the designed shape rather than something being stretched.
 //
 // The accessibility declared here governs: the generated half restates no modifier, so a consumer who
-// writes `public` gets a public surface and one who writes `internal` gets an internal one. Note also
-// that `static` is NOT required - the generator emits static members and a private constructor onto an
-// ordinary partial class, so the consumer is not made to think about it.
+// writes `public` gets a public surface and one who writes `internal` gets an internal one.
+//
+// `static` is optional, and it CHANGES WHAT IS GENERATED. Declared static, the registration and binding
+// methods are emitted as extension methods - `builder.Services.AddSmokeServices()`,
+// `app.BindSmokeServices()` - and no constructor is emitted, since a static class cannot have one.
+// Declared non-static (see ClientOnly.cs) they are emitted as plain statics plus a private constructor.
+// Both work; static reads the way .NET usually does, which is why it is what this container picks.
 // ---------------------------------------------------------------------------------------------
 
 [ProtoConnect(Model = typeof(SmokeModel))]
 [ProtoService(typeof(IGreeter), typeof(GreeterService))]
 [ProtoService(typeof(IFarewell), typeof(FarewellService))]
-internal partial class SmokeServices
+internal static partial class SmokeServices
 {
 }

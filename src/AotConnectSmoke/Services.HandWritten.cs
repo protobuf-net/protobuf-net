@@ -27,10 +27,13 @@ namespace ProtoBuf.AotConnectSmoke;
 //   - no accessibility or `static` is restated on the partial: both are the consumer's to choose.
 // ---------------------------------------------------------------------------------------------
 
-partial class SmokeServices
+// The consumer declared this container `static` (Services.cs), so the generated half mirrors that: no
+// constructor - a static class cannot have one - and the registration and binding methods carry `this`,
+// making them extension methods. That is what lets a consumer write `app.BindSmokeServices()` rather
+// than `SmokeServices.BindSmokeServices(app)`, and it removes the separate extensions class that a
+// non-static container needs. See ClientOnly.HandWritten.cs for the other branch.
+static partial class SmokeServices
 {
-    /// <summary>There is nothing to construct: every member here is static.</summary>
-    private SmokeServices() { }
 
     /// <summary>Creates a client proxy for one of the contracts this container declares.</summary>
     public static TService CreateClient<TService>(ConnectChannel channel) where TService : class
@@ -48,12 +51,12 @@ partial class SmokeServices
     /// every method of every service. Where that is too broad, bind the services separately with the
     /// generic overload.
     /// </remarks>
-    public static IEndpointConventionBuilder BindServer(
-        IEndpointRouteBuilder endpoints, string? routingPrefix = null)
+    public static IEndpointConventionBuilder BindSmokeServices(
+        this IEndpointRouteBuilder endpoints, string? routingPrefix = null)
         => new CompositeConventionBuilder(
         [
-            BindServer<IGreeter>(endpoints, routingPrefix),
-            BindServer<IFarewell>(endpoints, routingPrefix),
+            endpoints.BindSmokeServices<IGreeter>(routingPrefix),
+            endpoints.BindSmokeServices<IFarewell>(routingPrefix),
         ]);
 
     /// <summary>Maps one service, so that conventions can differ between them.</summary>
@@ -62,8 +65,8 @@ partial class SmokeServices
     /// runtime binds by implementation type - the consumer named the pairing once in Services.cs and
     /// should not have to remember which side each API wants.
     /// </remarks>
-    public static IEndpointConventionBuilder BindServer<TService>(
-        IEndpointRouteBuilder endpoints, string? routingPrefix = null)
+    public static IEndpointConventionBuilder BindSmokeServices<TService>(
+        this IEndpointRouteBuilder endpoints, string? routingPrefix = null)
     {
         if (typeof(TService) == typeof(IGreeter))
         {
@@ -93,7 +96,7 @@ partial class SmokeServices
     /// different lifetime, or a decorator - keeps theirs.
     /// </para>
     /// </remarks>
-    public static IServiceCollection AddSmokeServices(IServiceCollection services)
+    public static IServiceCollection AddSmokeServices(this IServiceCollection services)
     {
         services.AddConnect(options =>
         {
@@ -277,23 +280,4 @@ partial class SmokeServices
             foreach (var builder in _inner) builder.Finally(finallyConvention);
         }
     }
-}
-
-/// <summary>
-/// The idiomatic front doors, as <c>GrpcProxyGenerator</c>'s <c>AddXxx</c> is for gRPC: ASP.NET Core
-/// consumers reach for <c>services.AddXxx()</c> and <c>app.MapXxx()</c>. Both are one-line aliases and
-/// add no capability of their own.
-/// </summary>
-/// <remarks>
-/// <c>internal</c> because the container is: the generated surface mirrors whatever the consumer
-/// declared in Services.cs rather than picking for them.
-/// </remarks>
-internal static class SmokeServicesExtensions
-{
-    internal static IServiceCollection AddSmokeServices(this IServiceCollection services)
-        => SmokeServices.AddSmokeServices(services);
-
-    internal static IEndpointConventionBuilder MapSmokeServices(
-        this IEndpointRouteBuilder endpoints, string? routingPrefix = null)
-        => SmokeServices.BindServer(endpoints, routingPrefix);
 }

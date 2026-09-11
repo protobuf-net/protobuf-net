@@ -57,12 +57,12 @@ builder.WebHost.ConfigureKestrel(o =>
 builder.Services.AddSmokeServices();
 
 var app = builder.Build();
-app.MapSmokeServices();
+app.BindSmokeServices();
 // the same services again under a routing prefix, which the protocol allows and which is what lets
 // Connect share a host with gRPC - the two use identical paths otherwise
-app.MapSmokeServices("rpc");
+app.BindSmokeServices("rpc");
 // and just one of them, alone, to show conventions can differ between services
-SmokeServices.BindServer<IFarewell>(app, "solo");
+app.BindSmokeServices<IFarewell>("solo");
 await app.StartAsync();
 
 var address = $"http://127.0.0.1:{httpPort}";
@@ -252,7 +252,7 @@ await checks.Run("a second service in the same container", async () =>
 
 await checks.Run("services can be bound separately when conventions differ", async () =>
 {
-    // BindServer<TService> exists so one service can carry conventions the other does not; here the
+    // BindSmokeServices<TService> exists so one service can carry conventions the other does not; here the
     // proof is simply that a single service can be mapped alone, under its own prefix
     var solo = new ConnectChannel(http, new ProtoConnectCodec(SmokeModel.Instance), new Uri($"{address}/solo"));
     var farewell = SmokeServices.CreateClient<IFarewell>(solo);

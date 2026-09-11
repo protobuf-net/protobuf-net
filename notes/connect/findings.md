@@ -1768,6 +1768,55 @@ the rest of the fixture on the same question before the generator is written —
 takes exactly one request parameter and a `CallContext`, for instance, and `ContractOperation` in
 protobuf-net.Grpc recognises far more shapes than that.
 
+## 30. `static` on the consumer's half should change what is generated
+
+Review's suggestion, and it is a good one: if the consumer declares the container `static`, the
+generated methods can carry `this` and become **extension methods**, so binding reads the way .NET
+normally does.
+
+```csharp
+builder.Services.AddSmokeServices();
+app.BindSmokeServices();                    // every service
+app.BindSmokeServices<IFarewell>("solo");   // one, with its own conventions
+```
+
+Implemented, and **both branches are exercised side by side** so the generator cannot be written for
+only one: `SmokeServices` is declared `static` and gets extension methods with no constructor;
+`SmokeClientOnly` is declared non-static and gets plain statics plus a private constructor. 20/20, JIT
+and native, still 33 IL warnings.
+
+The pleasing part is that it **deletes** something: the separate `SmokeServicesExtensions` class existed
+only to supply a static home for `this`. A static container is its own.
+
+### But `CreateClient` must *not* be an extension — proven, not guessed
+
+`channel.CreateClient<IGreeter>()` reads better than `SmokeServices.CreateClient<IGreeter>(channel)`, so
+it was worth checking whether it could be an extension on `ConnectChannel`. It cannot. With two
+containers in scope that both declare a contract — exactly the `SmokeServices` / `SmokeClientOnly`
+arrangement here, and a realistic one — the call is ambiguous:
+
+```
+error CS0121: The call is ambiguous between the following methods or properties:
+'SmokeClientOnly.CreateClient<TService>(ConnectChannel)' and 'SmokeServices.CreateClient<TService>(ConnectChannel)'
+```
+
+**The rule that falls out is the useful part: an extension method is only collision-safe if its *name*
+carries the container's.** `AddSmokeServices` and `BindSmokeServices` do, so two containers can both
+emit them and nothing is ambiguous. `CreateClient` does not, so it cannot be an extension — and the
+alternative, `CreateSmokeServicesClient<T>(this ConnectChannel)`, is worse than the plain static.
+
+So: `Add`/`Bind` become extensions when the container is static; `CreateClient` stays a plain static
+either way. That asymmetry is not arbitrary, and it independently justifies naming the methods after the
+container rather than generically.
+
+### Naming: same name, different arity
+
+`BindSmokeServices()` and `BindSmokeServices<TService>()` share a name and are told apart by generic
+arity. Singularising the one-service form (`BindSmokeService<T>`) reads better, but deriving "Service"
+from "SmokeServices" means stripping a trailing "s" — string surgery on a consumer's identifier, which
+breaks or reads oddly for a container named `Backend`, `Rpc` or `Api`. The arity split needs no
+guessing and is unambiguous to the compiler. Open to revisiting; it is a one-line change in the emitter.
+
 ## 12. Unverified — check before committing to any of this
 
 Everything below is assumption or inference, not measurement:
