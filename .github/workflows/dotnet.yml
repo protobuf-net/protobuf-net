@@ -115,3 +115,10 @@ jobs:
       run: |
         dotnet publish src/AotGrpcSmoke/AotGrpcSmoke.csproj -c Release -r linux-x64 -o artifacts/aot-grpc-smoke
         ./artifacts/aot-grpc-smoke/AotGrpcSmoke
+    # self-contained: it hosts Kestrel on an ephemeral loopback port and calls itself, so it needs
+    # nothing from the network. src/ConnectProbe is deliberately NOT here - it checks interoperability
+    # against demo.connectrpc.com, and a third party's uptime has no business gating our builds.
+    - name: Publish and run the Connect smoke test
+      run: |
+        dotnet publish src/AotConnectSmoke/AotConnectSmoke.csproj -c Release -r linux-x64 -o artifacts/aot-connect-smoke
+        ./artifacts/aot-connect-smoke/AotConnectSmoke

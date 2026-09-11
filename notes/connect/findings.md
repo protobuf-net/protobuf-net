@@ -838,6 +838,20 @@ dotnet run --project src/AotConnectSmoke -- --serve   # just the server, on :808
 | a streaming content-type | 415, saying *why*, rather than mishandling it |
 | the wire form | bare message, `Content-Length` stated, HTTP/1.1, no envelope |
 
+### It gates CI
+
+`AotConnectSmoke` is published natively and **run** by the existing `native-aot-linux` job, alongside
+`AotSmoke` and `AotGrpcSmoke`. It is self-contained - Kestrel on an ephemeral loopback port, calling
+itself - so it needs nothing from the network.
+
+`src/ConnectProbe` is deliberately **not** in CI. It is the interoperability check against
+`demo.connectrpc.com`, and a third party's uptime has no business gating our builds; it stays a
+manually-run tool, like `src/AotCoverage`.
+
+**The gate was shown able to fail**, not merely observed to pass: changing the service's greeting from
+`hello {name}` to `hi {name}` was caught by three checks and exited 1. Worth having done, because a
+harness that cannot fail is worse than no harness - it reports green forever.
+
 ### Verified from outside .NET
 
 The self-check proves the two halves agree with each other, which is not the same as being a Connect
