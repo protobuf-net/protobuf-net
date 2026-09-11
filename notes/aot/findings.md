@@ -27,13 +27,15 @@ positionally. `AGENTS.md`'s "The writer's measure-first path" is the section to 
 any of it; the three invariants there are the ones that break silently. The measurable census is
 **2803 contracts** across the corpus.
 
-**The gate battery, and what it reported on 2026-09-11** — run on **linux-x64**, in this order.
-The 2026-08-26 figures are kept alongside, because a count that moved is the interesting column:
+**The gate battery, and what it reported on 2026-09-11** — run on **linux-x64** under the **.NET 11
+SDK**, in this order. The 2026-08-26 figures are kept alongside, because a count that moved is the
+interesting column:
 
 | gate | 2026-09-11 (linux) | was (2026-08-26, win) |
 | --- | --- | --- |
 | `dotnet build Build.csproj -c Debug` | 0 errors | 0 errors |
-| `BuildToolsUnitTests` (goldens + analyzers + fixers) | **655 / 662 — see B53** | 659 passed |
+| `BuildToolsUnitTests` (goldens + analyzers + fixers) | **662 / 662** | 659 passed |
+| `dotnet test Build.csproj` (the whole traversal, net8.0) | **5504 total, 0 failed**, exit 0 | — |
 | `AotConformanceTests` (differential over the fixtures) | **1920** passed | 1842 |
 | `protobuf-net.Test` | **1593** (net8.0) | 1584 / 1583 (net472) |
 | `protobuf-net.Reflection.Test` | **621** | 616 / 616 |
@@ -53,23 +55,16 @@ a member to `AotSmoke` moves it, so re-measure both sides when you do.
 this machine is Linux, so `dotnet test -f net8.0` is the whole of what ran. Anything needing net472
 (`AotRefGen` included) still has to be run on Windows before it is evidence.
 
-**`BuildToolsUnitTests` is RED here, and it is red on a clean `origin/v4` too** — confirmed in a
-separate worktree before the merge, so it is not merge damage. Seven
-`SchemaSourcedModelEndToEndTests` fail on Linux only; gap **B53** has the diagnosis. Treat 655/662 as
-the current linux baseline and 662/662 as what Windows should report.
+**Everything is green on Linux, which is new.** `BuildToolsUnitTests` was 655/662 before this
+sitting — seven `SchemaSourcedModelEndToEndTests` failing on Linux only — and gap **B53** records
+the cause and the fix: the leaf/directory split deferred to `System.IO.Path`, and therefore to the
+host's separator, where every other path comparison in that code already treats `/` and `\` as the
+same thing. So a full `dotnet test Build.csproj` now passes here rather than needing to be read
+around, which matters because this is where the work happens.
 
-**What is open.** `notes/gaps.md` is the entry point and its last entry is **B54**. The live ones,
-current to 2026-09-11:
+**What is open.** `notes/gaps.md` is the entry point and its last entry is **B54**; **B53 and B54 both
+closed on 2026-09-11**. The live ones:
 
-- **B54 (xunit.v3 4.0)** - new; proven working locally and reverted. The entry carries the whole
-  recipe including the CI change, so it is an hour's work whenever it is wanted;
-- **B53 (the Linux-only `SchemaSourcedModelEndToEndTests` failures)** - **new, and the only thing
-  here that is currently RED.** Seven tests fail on Linux because the fixture hard-codes
-  `C:\proj\shop.proto` and `Path.GetFileName` does not treat `\` as a separator off Windows, so the
-  whole string survives as the leaf and reaches `AddSource` as a hintName containing `:`. Small, and
-  it decides something worth deciding: whether `ProtoFileGenerator` should accept either separator
-  regardless of host, or the fixture should stop asserting a Windows path. Until then this gate
-  cannot be read on Linux, which is where most of this work now happens;
 - **B51 (NRT)** - ServiceModel and **`protobuf-net.Reflection` are done**, and protogen now EMITS
   annotations (C# only; VB has no NRT). **Next slice is `protobuf-net.Core` (1952 sites)**, which
   drags `protobuf-net.BuildTools` with it because BuildTools compiles Core's sources in - the
@@ -114,6 +109,13 @@ engine), B23 (derived lists admitted to the raw packed path), B49 + `PBN3014`, B
 ApiCompat gate DOES run and DOES fail the build; the earlier negative was a measurement artefact
 (`dotnet pack` never reaches the hook here, and `NuGetPackageRoot` is not the default path on this
 machine). That also settles the NRT half: annotations are invisible to package validation.**
+
+**A .NET 11 SDK build is now required**, and the failure is unhelpful if it is missing:
+`global.json` selects the Microsoft.Testing.Platform runner (xunit.v3 4.0 dropped the VSTest bridge
+on the .NET 10 SDK), and `dotnet test` can only expand a traversal project on .NET 11
+(dotnet/sdk#55297, no 10.x backport). On 10.x you get **"No test projects were found"**, which says
+nothing about the cause. `allowPrerelease` is on until 11 GAs in November. Gap **B54** has the whole
+story, including why `Build.csproj` declares `IsTraversal`.
 
 **Three operational traps that have each cost a sitting**, kept here because they are about running
 the gates rather than about the code:
