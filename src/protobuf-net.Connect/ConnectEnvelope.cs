@@ -69,26 +69,52 @@ namespace ProtoBuf.Connect
         /// <param name="value">The message.</param>
         /// <param name="over">An optional per-method codec that replaces the channel's encoding.</param>
         /// <param name="flags">The envelope flags; zero for an ordinary message.</param>
+        /// <param name="compression">
+        /// The negotiated compression, or <c>null</c>/<see cref="ConnectCompression.Identity"/> for none.
+        /// </param>
         public static void WriteMessage<T>(IBufferWriter<byte> destination, ConnectCodec codec, T value,
-            IConnectMessageCodec<T>? over = null, byte flags = 0)
+            IConnectMessageCodec<T>? over = null, byte flags = 0, ConnectCompression? compression = null)
         {
             if (destination is null) throw new ArgumentNullException(nameof(destination));
             if (codec is null) throw new ArgumentNullException(nameof(codec));
 
-            if (codec.Measure(value, over) is { } measured)
+            if (compression is null || ReferenceEquals(compression, ConnectCompression.Identity))
             {
-                WriteHeader(destination, flags, checked((int)measured));
-                codec.Write(destination, value, over);
+                if (codec.Measure(value, over) is { } measured)
+                {
+                    WriteHeader(destination, flags, checked((int)measured));
+                    codec.Write(destination, value, over);
+                    return;
+                }
+
+                // no measure pass: encode into a scratch buffer, then state what it came to. The copy is
+                // the price of not knowing, and is paid only by codecs that cannot tell us.
+                using var unmeasured = new Internal.PooledBufferWriter();
+                codec.Write(unmeasured, value, over);
+
+                WriteHeader(destination, flags, unmeasured.WrittenCount);
+                destination.Write(unmeasured.WrittenMemory.Span);
                 return;
             }
 
-            // no measure pass: encode into a scratch buffer, then state what it came to. The copy is the
-            // price of not knowing, and is paid only by codecs that cannot tell us.
+            // Compression always buffers, measurable or not: the length in the header is the length of
+            // the bytes that follow, and that is the COMPRESSED length, which nothing can predict.
             using var scratch = new Internal.PooledBufferWriter();
             codec.Write(scratch, value, over);
 
-            WriteHeader(destination, flags, scratch.WrittenCount);
-            destination.Write(scratch.WrittenMemory.Span);
+            // ...and it is per message, not per stream. Below the threshold the message goes out plain
+            // with the flag clear, which the protocol allows precisely so that compressing a 6-byte
+            // message into a larger one is avoidable.
+            if (scratch.WrittenCount < compression.MinimumSize)
+            {
+                WriteHeader(destination, flags, scratch.WrittenCount);
+                destination.Write(scratch.WrittenMemory.Span);
+                return;
+            }
+
+            var compressed = compression.Compress(new ReadOnlySequence<byte>(scratch.WrittenMemory));
+            WriteHeader(destination, (byte)(flags | FlagCompressed), compressed.Length);
+            destination.Write(compressed);
         }
 
         /// <summary>

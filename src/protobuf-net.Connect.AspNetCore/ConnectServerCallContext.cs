@@ -54,6 +54,20 @@ namespace ProtoBuf.Connect.AspNetCore
         /// </summary>
         public HttpContext HttpContext { get; }
 
+        /// <summary>
+        /// The compression the caller used for its request, and the one we may use for the response.
+        /// </summary>
+        /// <remarks>
+        /// Two properties rather than one, because the negotiation is genuinely two-sided: a caller may
+        /// send compressed and accept only identity, or the reverse. They live on the call context
+        /// rather than on the invoker signature because that is what they are - per-call state, settled
+        /// once from the request headers and read by whichever framing the method's shape uses.
+        /// </remarks>
+        internal ConnectCompression RequestCompression { get; set; } = ConnectCompression.Identity;
+
+        /// <inheritdoc cref="RequestCompression"/>
+        internal ConnectCompression ResponseCompression { get; set; } = ConnectCompression.Identity;
+
         /// <inheritdoc/>
         protected override string MethodCore => _method;
 
@@ -201,6 +215,23 @@ namespace ProtoBuf.Connect.AspNetCore
                 HttpContext.Response.Headers.Append(
                     "trailer-" + entry.Key, entry.IsBinary ? ConnectBase64Encode(entry.ValueBytes) : entry.Value);
             }
+        }
+
+        /// <summary>
+        /// Announces the compression used for the response body, where one is used.
+        /// </summary>
+        /// <remarks>
+        /// The header differs by shape for the same reason the request side does: a unary body is an
+        /// ordinary HTTP body, while an enveloped stream compresses each message under Connect's own
+        /// header. Nothing is announced for identity - an absent header already means "not compressed",
+        /// and stating it would only invite an intermediary to act on it.
+        /// </remarks>
+        internal void ApplyResponseEncoding()
+        {
+            if (ConnectCompression.IsIdentity(ResponseCompression.Name)) return;
+
+            HttpContext.Response.Headers[_isUnary ? "content-encoding" : "connect-content-encoding"]
+                = ResponseCompression.Name;
         }
 
         /// <summary>Binary metadata travels base64-encoded, and Connect's base64 is unpadded.</summary>

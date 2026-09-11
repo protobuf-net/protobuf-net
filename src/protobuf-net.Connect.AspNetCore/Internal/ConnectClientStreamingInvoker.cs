@@ -44,7 +44,7 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
             HttpContext http, TImplementation service, ConnectCodec codec, ConnectServerCallContext context)
         {
             var requests = EnvelopedRequestReader.ReadAllAsync(
-                http.Request.BodyReader, codec, _method.RequestCodec, _method.ToString(), context.CancellationToken);
+                http.Request.BodyReader, codec, _method.RequestCodec, _method.ToString(), context.RequestCompression, context.CancellationToken);
 
             // Status and content-type are set BEFORE the handler runs, and that ordering is load-bearing
             // rather than tidy: a handler may send leading metadata, which commits the response, after
@@ -55,6 +55,7 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
             var response = http.Response;
             response.StatusCode = StatusCodes.Status200OK;
             response.ContentType = codec.ContentTypeFor(ConnectMethodType.ClientStreaming);
+            context.ApplyResponseEncoding();
 
             // A STREAMING call answers 200 whatever happens, and reports failure in its terminating
             // envelope - even when it fails before producing anything. It is tempting to let the
@@ -95,7 +96,7 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
             // the message only if the call succeeded; a failed one carries no payload at all
             if (failure is null)
             {
-                ConnectEnvelope.WriteMessage(response.BodyWriter, codec, reply!, _method.ResponseCodec);
+                ConnectEnvelope.WriteMessage(response.BodyWriter, codec, reply!, _method.ResponseCodec, compression: context.ResponseCompression);
             }
 
             // http.RequestAborted, NOT the call's token. The call's token carries the deadline, so on a

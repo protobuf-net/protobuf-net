@@ -23,13 +23,14 @@ namespace ProtoBuf.Connect.Internal
     {
         private PooledBufferWriter? _payload;
 
-        public EnvelopedCodecContent(ConnectCodec codec, T value, string contentType, IConnectMessageCodec<T>? over = null)
+        public EnvelopedCodecContent(ConnectCodec codec, T value, string contentType, IConnectMessageCodec<T>? over = null,
+            ConnectCompression? compression = null)
         {
             var hint = codec.Measure(value, over) is { } length && length <= int.MaxValue ? (int)length : 256;
             var payload = new PooledBufferWriter(hint + ConnectEnvelope.HeaderLength);
             try
             {
-                ConnectEnvelope.WriteMessage(payload, codec, value, over);
+                ConnectEnvelope.WriteMessage(payload, codec, value, over, compression: compression);
             }
             catch
             {

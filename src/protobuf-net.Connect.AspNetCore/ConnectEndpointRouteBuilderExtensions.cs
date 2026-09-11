@@ -97,7 +97,6 @@ namespace ProtoBuf.Connect.AspNetCore
                     }
 
                     codec = SelectCodec(http, options, method.Type);
-                    RejectUnsupportedCompression(http, method.Type);
 
                     var cancellationToken = http.RequestAborted;
                     TimeSpan? span = TryGetTimeout(http, out var parsed) ? parsed : null;
@@ -108,9 +107,15 @@ namespace ProtoBuf.Connect.AspNetCore
                         cancellationToken = timeout.Token;
                     }
 
+                    Negotiate(http, options, method.Type, out var requestCompression, out var responseCompression);
+
                     callContext = new ConnectServerCallContext(
                         http, method.Path, ConnectServerCallContext.DeadlineFrom(span), cancellationToken,
-                        isUnary: method.Type == ConnectMethodType.Unary);
+                        isUnary: method.Type == ConnectMethodType.Unary)
+                    {
+                        RequestCompression = requestCompression,
+                        ResponseCompression = responseCompression,
+                    };
                     var service = http.RequestServices.GetRequiredService<TImplementation>();
 
                     await method.Invoker.InvokeAsync(http, service, codec, callContext).ConfigureAwait(false);
@@ -255,30 +260,72 @@ namespace ProtoBuf.Connect.AspNetCore
         }
 
         /// <summary>
-        /// Refuses a request whose body is compressed, since no compression is implemented yet.
+        /// Settles what compression the request used and what the response may use.
         /// </summary>
         /// <remarks>
-        /// The header differs by shape - <c>content-encoding</c> for a unary body, and Connect's own
-        /// <c>connect-content-encoding</c> for the enveloped shapes, which exists precisely so that the
-        /// envelope payloads can be compressed independently of the HTTP body. Ignoring either means
-        /// handing compressed bytes to a codec and reporting the resulting garbage as a parse error.
+        /// The header names differ by shape, and that is the protocol's design rather than an accident:
+        /// a <b>unary</b> body is an ordinary HTTP body and uses <c>content-encoding</c> /
+        /// <c>accept-encoding</c>, while an <b>enveloped</b> stream compresses each message individually
+        /// under <c>connect-content-encoding</c> / <c>connect-accept-encoding</c>. Compressing a frame
+        /// sequence as one body would defeat the framing.
+        /// <para>
+        /// A request encoding we do not have is <c>unimplemented</c> - the caller asked for something we
+        /// lack. An <em>accept</em> we cannot satisfy is not an error at all: identity always satisfies
+        /// it, which is why the two directions are settled separately.
+        /// </para>
         /// </remarks>
-        private static void RejectUnsupportedCompression(HttpContext http, ConnectMethodType type)
+        private static void Negotiate(
+            HttpContext http, ConnectServerOptions options, ConnectMethodType type,
+            out ConnectCompression request, out ConnectCompression response)
         {
-            var name = type == ConnectMethodType.Unary ? "content-encoding" : "connect-content-encoding";
-            var header = http.Request.Headers[name];
-            if (header.Count == 0) return;
+            var unary = type == ConnectMethodType.Unary;
+            var encodingHeader = unary ? "content-encoding" : "connect-content-encoding";
+            var acceptHeader = unary ? "accept-encoding" : "connect-accept-encoding";
 
-            var encoding = header.ToString();
-            if (string.IsNullOrEmpty(encoding)
-                || string.Equals(encoding, "identity", StringComparison.OrdinalIgnoreCase))
+            request = ConnectCompression.Identity;
+            var stated = http.Request.Headers[encodingHeader].ToString();
+            if (!ConnectCompression.IsIdentity(stated))
             {
-                return;
+                request = Find(options, stated)
+                    ?? throw new ConnectException(
+                        ConnectCode.Unimplemented,
+                        $"The '{stated}' compression is not supported; this server accepts: {Accepted(options)}.");
             }
 
-            throw new ConnectException(
-                ConnectCode.Unimplemented,
-                $"The '{encoding}' compression is not supported; this server accepts 'identity' only.");
+            // the response side is a preference list, and identity always satisfies it
+            response = ConnectCompression.Identity;
+            var accepted = http.Request.Headers[acceptHeader].ToString();
+            if (string.IsNullOrEmpty(accepted)) return;
+
+            foreach (var candidate in accepted.Split(','))
+            {
+                // "gzip;q=0.5" - the quality weighting is a preference, and we take the first we have
+                var name = candidate.Split(';')[0].Trim();
+                if (ConnectCompression.IsIdentity(name)) return;
+
+                if (Find(options, name) is { } found)
+                {
+                    response = found;
+                    return;
+                }
+            }
+        }
+
+        private static ConnectCompression? Find(ConnectServerOptions options, string name)
+        {
+            foreach (var compression in options.Compressions)
+            {
+                if (string.Equals(compression.Name, name, StringComparison.OrdinalIgnoreCase)) return compression;
+            }
+
+            return null;
+        }
+
+        private static string Accepted(ConnectServerOptions options)
+        {
+            var names = new List<string> { "identity" };
+            foreach (var compression in options.Compressions) names.Add(compression.Name);
+            return string.Join(", ", names);
         }
 
         private sealed class CompositeEndpointConventionBuilder : IEndpointConventionBuilder

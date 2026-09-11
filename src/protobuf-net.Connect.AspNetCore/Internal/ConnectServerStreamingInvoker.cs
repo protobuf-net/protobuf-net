@@ -48,12 +48,13 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
             // read BEFORE committing the status: a request we cannot read never starts a stream, and so
             // is reportable the ordinary way, as a non-200 with a JSON error
             var request = await EnvelopedRequestReader
-                .ReadOneAsync(http.Request.BodyReader, codec, _method.RequestCodec, _method.ToString(), context.CancellationToken)
+                .ReadOneAsync(http.Request.BodyReader, codec, _method.RequestCodec, _method.ToString(), context.RequestCompression, context.CancellationToken)
                 .ConfigureAwait(false);
 
             var response = http.Response;
             response.StatusCode = StatusCodes.Status200OK;
             response.ContentType = codec.ContentTypeFor(ConnectMethodType.ServerStreaming);
+            context.ApplyResponseEncoding();
             // no Content-Length: a stream cannot state one, which is the sibling case MeasuredCodecContent
             // exists to contrast with
 
@@ -63,7 +64,7 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
                 await foreach (var message in _handler(service, request, context)
                     .WithCancellation(context.CancellationToken).ConfigureAwait(false))
                 {
-                    WriteMessage(response.BodyWriter, codec, message);
+                    WriteMessage(response.BodyWriter, codec, message, context);
                     // flush per message: a stream the client cannot see until the end is not a stream
                     await response.BodyWriter.FlushAsync(context.CancellationToken).ConfigureAwait(false);
                 }
@@ -107,9 +108,9 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
                 .ConfigureAwait(false);
         }
 
-        private void WriteMessage(PipeWriter writer, ConnectCodec codec, TResponse message)
+        private void WriteMessage(PipeWriter writer, ConnectCodec codec, TResponse message, ConnectServerCallContext context)
         {
-            ConnectEnvelope.WriteMessage(writer, codec, message, _method.ResponseCodec);
+            ConnectEnvelope.WriteMessage(writer, codec, message, _method.ResponseCodec, compression: context.ResponseCompression);
         }
 
     }

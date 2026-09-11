@@ -43,6 +43,16 @@ namespace ProtoBuf.Connect
         public Version? HttpVersion { get; init; }
 
         /// <summary>
+        /// Compress the request with this. Omitted, or <see cref="ConnectCompression.Identity"/>, sends
+        /// it uncompressed.
+        /// </summary>
+        /// <remarks>
+        /// Only the <em>request</em> direction: what the response uses is the server's choice, from
+        /// whatever we advertised as acceptable, and is read off the response rather than assumed.
+        /// </remarks>
+        public ConnectCompression? Compression { get; init; }
+
+        /// <summary>
         /// Translates a caller's gRPC-shaped <see cref="CallOptions"/> into transport options.
         /// </summary>
         /// <remarks>

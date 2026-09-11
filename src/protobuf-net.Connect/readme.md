@@ -126,15 +126,16 @@ dotnet publish -c Release -r linux-x64     # PublishAot=true
 Measured against [`connectrpc/conformance`](https://github.com/connectrpc/conformance) v1.0.5,
 declaring binary (`CODEC_PROTO`) support over HTTP/1.1 and HTTP/2 — **both directions pass in full**:
 
-| mode | `proto` only | with `json` |
-| --- | --- | --- |
-| **server** | **207 / 207** | **390 / 390** |
-| **client** | **253 / 253** | **444 / 444** |
+| mode | `proto` only | + `json` | + compression |
+| --- | --- | --- | --- |
+| **server** | 207 / 207 | 390 / 390 | **1488 / 1488** |
+| **client** | 253 / 253 | 444 / 444 | **1696 / 1696** |
 
 Server mode drives a real Connect client against our server; client mode drives our client against the
 suite's reference server. Between them there is no step where both ends are ours.
 
-Declared unsupported, and therefore not counted: compression, TLS, and Connect GET. Those are
+Compression is `gzip`, `br` and `deflate`, all in-box on .NET. Declared unsupported, and therefore not
+counted: `zstd`, `snappy`, TLS, and Connect GET. Those are
 recorded as gaps rather than hidden — see `notes/connect/findings.md`.
 
 ## What is not here yet
@@ -143,7 +144,7 @@ recorded as gaps rather than hidden — see `notes/connect/findings.md`.
   `protobuf-net.Connect.Google`; a code-first `[ProtoModel]` is binary only, because protobuf JSON is a
   specified mapping of a *proto schema* rather than a serialization of a POCO, so it has to be
   generated the same way the binary path is.
-- **Compression**, **Connect GET** for side-effect-free methods, and **TLS client certificates**.
+- **Connect GET** for side-effect-free methods, and **TLS client certificates**.
 - Endpoint metadata inference for contract-first (see the warning above).
 
 ## Layout

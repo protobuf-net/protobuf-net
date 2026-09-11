@@ -34,6 +34,7 @@ namespace ProtoBuf.Connect
         private int _enumerated;
         private ConnectException? _failure;
         private readonly CancellationTokenSource? _deadline;
+        private readonly ConnectCompression? _compression;
 
         internal ConnectServerStream(
             HttpResponseMessage response,
@@ -41,9 +42,11 @@ namespace ProtoBuf.Connect
             IConnectMessageCodec<TResponse>? serializer,
             string method,
             IReadOnlyList<KeyValuePair<string, string>> headers,
-            CancellationTokenSource? deadline = null)
+            CancellationTokenSource? deadline = null,
+            ConnectCompression? compression = null)
         {
             _deadline = deadline;
+            _compression = compression;
             _response = response;
             _codec = codec;
             _serializer = serializer;
@@ -98,7 +101,7 @@ namespace ProtoBuf.Connect
                         if ((flags & ConnectEnvelope.FlagEndOfStream) != 0)
                         {
                             // a span cannot cross a yield, so the terminator is parsed out of line
-                            ReadTerminator(payload);
+                            ReadTerminator(flags, payload);
                             sawTerminator = true;
                             break;
                         }
@@ -156,9 +159,10 @@ namespace ProtoBuf.Connect
         private TResponse ReadMessage(byte flags, in ReadOnlySequence<byte> payload)
         {
             RejectUnsupportedFlags(flags);
+            var body = Decompress(flags, payload);
             try
             {
-                return _codec.Read(payload, _serializer);
+                return _codec.Read(body, _serializer);
             }
             catch (Exception ex) when (ex is not ConnectException)
             {
@@ -169,8 +173,11 @@ namespace ProtoBuf.Connect
             }
         }
 
-        private void ReadTerminator(in ReadOnlySequence<byte> payload)
+        private void ReadTerminator(byte flags, in ReadOnlySequence<byte> source)
         {
+            // the end-of-stream envelope is an envelope: it carries the compressed flag like any other
+            var payload = Decompress(flags, source);
+
             byte[]? rented = null;
             ReadOnlySpan<byte> span;
             if (payload.IsSingleSegment)
@@ -207,15 +214,40 @@ namespace ProtoBuf.Connect
             }
         }
 
-        private void RejectUnsupportedFlags(byte flags)
+        /// <summary>
+        /// Decompresses a payload where the envelope says it is compressed.
+        /// </summary>
+        /// <remarks>
+        /// Per <em>message</em>, not per stream: the flag is on each envelope precisely so that a sender
+        /// may leave a small message uncompressed, so a reader must take the flag's word for it rather
+        /// than the negotiation's.
+        /// </remarks>
+        private ReadOnlySequence<byte> Decompress(byte flags, in ReadOnlySequence<byte> payload)
         {
-            if ((flags & ConnectEnvelope.FlagCompressed) != 0)
+            if ((flags & ConnectEnvelope.FlagCompressed) == 0) return payload;
+
+            if (_compression is null || ConnectCompression.IsIdentity(_compression.Name))
             {
                 throw new ConnectException(
                     ConnectCode.Internal,
                     $"A response message for '{_method}' is flagged compressed, but no compression was negotiated.");
             }
 
+            try
+            {
+                return new ReadOnlySequence<byte>(_compression.Decompress(payload));
+            }
+            catch (Exception ex) when (ex is not ConnectException)
+            {
+                throw new ConnectException(
+                    ConnectCode.Internal,
+                    $"A message in the response stream for '{_method}' could not be decompressed as '{_compression.Name}': {ex.Message}",
+                    innerException: ex);
+            }
+        }
+
+        private void RejectUnsupportedFlags(byte flags)
+        {
             if ((flags & ConnectEnvelope.FlagReserved) != 0)
             {
                 // the peer is using an extension we do not know about, so we cannot know that ignoring

@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Buffers;
 using ProtoBuf.Serializers;
 
 namespace ProtoBuf.Connect.Internal
@@ -26,7 +27,8 @@ namespace ProtoBuf.Connect.Internal
     {
         private PooledBufferWriter? _payload;
 
-        public MeasuredCodecContent(ConnectCodec codec, T value, string contentType, IConnectMessageCodec<T>? over = null)
+        public MeasuredCodecContent(ConnectCodec codec, T value, string contentType, IConnectMessageCodec<T>? over = null,
+            ConnectCompression? compression = null)
         {
             // Measure first where the codec can: it sizes the buffer exactly, and it is the same call the
             // server uses to set Content-Length. A codec that cannot measure simply grows the writer.
@@ -35,6 +37,17 @@ namespace ProtoBuf.Connect.Internal
             try
             {
                 codec.Write(payload, value, over);
+
+                if (compression is not null && !ConnectCompression.IsIdentity(compression.Name))
+                {
+                    // the body is replaced wholesale rather than compressed in place: Content-Length has
+                    // to describe the compressed bytes, and this content states one
+                    var compressed = compression.Compress(new System.Buffers.ReadOnlySequence<byte>(payload.WrittenMemory));
+                    var replacement = new PooledBufferWriter(compressed.Length);
+                    replacement.Write(compressed);
+                    payload.Dispose();
+                    payload = replacement;
+                }
             }
             catch
             {

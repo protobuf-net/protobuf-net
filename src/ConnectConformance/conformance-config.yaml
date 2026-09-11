@@ -13,8 +13,13 @@ features:
     - CODEC_PROTO
     - CODEC_JSON
 
+  # gzip, brotli and deflate are all in-box on .NET; zstd and snappy are not, and are declared away
+  # rather than faked.
   compressions:
     - COMPRESSION_IDENTITY
+    - COMPRESSION_GZIP
+    - COMPRESSION_BR
+    - COMPRESSION_DEFLATE
 
   # HTTP/1.1 AND HTTP/2, which is the whole operational argument: everything except full-duplex works
   # over HTTP/1.1, because Connect puts trailing metadata in the body rather than in HTTP trailers.

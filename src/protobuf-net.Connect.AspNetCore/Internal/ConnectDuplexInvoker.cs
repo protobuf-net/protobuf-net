@@ -70,11 +70,12 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
             }
 
             var requests = EnvelopedRequestReader.ReadAllAsync(
-                http.Request.BodyReader, codec, _method.RequestCodec, _method.ToString(), context.CancellationToken);
+                http.Request.BodyReader, codec, _method.RequestCodec, _method.ToString(), context.RequestCompression, context.CancellationToken);
 
             var response = http.Response;
             response.StatusCode = StatusCodes.Status200OK;
             response.ContentType = codec.ContentTypeFor(ConnectMethodType.DuplexStreaming);
+            context.ApplyResponseEncoding();
 
             ConnectException? failure = null;
             try
@@ -82,7 +83,7 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
                 await foreach (var message in _handler(service, requests, context)
                     .WithCancellation(context.CancellationToken).ConfigureAwait(false))
                 {
-                    ConnectEnvelope.WriteMessage(response.BodyWriter, codec, message, _method.ResponseCodec);
+                    ConnectEnvelope.WriteMessage(response.BodyWriter, codec, message, _method.ResponseCodec, compression: context.ResponseCompression);
                     await response.BodyWriter.FlushAsync(context.CancellationToken).ConfigureAwait(false);
                 }
 

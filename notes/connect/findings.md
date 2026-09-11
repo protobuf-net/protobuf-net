@@ -2820,7 +2820,7 @@ which is the useful way round.
 ### Next
 
 - JSON codec — now unambiguously the largest remaining piece.
-- Compression, Connect GET, TLS.
+- ~~Compression~~ **Done — §50.** Connect GET and TLS remain.
 - ~~An HTTP-version option, per the duplex gap above.~~ **Done — §49.**
 - ~~Wiring conformance into CI.~~ **Done:** a step on the linux job, which downloads the pinned runner
   (checksum verified) and runs both modes. It is a release artefact rather than a live service, which is
@@ -3054,6 +3054,74 @@ left to negotiate is not negotiated, it silently becomes HTTP/1.1.
 `AotConnectSmoke` now drives half-duplex bidi over HTTP/1.1 through a generated client against our own
 server, with **no HTTP/2 anywhere** — the client-side counterpart of the server-side check added in §44.
 The server still does not refuse HTTP/1.1 for bidi and still should not: it cannot tell the two apart.
+
+## 50. Compression, and two bugs that look identical from the inside
+
+gzip, brotli and deflate, on both sides and all four shapes. With JSON already declared, the matrix is
+now **3184 cases and all of them pass**:
+
+```
+  server   1488 / 1488
+  client   1696 / 1696
+```
+
+### The two headers are not one header
+
+Connect negotiates compression in two places and it is easy to read that as redundancy. It is not:
+
+- a **unary** body is an ordinary HTTP body, so it uses `content-encoding` / `accept-encoding`;
+- an **enveloped** stream compresses **each message individually**, under `connect-content-encoding` /
+  `connect-accept-encoding`, with the envelope's flag bit 0 saying whether *that* message is compressed.
+
+The second exists because the body of a streaming call is a frame sequence rather than a message.
+Compressing it whole would defeat the framing, and any intermediary that re-encoded it would corrupt
+the stream.
+
+The per-message flag also makes "compressed" a property of a message rather than of a stream, which is
+what lets a sender leave a small message alone — gzip's header and trailer alone are 18 bytes, so
+compressing a 6-byte message reliably makes it bigger. `ConnectCompression.MinimumSize` is that
+threshold, and a reader must take the flag's word rather than the negotiation's.
+
+### `deflate` means zlib, not deflate
+
+The single fix that took the server from 1118/1488 to 1488/1488. HTTP's `deflate` encoding is
+**zlib** (RFC 1950) — two bytes of header and an Adler-32 trailer — not raw DEFLATE (RFC 1951).
+.NET's `DeflateStream` is the raw form and is the wrong one; `ZLibStream` is right.
+
+The failure signature is worth remembering: **gzip and brotli passed and every single deflate case
+failed**. A codec that is wrong in a uniform, structural way fails uniformly, which reads like "the
+feature is unimplemented" rather than "one constant is wrong".
+
+### `Content-Encoding` is a content header, and dropping it is silent
+
+The client compressed correctly and the reference server reported *"expected compression gzip; instead
+got identity"* with a parse error on bytes beginning `0x1f 0x8b` — gzip's magic. The body was
+compressed and nothing said so, because `Content-Encoding` belongs on `HttpRequestMessage.Content.Headers`
+and `HttpRequestMessage.Headers` **drops it without complaint**.
+
+`connect-content-encoding` is Connect's own header and does belong on the request, so the two live in
+different collections for a reason that has nothing to do with Connect. The two bugs above look
+identical from inside our process — bytes go out, something rejects them — and only an external peer
+distinguishes them.
+
+### The error body is compressed too
+
+The last two failures, and the most confusing failure mode available: a compressed error body that is
+not decompressed fails its JSON parse, gets reported as an opaque body, and reaches the caller as **an
+error whose message is gzip**. Errors are always the unary shape — a non-200 carries no envelopes — so
+it is `content-encoding` either way. An encoding we cannot decode leaves the bytes alone rather than
+inventing a decode failure on top of a failure.
+
+### What is declared
+
+`identity`, `gzip`, `br`, `deflate` — all in-box on .NET. `zstd` and `snappy` are in the suite's
+vocabulary and are declared away rather than faked.
+
+Compression is **opt-in on the server** (`ConnectServerOptions.Compressions`, empty by default): it is
+CPU the caller did not necessarily ask anyone to spend, and a server that advertises an encoding must
+be able to produce it. The client advertises what it can *decode* unconditionally, since that is a
+statement of capability rather than preference, and reads the response's actual encoding off the
+response rather than assuming its own preference was honoured.
 
 ## 12. Unverified — check before committing to any of this
 

@@ -75,8 +75,17 @@ internal static class ConformanceClient
             ? ProtoBuf.Connect.Google.GoogleJsonConnectCodec.Instance
             : MarshallerConnectCodec.Instance;
 
+        // the case names the compression its reference server expects the REQUEST to use
+        var compression = request.Compression switch
+        {
+            Compression.Gzip => ConnectCompression.Gzip,
+            Compression.Br => ConnectCompression.Brotli,
+            Compression.Deflate => ConnectCompression.Deflate,
+            _ => ConnectCompression.Identity,
+        };
+
         var client = new ConformanceService.ConformanceServiceClient(
-            new ConnectCallInvoker(new ConnectChannel(http, codec, address)));
+            new ConnectCallInvoker(new ConnectChannel(http, codec, address, compression: compression)));
 
         var result = new ClientResponseResult();
         using var cancellation = new CancellationTokenSource();

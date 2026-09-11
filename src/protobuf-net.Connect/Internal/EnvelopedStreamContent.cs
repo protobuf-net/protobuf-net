@@ -33,14 +33,16 @@ namespace ProtoBuf.Connect.Internal
         private readonly IConnectMessageCodec<T>? _serializer;
         private readonly CancellationToken _cancellationToken;
         private int _sent;
+        private readonly ConnectCompression? _compression;
 
         public EnvelopedStreamContent(
             ConnectCodec codec,
             IAsyncEnumerable<T> messages,
             string contentType,
             IConnectMessageCodec<T>? serializer,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken, ConnectCompression? compression = null)
         {
+            _compression = compression;
             _codec = codec;
             _messages = messages;
             _serializer = serializer;
@@ -72,7 +74,7 @@ namespace ProtoBuf.Connect.Internal
 
             await foreach (var message in _messages.WithCancellation(token).ConfigureAwait(false))
             {
-                ConnectEnvelope.WriteMessage(writer, _codec, message, _serializer);
+                ConnectEnvelope.WriteMessage(writer, _codec, message, _serializer, compression: _compression);
 
                 // flush per message: the server is entitled to act on each as it arrives
                 await writer.FlushAsync(token).ConfigureAwait(false);

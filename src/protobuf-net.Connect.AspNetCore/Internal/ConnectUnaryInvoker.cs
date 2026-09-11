@@ -1,6 +1,7 @@
 using System;
 using System.Buffers;
 using System.IO.Pipelines;
+using ProtoBuf.Connect.Internal;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -39,7 +40,7 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
 
         public override async Task InvokeAsync(HttpContext http, TImplementation service, ConnectCodec codec, ConnectServerCallContext context)
         {
-            var request = await ReadAsync(http.Request.BodyReader, codec, context.CancellationToken).ConfigureAwait(false);
+            var request = await ReadAsync(http.Request.BodyReader, codec, context).ConfigureAwait(false);
             var response = await _handler(service, request, context).ConfigureAwait(false);
 
             // a handler may report failure by setting ServerCallContext.Status rather than by throwing,
@@ -50,11 +51,12 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
             // is a `trailer-` prefixed header - which is how the protocol avoids HTTP trailers, and so HTTP/2
             context.FlushTrailers();
 
-            await WriteAsync(http.Response, codec, response, _method.ResponseCodec, context.CancellationToken).ConfigureAwait(false);
+            await WriteAsync(http.Response, codec, response, _method.ResponseCodec, context).ConfigureAwait(false);
         }
 
-        private async Task<TRequest> ReadAsync(PipeReader reader, ConnectCodec codec, CancellationToken cancellationToken)
+        private async Task<TRequest> ReadAsync(PipeReader reader, ConnectCodec codec, ConnectServerCallContext context)
         {
+            var cancellationToken = context.CancellationToken;
             // A unary body is the bare message with no framing, so there is nothing to parse incrementally:
             // read until the client is done, then decode once. A streaming shape reads envelope by envelope
             // from this same reader, which is why the reader rather than a Stream is the primitive.
@@ -69,6 +71,12 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
                     var buffer = result.Buffer;
                     try
                     {
+                        var compression = context.RequestCompression;
+                        if (!ConnectCompression.IsIdentity(compression.Name))
+                        {
+                            return Decode(codec, new ReadOnlySequence<byte>(compression.Decompress(buffer)));
+                        }
+
                         return Decode(codec, buffer);
                     }
                     finally
@@ -100,17 +108,45 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
         }
 
         private static async Task WriteAsync(HttpResponse response, ConnectCodec codec, TResponse value,
-            global::ProtoBuf.Connect.IConnectMessageCodec<TResponse>? serializer, CancellationToken cancellationToken)
+            global::ProtoBuf.Connect.IConnectMessageCodec<TResponse>? serializer, ConnectServerCallContext context)
         {
             // headers first: the response is committed on the first write, so anything the handler added -
             // including trailing metadata, which for unary is a `trailer-` prefixed header - is already set
             response.StatusCode = StatusCodes.Status200OK;
             response.ContentType = codec.ContentTypeFor(ConnectMethodType.Unary);
-            // measured with the same codec that writes, or not stated at all - a marshaller cannot measure
-            if (codec.Measure(value, serializer) is { } length) response.ContentLength = length;
 
-            codec.Write(response.BodyWriter, value, serializer);
-            await response.BodyWriter.FlushAsync(cancellationToken).ConfigureAwait(false);
+            var compression = context.ResponseCompression;
+            if (ConnectCompression.IsIdentity(compression.Name))
+            {
+                context.ApplyResponseEncoding();
+
+                // measured with the same codec that writes, or not stated at all - a marshaller cannot measure
+                if (codec.Measure(value, serializer) is { } length) response.ContentLength = length;
+
+                codec.Write(response.BodyWriter, value, serializer);
+                await response.BodyWriter.FlushAsync(context.CancellationToken).ConfigureAwait(false);
+                return;
+            }
+
+            // Compressing means encoding first: the Content-Length is the length of the COMPRESSED body,
+            // which nothing can predict, so the measure pass buys nothing here.
+            using var scratch = new PooledBufferWriter();
+            codec.Write(scratch, value, serializer);
+
+            // ...and below the threshold it goes out plain, in which case the encoding must NOT be
+            // announced - a stated content-encoding that does not describe the body is worse than none
+            if (scratch.WrittenCount < compression.MinimumSize)
+            {
+                context.ResponseCompression = ConnectCompression.Identity;
+                response.ContentLength = scratch.WrittenCount;
+                await response.BodyWriter.WriteAsync(scratch.WrittenMemory, context.CancellationToken).ConfigureAwait(false);
+                return;
+            }
+
+            var compressed = compression.Compress(new ReadOnlySequence<byte>(scratch.WrittenMemory));
+            context.ApplyResponseEncoding();
+            response.ContentLength = compressed.Length;
+            await response.BodyWriter.WriteAsync(compressed, context.CancellationToken).ConfigureAwait(false);
         }
     }
 }

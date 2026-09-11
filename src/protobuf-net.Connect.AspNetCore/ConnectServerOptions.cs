@@ -19,6 +19,17 @@ namespace ProtoBuf.Connect.AspNetCore
         public IList<ConnectCodec> Codecs { get; } = new List<ConnectCodec>();
 
         /// <summary>
+        /// The compressions this server accepts and may use, most preferred first.
+        /// </summary>
+        /// <remarks>
+        /// Empty by default: compression is opt-in, because it is a CPU cost the caller did not
+        /// necessarily ask anyone to pay and because a server that advertises an encoding must be able to
+        /// produce it. <c>identity</c> is always accepted and never needs listing - a peer that states it
+        /// explicitly is asking for no compression, not for something unknown.
+        /// </remarks>
+        public IList<ConnectCompression> Compressions { get; } = new List<ConnectCompression>();
+
+        /// <summary>
         /// Whether an exception's message is included in the error sent to the client. Off by default:
         /// an unhandled exception's message is not written for a caller to read.
         /// </summary>

@@ -25,7 +25,8 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
     {
         /// <summary>Reads exactly one message; anything less is a truncated request.</summary>
         public static async Task<T> ReadOneAsync<T>(
-            PipeReader reader, ConnectCodec codec, IConnectMessageCodec<T>? serializer, string method, CancellationToken cancellationToken)
+            PipeReader reader, ConnectCodec codec, IConnectMessageCodec<T>? serializer, string method,
+            ConnectCompression? compression, CancellationToken cancellationToken)
         {
             while (true)
             {
@@ -37,7 +38,7 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
                     T message;
                     try
                     {
-                        message = Decode(codec, serializer, method, flags, payload);
+                        message = Decode(codec, serializer, method, flags, payload, compression);
                     }
                     finally
                     {
@@ -65,6 +66,7 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
             ConnectCodec codec,
             IConnectMessageCodec<T>? serializer,
             string method,
+            ConnectCompression? compression,
             [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             while (true)
@@ -77,7 +79,7 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
                 // reader must not be advanced while payloads still reference its buffer
                 while (ConnectEnvelope.TryRead(ref buffer, out var flags, out var payload))
                 {
-                    produced.Add(Decode(codec, serializer, method, flags, payload));
+                    produced.Add(Decode(codec, serializer, method, flags, payload, compression));
                 }
 
                 var completed = result.IsCompleted;
@@ -96,16 +98,33 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
         }
 
         private static T Decode<T>(
-            ConnectCodec codec, IConnectMessageCodec<T>? serializer, string method, byte flags, in ReadOnlySequence<byte> payload)
+            ConnectCodec codec, IConnectMessageCodec<T>? serializer, string method, byte flags,
+            in ReadOnlySequence<byte> payload, ConnectCompression? compression)
         {
+            ReadOnlySequence<byte> body = payload;
             if ((flags & ConnectEnvelope.FlagCompressed) != 0)
             {
-                // `internal`, not `unimplemented`: the envelope claims compression that no
-                // connect-content-encoding negotiated, so the peer has contradicted itself rather than
-                // asked for something we lack. The conformance suite pins the distinction.
-                throw new ConnectException(
-                    ConnectCode.Internal,
-                    $"A request message for '{method}' is flagged compressed, but no compression was negotiated.");
+                if (compression is null || ConnectCompression.IsIdentity(compression.Name))
+                {
+                    // `internal`, not `unimplemented`: the envelope claims compression that no
+                    // connect-content-encoding negotiated, so the peer has contradicted itself rather
+                    // than asked for something we lack. The conformance suite pins the distinction.
+                    throw new ConnectException(
+                        ConnectCode.Internal,
+                        $"A request message for '{method}' is flagged compressed, but no compression was negotiated.");
+                }
+
+                try
+                {
+                    body = new ReadOnlySequence<byte>(compression.Decompress(payload));
+                }
+                catch (Exception ex) when (ex is not ConnectException)
+                {
+                    throw new ConnectException(
+                        ConnectCode.InvalidArgument,
+                        $"A request message for '{method}' could not be decompressed as '{compression.Name}': {ex.Message}",
+                        innerException: ex);
+                }
             }
 
             if ((flags & (ConnectEnvelope.FlagEndOfStream | ConnectEnvelope.FlagReserved)) != 0)
@@ -117,7 +136,7 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
 
             try
             {
-                return codec.Read(payload, serializer);
+                return codec.Read(body, serializer);
             }
             catch (Exception ex) when (ex is not ConnectException)
             {

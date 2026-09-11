@@ -3,6 +3,7 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Globalization;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
@@ -59,9 +60,11 @@ namespace ProtoBuf.Connect
         /// client goes through <c>CallContext</c>, which has no HTTP-version concept to carry - so for
         /// that consumer the channel is the only place to say it.
         /// </remarks>
-        public ConnectChannel(HttpClient http, ConnectCodec codec, Uri? baseAddress = null, Version? httpVersion = null)
+        public ConnectChannel(HttpClient http, ConnectCodec codec, Uri? baseAddress = null, Version? httpVersion = null,
+            ConnectCompression? compression = null)
         {
             _httpVersion = httpVersion;
+            _compression = compression;
             _http = http ?? throw new ArgumentNullException(nameof(http));
             Codec = codec ?? throw new ArgumentNullException(nameof(codec));
             var resolved = baseAddress ?? http.BaseAddress;
@@ -79,6 +82,17 @@ namespace ProtoBuf.Connect
         }
 
         private readonly Version? _httpVersion;
+        private readonly ConnectCompression? _compression;
+
+        /// <summary>
+        /// What this client can decode, advertised on every request.
+        /// </summary>
+        /// <remarks>
+        /// Advertised unconditionally rather than configured, because it is a statement of capability
+        /// rather than of preference: these three are in-box on .NET, so a response in any of them can
+        /// be read. Whether the server uses one is its choice, and is read back off the response.
+        /// </remarks>
+        private const string AcceptedEncodings = "gzip, br, deflate";
 
         /// <summary>The codec in use.</summary>
         public ConnectCodec Codec { get; }
@@ -132,9 +146,10 @@ namespace ProtoBuf.Connect
             {
                 // the bare message, no envelope - unary framing is the absence of framing
                 Content = new MeasuredCodecContent<TRequest>(
-                    Codec, request, Codec.ContentTypeFor(method.Type), method.RequestCodec),
+                    Codec, request, Codec.ContentTypeFor(method.Type), method.RequestCodec,
+                    options?.Compression ?? _compression),
             };
-            ApplyOptions(httpRequest, options);
+            ApplyOptions(httpRequest, options, unary: true);
 
             // ResponseHeadersRead throughout, not just where it is needed: it is what a streaming shape
             // requires, and using it for unary too keeps one path rather than two
@@ -153,10 +168,18 @@ namespace ProtoBuf.Connect
             // unary is small by construction and the codec reads a whole message, so the body is taken in
             // one piece; a streaming response reads from the PipeReader incrementally instead
             var body = await httpResponse.Content.ReadAsByteArrayAsync(cancellationToken).ConfigureAwait(false);
+            var payload = new ReadOnlySequence<byte>(body);
+
+            if (ResponseCompression(httpResponse, unary: true, method) is { } decompressor
+                && !ConnectCompression.IsIdentity(decompressor.Name))
+            {
+                payload = new ReadOnlySequence<byte>(decompressor.Decompress(payload));
+            }
+
             TResponse value;
             try
             {
-                value = Codec.Read(new ReadOnlySequence<byte>(body), method.ResponseCodec);
+                value = Codec.Read(payload, method.ResponseCodec);
             }
             catch (Exception ex) when (ex is not ConnectException)
             {
@@ -214,9 +237,10 @@ namespace ProtoBuf.Connect
             {
                 // one enveloped message: a streaming RPC frames both directions, whatever the cardinality
                 Content = new EnvelopedCodecContent<TRequest>(
-                    Codec, request, Codec.ContentTypeFor(method.Type), method.RequestCodec),
+                    Codec, request, Codec.ContentTypeFor(method.Type), method.RequestCodec,
+                    options?.Compression ?? _compression),
             };
-            ApplyOptions(httpRequest, options);
+            ApplyOptions(httpRequest, options, unary: false);
 
             var httpResponse = await _http
                 .SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
@@ -241,7 +265,8 @@ namespace ProtoBuf.Connect
 
             var metadata = ReadMetadata(httpResponse);
             return new ConnectServerStream<TResponse>(
-                httpResponse, Codec, method.ResponseCodec, method.ToString(), metadata.Headers, deadline);
+                httpResponse, Codec, method.ResponseCodec, method.ToString(), metadata.Headers, deadline,
+                ResponseCompression(httpResponse, unary: false, method));
         }
 
         /// <summary>
@@ -307,9 +332,10 @@ namespace ProtoBuf.Connect
             using var httpRequest = new HttpRequestMessage(HttpMethod.Post, ResolveUri(method))
             {
                 Content = new EnvelopedStreamContent<TRequest>(
-                    Codec, requests, Codec.ContentTypeFor(method.Type), method.RequestCodec, cancellationToken),
+                    Codec, requests, Codec.ContentTypeFor(method.Type), method.RequestCodec, cancellationToken,
+                    options?.Compression ?? _compression),
             };
-            ApplyOptions(httpRequest, options);
+            ApplyOptions(httpRequest, options, unary: false);
 
             var httpResponse = await _http
                 .SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
@@ -332,7 +358,8 @@ namespace ProtoBuf.Connect
 
             var metadata = ReadMetadata(httpResponse);
             var stream = new ConnectServerStream<TResponse>(
-                httpResponse, Codec, method.ResponseCodec, method.ToString(), metadata.Headers);
+                httpResponse, Codec, method.ResponseCodec, method.ToString(), metadata.Headers,
+                compression: ResponseCompression(httpResponse, unary: false, method));
 
             TResponse? response = default;
             var count = 0;
@@ -410,14 +437,15 @@ namespace ProtoBuf.Connect
             using var httpRequest = new HttpRequestMessage(HttpMethod.Post, ResolveUri(method))
             {
                 Content = new EnvelopedStreamContent<TRequest>(
-                    Codec, requests, Codec.ContentTypeFor(method.Type), method.RequestCodec, cancellationToken),
+                    Codec, requests, Codec.ContentTypeFor(method.Type), method.RequestCodec, cancellationToken,
+                    options?.Compression ?? _compression),
 
                 // the DEFAULT, not the rule: full duplex needs HTTP/2, half duplex does not, and only the
                 // caller knows which this is. ApplyOptions overrides it when the caller said so.
                 Version = System.Net.HttpVersion.Version20,
                 VersionPolicy = HttpVersionPolicy.RequestVersionExact,
             };
-            ApplyOptions(httpRequest, options);
+            ApplyOptions(httpRequest, options, unary: false);
 
             var httpResponse = await _http
                 .SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
@@ -440,7 +468,8 @@ namespace ProtoBuf.Connect
 
             var metadata = ReadMetadata(httpResponse);
             return new ConnectServerStream<TResponse>(
-                httpResponse, Codec, method.ResponseCodec, method.ToString(), metadata.Headers, deadline);
+                httpResponse, Codec, method.ResponseCodec, method.ToString(), metadata.Headers, deadline,
+                ResponseCompression(httpResponse, unary: false, method));
         }
 
         /// <summary>
@@ -490,9 +519,30 @@ namespace ProtoBuf.Connect
                 ConnectCode.DeadlineExceeded, $"The call to '{method}' exceeded its deadline.", innerException: exception);
         }
 
-        private void ApplyOptions(HttpRequestMessage request, ConnectCallOptions? options)
+        private void ApplyOptions(HttpRequestMessage request, ConnectCallOptions? options, bool unary)
         {
             request.Headers.TryAddWithoutValidation(ProtocolVersionHeader, ProtocolVersion);
+
+            var compression = options?.Compression ?? _compression;
+            if (compression is not null && !ConnectCompression.IsIdentity(compression.Name))
+            {
+                if (unary)
+                {
+                    // Content-Encoding is a CONTENT header, not a request header - HttpRequestMessage.Headers
+                    // drops it silently, which looks exactly like not compressing at all. The symptom is the
+                    // peer reporting a parse error on bytes beginning 0x1f 0x8b, which is gzip's magic:
+                    // the body was compressed and nothing said so.
+                    request.Content?.Headers.TryAddWithoutValidation("content-encoding", compression.Name);
+                }
+                else
+                {
+                    // ...whereas connect-content-encoding is Connect's own, and belongs on the request
+                    request.Headers.TryAddWithoutValidation("connect-content-encoding", compression.Name);
+                }
+            }
+
+            request.Headers.TryAddWithoutValidation(
+                unary ? "accept-encoding" : "connect-accept-encoding", AcceptedEncodings);
 
             // a stated version wins over anything the call shape chose for itself, and is pinned exactly:
             // a plaintext endpoint has no ALPN, so a version left to negotiate silently becomes HTTP/1.1.
@@ -549,6 +599,34 @@ namespace ProtoBuf.Connect
                 $"The response to '{method}' is '{actual ?? "<none>"}', but this call asked for '{expected}'.");
         }
 
+        /// <summary>
+        /// The compression a response actually used, from what it says rather than what we asked for.
+        /// </summary>
+        /// <remarks>
+        /// Read off the response deliberately: a server is free to answer uncompressed whatever the
+        /// accept header offered - and will, for a message too small to be worth it - so assuming our own
+        /// preference would decode garbage. An encoding we do not have is the server's mistake rather
+        /// than the caller's, hence <c>internal</c>.
+        /// </remarks>
+        private static ConnectCompression ResponseCompression(HttpResponseMessage response, bool unary, object method)
+        {
+            var header = unary
+                ? response.Content.Headers.ContentEncoding.FirstOrDefault()
+                : (response.Headers.TryGetValues("connect-content-encoding", out var values)
+                    ? values.FirstOrDefault() : null);
+
+            if (ConnectCompression.IsIdentity(header)) return ConnectCompression.Identity;
+
+            foreach (var known in new[] { ConnectCompression.Gzip, ConnectCompression.Brotli, ConnectCompression.Deflate })
+            {
+                if (string.Equals(known.Name, header, StringComparison.OrdinalIgnoreCase)) return known;
+            }
+
+            throw new ConnectException(
+                ConnectCode.Internal,
+                $"The response to '{method}' is encoded as '{header}', which this client cannot decode.");
+        }
+
         private static ConnectCallResult ReadMetadata(HttpResponseMessage response)
         {
             List<KeyValuePair<string, string>>? headers = null;
@@ -594,6 +672,24 @@ namespace ProtoBuf.Connect
                     ConnectCodes.FromHttpStatus(status), response.ReasonPhrase, status,
                     codeWasInferred: true, innerException: ex)
                     { Headers = metadata.Headers, Trailers = metadata.Trailers };
+            }
+
+            // The ERROR BODY is compressed too, and forgetting that produces the most confusing possible
+            // failure: the JSON parse fails, the body is reported as an opaque message, and the caller
+            // sees an error whose text is gzip. Errors are always the unary shape - a non-200 has no
+            // envelopes - so it is content-encoding either way.
+            try
+            {
+                var encoding = ResponseCompression(response, unary: true, "the error response");
+                if (!ConnectCompression.IsIdentity(encoding.Name))
+                {
+                    payload = encoding.Decompress(new ReadOnlySequence<byte>(payload));
+                }
+            }
+            catch (ConnectException)
+            {
+                // an encoding we cannot decode leaves the bytes alone; the status still says what
+                // happened, and inventing a decode failure on top of a failure helps nobody
             }
 
             var isJson = string.Equals(
