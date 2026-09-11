@@ -27,6 +27,10 @@
     <PackageVersion Include="Grpc.Core.Api" Version="2.83.0" />
     <PackageVersion Include="Grpc.Net.Client" Version="2.83.0" />
     <PackageVersion Include="Grpc.AspNetCore.Server" Version="2.83.0" />
+    <!-- google.rpc.Status, for the conformance harness: rich gRPC error details travel in a
+         grpc-status-details-bin trailer, and this is the package real services use to build one. Using
+         it rather than hand-writing the bytes is what makes the interop claim honest. -->
+    <PackageVersion Include="Grpc.StatusProto" Version="2.83.0" />
     <PackageVersion Include="Iesi.Collections" Version="4.1.1" />
     <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.12" />
     <PackageVersion Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />

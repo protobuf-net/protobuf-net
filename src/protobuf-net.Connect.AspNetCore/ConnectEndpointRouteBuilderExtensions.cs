@@ -106,7 +106,8 @@ namespace ProtoBuf.Connect.AspNetCore
                     }
 
                     var callContext = new ConnectServerCallContext(
-                        http, method.Path, ConnectServerCallContext.DeadlineFrom(span), cancellationToken);
+                        http, method.Path, ConnectServerCallContext.DeadlineFrom(span), cancellationToken,
+                        isUnary: method.Type == ConnectMethodType.Unary);
                     var service = http.RequestServices.GetRequiredService<TImplementation>();
 
                     await method.Invoker.InvokeAsync(http, service, codec, callContext).ConfigureAwait(false);

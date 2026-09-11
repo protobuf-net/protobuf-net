@@ -1,0 +1,184 @@
+// Copyright 2023-2024 The Connect Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package connectrpc.conformance.v1;
+
+// Config defines the configuration for running conformance tests.
+// This enumerates all of the "flavors" of the test suite to run.
+message Config {
+  // The features supported by the client or server under test.
+  // This is used to filter the set of test cases that are run.
+  // If absent, an empty message is used. See Features for more
+  // on how empty/absent fields are interpreted.
+  Features features = 1;
+  // This can indicate additional permutations that are supported
+  // that might otherwise be excluded based on the above features.
+  repeated ConfigCase include_cases = 2;
+  // This can indicates permutations that are not supported even
+  // though their support might be implied by the above features.
+  repeated ConfigCase exclude_cases = 3;
+}
+
+// Features define the feature set that a client or server supports. They are
+// used to determine the server configurations and test cases that
+// will be run. They are defined in YAML files and are specified as part of the
+// --conf flag to the test runner.
+message Features {
+  // TODO: we could probably model some of the constraints on what are valid vs.
+  //       invalid (i.e. conflicting/impossible) features using protovalidate rules
+
+  // Supported HTTP versions.
+  // If empty, HTTP 1.1 and HTTP/2 are assumed.
+  repeated HTTPVersion versions = 1;
+  // Supported protocols.
+  // If empty, all three are assumed: Connect, gRPC, and gRPC-Web.
+  repeated Protocol protocols = 2;
+  // Supported codecs.
+  // If empty, "proto" and "json" are assumed.
+  repeated Codec codecs = 3;
+  // Supported compression algorithms.
+  // If empty, "identity" and "gzip" are assumed.
+  repeated Compression compressions = 4;
+  // Supported stream types.
+  // If empty, all stream types are assumed. This is usually for
+  // clients, since some client environments may not be able to
+  // support certain kinds of streaming operations, especially
+  // bidirectional streams.
+  repeated StreamType stream_types = 5;
+  // Whether H2C (unencrypted, non-TLS HTTP/2 over cleartext) is supported.
+  // If absent, true is assumed.
+  optional bool supports_h2c = 6;
+  // Whether TLS is supported.
+  // If absent, true is assumed.
+  optional bool supports_tls = 7;
+  // Whether the client supports TLS certificates.
+  // If absent, false is assumed. This should not be set if
+  // supports_tls is false.
+  optional bool supports_tls_client_certs = 8;
+  // Whether trailers are supported.
+  // If absent, true is assumed. If false, implies that gRPC protocol is not allowed.
+  optional bool supports_trailers = 9;
+  // Whether half duplex bidi streams are supported over HTTP/1.1.
+  // If absent, false is assumed.
+  optional bool supports_half_duplex_bidi_over_http1 = 10;
+  // Whether Connect via GET is supported.
+  // If absent, true is assumed.
+  optional bool supports_connect_get = 11;
+  // Whether a message receive limit is supported.
+  // If absent, true is assumed.
+  optional bool supports_message_receive_limit = 12;
+}
+
+// ConfigCase represents a single resolved configuration case. When tests are
+// run, the Config and the supported features therein are used to compute all
+// of the cases relevant to the implementation under test. These configuration
+// cases are then used to select which test cases are applicable.
+message ConfigCase {
+  // TODO: we could probably model some of the constraints on what is a valid
+  //       vs. invalid config case using protovalidate rules
+
+  // If unspecified, indicates cases for all versions.
+  HTTPVersion version = 1;
+  // If unspecified, indicates cases for all protocols.
+  Protocol protocol = 2;
+  // If unspecified, indicates cases for all codecs.
+  Codec codec = 3;
+  // If unspecified, indicates cases for all compression algorithms.
+  Compression compression = 4;
+  // If unspecified, indicates cases for all stream types.
+  StreamType stream_type = 5;
+  // If absent, indicates cases for plaintext (no TLS) but also for
+  // TLS if features indicate that TLS is supported.
+  optional bool use_tls = 6;
+  // If absent, indicates cases without client certs but also cases
+  // that use client certs if features indicate they are supported.
+  optional bool use_tls_client_certs = 7;
+  // If absent, indicates cases that do not test message receive
+  // limits but also cases that do test message receive limits if
+  // features indicate they are supported.
+  optional bool use_message_receive_limit = 8;
+}
+
+enum HTTPVersion {
+  HTTP_VERSION_UNSPECIFIED = 0;
+  HTTP_VERSION_1 = 1;
+  HTTP_VERSION_2 = 2;
+  HTTP_VERSION_3 = 3;
+}
+
+enum Protocol {
+  PROTOCOL_UNSPECIFIED = 0;
+  PROTOCOL_CONNECT = 1;
+  PROTOCOL_GRPC = 2;
+  PROTOCOL_GRPC_WEB = 3;
+  // TODO: Support add'l protocols:
+  //PROTOCOL_GRPC_WEB_TEXT = 4;
+  //PROTOCOL_REST_TRANSCODING = 5;
+}
+
+enum Codec {
+  CODEC_UNSPECIFIED = 0;
+  CODEC_PROTO = 1;
+  CODEC_JSON = 2;
+  CODEC_TEXT = 3 [deprecated = true]; // not used; will be ignored
+}
+
+enum Compression {
+  COMPRESSION_UNSPECIFIED = 0;
+  COMPRESSION_IDENTITY = 1;
+  COMPRESSION_GZIP = 2;
+  COMPRESSION_BR = 3;
+  COMPRESSION_ZSTD = 4;
+  COMPRESSION_DEFLATE = 5;
+  COMPRESSION_SNAPPY = 6;
+}
+
+enum StreamType {
+  STREAM_TYPE_UNSPECIFIED = 0;
+  STREAM_TYPE_UNARY = 1;
+  STREAM_TYPE_CLIENT_STREAM = 2;
+  STREAM_TYPE_SERVER_STREAM = 3;
+  STREAM_TYPE_HALF_DUPLEX_BIDI_STREAM = 4;
+  STREAM_TYPE_FULL_DUPLEX_BIDI_STREAM = 5;
+}
+
+enum Code {
+  CODE_UNSPECIFIED = 0;
+  CODE_CANCELED = 1;
+  CODE_UNKNOWN = 2;
+  CODE_INVALID_ARGUMENT = 3;
+  CODE_DEADLINE_EXCEEDED = 4;
+  CODE_NOT_FOUND = 5;
+  CODE_ALREADY_EXISTS = 6;
+  CODE_PERMISSION_DENIED = 7;
+  CODE_RESOURCE_EXHAUSTED = 8;
+  CODE_FAILED_PRECONDITION = 9;
+  CODE_ABORTED = 10;
+  CODE_OUT_OF_RANGE = 11;
+  CODE_UNIMPLEMENTED = 12;
+  CODE_INTERNAL = 13;
+  CODE_UNAVAILABLE = 14;
+  CODE_DATA_LOSS = 15;
+  CODE_UNAUTHENTICATED = 16;
+}
+
+// TLSCreds represents credentials for TLS. It includes both a
+// certificate and corresponding private key. Both are encoded
+// in PEM format.
+message TLSCreds {
+  bytes cert = 1;
+  bytes key = 2;
+}

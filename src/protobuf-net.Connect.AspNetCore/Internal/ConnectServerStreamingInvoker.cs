@@ -70,6 +70,12 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
 
                 failure = context.GetReportedFailure();
             }
+            catch (Grpc.Core.RpcException ex)
+            {
+                // a deliberate status from the service, not a fault; without this it would fall to
+                // the catch-all below and be reported as `internal`
+                failure = ConnectException.FromRpcException(ex);
+            }
             catch (ConnectException ex)
             {
                 failure = ex;

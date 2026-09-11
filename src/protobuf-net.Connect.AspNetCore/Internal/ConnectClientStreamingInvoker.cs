@@ -46,19 +46,48 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
             var requests = EnvelopedRequestReader.ReadAllAsync(
                 http.Request.BodyReader, codec, _method.RequestCodec, _method.ToString(), context.CancellationToken);
 
-            // the handler consumes the request stream; nothing is written until it returns, so a failure
-            // here still reaches the endpoint's ordinary error path as a non-200
-            var response = await _handler(service, requests, context).ConfigureAwait(false);
-            if (context.GetReportedFailure() is { } reported) throw reported;
+            // A STREAMING call answers 200 whatever happens, and reports failure in its terminating
+            // envelope - even when it fails before producing anything. It is tempting to let the
+            // exception reach the endpoint's error path, since nothing has been written yet and that path
+            // would produce a tidy non-200; the protocol says otherwise, and the conformance suite is
+            // explicit about it ("error-returns-success-http-code"). A client reading a streaming
+            // response is looking for envelopes, and a bare JSON body is not one.
+            ConnectException? failure = null;
+            TResponse? response = default;
+            try
+            {
+                response = await _handler(service, requests, context).ConfigureAwait(false);
+                failure = context.GetReportedFailure();
+            }
+            catch (ConnectException ex)
+            {
+                failure = ex;
+            }
+            catch (Grpc.Core.RpcException ex)
+            {
+                failure = ConnectException.FromRpcException(ex);
+            }
+            catch (OperationCanceledException) when (http.RequestAborted.IsCancellationRequested)
+            {
+                return;
+            }
+            catch (Exception ex)
+            {
+                failure = new ConnectException(ConnectCode.Internal, null, innerException: ex);
+            }
 
-            var http2 = http.Response;
-            http2.StatusCode = StatusCodes.Status200OK;
-            http2.ContentType = codec.ContentTypeFor(ConnectMethodType.ClientStreaming);
+            var response2 = http.Response;
+            response2.StatusCode = StatusCodes.Status200OK;
+            response2.ContentType = codec.ContentTypeFor(ConnectMethodType.ClientStreaming);
 
-            ConnectEnvelope.WriteMessage(http2.BodyWriter, codec, response, _method.ResponseCodec);
+            // the message only if the call succeeded; a failed one carries no payload at all
+            if (failure is null)
+            {
+                ConnectEnvelope.WriteMessage(response2.BodyWriter, codec, response!, _method.ResponseCodec);
+            }
 
             await EndStreamWriter
-                .WriteAsync(http2.BodyWriter, error: null, context.ResponseTrailers, context.CancellationToken)
+                .WriteAsync(response2.BodyWriter, failure, context.ResponseTrailers, context.CancellationToken)
                 .ConfigureAwait(false);
         }
     }

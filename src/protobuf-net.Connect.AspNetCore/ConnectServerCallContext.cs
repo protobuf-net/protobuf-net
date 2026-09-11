@@ -34,13 +34,18 @@ namespace ProtoBuf.Connect.AspNetCore
         private Metadata? _requestHeaders;
         private Metadata? _responseTrailers;
         private Dictionary<object, object>? _userState;
+        private readonly bool _isUnary;
+        private bool _trailersFlushed;
 
-        internal ConnectServerCallContext(HttpContext httpContext, string method, DateTime deadline, CancellationToken cancellationToken)
+        internal ConnectServerCallContext(
+            HttpContext httpContext, string method, DateTime deadline, CancellationToken cancellationToken,
+            bool isUnary)
         {
             HttpContext = httpContext;
             _method = method;
             _deadline = deadline;
             _cancellationToken = cancellationToken;
+            _isUnary = isUnary;
         }
 
         /// <summary>
@@ -117,9 +122,19 @@ namespace ProtoBuf.Connect.AspNetCore
                 foreach (var entry in responseHeaders)
                 {
                     HttpContext.Response.Headers.Append(
-                        entry.Key, entry.IsBinary ? Convert.ToBase64String(entry.ValueBytes) : entry.Value);
+                        entry.Key, entry.IsBinary ? ConnectBase64Encode(entry.ValueBytes) : entry.Value);
                 }
             }
+
+            // A UNARY response is not committed here, deliberately. There is only one write on that path,
+            // so "send the headers now" has nothing to mean - while committing early takes away the
+            // invoker's ability to set the status and content-type, and to report a late failure as a
+            // non-200 at all. A handler that sends leading metadata and then fails would otherwise abort
+            // a response it had already begun, which reaches the client as a reset connection.
+            //
+            // For a STREAMING call it is the opposite: committing is the point, since a caller may await
+            // the response headers before reading any message, and the status is already fixed at 200.
+            if (_isUnary) return Task.CompletedTask;
 
             return HttpContext.Response.StartAsync(_cancellationToken);
         }
@@ -175,13 +190,21 @@ namespace ProtoBuf.Connect.AspNetCore
         /// </remarks>
         internal void FlushTrailers()
         {
-            if (_responseTrailers is null) return;
+            // only a unary call carries trailing metadata as headers; a streaming one puts the same
+            // values in its terminating message, and writing them here as well would send them twice
+            if (!_isUnary || _trailersFlushed || _responseTrailers is null) return;
+            if (HttpContext.Response.HasStarted) return;
+
+            _trailersFlushed = true;
             foreach (var entry in _responseTrailers)
             {
                 HttpContext.Response.Headers.Append(
-                    "trailer-" + entry.Key, entry.IsBinary ? Convert.ToBase64String(entry.ValueBytes) : entry.Value);
+                    "trailer-" + entry.Key, entry.IsBinary ? ConnectBase64Encode(entry.ValueBytes) : entry.Value);
             }
         }
+
+        /// <summary>Binary metadata travels base64-encoded, and Connect's base64 is unpadded.</summary>
+        private static string ConnectBase64Encode(byte[] value) => ProtoBuf.Connect.Internal.ConnectBase64.Encode(value);
 
         /// <summary>The status the handler set, as a Connect error, or <c>null</c> when it reported success.</summary>
         internal ConnectException? GetReportedFailure()

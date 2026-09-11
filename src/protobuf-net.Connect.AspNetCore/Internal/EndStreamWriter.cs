@@ -1,5 +1,6 @@
 using System;
 using System.Buffers;
+using System.Collections.Generic;
 using System.IO.Pipelines;
 using System.Text.Json;
 using System.Threading;
@@ -40,7 +41,7 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
                         {
                             json.WriteStartObject();
                             json.WriteString("type"u8, detail.TypeName);
-                            json.WriteBase64String("value"u8, detail.Value);
+                            json.WriteString("value"u8, ProtoBuf.Connect.Internal.ConnectBase64.Encode(detail.Value));
                             json.WriteEndObject();
                         }
                         json.WriteEndArray();
@@ -50,12 +51,26 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
 
                 if (trailers is { Count: > 0 })
                 {
-                    json.WriteStartObject("metadata"u8);
+                    // each name maps to an ARRAY of values, and a name may legitimately repeat - so the
+                    // entries must be GROUPED first. Writing one array per entry produces duplicate JSON
+                    // keys instead, which is not valid metadata and which the conformance suite rejects
+                    // by name ("contains duplicate key").
+                    var grouped = new Dictionary<string, List<string>>(StringComparer.Ordinal);
                     foreach (var entry in trailers)
                     {
-                        // each name maps to an ARRAY of values, since metadata may repeat
-                        json.WriteStartArray(entry.Key);
-                        json.WriteStringValue(entry.IsBinary ? Convert.ToBase64String(entry.ValueBytes) : entry.Value);
+                        if (!grouped.TryGetValue(entry.Key, out var values))
+                        {
+                            grouped[entry.Key] = values = new List<string>();
+                        }
+
+                        values.Add(entry.IsBinary ? ProtoBuf.Connect.Internal.ConnectBase64.Encode(entry.ValueBytes) : entry.Value);
+                    }
+
+                    json.WriteStartObject("metadata"u8);
+                    foreach (var pair in grouped)
+                    {
+                        json.WriteStartArray(pair.Key);
+                        foreach (var value in pair.Value) json.WriteStringValue(value);
                         json.WriteEndArray();
                     }
                     json.WriteEndObject();

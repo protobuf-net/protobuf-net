@@ -1,0 +1,43 @@
+# What this implementation claims to support. The suite filters its matrix on this, so every line is a
+# claim we are choosing to be measured against - and every omission is a gap recorded honestly rather
+# than a test quietly passing.
+features:
+  # Connect only. gRPC and gRPC-Web are different protocols served by grpc-dotnet; this is not them.
+  protocols:
+    - PROTOCOL_CONNECT
+
+  # Binary only. JSON is the long pole (§4) and is declared away rather than faked - the suite has an
+  # explicit mechanism for exactly this, which is why binary-first was a viable plan at all.
+  codecs:
+    - CODEC_PROTO
+
+  compressions:
+    - COMPRESSION_IDENTITY
+
+  # HTTP/1.1 AND HTTP/2, which is the whole operational argument: everything except full-duplex works
+  # over HTTP/1.1, because Connect puts trailing metadata in the body rather than in HTTP trailers.
+  versions:
+    - HTTP_VERSION_1
+    - HTTP_VERSION_2
+
+  stream_types:
+    - STREAM_TYPE_UNARY
+    - STREAM_TYPE_CLIENT_STREAM
+    - STREAM_TYPE_SERVER_STREAM
+    - STREAM_TYPE_HALF_DUPLEX_BIDI_STREAM
+    - STREAM_TYPE_FULL_DUPLEX_BIDI_STREAM
+
+  # h2c prior knowledge: Kestrel serves it on an HTTP/2-only plaintext listener, which is how the
+  # bootstrap picks its listener from the requested minimum version.
+  supports_h2c: true
+
+  # Half-duplex bidi over HTTP/1.1 is genuinely fine - the request completes before the response
+  # begins, so nothing needs interleaving. Full duplex needs HTTP/2, as it does under gRPC.
+  supports_half_duplex_bidi_over_http1: true
+
+  # Not yet: no TLS wiring, no GET support (idempotency is recorded but unused - §41), and no
+  # enforcement of a receive limit.
+  supports_tls: false
+  supports_tls_client_certs: false
+  supports_connect_get: false
+  supports_message_receive_limit: false

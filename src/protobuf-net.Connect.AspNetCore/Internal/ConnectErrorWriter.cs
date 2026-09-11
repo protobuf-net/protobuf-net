@@ -39,7 +39,7 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
                     {
                         writer.WriteStartObject();
                         writer.WriteString("type"u8, detail.TypeName);
-                        writer.WriteBase64String("value"u8, detail.Value);
+                        writer.WriteString("value"u8, ProtoBuf.Connect.Internal.ConnectBase64.Encode(detail.Value));
                         writer.WriteEndObject();
                     }
                     writer.WriteEndArray();

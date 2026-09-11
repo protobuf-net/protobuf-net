@@ -360,9 +360,12 @@ await checks.Run("duplex genuinely interleaves", async () =>
     return $"{received.Count} round-trips, each awaiting the previous";
 });
 
-await checks.Run("duplex over HTTP/1.1 is refused, not deadlocked", async () =>
+await checks.Run("half-duplex bidi works over HTTP/1.1", async () =>
 {
-    // a client that did not pin HTTP/2 would hang here; the server answers instead
+    // This used to assert the OPPOSITE - that the server answered 505 - and the conformance suite
+    // showed that to be wrong: only FULL duplex needs interleaving, and a bidi call whose requests all
+    // arrive before any response is read is ordinary HTTP/1.1. The server cannot tell the two apart, so
+    // the HTTP/2 demand lives on the client, which knows whether it is about to interleave.
     using var request = new HttpRequestMessage(HttpMethod.Post, $"{address}/{ServiceOnTheWire}/Chat")
     {
         Content = new ByteArrayContent([]) { Headers = { ContentType = new MediaTypeHeaderValue("application/connect+proto") } },
@@ -370,10 +373,13 @@ await checks.Run("duplex over HTTP/1.1 is refused, not deadlocked", async () =>
         VersionPolicy = System.Net.Http.HttpVersionPolicy.RequestVersionExact,
     };
     using var response = await http.SendAsync(request);
-    Checks.Require((int)response.StatusCode == 505, $"HTTP 505, was {(int)response.StatusCode}");
-    var body = await response.Content.ReadAsStringAsync();
-    Checks.Require(body.Contains("HTTP/1.1"), $"it names the protocol it got, body was {body}");
-    return body;
+    Checks.Require((int)response.StatusCode == 200, $"HTTP 200, was {(int)response.StatusCode}");
+
+    // an empty request stream yields no responses, so the body is just the terminator
+    var body = await response.Content.ReadAsByteArrayAsync();
+    Checks.Require(body.Length >= ConnectEnvelope.HeaderLength, "a terminating envelope arrived");
+    Checks.Require((body[0] & ConnectEnvelope.FlagEndOfStream) != 0, "the envelope is the terminator");
+    return $"HTTP/1.1 bidi answered 200 with a {body.Length}-byte terminator";
 });
 
 await checks.Run("framing must match the method's shape", async () =>

@@ -108,8 +108,29 @@ namespace ProtoBuf.Connect
             // Status.Detail is gRPC's message; an empty one is normal and stays empty, since the protocol
             // lets a reader synthesize its own
             var detail = exception.Status.Detail;
+
+            // rich error details ride in a `grpc-status-details-bin` trailer by convention, which is where
+            // Grpc.StatusProto and its equivalents put them; Connect has a first-class `details` array, so
+            // they move across rather than being dropped - see Internal.GrpcStatusDetails
+            IReadOnlyList<ConnectErrorDetail>? details = null;
+            if (exception.Trailers is { } trailers)
+            {
+                foreach (var entry in trailers)
+                {
+                    if (!entry.IsBinary || !string.Equals(
+                        entry.Key, Internal.GrpcStatusDetails.TrailerName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    var read = Internal.GrpcStatusDetails.Read(entry.ValueBytes);
+                    if (read.Count != 0) details = read;
+                    break;
+                }
+            }
+
             return new ConnectException(
-                code, string.IsNullOrEmpty(detail) ? null : detail, innerException: exception);
+                code, string.IsNullOrEmpty(detail) ? null : detail, details: details, innerException: exception);
         }
 
         /// <summary>
