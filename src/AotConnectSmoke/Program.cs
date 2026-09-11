@@ -54,7 +54,11 @@ builder.WebHost.ConfigureKestrel(o =>
 // one call: the generated registration adds the codec over this container's model and registers every
 // service implementation it declares. The consumer never names ProtoConnectCodec or SmokeModel here.
 // IncludeExceptionDetailInErrors is left at its default of off, which one of the checks relies on.
+// the all-services form; the per-service forms (AddGreeter/AddFarewell) are called too, to prove the
+// codec is not registered twice when both are used
 builder.Services.AddSmokeServices();
+builder.Services.AddGreeter();
+builder.Services.AddFarewell();
 
 var app = builder.Build();
 app.BindSmokeServices();
@@ -264,6 +268,18 @@ await checks.Run("services can be bound separately when conventions differ", asy
     var ex = await Checks.Throws(() => greeter.SayHelloAsync(new HelloRequest { Name = "nope" }));
     Checks.Require(ex.Code == ConnectCode.Unimplemented, $"404 infers unimplemented, was {ex.Code.ToWireName()}");
     return "Farewell alone at /solo; Greeter absent, as bound";
+});
+
+await checks.Run("the codec is registered once, however many Add calls", () =>
+{
+    // Program.cs calls AddSmokeServices(), AddGreeter() and AddFarewell(). A duplicate codec would not
+    // have failed any other check - SelectCodec takes the first match - so this has to be asserted
+    // directly rather than inferred from the suite passing.
+    var options = app.Services
+        .GetRequiredService<Microsoft.Extensions.Options.IOptions<ConnectServerOptions>>().Value;
+    Checks.Require(options.Codecs.Count == 1, $"exactly one codec, found {options.Codecs.Count}");
+    Checks.Require(options.Codecs[0].Name == "proto", $"and it is the proto codec, was '{options.Codecs[0].Name}'");
+    return Task.FromResult($"{options.Codecs.Count} codec after 3 Add calls");
 });
 
 await checks.Run("the fluent client factory", async () =>

@@ -97,14 +97,39 @@ static partial class SmokeServices
     /// </remarks>
     public static IServiceCollection AddServices(IServiceCollection services)
     {
-        services.AddConnect(options =>
-        {
-            if (!options.Codecs.Any(c => c.Name == "proto")) options.Codecs.Add(new ProtoConnectCodec(SmokeModel.Instance));
-        });
+        AddCodec(services);
         services.TryAddScoped<GreeterService>();
         services.TryAddScoped<FarewellService>();
         return services;
     }
+
+    /// <summary>Registers what one service needs: the codec, and that service's implementation.</summary>
+    public static IServiceCollection AddService<TService>(IServiceCollection services)
+    {
+        AddCodec(services);
+        if (typeof(TService) == typeof(IGreeter)) { services.TryAddScoped<GreeterService>(); return services; }
+        if (typeof(TService) == typeof(IFarewell)) { services.TryAddScoped<FarewellService>(); return services; }
+        throw new InvalidOperationException(
+            "No build-time Connect bindings for " + typeof(TService).FullName + " in " + nameof(SmokeServices) + ".");
+    }
+
+    /// <summary>
+    /// The container-level half of registration: the codec over this container's model.
+    /// </summary>
+    /// <remarks>
+    /// Separate because it is <em>not</em> per-service, and every <c>Add</c> entry point needs it - so
+    /// calling <c>AddGreeter()</c> and <c>AddFarewell()</c> must not register it twice. The guard is
+    /// inside the configure delegate rather than around <c>AddConnect</c>, because options delegates
+    /// accumulate and all of them run: checking at registration time would look right and still add two.
+    /// </remarks>
+    private static void AddCodec(IServiceCollection services)
+        => services.AddConnect(options =>
+        {
+            if (!options.Codecs.Any(c => c.Name == "proto"))
+            {
+                options.Codecs.Add(new ProtoConnectCodec(SmokeModel.Instance));
+            }
+        });
 
     // Method descriptors. Named from the contract's SIMPLE name, which is unambiguous here; a
     // generator sees every contract in the container, so it can qualify only on collision rather than
@@ -314,6 +339,14 @@ internal static class SmokeServicesExtensions
     public static IEndpointConventionBuilder BindSmokeServices(
         this IEndpointRouteBuilder endpoints, string? routingPrefix = null)
         => SmokeServices.BindServices(endpoints, routingPrefix);
+
+    /// <summary>Registers <see cref="IGreeter"/>'s implementation, and the codec.</summary>
+    public static IServiceCollection AddGreeter(this IServiceCollection services)
+        => SmokeServices.AddService<IGreeter>(services);
+
+    /// <summary>Registers <see cref="IFarewell"/>'s implementation, and the codec.</summary>
+    public static IServiceCollection AddFarewell(this IServiceCollection services)
+        => SmokeServices.AddService<IFarewell>(services);
 
     /// <summary>Maps <see cref="IGreeter"/> alone, so its conventions can differ from the others'.</summary>
     public static IEndpointConventionBuilder BindGreeter(

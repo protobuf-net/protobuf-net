@@ -1915,6 +1915,45 @@ composed from two sources rather than one.
 The generic forms live on the container — `BindService<TService>`, `CreateClient<TService>` — where
 they cannot be ambiguous, and are the escape hatch when two containers do share a contract.
 
+## 33. `Add` gets the per-service form too
+
+Review spotted the imbalance: `Bind` had both an all-services and a per-service form, `Add` only the
+former. **Not deliberate** — it fell out rather than being reasoned.
+
+On inspection the asymmetry was *defensible*: `Bind`'s per-service form earns its place because endpoint
+conventions are per-endpoint and there is no other way to make them differ, whereas a consumer wanting
+different DI registration can simply register it themselves first — `TryAdd` throughout means ours
+yields. But that is an argument about **need**, and an asymmetric surface has its own cost: someone who
+learns `Bind` has both forms goes looking for `AddGreeter` and does not find it. It is cheap, so it is
+now symmetric.
+
+| | all services | one contract |
+| --- | --- | --- |
+| register | `AddSmokeServices` | `AddGreeter`, `AddFarewell` |
+| map | `BindSmokeServices` | `BindGreeter`, `BindFarewell` |
+| client | — | `GreeterClient`, `FarewellClient` |
+
+### Which exposed a real trap: the codec is *not* per-service
+
+Every `Add` entry point needs the codec registered, but the codec is container-level. So calling
+`AddGreeter()` and `AddFarewell()` must not register it twice.
+
+**The guard has to live inside the configure delegate, not around `AddConnect`.** Options delegates
+accumulate and *all* of them run at resolution, so checking "have I already called `AddConnect`?" at
+registration time looks right and still ends up with two codecs. Checking `options.Codecs` from inside
+the delegate is what actually works, because by then the earlier delegate has run.
+
+### A duplicate codec would not have failed anything else
+
+Worth stating, because it is why this needed its own check rather than trusting the suite:
+`SelectCodec` iterates the list and takes the first match, so a second identical codec is **invisible**
+to every other check. The harness now asserts `options.Codecs.Count == 1` directly by resolving
+`IOptions<ConnectServerOptions>`, after `AddSmokeServices()`, `AddGreeter()` and `AddFarewell()` have
+all been called.
+
+**Verified able to fail**, not merely observed to pass: removing the guard gives *"expected exactly one
+codec, found 3"* and a non-zero exit.
+
 ## 12. Unverified — check before committing to any of this
 
 Everything below is assumption or inference, not measurement:
