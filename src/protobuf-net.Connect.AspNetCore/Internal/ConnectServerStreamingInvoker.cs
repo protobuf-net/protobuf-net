@@ -91,12 +91,7 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
 
         private void WriteMessage(PipeWriter writer, ConnectCodec codec, TResponse message)
         {
-            var length = codec.Measure(message)
-                ?? throw new ConnectException(
-                    ConnectCode.Internal, $"The '{codec.Name}' codec cannot measure a message, which framing requires.");
-
-            ConnectEnvelope.WriteHeader(writer, flags: 0, checked((int)length));
-            codec.Write(writer, message, _method.ResponseCodec);
+            ConnectEnvelope.WriteMessage(writer, codec, message, _method.ResponseCodec);
         }
 
     }

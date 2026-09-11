@@ -72,12 +72,7 @@ namespace ProtoBuf.Connect.Internal
 
             await foreach (var message in _messages.WithCancellation(token).ConfigureAwait(false))
             {
-                var length = _codec.Measure(message)
-                    ?? throw new NotSupportedException(
-                        $"The '{_codec.Name}' codec cannot measure a message, which framing requires.");
-
-                ConnectEnvelope.WriteHeader(writer, flags: 0, checked((int)length));
-                _codec.Write(writer, message, _serializer);
+                ConnectEnvelope.WriteMessage(writer, _codec, message, _serializer);
 
                 // flush per message: the server is entitled to act on each as it arrives
                 await writer.FlushAsync(token).ConfigureAwait(false);

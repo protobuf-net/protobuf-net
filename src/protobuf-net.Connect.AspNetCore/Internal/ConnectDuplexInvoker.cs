@@ -64,12 +64,7 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
                 await foreach (var message in _handler(service, requests, context)
                     .WithCancellation(context.CancellationToken).ConfigureAwait(false))
                 {
-                    var length = codec.Measure(message)
-                        ?? throw new ConnectException(
-                            ConnectCode.Internal, $"The '{codec.Name}' codec cannot measure a message, which framing requires.");
-
-                    ConnectEnvelope.WriteHeader(response.BodyWriter, flags: 0, checked((int)length));
-                    codec.Write(response.BodyWriter, message, _method.ResponseCodec);
+                    ConnectEnvelope.WriteMessage(response.BodyWriter, codec, message, _method.ResponseCodec);
                     await response.BodyWriter.FlushAsync(context.CancellationToken).ConfigureAwait(false);
                 }
 

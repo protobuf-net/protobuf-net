@@ -48,6 +48,50 @@ namespace ProtoBuf.Connect
         }
 
         /// <summary>
+        /// Writes one whole enveloped message - header and payload - to <paramref name="destination"/>.
+        /// </summary>
+        /// <remarks>
+        /// Every streaming shape on both sides goes through this, and that is the point: the header states
+        /// the payload's length, so the length and the payload must come from <em>the same</em> encoding.
+        /// Measuring with the channel codec and then writing with a per-method one is a length that
+        /// describes different bytes than the ones that follow - which desynchronises the stream for every
+        /// message after it, with no error at the point of the mistake. Five sites open-coded that pairing
+        /// before this existed, and all five had the mismatch.
+        /// <para>
+        /// A codec that <em>cannot</em> measure is served by buffering the payload and reading its length
+        /// off the buffer. That is not a hypothetical: <see cref="MarshallerMessageCodec{T}"/> wraps a
+        /// <c>Grpc.Core</c> marshaller, which has no measure pass at all, so the contract-first path takes
+        /// this arm for every message. protobuf-net's own codec takes the measured one and never buffers.
+        /// </para>
+        /// </remarks>
+        /// <param name="destination">Where to write.</param>
+        /// <param name="codec">The channel codec.</param>
+        /// <param name="value">The message.</param>
+        /// <param name="over">An optional per-method codec that replaces the channel's encoding.</param>
+        /// <param name="flags">The envelope flags; zero for an ordinary message.</param>
+        public static void WriteMessage<T>(IBufferWriter<byte> destination, ConnectCodec codec, T value,
+            IConnectMessageCodec<T>? over = null, byte flags = 0)
+        {
+            if (destination is null) throw new ArgumentNullException(nameof(destination));
+            if (codec is null) throw new ArgumentNullException(nameof(codec));
+
+            if (codec.Measure(value, over) is { } measured)
+            {
+                WriteHeader(destination, flags, checked((int)measured));
+                codec.Write(destination, value, over);
+                return;
+            }
+
+            // no measure pass: encode into a scratch buffer, then state what it came to. The copy is the
+            // price of not knowing, and is paid only by codecs that cannot tell us.
+            using var scratch = new Internal.PooledBufferWriter();
+            codec.Write(scratch, value, over);
+
+            WriteHeader(destination, flags, scratch.WrittenCount);
+            destination.Write(scratch.WrittenMemory.Span);
+        }
+
+        /// <summary>
         /// Takes one whole envelope off the front of <paramref name="buffer"/>, or leaves it untouched
         /// and returns <c>false</c> when less than a whole one has arrived.
         /// </summary>

@@ -76,8 +76,8 @@ namespace ProtoBuf.Connect
     /// </summary>
     /// <remarks>
     /// The model is expected to be a build-time generated one (<c>[ProtoModel]</c>); nothing here requires
-    /// that, but nothing here provides a reflective fallback either - if the model has no over for a
-    /// type, <see cref="TypeModel"/>'s own "no over" throw is the backstop.
+    /// that, but nothing here provides a reflective fallback either - if the model has no serializer for a
+    /// type, <see cref="TypeModel"/>'s own "no serializer" throw is the backstop.
     /// </remarks>
     public sealed class ProtoConnectCodec : ConnectCodec
     {
@@ -101,8 +101,8 @@ namespace ProtoBuf.Connect
 
         /// <inheritdoc/>
         [UnconditionalSuppressMessage("Trimming", "IL2091",
-            Justification = "SerializeRoot's annotation exists for its 'over ?? TypeModel.GetSerializer<T>(Model)' "
-                + "fallback; a non-null over short-circuits it, so nothing on this path reflects over T. "
+            Justification = "SerializeRoot's annotation exists for its 'serializer ?? TypeModel.GetSerializer<T>(Model)' "
+                + "fallback; a non-null serializer short-circuits it, so nothing on this path reflects over T. "
                 + "Suppressed here rather than annotated, because annotating would push the demand onto every "
                 + "public generic on this assembly and thence onto every consumer's payload types - which is the "
                 + "mistake AGENTS.md records against IConnectMessageCodec<T>.")]
@@ -111,9 +111,50 @@ namespace ProtoBuf.Connect
 
         /// <inheritdoc/>
         [UnconditionalSuppressMessage("Trimming", "IL2091",
-            Justification = "As for Write: DeserializeRoot's annotation covers a fallback a non-null over "
+            Justification = "As for Write: DeserializeRoot's annotation covers a fallback a non-null serializer "
                 + "short-circuits, and annotating instead would propagate the demand across the whole surface.")]
         protected override T ReadCore<T>(in ReadOnlySequence<byte> source)
             => ((IProtoInput<ReadOnlySequence<byte>>)_model).Deserialize<T>(source);
+    }
+
+    /// <summary>
+    /// A <c>proto</c> codec that carries no marshalling of its own, and serves only methods that supply
+    /// their own.
+    /// </summary>
+    /// <remarks>
+    /// This is what a <strong>contract-first</strong> application registers. Such an application has no
+    /// protobuf-net <see cref="TypeModel"/> at all - its messages are Google.Protobuf types, which no
+    /// <c>TypeModel</c> can serialize - and every method it serves already carries a
+    /// <see cref="MarshallerMessageCodec{T}"/> taken from the descriptor <c>protoc</c> generated. So the
+    /// channel-level codec has nothing left to do but name itself, which is still required: the name is
+    /// what selects a codec from a content-type, on both sides.
+    /// <para>
+    /// Reaching the core methods means a method arrived without a per-method codec, which for this codec
+    /// is a wiring mistake rather than a payload it cannot handle - hence a throw that says so, rather
+    /// than a silent empty message.
+    /// </para>
+    /// </remarks>
+    public sealed class MarshallerConnectCodec : ConnectCodec
+    {
+        /// <summary>A shared instance; the type holds no state.</summary>
+        public static MarshallerConnectCodec Instance { get; } = new();
+
+        /// <inheritdoc/>
+        public override string Name => "proto";
+
+        private static Exception NoCodec<T>()
+            => new NotSupportedException(
+                $"No codec was supplied for '{typeof(T).Name}'. {nameof(MarshallerConnectCodec)} marshals nothing itself; "
+                + "it serves methods whose own codec comes from a Grpc.Core marshaller. A method reaching it without one "
+                + "was not built from a generated descriptor.");
+
+        /// <inheritdoc/>
+        protected override long? MeasureCore<T>(T value) => throw NoCodec<T>();
+
+        /// <inheritdoc/>
+        protected override void WriteCore<T>(IBufferWriter<byte> destination, T value) => throw NoCodec<T>();
+
+        /// <inheritdoc/>
+        protected override T ReadCore<T>(in ReadOnlySequence<byte> source) => throw NoCodec<T>();
     }
 }

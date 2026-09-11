@@ -55,12 +55,7 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
             http2.StatusCode = StatusCodes.Status200OK;
             http2.ContentType = codec.ContentTypeFor(ConnectMethodType.ClientStreaming);
 
-            var length = codec.Measure(response)
-                ?? throw new ConnectException(
-                    ConnectCode.Internal, $"The '{codec.Name}' codec cannot measure a message, which framing requires.");
-
-            ConnectEnvelope.WriteHeader(http2.BodyWriter, flags: 0, checked((int)length));
-            codec.Write(http2.BodyWriter, response, _method.ResponseCodec);
+            ConnectEnvelope.WriteMessage(http2.BodyWriter, codec, response, _method.ResponseCodec);
 
             await EndStreamWriter
                 .WriteAsync(http2.BodyWriter, error: null, context.ResponseTrailers, context.CancellationToken)

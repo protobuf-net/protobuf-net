@@ -30,7 +30,7 @@ namespace ProtoBuf.Connect.Internal
         {
             // Measure first where the codec can: it sizes the buffer exactly, and it is the same call the
             // server uses to set Content-Length. A codec that cannot measure simply grows the writer.
-            var hint = codec.Measure(value) is { } length && length <= int.MaxValue ? (int)length : 256;
+            var hint = codec.Measure(value, over) is { } length && length <= int.MaxValue ? (int)length : 256;
             var payload = new PooledBufferWriter(hint);
             try
             {

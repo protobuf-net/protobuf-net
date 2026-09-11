@@ -2374,6 +2374,122 @@ shims grpc-dotnet already has, but not nothing. That is a second work item besid
 | stream shims | `IServerStreamWriter<T>` / `IAsyncStreamReader<T>` over pipes — **new, and the bulk of it** |
 | errors | `RpcException` → `ConnectException`, ordinals already aligned |
 
+## 41. Contract-first works, end to end, on all four shapes
+
+`src/ConnectContractFirst` is a `protoc`-generated `Greeter` — Google.Protobuf messages, protoc's
+`GreeterBase`/`GreeterClient`, a `.proto` with no annotation of ours — served over Connect. **The
+consumer's entire opt-in is one line:**
+
+```csharp
+builder.Services.AddConnect(o => o.Codecs.Add(MarshallerConnectCodec.Instance));
+builder.Services.AddScoped<GreeterImpl>();
+app.MapConnectService<GreeterImpl>(Greeter.BindService);   // <- protoc's own method group
+```
+
+No generator, no attribute, no change to the contract. 18 checks pass across unary, server-streaming,
+client-streaming and duplex, plus `RpcException` mapping. **The checks drive the server with a raw
+`HttpClient` and hand-built envelopes**, not with our own `ConnectChannel`: a matched pair of bugs in
+our two halves would pass a self-test and prove nothing about interoperability.
+
+### The pieces, and why each is shaped as it is
+
+- **`MarshallerMessageCodec<T>`** wraps a `Grpc.Core` `Marshaller<T>` as an `IConnectMessageCodec<T>`,
+  over a `SerializationContext`/`DeserializationContext` pair implemented on `IBufferWriter<byte>` and
+  `ReadOnlySequence<byte>`. Nothing is re-encoded: for `application/proto` a Connect body and a gRPC
+  body are *the same bytes*, so this is the marshalling the gRPC path would have done, reached through
+  different framing.
+- **`MarshallerConnectCodec`** is the channel-level codec such an app registers. It marshals nothing —
+  a contract-first app has no `TypeModel`, and could not have one, since a Google.Protobuf message is
+  not a protobuf-net contract — and exists because the codec *name* is what a content-type selects on
+  both sides. Its core methods throw, saying the method arrived without a codec, rather than writing an
+  empty message.
+- **`GrpcStreamAdapters`** bridges protoc's reader/writer-shaped handlers to our `IAsyncEnumerable`
+  invokers. Only the writer side needs a buffer (pulling from a push), and it is a `Channel` **bounded
+  at one**, so a handler's `WriteAsync` completes only once the previous message reached the wire —
+  the backpressure a gRPC handler already expects.
+- **`ContractFirstServiceBinder<T>`** adapts `ServiceBinderBase` to `IConnectServiceBinder<T>`.
+
+### Two phases, and no reflection anywhere
+
+The problem: protoc captures the *instance* in the handler — `new UnaryServerMethod<,>(serviceImpl.SayHello)`
+— so a bind yields handlers closed over one object, while ASP.NET wants a per-request instance.
+`Grpc.AspNetCore.Server` solves this by binding with `null` and then resolving each method **by name**
+through reflection. We do not, and do not need to:
+
+- **startup**: bind with `serviceImpl: null`. protoc emits `serviceImpl == null ? null : new ...`, so
+  every `Method<,>` descriptor arrives with no handler. That null-tolerance is not incidental — it is
+  there so grpc-dotnet can do exactly this — and it is enough to build every endpoint without
+  constructing the consumer's service.
+- **per call**: bind again against the DI-resolved instance and take the handlers. A one-entry cache
+  keyed on the instance makes a **singleton** service bind once for the life of the process; a
+  **scoped** one costs a handful of delegate allocations per call, and no reflection at all.
+
+The shape is read from the descriptor rather than from which `AddMethod` overload we are in, so
+`ConnectServiceBinderContext`'s existing "this method says it is unary" check stays a real check
+instead of a tautology.
+
+### What contract-first does *not* get, and it is not cosmetic
+
+**`[Authorize]` is not honoured unless it is supplied.** `Grpc.AspNetCore.Server` collects endpoint
+metadata by reflecting over the implementation's methods; this path does not reflect, so an
+`[Authorize]` on a contract-first service method silently produces a **more permissive endpoint with
+no error anywhere** — the exact failure `AotGrpcMetadataDiff` exists to prevent on the code-first side.
+`MapConnectService` therefore takes a `Func<IMethod, IReadOnlyList<object>>? metadata` parameter rather
+than defaulting to none quietly. Closing this properly is backlog, and the honest options are a
+generator (which would need the consumer's implementation type) or documented reflection behind a
+switch.
+
+Also absent: `idempotency_level` is in the descriptor set but not on `Method<,>`, so there is nothing to
+read and every RPC stays POST.
+
+### Google.Protobuf calls `Advance(0)` before its first `GetSpan`
+
+Worth its own heading, because it cost the first run and nothing about it is guessable. Writing a
+message to a logging `IBufferWriter<byte>` gives exactly:
+
+```
+Advance(0), GetSpan(0), Advance(14)
+```
+
+Kestrel's response writer rejects a leading bare `Advance` — *"Invalid ordering of calling StartAsync or
+CompleteAsync and Advance"* — so handing it straight to a marshaller throws, and the endpoint's
+catch-all turns that into a bare `{"code":"internal"}`. The fix is one line in the codec: call
+`destination.GetSpan(1)` before handing the writer over. An unused `GetSpan` is free and unambiguously
+legal; buffering instead would cost a copy per message. This is also *why* grpc-dotnet's
+`DefaultSerializationContext` owns its own buffer rather than passing the pipe through — a detail that
+reads as an optimisation and is not.
+
+**Measured, not inferred.** The first diagnosis (that this was a `Content-Length` problem) was wrong;
+a ten-line probe with a logging writer settled it in one run.
+
+### A latent bug the marshaller found: measuring with the wrong codec
+
+`IConnectMessageCodec<T>` is a fast path for protobuf-net and was *always* the encoder where present —
+but five envelope sites measured with the **channel** codec and then wrote with the **per-method** one.
+For protobuf-net that is the same answer twice, so nothing showed. A marshaller cannot measure at all,
+which turned a silent inconsistency into a visible throw.
+
+A length header that describes different bytes than the ones that follow desynchronises the stream for
+every message after it, with no error at the point of the mistake. All five now go through one
+`ConnectEnvelope.WriteMessage`, which measures and writes with the same codec, and buffers when the
+codec cannot measure. **The general lesson is the one this repo keeps relearning**: a second
+implementation of an interface is the only thing that finds the places where the first one's
+coincidences were being relied on.
+
+### Status
+
+- `dotnet run --project src/ConnectContractFirst` — 18/18.
+- `src/AotConnectSmoke` — 22/22, unchanged. `src/ConnectProbe` — 9/9 against connect-go.
+- `BuildToolsUnitTests` — 540/540. Traversal build clean.
+
+### Next
+
+`ConnectCallInvoker`. The server half is done; the client half is the same claim from the other end —
+`new Greeter.GreeterClient(new ConnectCallInvoker(...))`, i.e. protoc's *generated client*, unchanged,
+speaking Connect over HTTP/1.1. It shares this section's `SerializationContext` machinery, and the
+`__Method_*` descriptors are private, so the `CallInvoker` seam is the only route in — which is exactly
+what it is for.
+
 ## 12. Unverified — check before committing to any of this
 
 Everything below is assumption or inference, not measurement:

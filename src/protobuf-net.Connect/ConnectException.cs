@@ -67,6 +67,51 @@ namespace ProtoBuf.Connect
             CodeWasInferred = codeWasInferred;
         }
 
+        /// <summary>
+        /// Translates a <c>Grpc.Core</c> <see cref="Grpc.Core.RpcException"/> - the way a contract-first
+        /// service reports a failure - into its Connect equivalent.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="ConnectCode"/> takes its ordinals from gRPC's <c>StatusCode</c>, so this could be a
+        /// cast. It is written out instead: the two enums are maintained by different people in different
+        /// repositories, a cast would silently mis-map the day either adds a value, and this codebase has
+        /// already shipped exactly that bug once (<c>DataFormat</c> to <c>ProtoDataFormat</c>, where the
+        /// ordinals looked aligned and were not). An unrecognised code becomes
+        /// <see cref="ConnectCode.Unknown"/>, which is what the protocol asks of a reader.
+        /// </remarks>
+        public static ConnectException FromRpcException(Grpc.Core.RpcException exception)
+        {
+            if (exception is null) throw new ArgumentNullException(nameof(exception));
+
+            var code = exception.StatusCode switch
+            {
+                Grpc.Core.StatusCode.OK => ConnectCode.Ok,
+                Grpc.Core.StatusCode.Cancelled => ConnectCode.Cancelled,
+                Grpc.Core.StatusCode.Unknown => ConnectCode.Unknown,
+                Grpc.Core.StatusCode.InvalidArgument => ConnectCode.InvalidArgument,
+                Grpc.Core.StatusCode.DeadlineExceeded => ConnectCode.DeadlineExceeded,
+                Grpc.Core.StatusCode.NotFound => ConnectCode.NotFound,
+                Grpc.Core.StatusCode.AlreadyExists => ConnectCode.AlreadyExists,
+                Grpc.Core.StatusCode.PermissionDenied => ConnectCode.PermissionDenied,
+                Grpc.Core.StatusCode.ResourceExhausted => ConnectCode.ResourceExhausted,
+                Grpc.Core.StatusCode.FailedPrecondition => ConnectCode.FailedPrecondition,
+                Grpc.Core.StatusCode.Aborted => ConnectCode.Aborted,
+                Grpc.Core.StatusCode.OutOfRange => ConnectCode.OutOfRange,
+                Grpc.Core.StatusCode.Unimplemented => ConnectCode.Unimplemented,
+                Grpc.Core.StatusCode.Internal => ConnectCode.Internal,
+                Grpc.Core.StatusCode.Unavailable => ConnectCode.Unavailable,
+                Grpc.Core.StatusCode.DataLoss => ConnectCode.DataLoss,
+                Grpc.Core.StatusCode.Unauthenticated => ConnectCode.Unauthenticated,
+                _ => ConnectCode.Unknown,
+            };
+
+            // Status.Detail is gRPC's message; an empty one is normal and stays empty, since the protocol
+            // lets a reader synthesize its own
+            var detail = exception.Status.Detail;
+            return new ConnectException(
+                code, string.IsNullOrEmpty(detail) ? null : detail, innerException: exception);
+        }
+
         private static string Describe(ConnectCode code, string? message, int? httpStatus)
         {
             // the protocol explicitly allows an omitted or empty message, saying the client should

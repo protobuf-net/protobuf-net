@@ -115,6 +115,12 @@ namespace ProtoBuf.Connect.AspNetCore
                 {
                     await TryWriteError(http, ex).ConfigureAwait(false);
                 }
+                catch (Grpc.Core.RpcException ex)
+                {
+                    // how a contract-first service states a failure; it is a deliberate status, not a fault,
+                    // so it must not fall through to the Internal catch-all below
+                    await TryWriteError(http, ConnectException.FromRpcException(ex)).ConfigureAwait(false);
+                }
                 catch (OperationCanceledException) when (http.RequestAborted.IsCancellationRequested)
                 {
                     // the client went away; there is nobody to tell

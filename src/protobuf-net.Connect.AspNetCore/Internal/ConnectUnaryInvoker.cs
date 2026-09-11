@@ -106,7 +106,8 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
             // including trailing metadata, which for unary is a `trailer-` prefixed header - is already set
             response.StatusCode = StatusCodes.Status200OK;
             response.ContentType = codec.ContentTypeFor(ConnectMethodType.Unary);
-            if (codec.Measure(value) is { } length) response.ContentLength = length;
+            // measured with the same codec that writes, or not stated at all - a marshaller cannot measure
+            if (codec.Measure(value, serializer) is { } length) response.ContentLength = length;
 
             codec.Write(response.BodyWriter, value, serializer);
             await response.BodyWriter.FlushAsync(cancellationToken).ConfigureAwait(false);

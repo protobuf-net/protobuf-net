@@ -25,21 +25,11 @@ namespace ProtoBuf.Connect.Internal
 
         public EnvelopedCodecContent(ConnectCodec codec, T value, string contentType, IConnectMessageCodec<T>? over = null)
         {
-            var hint = codec.Measure(value) is { } length && length <= int.MaxValue ? (int)length : 256;
+            var hint = codec.Measure(value, over) is { } length && length <= int.MaxValue ? (int)length : 256;
             var payload = new PooledBufferWriter(hint + ConnectEnvelope.HeaderLength);
             try
             {
-                // the header states the payload length, so the payload is written first and the header
-                // patched in - except protobuf-net can measure, so there is nothing to patch
-                var measured = codec.Measure(value);
-                if (measured is null)
-                {
-                    throw new NotSupportedException(
-                        $"The '{codec.Name}' codec cannot measure a message, which an enveloped request requires.");
-                }
-
-                ConnectEnvelope.WriteHeader(payload, flags: 0, checked((int)measured.Value));
-                codec.Write(payload, value, over);
+                ConnectEnvelope.WriteMessage(payload, codec, value, over);
             }
             catch
             {
