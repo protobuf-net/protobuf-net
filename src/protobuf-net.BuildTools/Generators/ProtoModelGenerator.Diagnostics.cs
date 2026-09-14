@@ -46,12 +46,27 @@ namespace ProtoBuf.BuildTools.Generators
             defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true);
 
+        // Info, not Warning, and the difference from the four above is the point: those leave a caller
+        // with no serializer at all and a "no serializer for type" throw much later, whereas this one
+        // leaves GetJsonSerializer<T>() returning *null* - an answer the caller can test for, and
+        // which the Connect codec turns into a clear error naming the type. It is also information a
+        // consumer who only ever uses the binary codec does not need, and every contract with
+        // inheritance would produce one.
+        internal static readonly DiagnosticDescriptor JsonOmitted = new(
+            id: "PBN3005",
+            title: "No canonical JSON mapping for this contract",
+            messageFormat: "Contract '{0}' has no canonical protobuf JSON mapping, so only the binary codec will serve it: {1}.",
+            category: Category,
+            defaultSeverity: DiagnosticSeverity.Info,
+            isEnabledByDefault: true);
+
         private static DiagnosticDescriptor GetDescriptor(ProtoDiagnosticKind kind) => kind switch
         {
             ProtoDiagnosticKind.UnsupportedMember => UnsupportedMember,
             ProtoDiagnosticKind.UnsupportedContract => UnsupportedContract,
             ProtoDiagnosticKind.UnsupportedOption => UnsupportedOption,
             ProtoDiagnosticKind.OmittedCascade => OmittedCascade,
+            ProtoDiagnosticKind.JsonOmitted => JsonOmitted,
             _ => throw new ArgumentOutOfRangeException(nameof(kind)),
         };
 

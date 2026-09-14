@@ -15,6 +15,7 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         UnsupportedContract,
         UnsupportedOption,
         OmittedCascade,
+        JsonOmitted,
     }
 
     /// <summary>

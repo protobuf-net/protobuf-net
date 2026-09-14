@@ -1,0 +1,52 @@
+// The oracle schema. This is NOT hand-written: it is `Serializer.GetProto<Shapes>()` verbatim, with
+// only the package and a csharp_namespace changed so protoc's types can sit beside the code-first
+// ones. SchemaMatchesContracts() re-derives it on every run and fails if the two drift - which is
+// what makes a comparison against Google's formatter mean anything, since a differently-shaped
+// schema would agree with us about a different message.
+syntax = "proto3";
+package oracle;
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+option csharp_namespace = "Oracle";
+
+message Leaf {
+   string Label = 1;
+   int32 Weight = 2;
+}
+enum Shade {
+   Unknown = 0;
+   Green = 1;
+   Blue = 2;
+}
+message Shapes {
+   int32 Count = 1;
+   int64 BigNumber = 2;
+   uint32 Unsigned = 3;
+   uint64 BigUnsigned = 4;
+   bool Flag = 5;
+   float Ratio = 6;
+   double Precise = 7;
+   string UserName = 8;
+   bytes Blob = 9;
+   Shade Colour = 10;
+   Leaf Child = 11;
+   repeated int32 Many = 20 [packed = false];
+   repeated string Words = 21;
+   repeated Leaf Leaves = 22;
+   repeated Shade Shades = 23 [packed = false];
+   map<string,int32> Tally = 30;
+   map<int32,string> Names = 31;
+   map<string,Leaf> Nested = 32;
+   string pinned_name = 40;
+   repeated string Tags = 41;
+   repeated int32 Fixed = 42 [packed = false];
+   // NOTE: this is `int? Maybe` in C#, and protobuf-net's schema says plain int32 - NOT
+   // `optional int32`. So the nullable's presence is invisible to any peer generating from our
+   // schema; see the KnownDivergences check, which pins what we do about it.
+   int32 Maybe = 43;
+   Temporal Times = 50;
+}
+message Temporal {
+   .google.protobuf.Timestamp At = 1;
+   .google.protobuf.Duration Took = 2;
+}

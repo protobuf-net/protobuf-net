@@ -118,6 +118,18 @@ jobs:
     # self-contained: it hosts Kestrel on an ephemeral loopback port and calls itself, so it needs
     # nothing from the network. src/ConnectProbe is deliberately NOT here - it checks interoperability
     # against demo.connectrpc.com, and a third party's uptime has no business gating our builds.
+    # The code-first JSON mapping, against Google's own JsonFormatter over protoc's C# for the same
+    # schema. It is here rather than in the unit tests because the only useful oracle is an external
+    # one: a JSON writer and reader of ours would round-trip perfectly against each other while
+    # spelling every key differently from everyone else, which is precisely the §48 trap. The .proto
+    # is re-derived from the contracts on every run, so the schema cannot quietly stop describing the
+    # types it is supposed to describe.
+    - name: Code-first JSON differential
+      run: dotnet run --project src/ConnectJsonDifferential/ConnectJsonDifferential.csproj
+    - name: Publish and run the code-first JSON AOT smoke test
+      run: |
+        dotnet publish src/AotConnectJsonSmoke/AotConnectJsonSmoke.csproj -c Release -r linux-x64 -o artifacts/aot-json-smoke
+        ./artifacts/aot-json-smoke/AotConnectJsonSmoke
     - name: Publish and run the Connect smoke test
       run: |
         dotnet publish src/AotConnectSmoke/AotConnectSmoke.csproj -c Release -r linux-x64 -o artifacts/aot-connect-smoke

@@ -3216,3 +3216,27 @@ Everything below is assumption or inference, not measurement:
 - Whether `Grpc.AspNetCore.Web`'s HTTP/2-check relaxation is reachable by a third-party middleware, which
   option (2) would depend on. Only matters if (2) is pursued, and I recommend it is not.
 - Sizing of the JSON codec. Called "the majority of the effort" on judgement, not on a spike.
+
+## 53. Code-first JSON: spiked, and it works
+
+Built end to end and measured rather than estimated. **`notes/connect/json-spike.md` is the record**;
+it is a separate file because it is a design note for an unfinished feature rather than a finding
+about the protocol.
+
+The short version: 26/26 differential cases agree with Google's `JsonFormatter` over protoc's C# for
+the same schema; native AOT publishes with **zero** IL warnings; the binary path is untouched (552
+tests, 3090-contract corpus still 100%).
+
+Three things worth knowing without reading the whole note:
+
+- **The JSON surface is a subset of the binary one**, and needs its own drop cascade. Inheritance,
+  extensible contracts, null wrappers and the level-200 BCL types have *no canonical JSON form* -
+  nothing to emit, and inventing one would break interop silently. `PBN3005` reports each, at **Info**
+  severity, because unlike a missing binary serializer this one leaves the caller a testable `null`.
+- **protobuf-net's code-first nullable has no schema representation.** `int?` emits `int32 Maybe = 43`,
+  not `optional int32`, so a peer generating from our `.proto` cannot see the presence at all. We write
+  the zero anyway (interoperable and lossless, versus canonical and lossy) and pin it as a known
+  divergence. This is §12's worry about `GetProto`'s faithfulness turning up for real.
+- **The oracle is the load-bearing half.** Injecting §48's lowercase-first trap failed in all three
+  directions - but the *pinned* `snake_case` field stayed correct, so a fixture set of `.proto`-shaped
+  names (which is every fixture set anyone would reach for) would have seen nothing wrong.
