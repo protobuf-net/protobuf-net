@@ -16,7 +16,7 @@ Read `findings.md` §46 (the design) and §48 (the name rule) first; this is the
 | the emitter | `ProtoModelGenerator.EmitJson.cs` |
 | plan additions | `ProtoMemberPlan.SchemaName`, `ProtoJsonEnumPlan`, `ProtoModelPlan.JsonContracts`/`JsonEnums` |
 | the oracle | `src/ConnectJsonDifferential` — our JSON vs Google's `JsonFormatter`, 26 cases |
-| native proof | `src/AotConnectJsonSmoke` — `PublishAot`, **0 IL warnings**, runs |
+| native proof | `src/AotConnectJsonSmoke` — `PublishAot`, **0 new IL warnings**, runs |
 
 Measured: 26/26 differential cases agree with Google.Protobuf; 552 BuildTools tests unchanged; the
 binary corpus differential still reads 100% on 3090 contracts; no golden moved.
@@ -153,10 +153,17 @@ harm: `18446744073709551615` came back as `1.8446744073709552E+19`.
 
 ## Native AOT
 
-`src/AotConnectJsonSmoke` publishes with **zero IL warnings** and runs — a 1.9 MB binary. The surface
-is generated code over `Utf8JsonWriter`/`Utf8JsonReader` with no reflection anywhere, and it
-deliberately does **not** reference protobuf-net (only Core), so there is no reflective path to fall
-back to even by accident.
+`src/AotConnectJsonSmoke` publishes and runs — 3.0 MB, **20 IL warnings, none of them ours**. Every
+one names `TypeModel`, `DynamicStub` or `TypeHelper`, i.e. the pre-existing runtime-model fallbacks
+`AotSmoke` already reports; **zero** name generated JSON code or `System.Text.Json`. The surface is
+generated code over `Utf8JsonWriter`/`Utf8JsonReader` with no reflection anywhere. It deliberately
+does **not** reference protobuf-net (only Core), so there is no reflective path to fall back to even
+by accident.
+
+**The first version of this smoke reported zero warnings, and that number was worthless**: it only
+called the JSON serializer, so ILC trimmed the binary codec entirely and the count measured an app
+that never used it. Exercising *both* codecs is what makes "none of them ours" mean something — the
+same trap AGENTS.md records for maps ("whatever it does not cover is not fine, it is unmeasured").
 
 ## What is not done
 

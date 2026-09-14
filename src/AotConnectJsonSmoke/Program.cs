@@ -42,6 +42,14 @@ if (round.Tally.Count != 1 || round.Tally["a"] != 1) return Fail("Tally");
 if (!json.Contains("\"Big\":\"9007199254740993\"")) return Fail($"int64 is not a string: {json}");
 if (!json.Contains("\"Level\":\"High\"")) return Fail($"enum is not a name: {json}");
 
+// ...and the binary codec on the SAME model, because otherwise ILC simply trims it and a zero
+// warning count says only that the binary path was never reached
+var binary = new MemoryStream();
+Model.Instance.Serialize(binary, original);
+binary.Position = 0;
+var fromBinary = Model.Instance.Deserialize<Payload>(binary);
+if (fromBinary.Big != original.Big || fromBinary.Child?.Note != "inner") return Fail("binary round-trip");
+
 Console.WriteLine($"AotConnectJsonSmoke: ok - {json}");
 return 0;
 

@@ -3224,8 +3224,9 @@ it is a separate file because it is a design note for an unfinished feature rath
 about the protocol.
 
 The short version: 26/26 differential cases agree with Google's `JsonFormatter` over protoc's C# for
-the same schema; native AOT publishes with **zero** IL warnings; the binary path is untouched (552
-tests, 3090-contract corpus still 100%).
+the same schema; native AOT publishes and runs with **no new** IL warnings (20 in total, every one a
+pre-existing `TypeModel`/`DynamicStub` fallback, none naming generated JSON code or
+`System.Text.Json`); the binary path is untouched (552 tests, 3090-contract corpus still 100%).
 
 Three things worth knowing without reading the whole note:
 
