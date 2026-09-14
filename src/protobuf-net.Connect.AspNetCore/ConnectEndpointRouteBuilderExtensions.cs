@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Threading;
@@ -38,6 +39,9 @@ namespace ProtoBuf.Connect.AspNetCore
         /// host - the two use identical paths otherwise, so mapping both at the root puts two endpoints
         /// on one route, and the duplicated path then answers 500 at request time.
         /// </param>
+        private static readonly string[] GetAndPost = { "GET", "POST" };
+
+        /// <inheritdoc cref="MapConnectService{TImplementation}(IEndpointRouteBuilder, IConnectServiceBinder{TImplementation}, string?)"/>
         public static IEndpointConventionBuilder MapConnectService<TImplementation>(
             this IEndpointRouteBuilder endpoints,
             IConnectServiceBinder<TImplementation> binder,
@@ -64,10 +68,15 @@ namespace ProtoBuf.Connect.AspNetCore
             var builders = new List<IEndpointConventionBuilder>(context.Methods.Count);
             foreach (var method in context.Methods)
             {
-                // POST only for now; GET arrives with idempotency, which needs the query-parameter form
-                var builder = endpoints
-                    .MapPost(prefix + method.Path, CreateHandler(method, options))
-                    .WithDisplayName(method.DisplayName);
+                var handler = CreateHandler(method, options);
+                var route = prefix + method.Path;
+
+                // POST always; GET as well for a side-effect-free unary method, which is the whole point
+                // of Connect's GET form - such a call is an ordinary cacheable HTTP request, and can be
+                // served from a CDN or a browser cache without anything here being involved.
+                var builder = method.AllowsGet
+                    ? endpoints.MapMethods(route, GetAndPost, handler).WithDisplayName(method.DisplayName)
+                    : endpoints.MapPost(route, handler).WithDisplayName(method.DisplayName);
 
                 foreach (var metadata in method.Metadata) builder.WithMetadata(metadata);
                 builders.Add(builder);
@@ -96,7 +105,10 @@ namespace ProtoBuf.Connect.AspNetCore
                             StatusCodes.Status400BadRequest);
                     }
 
-                    codec = SelectCodec(http, options, method.Type);
+                    var isGet = HttpMethods.IsGet(http.Request.Method);
+                    codec = isGet
+                        ? SelectCodecForGet(http, options)
+                        : SelectCodec(http, options, method.Type);
 
                     var cancellationToken = http.RequestAborted;
                     TimeSpan? span = TryGetTimeout(http, out var parsed) ? parsed : null;
@@ -107,7 +119,7 @@ namespace ProtoBuf.Connect.AspNetCore
                         cancellationToken = timeout.Token;
                     }
 
-                    Negotiate(http, options, method.Type, out var requestCompression, out var responseCompression);
+                    Negotiate(http, options, method.Type, isGet, out var requestCompression, out var responseCompression);
 
                     callContext = new ConnectServerCallContext(
                         http, method.Path, ConnectServerCallContext.DeadlineFrom(span), cancellationToken,
@@ -116,6 +128,13 @@ namespace ProtoBuf.Connect.AspNetCore
                         RequestCompression = requestCompression,
                         ResponseCompression = responseCompression,
                     };
+
+                    // Assigned separately rather than with `isGet ? ReadGetPayload(...) : null`, which
+                    // does NOT do what it reads as: ReadOnlyMemory<byte> has an implicit conversion from
+                    // byte[], so `null` binds to that operator and yields an EMPTY memory rather than no
+                    // value. The property then has HasValue == true and Length == 0, every POST takes the
+                    // GET path, and every request decodes as an empty message.
+                    if (isGet) callContext.RequestPayload = ReadGetPayload(http, requestCompression);
                     var service = http.RequestServices.GetRequiredService<TImplementation>();
 
                     await method.Invoker.InvokeAsync(http, service, codec, callContext).ConfigureAwait(false);
@@ -154,6 +173,86 @@ namespace ProtoBuf.Connect.AspNetCore
                     timeout?.Dispose();
                 }
             };
+
+        /// <summary>
+        /// Picks the codec for a <c>GET</c>, where it is named by a query parameter.
+        /// </summary>
+        /// <remarks>
+        /// There is no content-type to read: a <c>GET</c> has no body, which is exactly what makes it a
+        /// cacheable, ordinary HTTP request. The codec is named by <c>encoding</c> instead, and the
+        /// framing question does not arise - only unary is reachable this way.
+        /// </remarks>
+        private static ConnectCodec SelectCodecForGet(HttpContext http, ConnectServerOptions options)
+        {
+            var name = http.Request.Query["encoding"].ToString();
+            if (string.IsNullOrEmpty(name))
+            {
+                throw new ConnectException(
+                    ConnectCode.InvalidArgument, "A GET request must name its codec with 'encoding'.");
+            }
+
+            foreach (var codec in options.Codecs)
+            {
+                if (string.Equals(codec.Name, name, StringComparison.OrdinalIgnoreCase)) return codec;
+            }
+
+            throw ConnectException.UnsupportedMediaType(
+                $"The codec '{name}' is not supported; this server accepts: {Codecs(options)}.");
+        }
+
+        /// <summary>
+        /// Decodes the request message from the URL.
+        /// </summary>
+        /// <remarks>
+        /// <c>message</c> holds the payload; <c>base64=1</c> says it is base64, and then it is RFC 4648
+        /// §5 <b>URL-safe</b> base64 - <c>-</c> and <c>_</c> rather than <c>+</c> and <c>/</c>, since the
+        /// value is going in a URL - and unpadded. Without the flag the payload is the raw text of a
+        /// textual codec, which is what makes a JSON GET readable in a browser's address bar.
+        /// <para>
+        /// ASP.NET Core has already percent-decoded the query, so what arrives here is the base64 (or the
+        /// text) itself.
+        /// </para>
+        /// </remarks>
+        private static ReadOnlyMemory<byte> ReadGetPayload(HttpContext http, ConnectCompression compression)
+        {
+            var message = http.Request.Query["message"].ToString();
+            var isBase64 = http.Request.Query["base64"].ToString() == "1";
+
+            byte[] payload;
+            try
+            {
+                payload = isBase64
+                    ? DecodeUrlBase64(message)
+                    : System.Text.Encoding.UTF8.GetBytes(message);
+            }
+            catch (FormatException ex)
+            {
+                throw new ConnectException(
+                    ConnectCode.InvalidArgument, $"The 'message' query parameter is not valid base64: {ex.Message}",
+                    innerException: ex);
+            }
+
+            if (ConnectCompression.IsIdentity(compression.Name)) return payload;
+
+            try
+            {
+                return compression.Decompress(new ReadOnlySequence<byte>(payload));
+            }
+            catch (Exception ex) when (ex is not ConnectException)
+            {
+                throw new ConnectException(
+                    ConnectCode.InvalidArgument,
+                    $"The 'message' query parameter could not be decompressed as '{compression.Name}': {ex.Message}",
+                    innerException: ex);
+            }
+        }
+
+        /// <summary>RFC 4648 §5 base64: URL-safe alphabet, and padding optional on the way in.</summary>
+        private static byte[] DecodeUrlBase64(string value)
+        {
+            var standard = value.Replace('-', '+').Replace('_', '/');
+            return Convert.FromBase64String(standard.PadRight((standard.Length + 3) & ~3, '='));
+        }
 
         private static ConnectCodec SelectCodec(HttpContext http, ConnectServerOptions options, ConnectMethodType type)
         {
@@ -275,7 +374,7 @@ namespace ProtoBuf.Connect.AspNetCore
         /// </para>
         /// </remarks>
         private static void Negotiate(
-            HttpContext http, ConnectServerOptions options, ConnectMethodType type,
+            HttpContext http, ConnectServerOptions options, ConnectMethodType type, bool isGet,
             out ConnectCompression request, out ConnectCompression response)
         {
             var unary = type == ConnectMethodType.Unary;
@@ -283,7 +382,12 @@ namespace ProtoBuf.Connect.AspNetCore
             var acceptHeader = unary ? "accept-encoding" : "connect-accept-encoding";
 
             request = ConnectCompression.Identity;
-            var stated = http.Request.Headers[encodingHeader].ToString();
+
+            // a GET names the request's compression in the query, since there is no body to describe;
+            // the ACCEPT side is still a header, because that describes the response
+            var stated = isGet
+                ? http.Request.Query["compression"].ToString()
+                : http.Request.Headers[encodingHeader].ToString();
             if (!ConnectCompression.IsIdentity(stated))
             {
                 request = Find(options, stated)
@@ -319,6 +423,13 @@ namespace ProtoBuf.Connect.AspNetCore
             }
 
             return null;
+        }
+
+        private static string Codecs(ConnectServerOptions options)
+        {
+            var names = new List<string>();
+            foreach (var codec in options.Codecs) names.Add(codec.Name);
+            return string.Join(", ", names);
         }
 
         private static string Accepted(ConnectServerOptions options)

@@ -2820,7 +2820,7 @@ which is the useful way round.
 ### Next
 
 - JSON codec — now unambiguously the largest remaining piece.
-- ~~Compression~~ **Done — §50.** Connect GET and TLS remain.
+- ~~Compression~~ **Done — §50.** ~~Connect GET~~ **Done — §51.** TLS remains.
 - ~~An HTTP-version option, per the duplex gap above.~~ **Done — §49.**
 - ~~Wiring conformance into CI.~~ **Done:** a step on the linux job, which downloads the pinned runner
   (checksum verified) and runs both modes. It is a release artefact rather than a live service, which is
@@ -3122,6 +3122,79 @@ CPU the caller did not necessarily ask anyone to spend, and a server that advert
 be able to produce it. The client advertises what it can *decode* unconditionally, since that is a
 statement of capability rather than preference, and reads the response's actual encoding off the
 response rather than assuming its own preference was honoured.
+
+## 51. Connect GET: cacheable RPC, and a `null` that was not null
+
+A side-effect-free unary method is now served over **`GET`** as well as `POST`, and called that way when
+the caller asks. That is the thing Connect does which gRPC structurally cannot: such a call is an
+ordinary cacheable HTTP request, servable from a browser cache, a proxy or a CDN without the server
+being involved at all. It also finally reads `ConnectMethod.IsIdempotent`, which had existed unused
+since the first MVP.
+
+```
+  server   1492 / 1492
+  client   1700 / 1700
+```
+
+### Idempotency is declared, not inferred, and that shapes the API
+
+`option idempotency_level = NO_SIDE_EFFECTS` reaches the generated `ServiceDescriptor` but **not** the
+`Method<,>` the binder and invoker see. Reaching a descriptor means Google.Protobuf, which
+`protobuf-net.Connect` deliberately does not reference — so both ends take a `Func<IMethod, bool>` and
+`protobuf-net.Connect.Google` ships the implementation:
+
+```csharp
+app.MapConnectService<GreeterImpl>(Greeter.BindService,
+    isIdempotent: GoogleIdempotency.For(Greeter.Descriptor));
+```
+
+Only `NO_SIDE_EFFECTS` qualifies. `IDEMPOTENT` means "safe to retry", which is a weaker claim than
+"safe to cache and prefetch" — a delete is idempotent and must emphatically not be a `GET`.
+
+Both ends refuse to widen this quietly: a caller asking for `GET` on a method that is not unary and
+side-effect-free gets `POST` **silently**, because quietly not caching is a far better failure than
+quietly exposing a side-effecting method to prefetchers.
+
+### Query parameter order is load-bearing
+
+The spec asks clients to emit `connect`, `base64`, `compression`, `encoding`, `message` in that order,
+and requires servers to accept any order. That is not pedantry: **a shared cache keys on the URL as a
+string**, so two clients sending the same call with the parameters shuffled would miss each other's
+entries entirely. Emitting the canonical order is most of the point of using `GET` at all.
+
+The message is base64 in the RFC 4648 §5 **URL-safe** alphabet (`-`/`_`, not `+`/`/`) and unpadded —
+`=` would only have to be percent-encoded. Without `base64=1` the payload is the codec's raw text, which
+is what makes a JSON `GET` readable in a browser's address bar.
+
+### `null` in a conditional that was not null
+
+Worth recording in full, because it broke **every POST in the suite** and the code reads as obviously
+correct:
+
+```csharp
+RequestPayload = isGet ? ReadGetPayload(http, compression) : null,   // WRONG
+```
+
+`RequestPayload` is `ReadOnlyMemory<byte>?`, so this looks like "the payload, or nothing". It is not.
+**`ReadOnlyMemory<byte>` has an implicit conversion from `byte[]`**, so `null` binds to *that* operator:
+the conditional's type is the non-nullable `ReadOnlyMemory<byte>`, `null` becomes an **empty** memory,
+and the property ends up `HasValue == true, Length == 0`.
+
+Every `POST` then took the `GET` path and decoded an empty message — 632 failures, from a line whose
+only fault is that `null` is a legal `byte[]`. Assigning separately (`if (isGet) ...`) is unambiguous
+and is what the code does now.
+
+The diagnosis is worth keeping too: the *symptom* was a JSON parse error on requests whose bodies were
+demonstrably 191 bytes long, and three rounds of reasoning got nowhere. Printing `HasValue` at the
+branch settled it immediately. **Probe the value, do not re-read the code.**
+
+### `bool` cannot express "unset"
+
+The same class of bug, found minutes later: `ConnectCallOptions.UseGet` was a plain `bool`, so
+`options?.UseGet ?? channelDefault` **never consulted the default** — `?.` yields `false` rather than
+`null` whenever the options object exists, and `false ?? x` is `false`. It is now `bool?`, for the same
+reason `HttpVersion` is nullable. A channel-level default is meaningless unless the per-call option can
+say "I did not decide".
 
 ## 12. Unverified — check before committing to any of this
 

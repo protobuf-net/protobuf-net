@@ -99,6 +99,14 @@ namespace ProtoBuf.Connect
             return code != ConnectCode.Unknown || name == "unknown";
         }
 
+        /// <summary>
+        /// Maps a wire name to its code, falling back to <see cref="ConnectCode.Unknown"/>.
+        /// </summary>
+        /// <remarks>
+        /// The fallback is lossy - see <see cref="TryFromWireName"/>, which reports whether the name was
+        /// recognised at all, and which is what a reader deciding between a stated code and an inferred
+        /// one needs.
+        /// </remarks>
         public static ConnectCode FromWireName(string? name) => name switch
         {
             "canceled" => ConnectCode.Cancelled,

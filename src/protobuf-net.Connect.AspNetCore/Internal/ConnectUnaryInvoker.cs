@@ -57,6 +57,9 @@ namespace ProtoBuf.Connect.AspNetCore.Internal
         private async Task<TRequest> ReadAsync(PipeReader reader, ConnectCodec codec, ConnectServerCallContext context)
         {
             var cancellationToken = context.CancellationToken;
+
+            // a GET carries its message in the URL, already decoded and decompressed by the endpoint
+            if (context.RequestPayload is { } payload) return Decode(codec, new ReadOnlySequence<byte>(payload));
             // A unary body is the bare message with no framing, so there is nothing to parse incrementally:
             // read until the client is done, then decode once. A streaming shape reads envelope by envelope
             // from this same reader, which is why the reader rather than a Stream is the primitive.

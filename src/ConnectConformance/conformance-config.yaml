@@ -46,5 +46,7 @@ features:
   # enforcement of a receive limit.
   supports_tls: false
   supports_tls_client_certs: false
-  supports_connect_get: false
+  # a side-effect-free unary method is served over GET as well as POST, and called that way when the
+  # caller asks - which makes it an ordinary cacheable HTTP request
+  supports_connect_get: true
   supports_message_receive_limit: false

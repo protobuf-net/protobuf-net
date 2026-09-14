@@ -85,7 +85,9 @@ internal static class ConformanceClient
         };
 
         var client = new ConformanceService.ConformanceServiceClient(
-            new ConnectCallInvoker(new ConnectChannel(http, codec, address, compression: compression)));
+            new ConnectCallInvoker(
+                new ConnectChannel(http, codec, address, compression: compression, useGet: request.UseGetHttpMethod),
+                ProtoBuf.Connect.Google.GoogleIdempotency.For(ConformanceService.Descriptor)));
 
         var result = new ClientResponseResult();
         using var cancellation = new CancellationTokenSource();

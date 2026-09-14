@@ -65,6 +65,16 @@ namespace ProtoBuf.Connect.AspNetCore
         /// </remarks>
         internal ConnectCompression RequestCompression { get; set; } = ConnectCompression.Identity;
 
+        /// <summary>
+        /// The request message, when it arrived in the URL rather than in a body.
+        /// </summary>
+        /// <remarks>
+        /// A <c>GET</c> has no body: the message is a query parameter. Carrying it here rather than
+        /// widening the invoker keeps the reading decision in one place - the invoker asks for the
+        /// payload and does not care which half of the request it came from.
+        /// </remarks>
+        internal ReadOnlyMemory<byte>? RequestPayload { get; set; }
+
         /// <inheritdoc cref="RequestCompression"/>
         internal ConnectCompression ResponseCompression { get; set; } = ConnectCompression.Identity;
 

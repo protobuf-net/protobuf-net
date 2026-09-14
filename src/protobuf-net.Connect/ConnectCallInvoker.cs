@@ -33,9 +33,25 @@ namespace ProtoBuf.Connect
     {
         private readonly ConnectChannel _channel;
 
+        private readonly Func<IMethod, bool>? _isIdempotent;
+
         /// <summary>Creates an invoker over an existing <see cref="ConnectChannel"/>.</summary>
-        public ConnectCallInvoker(ConnectChannel channel)
-            => _channel = channel ?? throw new ArgumentNullException(nameof(channel));
+        /// <param name="channel">The channel to call on.</param>
+        /// <param name="isIdempotent">
+        /// Says which methods are free of side effects, and so may be sent as a cacheable <c>GET</c> when
+        /// the channel or call asks for one.
+        /// </param>
+        /// <remarks>
+        /// Supplied rather than inferred for the same reason the server side is: idempotency is declared
+        /// in the <em>descriptor</em>, <c>Method&lt;,&gt;</c> does not carry it, and reaching a descriptor
+        /// means Google.Protobuf - which this assembly does not reference.
+        /// <c>GoogleIdempotency.For(Service.Descriptor)</c> is the ready-made answer.
+        /// </remarks>
+        public ConnectCallInvoker(ConnectChannel channel, Func<IMethod, bool>? isIdempotent = null)
+        {
+            _channel = channel ?? throw new ArgumentNullException(nameof(channel));
+            _isIdempotent = isIdempotent;
+        }
 
         /// <summary>
         /// Creates an invoker over the given client and address, marshalling through the descriptors the
@@ -45,8 +61,9 @@ namespace ProtoBuf.Connect
         /// The codec is <see cref="MarshallerConnectCodec"/> because there is nothing for a channel-level
         /// codec to do here: every method supplies its own, built from its own marshaller.
         /// </remarks>
-        public ConnectCallInvoker(System.Net.Http.HttpClient http, Uri? baseAddress = null)
-            : this(new ConnectChannel(http, MarshallerConnectCodec.Instance, baseAddress)) { }
+        public ConnectCallInvoker(System.Net.Http.HttpClient http, Uri? baseAddress = null,
+            Func<IMethod, bool>? isIdempotent = null)
+            : this(new ConnectChannel(http, MarshallerConnectCodec.Instance, baseAddress), isIdempotent) { }
 
         /// <inheritdoc/>
         public override TResponse BlockingUnaryCall<TRequest, TResponse>(
@@ -240,7 +257,7 @@ namespace ProtoBuf.Connect
         /// it would silently send the call somewhere the caller did not ask for. Generated clients always
         /// pass <c>null</c>.
         /// </remarks>
-        private static ConnectMethod<TRequest, TResponse> Describe<TRequest, TResponse>(
+        private ConnectMethod<TRequest, TResponse> Describe<TRequest, TResponse>(
             Method<TRequest, TResponse> method, string? host)
         {
             if (!string.IsNullOrEmpty(host))
@@ -249,7 +266,7 @@ namespace ProtoBuf.Connect
                     $"A per-call host ('{host}') is not supported; set the address on the {nameof(ConnectChannel)} instead.");
             }
 
-            return ConnectMethod.FromGrpc(method);
+            return ConnectMethod.FromGrpc(method, _isIdempotent?.Invoke(method) ?? false);
         }
 
         private static RpcException ToRpcException(ConnectException error)

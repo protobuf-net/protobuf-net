@@ -47,6 +47,13 @@ namespace ProtoBuf.Connect.AspNetCore
         /// The generated <c>BindService(ServiceBinderBase, TBase)</c> method, passed as a method group.
         /// </param>
         /// <param name="routingPrefix">An optional prefix in front of every method path.</param>
+        /// <param name="isIdempotent">
+        /// Says which methods are free of side effects, and so may also be served over <c>GET</c> - an
+        /// ordinary cacheable HTTP request, which is the thing Connect can do that gRPC cannot. Nothing
+        /// is inferred: idempotency lives in the descriptor, reaching one means Google.Protobuf, and this
+        /// assembly does not reference it. <c>GoogleIdempotency.For(Service.Descriptor)</c> is the
+        /// ready-made answer; omitted, every method stays POST-only.
+        /// </param>
         /// <param name="metadata">
         /// Supplies endpoint metadata per method - <c>[Authorize]</c>, a CORS policy, a rate-limiter policy.
         /// <strong>Nothing is inferred</strong>: <c>Grpc.AspNetCore.Server</c> collects those by reflecting
@@ -59,14 +66,15 @@ namespace ProtoBuf.Connect.AspNetCore
             this IEndpointRouteBuilder endpoints,
             Action<ServiceBinderBase, TImplementation> bindService,
             string? routingPrefix = null,
-            Func<IMethod, IReadOnlyList<object>>? metadata = null)
+            Func<IMethod, IReadOnlyList<object>>? metadata = null,
+            Func<IMethod, bool>? isIdempotent = null)
             where TImplementation : class
         {
             ArgumentNullException.ThrowIfNull(endpoints);
             ArgumentNullException.ThrowIfNull(bindService);
 
             return endpoints.MapConnectService(
-                new ContractFirstServiceBinder<TImplementation>(bindService, metadata), routingPrefix);
+                new ContractFirstServiceBinder<TImplementation>(bindService, metadata, isIdempotent), routingPrefix);
         }
     }
 
@@ -78,6 +86,7 @@ namespace ProtoBuf.Connect.AspNetCore
     {
         private readonly Action<ServiceBinderBase, TImplementation> _bindService;
         private readonly Func<IMethod, IReadOnlyList<object>>? _metadata;
+        private readonly Func<IMethod, bool>? _isIdempotent;
 
         // one-entry cache of the handler table, keyed on the instance it closes over. A service registered
         // as a singleton - the common shape for a stateless gRPC service - therefore builds its handlers
@@ -86,10 +95,12 @@ namespace ProtoBuf.Connect.AspNetCore
         private HandlerTable? _cached;
 
         public ContractFirstServiceBinder(
-            Action<ServiceBinderBase, TImplementation> bindService, Func<IMethod, IReadOnlyList<object>>? metadata)
+            Action<ServiceBinderBase, TImplementation> bindService, Func<IMethod, IReadOnlyList<object>>? metadata,
+            Func<IMethod, bool>? isIdempotent)
         {
             _bindService = bindService;
             _metadata = metadata;
+            _isIdempotent = isIdempotent;
         }
 
         /// <remarks>
@@ -145,13 +156,13 @@ namespace ProtoBuf.Connect.AspNetCore
 
             public override void AddMethod<TRequest, TResponse>(
                 Method<TRequest, TResponse> method, UnaryServerMethod<TRequest, TResponse>? handler)
-                => _context.AddUnaryMethod(ConnectMethod.FromGrpc(method), (service, request, context)
+                => _context.AddUnaryMethod(ConnectMethod.FromGrpc(method, Idempotent(method)), (service, request, context)
                     => _owner.Handler<UnaryServerMethod<TRequest, TResponse>>(service, method)(request, context),
                     Metadata(method));
 
             public override void AddMethod<TRequest, TResponse>(
                 Method<TRequest, TResponse> method, ServerStreamingServerMethod<TRequest, TResponse>? handler)
-                => _context.AddServerStreamingMethod(ConnectMethod.FromGrpc(method), (service, request, context)
+                => _context.AddServerStreamingMethod(ConnectMethod.FromGrpc(method, Idempotent(method)), (service, request, context)
                     => GrpcStreamAdapters.ToAsyncEnumerable<TResponse>(
                         writer => _owner.Handler<ServerStreamingServerMethod<TRequest, TResponse>>(service, method)(request, writer, context),
                         context.CancellationToken),
@@ -159,14 +170,14 @@ namespace ProtoBuf.Connect.AspNetCore
 
             public override void AddMethod<TRequest, TResponse>(
                 Method<TRequest, TResponse> method, ClientStreamingServerMethod<TRequest, TResponse>? handler)
-                => _context.AddClientStreamingMethod(ConnectMethod.FromGrpc(method), (service, requests, context)
+                => _context.AddClientStreamingMethod(ConnectMethod.FromGrpc(method, Idempotent(method)), (service, requests, context)
                     => _owner.Handler<ClientStreamingServerMethod<TRequest, TResponse>>(service, method)(
                         GrpcStreamAdapters.ToStreamReader(requests, context.CancellationToken), context),
                     Metadata(method));
 
             public override void AddMethod<TRequest, TResponse>(
                 Method<TRequest, TResponse> method, DuplexStreamingServerMethod<TRequest, TResponse>? handler)
-                => _context.AddDuplexMethod(ConnectMethod.FromGrpc(method), (service, requests, context)
+                => _context.AddDuplexMethod(ConnectMethod.FromGrpc(method, Idempotent(method)), (service, requests, context)
                     => GrpcStreamAdapters.ToAsyncEnumerable<TResponse>(
                         writer => _owner.Handler<DuplexStreamingServerMethod<TRequest, TResponse>>(service, method)(
                             GrpcStreamAdapters.ToStreamReader(requests, context.CancellationToken), writer, context),
@@ -174,6 +185,14 @@ namespace ProtoBuf.Connect.AspNetCore
                     Metadata(method));
 
             private IReadOnlyList<object>? Metadata(IMethod method) => _owner._metadata?.Invoke(method);
+
+            /// <remarks>
+            /// Supplied rather than inferred, because idempotency lives in the <em>descriptor</em> and
+            /// <c>Method&lt;,&gt;</c> does not carry it - and reaching a descriptor means Google.Protobuf,
+            /// which this assembly deliberately does not reference. <c>protobuf-net.Connect.Google</c>
+            /// ships a ready-made implementation.
+            /// </remarks>
+            private bool Idempotent(IMethod method) => _owner._isIdempotent?.Invoke(method) ?? false;
         }
 
         /// <summary>Captures the handlers a bind against a real instance produces.</summary>

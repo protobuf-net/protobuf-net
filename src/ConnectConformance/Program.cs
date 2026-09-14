@@ -93,7 +93,11 @@ if (!string.IsNullOrEmpty(logPath))
         await next();
     });
 }
-app.MapConnectService<ConformanceServiceImpl>(ConformanceService.BindService);
+app.MapConnectService<ConformanceServiceImpl>(
+    ConformanceService.BindService,
+    // IdempotentUnary declares `option idempotency_level = NO_SIDE_EFFECTS`, which reaches the
+    // descriptor but not the Method<,> the binder sees - so it is read from the descriptor
+    isIdempotent: ProtoBuf.Connect.Google.GoogleIdempotency.For(ConformanceService.Descriptor));
 
 await app.StartAsync();
 

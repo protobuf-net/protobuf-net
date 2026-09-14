@@ -53,6 +53,25 @@ namespace ProtoBuf.Connect
         public ConnectCompression? Compression { get; init; }
 
         /// <summary>
+        /// Send this call as an HTTP <c>GET</c> where the method allows it.
+        /// </summary>
+        /// <remarks>
+        /// Opt-in, and only honoured for a <b>unary</b> method declared free of side effects
+        /// (<c>ConnectMethod.IsIdempotent</c>); anything else stays <c>POST</c>, silently, because
+        /// downgrading a method that has side effects to a cacheable verb would be a much worse outcome
+        /// than ignoring a preference. Worth asking for when the result is cacheable: such a call is an
+        /// ordinary HTTP <c>GET</c> that a browser, proxy or CDN can serve without reaching the server.
+        /// <para>
+        /// <b>Nullable, so that "unset" is distinguishable from "no".</b> A plain <c>bool</c> cannot
+        /// express that difference, and <c>options?.UseGet ?? channelDefault</c> then silently never
+        /// consults the default: <c>?.</c> yields <c>false</c> rather than <c>null</c> whenever the
+        /// options object exists at all, and <c>false ?? x</c> is <c>false</c>. <see cref="HttpVersion"/>
+        /// is nullable for exactly the same reason.
+        /// </para>
+        /// </remarks>
+        public bool? UseGet { get; init; }
+
+        /// <summary>
         /// Translates a caller's gRPC-shaped <see cref="CallOptions"/> into transport options.
         /// </summary>
         /// <remarks>

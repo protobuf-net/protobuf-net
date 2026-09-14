@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Globalization;
 using System.Linq;
+using System.Text;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
@@ -52,6 +53,11 @@ namespace ProtoBuf.Connect
         /// Pins the HTTP version for every call on this channel, for callers that cannot state it per
         /// call.
         /// </param>
+        /// <param name="compression">Compresses every request on this channel.</param>
+        /// <param name="useGet">
+        /// Sends side-effect-free unary calls as cacheable <c>GET</c> requests. Honoured only where the
+        /// method allows it; everything else stays <c>POST</c>.
+        /// </param>
         /// <remarks>
         /// The version is worth pinning because a plaintext endpoint has no ALPN, so it is a decision
         /// rather than an outcome. The case that needs it is <c>HttpVersion.Version11</c> with
@@ -61,10 +67,11 @@ namespace ProtoBuf.Connect
         /// that consumer the channel is the only place to say it.
         /// </remarks>
         public ConnectChannel(HttpClient http, ConnectCodec codec, Uri? baseAddress = null, Version? httpVersion = null,
-            ConnectCompression? compression = null)
+            ConnectCompression? compression = null, bool useGet = false)
         {
             _httpVersion = httpVersion;
             _compression = compression;
+            _useGet = useGet;
             _http = http ?? throw new ArgumentNullException(nameof(http));
             Codec = codec ?? throw new ArgumentNullException(nameof(codec));
             var resolved = baseAddress ?? http.BaseAddress;
@@ -83,6 +90,7 @@ namespace ProtoBuf.Connect
 
         private readonly Version? _httpVersion;
         private readonly ConnectCompression? _compression;
+        private readonly bool _useGet;
 
         /// <summary>
         /// What this client can decode, advertised on every request.
@@ -142,13 +150,20 @@ namespace ProtoBuf.Connect
                     $"'{method}' is {method.Type}; only unary calls are implemented so far.");
             }
 
-            using var httpRequest = new HttpRequestMessage(HttpMethod.Post, ResolveUri(method))
-            {
-                // the bare message, no envelope - unary framing is the absence of framing
-                Content = new MeasuredCodecContent<TRequest>(
-                    Codec, request, Codec.ContentTypeFor(method.Type), method.RequestCodec,
-                    options?.Compression ?? _compression),
-            };
+            var compression = options?.Compression ?? _compression;
+
+            // GET only where the METHOD allows it: unary and declared free of side effects. A caller
+            // asking for it on anything else gets POST rather than an error - the preference is about
+            // cacheability, and quietly not caching is fine where quietly exposing a side-effecting
+            // method to prefetchers is not.
+            using var httpRequest = (options?.UseGet ?? _useGet) && method.IsIdempotent && method.Type == ConnectMethodType.Unary
+                ? new HttpRequestMessage(HttpMethod.Get, BuildGetUri(method, request, compression))
+                : new HttpRequestMessage(HttpMethod.Post, ResolveUri(method))
+                {
+                    // the bare message, no envelope - unary framing is the absence of framing
+                    Content = new MeasuredCodecContent<TRequest>(
+                        Codec, request, Codec.ContentTypeFor(method.Type), method.RequestCodec, compression),
+                };
             ApplyOptions(httpRequest, options, unary: true);
 
             // ResponseHeadersRead throughout, not just where it is needed: it is what a streaming shape
@@ -626,6 +641,46 @@ namespace ProtoBuf.Connect
                 ConnectCode.Internal,
                 $"The response to '{method}' is encoded as '{header}', which this client cannot decode.");
         }
+
+        /// <summary>
+        /// Builds the URL for the <c>GET</c> form of a unary call.
+        /// </summary>
+        /// <remarks>
+        /// The parameters are emitted in the order the specification's grammar lists them -
+        /// <c>connect</c>, <c>base64</c>, <c>compression</c>, <c>encoding</c>, <c>message</c> - and that
+        /// is not cosmetic: a shared cache keys on the URL as a string, so two clients sending the same
+        /// call in different orders would miss each other's entries. The spec asks for this ordering for
+        /// exactly that reason, while requiring servers to accept any.
+        /// <para>
+        /// The message is base64 in the RFC 4648 §5 <b>URL-safe</b> alphabet, unpadded - <c>-</c> and
+        /// <c>_</c> for <c>+</c> and <c>/</c>, since it is going in a URL, and no <c>=</c> to
+        /// percent-encode.
+        /// </para>
+        /// </remarks>
+        private Uri BuildGetUri<TRequest, TResponse>(
+            ConnectMethod<TRequest, TResponse> method, TRequest request, ConnectCompression? compression)
+        {
+            using var payload = new PooledBufferWriter();
+            Codec.Write(payload, request, method.RequestCodec);
+
+            var body = new ReadOnlySequence<byte>(payload.WrittenMemory);
+            var compressed = compression is not null
+                && !ConnectCompression.IsIdentity(compression.Name)
+                && payload.WrittenCount >= compression.MinimumSize;
+
+            var bytes = compressed ? compression!.Compress(body) : body.ToArray();
+
+            var query = new StringBuilder("?connect=v1&base64=1");
+            if (compressed) query.Append("&compression=").Append(compression!.Name);
+            query.Append("&encoding=").Append(Codec.Name);
+            query.Append("&message=").Append(Uri.EscapeDataString(UrlBase64(bytes)));
+
+            return new Uri(ResolveUri(method) + query.ToString());
+        }
+
+        /// <summary>RFC 4648 §5: the URL-safe alphabet, unpadded.</summary>
+        private static string UrlBase64(byte[] value)
+            => Convert.ToBase64String(value).TrimEnd('=').Replace('+', '-').Replace('/', '_');
 
         private static ConnectCallResult ReadMetadata(HttpResponseMessage response)
         {

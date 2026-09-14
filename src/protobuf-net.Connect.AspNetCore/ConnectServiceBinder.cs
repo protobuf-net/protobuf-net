@@ -130,7 +130,8 @@ namespace ProtoBuf.Connect.AspNetCore
             }
 
             _methods.Add(new ConnectMethodRegistration<TImplementation>(
-                method.Path, method.ToString(), expected, metadata ?? Array.Empty<object>(), invoker));
+                method.Path, method.ToString(), expected, metadata ?? Array.Empty<object>(), invoker,
+                method.IsIdempotent));
         }
 
         private static T Require<T>(T handler) where T : Delegate
@@ -142,5 +143,18 @@ namespace ProtoBuf.Connect.AspNetCore
         string DisplayName,
         ConnectMethodType Type,
         IReadOnlyList<object> Metadata,
-        Internal.ConnectInvoker<TImplementation> Invoker) where TImplementation : class;
+        Internal.ConnectInvoker<TImplementation> Invoker,
+        bool IsIdempotent) where TImplementation : class
+    {
+        /// <summary>
+        /// Whether this method may also be reached with <c>GET</c>.
+        /// </summary>
+        /// <remarks>
+        /// Unary and side-effect-free, both required. The shape, because there is nowhere in a URL to
+        /// put a stream; the idempotency, because a <c>GET</c> is cacheable and prefetchable by anything
+        /// between here and the caller - so exposing a method with side effects that way invites a proxy
+        /// to invoke it, uninstructed and more than once.
+        /// </remarks>
+        public bool AllowsGet => IsIdempotent && Type == ConnectMethodType.Unary;
+    }
 }

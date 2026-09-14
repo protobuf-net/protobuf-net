@@ -42,7 +42,8 @@ namespace ProtoBuf.Connect
         /// a Connect body and a gRPC body are the same bytes.
         /// </para>
         /// </remarks>
-        public static ConnectMethod<TRequest, TResponse> FromGrpc<TRequest, TResponse>(Method<TRequest, TResponse> method)
+        public static ConnectMethod<TRequest, TResponse> FromGrpc<TRequest, TResponse>(
+            Method<TRequest, TResponse> method, bool idempotent = false)
         {
             if (method is null) throw new ArgumentNullException(nameof(method));
 
@@ -57,9 +58,10 @@ namespace ProtoBuf.Connect
                 },
                 method.ServiceName,
                 method.Name,
-                // protoc records idempotency_level in the descriptor set, but Method<,> does not carry it,
-                // so there is nothing to read and every contract-first RPC stays POST
-                idempotent: false,
+                // Method<,> does not carry idempotency_level, though the descriptor does - so it is
+                // supplied by the caller, which is the only party that can reach a descriptor without
+                // this assembly taking a dependency on Google.Protobuf
+                idempotent,
                 requestCodec: new MarshallerMessageCodec<TRequest>(method.RequestMarshaller),
                 responseCodec: new MarshallerMessageCodec<TResponse>(method.ResponseMarshaller));
         }
