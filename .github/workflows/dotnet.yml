@@ -143,3 +143,67 @@ jobs:
       run: |
         dotnet publish src/AotGrpcSmoke/AotGrpcSmoke.csproj -c Release -r linux-x64 -o artifacts/aot-grpc-smoke
         ./artifacts/aot-grpc-smoke/AotGrpcSmoke
+
+  # Builds protobuf-net.Connect against THIS checkout's tooling, and runs its checks.
+  #
+  # It exists because the Connect split took the only real-runtime coverage with it. What remains
+  # here is BuildToolsUnitTests/Connect, whose fixtures compile against `_ConnectSurface.cs` - a
+  # SNAPSHOT of the runtime surface, and one whose own header records that it can drift and that a
+  # smoke project is what catches it. That smoke project now lives in the other repository, so
+  # without this a generator change can produce code that compiles against the snapshot and not
+  # against the real thing, and nothing here would say so.
+  #
+  # Direction matters: protobuf-net.Connect's CI proves "does the released tooling still serve me",
+  # which is the wrong question for a PR here. This one asks "does the tooling I am about to ship
+  # still serve the downstream", and asks it before the release rather than after.
+  #
+  # Tracks main rather than pinning: the question is whether this change breaks the CURRENT Connect.
+  # Deliberately a subset of that repository's own CI - no native publishes and no conformance run,
+  # which are its job. What is wanted here is that generated code compiles, and executes correctly
+  # enough to exercise the generator's output.
+  downstream-connect:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        fetch-depth: 0  # versioning
+    - name: Check out protobuf-net.Connect
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        repository: protobuf-net/protobuf-net.Connect
+        ref: ${{ vars.CONNECT_REF || 'main' }}
+        path: .connect
+        fetch-depth: 0
+    - name: Setup .NET
+      uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+      with:
+        dotnet-version: |
+          8.0.x
+          10.0.x
+    - name: Cache NuGet packages
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-downstream-${{ hashFiles('src/Directory.Packages.props', '.connect/Directory.Packages.props') }}
+        restore-keys: ${{ runner.os }}-nuget-
+    # ProtoBufSourcePath swaps every protobuf-net package reference in that repository for a project
+    # reference into this checkout, tooling included - so the generators under test are the ones in
+    # this PR, not the ones on nuget.org. Nesting is safe: protobuf-net has no root
+    # Directory.Build.props/targets/Packages.props, so MSBuild's walk up from .connect/src/... stops
+    # inside .connect and nothing leaks across.
+    - name: Build protobuf-net.Connect against this tooling
+      working-directory: .connect
+      run: dotnet build Build.csproj -p:ProtoBufSourcePath=${{ github.workspace }}
+    - name: Contract-first checks
+      working-directory: .connect
+      run: dotnet run --project tests/ConnectContractFirst/ConnectContractFirst.csproj --no-build -p:ProtoBufSourcePath=${{ github.workspace }}
+    # exercises ProtoModelGenerator's JSON half against Google's own formatter
+    - name: Code-first JSON differential
+      working-directory: .connect
+      run: dotnet run --project tests/ConnectJsonDifferential/ConnectJsonDifferential.csproj --no-build -p:ProtoBufSourcePath=${{ github.workspace }}
+    # one contract over gRPC AND Connect on one host: the broadest single exercise of generated code
+    - name: Dual-transport smoke test
+      working-directory: .connect
+      run: dotnet run --project tests/AotDualHostSmoke/AotDualHostSmoke.csproj --no-build -p:ProtoBufSourcePath=${{ github.workspace }}

@@ -1887,8 +1887,21 @@ the generator **probes** for `ProtoBuf.Connect.JsonConnectCodec` before naming i
 may have a newer BuildTools and an older protobuf-net.Connect, and emitting it unconditionally is a
 build break in their project. Expect to need more of that shape, and prefer probing to assuming.
 
-Until a release carries `ProtoConnectGenerator`, that repository builds against a checkout of this
-one (`-p:ProtoBufSourcePath=...`), and its CI does the same.
+`protobuf-net.Core` 3.4.28 was the first release carrying `ProtoConnectGenerator` and
+`ProtoModelGenerator`'s JSON half, so that repository now restores from packages like any other
+consumer.
+
+**CI here has a `downstream-connect` job that builds it against *this* checkout's tooling**, and that
+is not redundant with its own CI: theirs asks "does the released tooling still serve me", which is the
+wrong question for a PR here; this one asks "does the tooling I am about to ship still serve the
+downstream", before the release rather than after.
+
+It exists because the split took the only real-runtime coverage with it. What is left here is
+`BuildToolsUnitTests/Connect`, whose fixtures compile against **`_ConnectSurface.cs` - a snapshot**,
+and whose own header records that it can drift and that a smoke project is what catches it. That
+smoke project is in the other repository now. So without the downstream job, a generator change can
+produce code that compiles against the snapshot and not against the real runtime, and nothing here
+would say so - which is exactly what happened once already to the gRPC equivalent.
 
 ### Build-time gRPC proxies (`GrpcProxyGenerator`)
 
