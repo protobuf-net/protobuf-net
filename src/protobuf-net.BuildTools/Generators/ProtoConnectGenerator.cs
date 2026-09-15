@@ -143,7 +143,12 @@ namespace ProtoBuf.BuildTools.Generators
                 isStatic: container.IsStatic,
                 declaresConstructor: container.InstanceConstructors.Any(static c => !c.IsImplicitlyDeclared),
                 modelTypeFullName: modelType,
-                services: new EquatableArray<GrpcInterfaceModel>(services.ToArray()));
+                services: new EquatableArray<GrpcInterfaceModel>(services.ToArray()),
+                // by metadata name, exactly as ProtoModelGenerator probes for the JSON seam: the two
+                // packages version independently, so the type being nameable has to be established
+                // rather than assumed
+                jsonCodecAvailable: ctx.SemanticModel.Compilation
+                    .GetTypeByMetadataName("ProtoBuf.Connect.JsonConnectCodec") is not null);
 
             return new ConnectCandidate(plan, new EquatableArray<DiagnosticInfo>(diagnostics.ToArray()));
         }

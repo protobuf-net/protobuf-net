@@ -190,6 +190,17 @@ namespace ProtoBuf.BuildTools.Generators
             Line(sb, indent + 1, "{");
             Line(sb, indent + 2, "foreach (var existing in options.Codecs) { if (existing.Name == \"proto\") return; }");
             Line(sb, indent + 2, $"options.Codecs.Add(new global::ProtoBuf.Connect.ProtoConnectCodec({plan.ModelTypeFullName}.Instance));");
+            // A runtime type test, not a compile-time one, and it has to be: IJsonModel is put onto the
+            // model by ProtoModelGenerator, and no generator sees another's output - so this generator
+            // cannot tell whether the model ended up with a JSON half. The test costs one branch at
+            // startup, needs no reflection, and is exactly as AOT-safe as naming the type would have been.
+            if (plan.JsonCodecAvailable)
+            {
+                Line(sb, indent + 2, $"if ({plan.ModelTypeFullName}.Instance is global::ProtoBuf.Connect.IJsonModel jsonModel)");
+                Line(sb, indent + 2, "{");
+                Line(sb, indent + 3, "options.Codecs.Add(new global::ProtoBuf.Connect.JsonConnectCodec(jsonModel));");
+                Line(sb, indent + 2, "}");
+            }
             Line(sb, indent + 1, "});");
         }
 

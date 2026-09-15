@@ -270,16 +270,21 @@ await checks.Run("services can be bound separately when conventions differ", asy
     return "Farewell alone at /solo; Greeter absent, as bound";
 });
 
-await checks.Run("the codec is registered once, however many Add calls", () =>
+await checks.Run("each codec is registered once, however many Add calls", () =>
 {
     // Program.cs calls AddSmokeServices(), AddGreeter() and AddFarewell(). A duplicate codec would not
     // have failed any other check - SelectCodec takes the first match - so this has to be asserted
     // directly rather than inferred from the suite passing.
+    //
+    // The assertion is "one per name", not "one in total": the generated registration adds the JSON
+    // codec too, whenever the model turned out to carry the canonical mapping. It counts names for
+    // that reason - an earlier version counted codecs, and JSON arriving read as a regression.
     var options = app.Services
         .GetRequiredService<Microsoft.Extensions.Options.IOptions<ConnectServerOptions>>().Value;
-    Checks.Require(options.Codecs.Count == 1, $"exactly one codec, found {options.Codecs.Count}");
-    Checks.Require(options.Codecs[0].Name == "proto", $"and it is the proto codec, was '{options.Codecs[0].Name}'");
-    return Task.FromResult($"{options.Codecs.Count} codec after 3 Add calls");
+    var names = options.Codecs.Select(c => c.Name).OrderBy(n => n, StringComparer.Ordinal).ToArray();
+    Checks.Require(names.Length == names.Distinct().Count(), $"no name twice, found [{string.Join(", ", names)}]");
+    Checks.Require(names is ["json", "proto"], $"proto and json, found [{string.Join(", ", names)}]");
+    return Task.FromResult($"[{string.Join(", ", names)}] after 3 Add calls");
 });
 
 await checks.Run("the fluent client factory", async () =>
@@ -482,6 +487,62 @@ await checks.Run("the wire form is a bare message, no envelope", async () =>
     Checks.Require(response.Content.Headers.ContentLength == bytes.Length, "Content-Length was stated");
     Checks.Require(response.Version.Major == 1, $"served over HTTP/1.1, was HTTP/{response.Version}");
     return $"{bytes.Length} bytes, HTTP/{response.Version}, Content-Length stated";
+});
+
+// --- JSON, the code-first way ----------------------------------------------------------------
+//
+// The mapping itself is verified against Google's own formatter in src/ConnectJsonDifferential;
+// what these two prove is that it reaches the WIRE - that a content-type selects it on both ends,
+// and that a peer sending hand-written JSON gets hand-readable JSON back.
+
+await checks.Run("a raw JSON request gets a JSON reply", async () =>
+{
+    // hand-written, so the assertion is about the protocol rather than about our writer agreeing
+    // with our reader. Note the keys: protobuf-net puts the C# member name verbatim into the schema,
+    // and protoc's ToJsonName leaves an already-PascalCase name alone - so "Name", not "name"
+    using var request = new HttpRequestMessage(HttpMethod.Post, $"{address}/{ServiceOnTheWire}/SayHello")
+    {
+        Content = new StringContent(@"{""Name"":""json"",""Repeat"":2}")
+        {
+            Headers = { ContentType = new MediaTypeHeaderValue("application/json") },
+        },
+    };
+    request.Headers.TryAddWithoutValidation("connect-protocol-version", "1");
+
+    using var response = await http.SendAsync(request);
+    Checks.Require(response.IsSuccessStatusCode, $"HTTP 200, was {(int)response.StatusCode}");
+    Checks.Require(response.Content.Headers.ContentType?.MediaType == "application/json",
+        $"the response names the codec, was {response.Content.Headers.ContentType?.MediaType}");
+
+    var body = await response.Content.ReadAsStringAsync();
+    Checks.Require(body.Contains(@"""Message"":""hello json; hello json"""), $"the greeting, body was {body}");
+    // Length is 22, not a default, so it must be present; a JSON codec that omitted non-defaults
+    // would be the bug this catches
+    Checks.Require(body.Contains(@"""Length"":22"), $"the second field survived, body was {body}");
+    return body;
+});
+
+await checks.Run("a typed client negotiates JSON end to end", async () =>
+{
+    // the same contract, the same generated client, a different codec on the channel - which is the
+    // whole claim: the codec is a channel-level choice and nothing above it changes
+    var jsonChannel = new ConnectChannel(http, new JsonConnectCodec((IJsonModel)SmokeModel.Instance), new Uri(address));
+    var jsonClient = SmokeServices.CreateClient<IGreeter>(jsonChannel);
+
+    var reply = await jsonClient.SayHelloAsync(new HelloRequest { Name = "typed", Repeat = 1 });
+    Checks.Require(reply.Message == "hello typed", $"the greeting, was \"{reply.Message}\"");
+    Checks.Require(reply.Length == reply.Message!.Length, "a second field survived the round-trip");
+
+    // and the streaming shape, which is the one that has to buffer: JSON cannot measure, so the
+    // envelope's length prefix costs a copy that binary does not pay
+    var messages = new List<string>();
+    await foreach (var item in jsonClient.Subscribe(new HelloRequest { Name = "stream", Repeat = 3 }))
+    {
+        messages.Add(item.Message!);
+    }
+    Checks.Require(messages.Count == 3, $"three enveloped JSON messages, got {messages.Count}");
+    Checks.Require(messages[2] == "hello stream #3", $"in order, last was \"{messages[2]}\"");
+    return $"unary + {messages.Count} streamed";
 });
 
 await app.StopAsync();

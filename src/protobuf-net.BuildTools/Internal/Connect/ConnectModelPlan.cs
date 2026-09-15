@@ -31,8 +31,10 @@ namespace ProtoBuf.BuildTools.Internal.Connect
             bool isStatic,
             bool declaresConstructor,
             string? modelTypeFullName,
-            EquatableArray<GrpcInterfaceModel> services)
+            EquatableArray<GrpcInterfaceModel> services,
+            bool jsonCodecAvailable = false)
         {
+            JsonCodecAvailable = jsonCodecAvailable;
             ContainerNamespace = containerNamespace;
             ContainerName = containerName;
             Accessibility = accessibility;
@@ -41,6 +43,19 @@ namespace ProtoBuf.BuildTools.Internal.Connect
             ModelTypeFullName = modelTypeFullName;
             Services = services;
         }
+
+        /// <summary>
+        /// Whether <c>ProtoBuf.Connect.JsonConnectCodec</c> exists in the consumer's compilation, and
+        /// so whether the generated registration may name it.
+        /// </summary>
+        /// <remarks>
+        /// Probed rather than assumed, because BuildTools and protobuf-net.Connect are separate
+        /// packages and a consumer may have a newer one of the first with an older one of the second.
+        /// Emitting the registration unconditionally is a <b>build break in their project</b> for a
+        /// feature they never asked for - which is exactly what the golden fixture caught, since its
+        /// stubbed compilation has the older shape.
+        /// </remarks>
+        public bool JsonCodecAvailable { get; }
 
         /// <summary>The consumer's namespace, or <c>null</c> for the global one.</summary>
         public string? ContainerNamespace { get; }
@@ -88,7 +103,8 @@ namespace ProtoBuf.BuildTools.Internal.Connect
             && IsStatic == other.IsStatic
             && DeclaresConstructor == other.DeclaresConstructor
             && string.Equals(ModelTypeFullName, other.ModelTypeFullName, StringComparison.Ordinal)
-            && Services.Equals(other.Services);
+            && Services.Equals(other.Services)
+            && JsonCodecAvailable == other.JsonCodecAvailable;
 
         public override bool Equals(object? obj) => Equals(obj as ConnectContainerPlan);
 

@@ -177,7 +177,32 @@ same trap AGENTS.md records for maps ("whatever it does not cover is not fine, i
   none of them, which is the single largest simplification against implementing protojson wholesale.
 - **Unknown fields are ignored**, where Google's parser rejects by default. A deliberate choice (a
   peer adding a field should not break us), worth revisiting if a conformance mode ever needs strict.
-- **No Connect codec yet.** `IJsonModel` exists and answers; nothing wires it into `ConnectCodec` as a
-  `"json"` codec for the code-first path. That is small, and is the obvious next step.
 - **Nothing is measured for throughput.** There is no transcode here — unlike the contract-first path,
   which goes through `string` — so it should be the faster of the two, but that is untested.
+
+## The codec (done)
+
+`JsonConnectCodec` serves `application/json` from an `IJsonModel`, and `ProtoConnectGenerator`
+registers it alongside the proto one. Two details worth keeping:
+
+- **The registration is a runtime type test**, `Instance is IJsonModel`, not a compile-time one. It
+  has to be: `IJsonModel` is put onto the model by `ProtoModelGenerator`, and **no generator sees
+  another's output** — so the Connect generator cannot tell whether the model ended up with a JSON
+  half. One branch at startup, no reflection, as AOT-safe as naming the type would have been.
+- **The emit is gated on probing for `ProtoBuf.Connect.JsonConnectCodec`** in the consumer's
+  compilation. BuildTools and protobuf-net.Connect are separate packages that version independently,
+  so emitting the registration unconditionally is a build break in the project of anyone with a newer
+  one and an older other. The golden fixture caught this immediately — its stubbed compilation has
+  the older shape, and `Basic.output.txt` appeared carrying two CS0234s.
+
+`Measure` returns `null`, so JSON states no `Content-Length` and every enveloped message is buffered
+— the same cost the contract-first JSON codec pays, and a real difference from binary.
+
+`AotConnectSmoke` gained two checks (now 25, native, 33 IL warnings — its existing baseline, none
+naming JSON): a **hand-written** raw JSON POST getting hand-readable JSON back, and a typed client
+negotiating JSON for both a unary and a server-streaming call. The first is the one that matters — it
+asserts the wire rather than our writer agreeing with our reader.
+
+Its "the codec is registered once" check had to become "**each** codec is registered once": it
+counted codecs, and JSON arriving read as a regression. It counts distinct names now, which is what
+it always meant.
