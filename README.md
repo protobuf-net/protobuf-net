@@ -7,6 +7,11 @@
 Recent changes are on [the releases page](https://github.com/protobuf-net/protobuf-net/releases); older
 history is in [the release notes](https://docs.protobuf-net.dev/releasenotes).
 
+> **New: [protobuf-net.Connect](https://connect.protobuf-net.dev)** — the
+> [Connect protocol](https://connectrpc.com) for .NET. gRPC semantics over ordinary HTTP, so unary and
+> one-way streaming work over **HTTP/1.1**, through proxies and CDNs that will not carry gRPC. Reuses
+> protobuf-net.Grpc contracts unchanged; AOT-first; full conformance both directions.
+
 ## Online tools: [protobuf-net.dev](https://protobuf-net.dev/)
 
 Free, browser-based, and nothing to install — and **it all runs locally**: it is a static site, so your
@@ -17,13 +22,6 @@ schemas and payloads never leave your machine. You can:
 - **decode a raw protobuf payload**, without needing the schema that produced it
 
 Documentation is at [docs.protobuf-net.dev](https://docs.protobuf-net.dev/).
-
-## Related: [protobuf-net.Connect](https://connect.protobuf-net.dev)
-
-The [Connect protocol](https://connectrpc.com) for .NET — gRPC's wire semantics over ordinary HTTP,
-so unary and one-way streaming work over **HTTP/1.1**, through proxies and CDNs that will not carry
-gRPC. Reuses protobuf-net.Grpc contracts unchanged, and the same interface can serve both at once.
-Built for native AOT, and passes the connectrpc conformance suite in full, both directions.
 
 ## Supported Runtimes
 - .NET 6.0+ (.NET 5 etc will use .NET Standard 2.1)
