@@ -18,6 +18,13 @@ schemas and payloads never leave your machine. You can:
 
 Documentation is at [docs.protobuf-net.dev](https://docs.protobuf-net.dev/).
 
+## Related: [protobuf-net.Connect](https://connect.protobuf-net.dev)
+
+The [Connect protocol](https://connectrpc.com) for .NET — gRPC's wire semantics over ordinary HTTP,
+so unary and one-way streaming work over **HTTP/1.1**, through proxies and CDNs that will not carry
+gRPC. Reuses protobuf-net.Grpc contracts unchanged, and the same interface can serve both at once.
+Built for native AOT, and passes the connectrpc conformance suite in full, both directions.
+
 ## Supported Runtimes
 - .NET 6.0+ (.NET 5 etc will use .NET Standard 2.1)
 - .NET Standard 2.0, 2.1
