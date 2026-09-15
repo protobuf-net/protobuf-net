@@ -3258,3 +3258,25 @@ protobuf-net emits that protoc will not compile, and `IsValidKey` is additionall
 repeated key/value pair are byte-identical by construction, and the only behavioural reach is
 duplicate-key handling on read. See `json-spike.md`.
 
+
+## 54. Packaging: deferred, and the shape it will probably take
+
+**Decision recorded 2026-09-15, deliberately not acted on.** Everything here is still
+`IsPackable=false`, off `Build.csproj`'s `Packing` list, and has no ApiCompat baseline. Nothing about
+this branch is installable, and that is a choice rather than an oversight.
+
+The likely end state: **the runtime assemblies move to a sibling repo, and protobuf-net.BuildTools
+stays here.** That split follows the dependency facts - the generators live in BuildTools alongside
+`ProtoModelGenerator` and `GrpcProxyGenerator` and share their contract parse, while
+protobuf-net.Connect / .AspNetCore / .Google depend only on Core and ship on their own cadence.
+
+**The cost is worth stating up front, because it is the reason this is not free:** it makes iteration
+awkward in exactly the place iteration currently happens. `ProtoConnectGenerator` emits code that
+names `ProtoBuf.Connect` types, and the two are developed together - today a change to both is one
+commit, one build, one test run. Across repos it becomes a package round-trip, and the version skew
+it introduces is real rather than theoretical: this branch already had to make the generator **probe**
+for `JsonConnectCodec` rather than name it, precisely because BuildTools and protobuf-net.Connect will
+version independently. Expect more of that shape.
+
+Nothing is blocked on the decision. What *is* blocked on it is anyone outside this branch trying the
+work, which is worth remembering when judging how "done" it looks.
