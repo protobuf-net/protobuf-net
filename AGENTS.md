@@ -305,10 +305,18 @@ it.
 | `PBN0001`–`PBN0026` | `DataContractAnalyzer` |
 | `PBN1000+` | `ProtoFileGenerator`'s schema errors |
 | **`PBN2001`–`PBN2010`** | **`ServiceContractAnalyzer`** (the gRPC analyzers, since #735) |
-| `PBN3000`–`PBN3004` | `ProtoModelGenerator` — the language floor and the four drop reasons |
+| `PBN3000`–`PBN3005` | `ProtoModelGenerator` — the language floor, the four drop reasons, and the JSON refusal |
 | `PBN3010`–`PBN3013` | `AotMigrationAnalyzer` |
 | `PBN4000`–`PBN4014`, `PBN4018` | `GrpcProxyGenerator` — the language floor, the drop reasons, and the AOT escalation |
 | **`PBN4015`–`PBN4017`** | **`GrpcMigrationAnalyzer`** — a *different owner inside the same block* |
+| `PBN5000`–`PBN5006`, `PBN5008` | `ProtoConnectGenerator` — the language floor, the drop reasons, and unreconstructable endpoint metadata |
+| **`PBN5007`** | **`ConnectContractFirstAnalyzer`** — a *different owner inside the same block*, again |
+| `PBN9001` | not an analyzer id at all; see below |
+
+**The `PBN50xx` block was missing from this table entirely** until the metadata work went in - eight
+shipped ids recorded nowhere - which is precisely the drift the paragraph below is about, repeated on a
+newer block. It has the same two-owner shape as `PBN40xx`, and the same interleaving: `PBN5008` is the
+generator's even though `PBN5007` sits below it on the analyzer.
 
 **Note the `PBN40xx` block has two owners**, and the numbering is interleaved rather than split at a
 boundary: `PBN4018` belongs to the generator even though `PBN4015`–`PBN4017` sit below it on the
@@ -1880,6 +1888,30 @@ because it ships inside protobuf-net.Core rather than as a package of its own:
 | `ProtoModelGenerator`'s JSON half | `ParseJson.cs` / `EmitJson.cs`, PBN3005 |
 | `BuildToolsUnitTests/Connect/` | the golden fixtures and analyzer tests for all of it |
 
+**Endpoint metadata is reconstructed, not reflected, and that is shared with the gRPC generator.**
+`ProtoConnectGenerator` passes the compilation into `GrpcProxyGenerator.ParseContract`, so each
+operation arrives carrying `MetadataExpressions` - `MetadataGather` reproduces
+`ServiceBinder.GetMetadata`'s list *and its order*, `AttributeRenderer` turns each `AttributeData`
+back into a constructor call, and the binder emits `new object[] { ... }` alongside the handler.
+Everything gathered is emitted, not an authorization allowlist: a consumer's own attribute reaching
+`endpoint.Metadata.GetMetadata<T>()` is what endpoint metadata is *for*.
+
+The asymmetry with gRPC is the part to keep in mind. `GrpcProxyGenerator` has a real fallback - an
+operation it cannot reconstruct keeps the reflective `ServiceBinder.GetMetadata` call, so `PBN4019` is
+close to harmless. **There is no such fallback here**: `MapConnectService` does not reflect, which is
+what makes it AOT-safe, so metadata this generator does not construct simply does not exist and the
+endpoint is served without it. That is why `PBN5008` is worded as a permissive endpoint rather than as
+a fallback, and why the give-up is per *operation* and drops that operation's list **whole** - a
+partial list is a more permissive endpoint and nothing would notice.
+
+`AotDualHostSmoke` in the other repository is the oracle, and it is the only thing that can catch a
+regression here: it puts an `[Authorize]` on one implementation method and asserts the **gRPC and
+Connect endpoints agree**, comparing our build-time reconstruction against grpc-dotnet's reflective
+answer for the same method, in one host. Proven able to fail by short-circuiting the emit and watching
+it report. The golden fixtures (`Connect/Data/Authorization.input.cs`, and
+`Diagnostics/MetadataNotConstructible.input.cs` for `PBN5008`) pin the emitted shape and the ordering;
+they cannot tell you ASP.NET Core honours it.
+
 **The consequence to keep in mind when changing any of that: the other repository cannot see it until
 it ships.** `ProtoConnectGenerator` emits code naming `ProtoBuf.Connect` types, so the generator and
 the runtime it targets are now versioned apart. That is already load-bearing rather than theoretical -
@@ -1887,8 +1919,21 @@ the generator **probes** for `ProtoBuf.Connect.JsonConnectCodec` before naming i
 may have a newer BuildTools and an older protobuf-net.Connect, and emitting it unconditionally is a
 build break in their project. Expect to need more of that shape, and prefer probing to assuming.
 
-Until a release carries `ProtoConnectGenerator`, that repository builds against a checkout of this
-one (`-p:ProtoBufSourcePath=...`), and its CI does the same.
+`protobuf-net.Core` 3.4.28 was the first release carrying `ProtoConnectGenerator` and
+`ProtoModelGenerator`'s JSON half, so that repository now restores from packages like any other
+consumer.
+
+**CI here has a `downstream-connect` job that builds it against *this* checkout's tooling**, and that
+is not redundant with its own CI: theirs asks "does the released tooling still serve me", which is the
+wrong question for a PR here; this one asks "does the tooling I am about to ship still serve the
+downstream", before the release rather than after.
+
+It exists because the split took the only real-runtime coverage with it. What is left here is
+`BuildToolsUnitTests/Connect`, whose fixtures compile against **`_ConnectSurface.cs` - a snapshot**,
+and whose own header records that it can drift and that a smoke project is what catches it. That
+smoke project is in the other repository now. So without the downstream job, a generator change can
+produce code that compiles against the snapshot and not against the real runtime, and nothing here
+would say so - which is exactly what happened once already to the gRPC equivalent.
 
 ### Build-time gRPC proxies (`GrpcProxyGenerator`)
 

@@ -260,11 +260,57 @@ namespace ProtoBuf.BuildTools.Generators
             foreach (var op in service.Operations)
             {
                 var call = $"service.{op.MethodName}({BinderArguments(op)})";
+                var handler = $"static (service, {BinderRequestName(op.Kind)}, ctx) => {call}";
                 Line(sb, indent + 2, $"context.{BinderAdd(op.Kind)}({MethodsName(service)}.{op.OperationName},");
-                Line(sb, indent + 3, $"static (service, {BinderRequestName(op.Kind)}, ctx) => {call});");
+                EmitHandlerAndMetadata(sb, indent + 3, op, handler);
             }
             Line(sb, indent + 1, "}");
             Line(sb, indent, "}");
+        }
+
+        /// <summary>
+        /// The handler, plus this operation's endpoint metadata where there is any.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// The attributes are <em>constructed</em>, not named: ASP.NET Core resolves authorization, CORS
+        /// and rate limiting from attribute <b>instances</b> on the matched endpoint, so reconstructing
+        /// the list at compile time means calling the constructors. <c>AttributeRenderer</c> and
+        /// <c>MetadataGather</c> do that work, shared with the gRPC generator, which is also where the
+        /// <em>order</em> comes from - the consumer treats later as higher priority, and the order is
+        /// what decides the case where two attributes disagree.
+        /// </para>
+        /// <para>
+        /// Everything gathered is emitted, not an authorization allowlist. A consumer's own attribute
+        /// reaching <c>endpoint.Metadata.GetMetadata&lt;T&gt;()</c> is exactly what endpoint metadata is
+        /// for, and an allowlist would drop precisely those while keeping the ones we happened to think
+        /// of. This matches what <c>Grpc.AspNetCore.Server</c> puts on a gRPC endpoint.
+        /// </para>
+        /// <para>
+        /// An empty list and an unreconstructable one are both emitted as no argument at all - the
+        /// parameter defaults to null and the binder substitutes an empty list - and the two are told
+        /// apart by <c>PBN5008</c>, which fires only for the second. There is no third option: unlike
+        /// the gRPC path there is no reflective lookup to fall back to, which is the point of the
+        /// diagnostic.
+        /// </para>
+        /// </remarks>
+        private static void EmitHandlerAndMetadata(StringBuilder sb, int indent, GrpcOperationModel op,
+            string handler)
+        {
+            if (op.MetadataExpressions.IsDefault || op.MetadataExpressions.Length == 0)
+            {
+                Line(sb, indent, handler + ");");
+                return;
+            }
+
+            Line(sb, indent, handler + ",");
+            Line(sb, indent, "new object[]");
+            Line(sb, indent, "{");
+            foreach (var expression in op.MetadataExpressions)
+            {
+                Line(sb, indent + 1, expression + ",");
+            }
+            Line(sb, indent, "});");
         }
 
         private static string BinderAdd(GrpcMethodKind kind) => kind switch

@@ -32,3 +32,4 @@ profile.arm.json
 .DS_Store
 # transient BenchmarkDotNet artifact dirs (NanoBench runs)
 bench-*/
+.connect/

@@ -7,6 +7,11 @@
 Recent changes are on [the releases page](https://github.com/protobuf-net/protobuf-net/releases); older
 history is in [the release notes](https://docs.protobuf-net.dev/releasenotes).
 
+> **New: [protobuf-net.Connect](https://connect.protobuf-net.dev)** — the
+> [Connect protocol](https://connectrpc.com) for .NET. gRPC semantics over ordinary HTTP, so unary and
+> one-way streaming work over **HTTP/1.1**, through proxies and CDNs that will not carry gRPC. Reuses
+> protobuf-net.Grpc contracts unchanged; AOT-first; full conformance both directions.
+
 ## Online tools: [protobuf-net.dev](https://protobuf-net.dev/)
 
 Free, browser-based, and nothing to install — and **it all runs locally**: it is a static site, so your

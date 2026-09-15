@@ -29,6 +29,7 @@ namespace ProtoBuf.BuildTools.Generators
             GrpcDiagnosticKind.NoOperationsFound => NoOperationsFound,
             GrpcDiagnosticKind.ImplementationDoesNotImplement => ImplementationDoesNotImplement,
             GrpcDiagnosticKind.GenericInterfaceNotSupported => GenericInterfaceNotSupported,
+            GrpcDiagnosticKind.MetadataNotConstructible => MetadataNotConstructible,
             _ => UnsupportedContract,
         };
 
@@ -82,6 +83,38 @@ namespace ProtoBuf.BuildTools.Generators
             title: "Open generic service contract is not supported",
             messageFormat: "'{0}' is an open generic contract, so there is no one request or response "
                 + "type to build a method descriptor from",
+            category: Category,
+            defaultSeverity: DiagnosticSeverity.Warning,
+            isEnabledByDefault: true);
+
+        /// <summary>
+        /// Endpoint metadata could not be reconstructed, so the endpoint carries none.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// The gRPC generator's equivalent, <c>PBN4019</c>, says the operation "keeps the reflective
+        /// metadata lookup" - and that is a genuine fallback, so it is close to harmless. There is no
+        /// such fallback here: <c>MapConnectService</c> deliberately does not reflect, which is what
+        /// makes it AOT-safe, so the metadata this generator does not construct simply does not exist.
+        /// </para>
+        /// <para>
+        /// Which makes this the <em>same failure</em> <c>PBN5007</c> exists for, arrived at from the
+        /// other direction - a more permissive endpoint with no error anywhere - and it is worded to say
+        /// what actually happens rather than to describe a fallback that is not there.
+        /// </para>
+        /// <para>
+        /// Reported per operation, and the metadata for that operation is dropped <em>whole</em>: the
+        /// shared parse gives up on the first attribute it cannot render rather than emitting a partial
+        /// list, because a short list is a more permissive endpoint and nothing would notice.
+        /// </para>
+        /// </remarks>
+        internal static readonly DiagnosticDescriptor MetadataNotConstructible = new(
+            id: "PBN5008",
+            title: "Endpoint metadata could not be reconstructed, so the endpoint carries none",
+            messageFormat: "'{0}.{1}' is bound without its endpoint metadata because {2}; nothing on "
+                + "this path reflects, so an authorization attribute would not be honoured. Chain "
+                + ".RequireAuthorization(...) on the returned builder, or make the attribute "
+                + "constructible from this assembly",
             category: Category,
             defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true);

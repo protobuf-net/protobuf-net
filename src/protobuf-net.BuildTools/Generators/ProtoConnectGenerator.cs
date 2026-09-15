@@ -108,7 +108,15 @@ namespace ProtoBuf.BuildTools.Generators
 
                 // the shared classification: every method shape, context kind, void/Empty rule and
                 // [SubService] walk arrives from here rather than being re-derived
-                var parsed = GrpcProxyGenerator.ParseContract(contract, implementation, cancellationToken);
+                //
+                // The compilation is passed so the parse also reconstructs each operation's endpoint
+                // metadata. That is not optional here the way it is for gRPC: protobuf-net.Grpc's
+                // binding can fall back to the reflective ServiceBinder.GetMetadata, and does, whereas
+                // nothing on this path reflects - so an operation whose metadata is not reconstructed
+                // gets none, and an [Authorize] on the implementation would be silently dropped. The
+                // fallback here is PBN5008 rather than a runtime lookup.
+                var parsed = GrpcProxyGenerator.ParseContract(contract, implementation, cancellationToken,
+                    payloadSink: null, compilation: ctx.SemanticModel.Compilation);
                 foreach (var diagnostic in parsed.Diagnostics) diagnostics.Add(diagnostic);
                 if (parsed.Model is not { } model) continue;
 
