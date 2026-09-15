@@ -3241,3 +3241,13 @@ Three things worth knowing without reading the whole note:
 - **The oracle is the load-bearing half.** Injecting §48's lowercase-first trap failed in all three
   directions - but the *pinned* `snake_case` field stayed correct, so a fixture set of `.proto`-shaped
   names (which is every fixture set anyone would reach for) would have seen nothing wrong.
+
+The codec is now wired (`JsonConnectCodec`, registered by `ProtoConnectGenerator`), and the oracle has
+grown a **breadth sweep** — every scalar kind in every container, 80 cases, paired through the binary
+codec so the oracle holds what protobuf-net actually derives rather than what a fixture author typed.
+It found five bugs and, more interestingly, a **second protobuf-net schema-generator bug**: an enum map
+key is accepted by `IsValidProtobufMap` and emitted by `GetProto` as `map<Shade,int32>`, which protoc
+rejects outright ("Key in map fields cannot be enum types"). With `int?` emitting `int32` rather than
+`optional int32`, that is two — and both say the same thing: `GetProto` has never had to be an interop
+contract, and it shows.
+

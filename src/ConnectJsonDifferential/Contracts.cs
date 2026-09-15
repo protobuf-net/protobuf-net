@@ -81,6 +81,7 @@ public enum Shade
 
 [ProtoModel]
 [ProtoSerializable(typeof(Shapes))]
+[ProtoSerializable(typeof(Wide))]
 public partial class JsonModel : ProtoBuf.Meta.TypeModel
 {
 }

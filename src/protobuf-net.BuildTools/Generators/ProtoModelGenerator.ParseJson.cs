@@ -208,6 +208,19 @@ namespace ProtoBuf.BuildTools.Generators
                     return "is a dictionary that protobuf cannot express as a map, and canonical JSON "
                         + "has a form only for a map";
                 }
+                // An ENUM KEY is not a protobuf map key, whatever protobuf-net thinks. Its
+                // IsValidProtobufMap accepts one and GetProto duly emits `map<Shade,int32>` - which
+                // protoc rejects outright: "Key in map fields cannot be enum types." The spec allows
+                // any integral or string type and nothing else, so there is no canonical JSON for
+                // this shape because there is no schema for it. (That is a protobuf-net schema bug in
+                // its own right; see notes/connect/json-spike.md.)
+                if (member.Map.KeyEnumTypeName is not null)
+                {
+                    return "is a dictionary with an enum key, which protobuf does not allow as a map "
+                        + "key at all - protoc rejects the generated schema with \"Key in map fields "
+                        + "cannot be enum types\", so there is no canonical JSON form for it";
+                }
+
                 var mapKind = JsonCollectionKindOf(member.DeclaredTypeName);
                 if (mapKind is not (JsonCollectionKind.Dictionary or JsonCollectionKind.ReadOnlyDictionary))
                 {
@@ -220,8 +233,12 @@ namespace ProtoBuf.BuildTools.Generators
                         + "to put what it read";
                 }
 
-                return JsonKindRefusal(member.Map.KeyKind, "map key")
-                    ?? JsonKindRefusal(member.Map.ValueKind, "map value");
+                // `member` matters and was omitted here once: without it the kind tests read
+                // CompatibilityLevel off a default(ProtoMemberPlan), i.e. 0, so every BCL type on
+                // either side of a map was refused for being "level 0" whatever level it was
+                // actually reached at
+                return JsonKindRefusal(member.Map.KeyKind, "map key", member)
+                    ?? JsonKindRefusal(member.Map.ValueKind, "map value", member);
             }
 
             if (member.Repeated.Factory is not null)

@@ -206,3 +206,91 @@ asserts the wire rather than our writer agreeing with our reader.
 Its "the codec is registered once" check had to become "**each** codec is registered once": it
 counted codecs, and JSON arriving read as a regression. It counts distinct names now, which is what
 it always meant.
+
+## The breadth sweep
+
+`src/ConnectJsonDifferential` grew a second half: `Wide`, a fixture carrying **every scalar kind in
+every container**, driven by 80 cases.
+
+**Breadth beats a corpus here, and that is the opposite of what the binary path concluded.** Binary's
+risk lives in what people actually write — odd attribute combinations, generated DTOs, shapes nobody
+would choose — so a 3090-contract sweep of real code is the right instrument. The JSON mapping's risk
+is different in kind: it is a *specified transformation*, so its surface is the cross-product of
+scalar kind and container, and real code covers that cross-product sparsely and by accident. Walking
+it deliberately covers more of what can be wrong, with far less machinery.
+
+### The pairing is through the binary codec
+
+`Cases` builds two instances by hand. That does not scale, and it cannot check anything protobuf-net
+*derives* — a level-300 `Guid` is a `string` in the schema, so a hand-written oracle holds whatever
+the author typed and confirms our JSON against a guess.
+
+So the sweep serializes the protobuf-net instance to **binary protobuf** and parses it with protoc's
+parser. The oracle then holds exactly what protobuf-net thinks the message contains, including every
+derived string form, at the cost of one filler instead of two. It leans on the binary codec, which is
+fair: that one is differentially verified against ref-emit across 3090 contracts.
+
+### Five bugs, none of which the narrow fixture could have found
+
+1. **Map key and value BCL types were refused for being "level 0".** `MemberJsonRefusal` called
+   `JsonKindRefusal` without passing the member for a map, so the kind tests read `CompatibilityLevel`
+   off a `default(ProtoMemberPlan)`. Every `Dictionary<string, TimeSpan>` was refused whatever level it
+   was actually reached at.
+2. **`Guid.ToString(IFormatProvider)` does not exist** — only `()`, `(string)` and
+   `(string, IFormatProvider)`. Pairing Guid with decimal was CS1503 in the consumer's build.
+3. **`Guid.Empty` is `""`, not `"00000000-0000-0000-0000-000000000000"`.** `GuidHelper.Write`'s first
+   branch writes an *empty payload* for it, so that is what the schema's `string` carries and what
+   every peer sees; a plain `ToString()` disagreed with our own binary codec about the same instance.
+   The reader had to learn `""` → `Guid.Empty` too, which it was throwing on.
+4. **`DateTime` must be written unconditionally**, matching the binary path — zero is a legitimate
+   date, so protobuf-net always puts the `Timestamp` message on the wire and a peer sees the field as
+   *present*. Guarding on `!= default` omitted it and disagreed with our own binary output.
+5. **`ParseJsonEnumName_` was referenced and never emitted.** An enum-keyed map produced code the
+   consumer's build rejects — the same class as the `HashSet` bug, invisible until the sweep tried to
+   add the cell. (It is now deleted rather than fixed; see below.)
+
+### ...and a second protobuf-net schema bug
+
+Adding that enum-key cell turned up something better than a JSON bug. **protobuf-net believes an enum
+is a valid map key** — `IsValidProtobufMap` accepts one, and `GetProto` duly emits
+`map<Shade,int32>`. protoc rejects that outright:
+
+```
+Key in map fields cannot be enum types.
+```
+
+The spec allows any integral or string type and nothing else. So protobuf-net generates a schema no
+protobuf tool will compile. That is a schema-generator bug in its own right, unrelated to JSON, and it
+is the second one this spike has turned up — after `int?` emitting `int32` rather than `optional
+int32`. Both say the same thing: **`GetProto` has never had to be an interop contract, and it shows.**
+
+The JSON pass now refuses an enum map key, and the emitter's enum-key branches are **deleted rather
+than left unreachable** — an `Enum.ToString()` fallback is *accidentally plausible* (it produces the
+member name), which is exactly the kind of quietly-wrong output that survives a self-test.
+
+Also measured rather than assumed, and guessed wrong first: **`bool` is not a legal protobuf map key**
+either, alongside float, double and bytes. protobuf-net models those as a `repeated KeyValuePair_...`,
+which has no `map` form and so no canonical JSON.
+
+### Two harness lessons
+
+**Refusals mask each other.** A contract bails at its first bad member, so one holds-everything
+`Awkward` type reported one reason and silently hid three others — including the enum-key one. Probe
+is now **one refusal reason per contract**.
+
+**Numbers had to be compared numerically.** `Utf8JsonWriter` emits `5E-324` where Google emits
+`5e-324`; JSON does not distinguish them, and comparing raw text would pin an exponent's
+capitalisation as if it were the protocol.
+
+`Boundary` now asserts the subset line in **both** directions — each refused shape has no JSON
+serializer, each supported shape does, and every one of them still has its **binary** serializer,
+since narrowing the JSON surface must never narrow the other.
+
+### Where it stands
+
+```
+26 paired + 80 breadth cases agree with Google.Protobuf; the subset boundary holds
+```
+
+Gate re-verified able to fail after widening, by emitting a `char` as a character rather than a
+number — caught in all three directions, including Google refusing to parse it.

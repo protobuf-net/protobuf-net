@@ -25,12 +25,14 @@
   <ItemGroup>
     <!-- the schema is re-derived and compared on every run; it must sit beside the binary -->
     <None Include="proto/oracle.proto" Link="oracle.proto" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="proto/wide.proto" Link="wide.proto" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
     <!-- the oracle: protoc's own C# for the same schema, so the comparison is against Google's
          JsonFormatter rather than against our opinion of the mapping -->
     <Protobuf Include="proto/oracle.proto" ProtoRoot="proto" GrpcServices="None" />
+    <Protobuf Include="proto/wide.proto" ProtoRoot="proto" GrpcServices="None" />
     <PackageReference Include="Grpc.Tools" PrivateAssets="all" />
     <PackageReference Include="Google.Protobuf" />
 

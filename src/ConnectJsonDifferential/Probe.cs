@@ -3,32 +3,77 @@ using ProtoBuf;
 
 namespace ProtoBuf.ConnectJsonDifferential;
 
+// Shapes with no canonical JSON form. These are not expected to work; they are here so that "does
+// not work" means *refused with a diagnostic* rather than *emits code the consumer's build rejects*,
+// which is the worst failure a generator has available. The binary serializer for every one of them
+// must still be emitted - the JSON surface is a subset, and narrowing it must not narrow the other.
+//
+// ONE REFUSAL REASON PER CONTRACT, deliberately. A contract bails at its first bad member, so a
+// single holds-everything type reports one reason and silently masks the rest - which it did, hiding
+// three of the five below until this was split.
+
+/// <summary>A collection the JSON reader cannot construct: it builds a <c>List&lt;T&gt;</c>.</summary>
+[ProtoContract]
+public class HasHashSet
+{
+    [ProtoMember(1)] public HashSet<int> Unique { get; set; } = new();
+}
+
+/// <summary>Likewise; a <c>Queue&lt;T&gt;</c> is neither a list nor assignable from one.</summary>
+[ProtoContract]
+public class HasQueue
+{
+    [ProtoMember(1)] public Queue<int> Pending { get; set; } = new();
+}
+
 /// <summary>
-/// Shapes that have no canonical JSON form, or that the JSON emitter cannot yet express.
+/// A <c>DateTime</c> at the default compatibility level, where it is a protobuf-net message rather
+/// than a <c>google.protobuf.Timestamp</c> and so has no JSON form at all.
+/// </summary>
+[ProtoContract]
+public class HasLevel200DateTime
+{
+    [ProtoMember(1)] public DateTime When { get; set; }
+}
+
+/// <summary>
+/// <c>bool</c> is not a legal protobuf map key - nor are float, double or bytes.
 /// </summary>
 /// <remarks>
-/// These are not expected to work; they are here so that "does not work" means <em>refused with a
-/// diagnostic</em> rather than <em>emits code the consumer's build rejects</em>. The binary
-/// serializer for every one of them must still be emitted - the JSON surface is a subset, and
-/// narrowing it must not narrow the other.
+/// protobuf-net models this as a <c>repeated KeyValuePair_Boolean_Int32</c>, which has no <c>map</c>
+/// form and therefore no canonical JSON. The guess that bool was a legal key cost a round of the
+/// breadth fixture.
 /// </remarks>
 [ProtoContract]
-public class Awkward
+public class HasBoolKeyedMap
 {
-    // a HashSet is not a List, so a reader that builds a List has nowhere to put it
-    [ProtoMember(1)] public HashSet<int> Unique { get; set; } = new();
+    [ProtoMember(1)] public Dictionary<bool, int> BoolKeyed { get; set; } = new();
+}
 
-    // an array needs .ToArray() rather than the list itself
-    [ProtoMember(2)] public string[] Names { get; set; }
+/// <summary>
+/// An <b>enum</b> map key, which is refused for a sharper reason than the others.
+/// </summary>
+/// <remarks>
+/// protobuf-net believes this one <em>is</em> a valid map - <c>IsValidProtobufMap</c> accepts an enum
+/// key - and <c>GetProto</c> duly emits <c>map&lt;Shade,int32&gt;</c>. protoc rejects that outright:
+/// <em>"Key in map fields cannot be enum types."</em> The spec allows any integral or string type and
+/// nothing else. So protobuf-net generates a schema no protobuf tool will compile, which is a bug in
+/// the schema generator rather than anything to do with JSON - found here only because the breadth
+/// sweep tried to add the cell.
+/// </remarks>
+[ProtoContract]
+public class HasEnumKeyedMap
+{
+    [ProtoMember(1)] public Dictionary<Shade, int> EnumKeyed { get; set; } = new();
+}
 
-    // a Queue is neither
-    [ProtoMember(3)] public Queue<int> Pending { get; set; } = new();
-
-    // level 200 by default, where a DateTime is a protobuf-net message and not a Timestamp
-    // (moved out: a level-200 DateTime refused the whole contract and masked everything below it)
-
-    // explicit presence: a nullable scalar is written even when it holds the default
-    [ProtoMember(5)] public int? Maybe { get; set; }
+/// <summary>Shapes that <em>do</em> work, kept beside the refusals so the split stays honest.</summary>
+[ProtoContract]
+public class Supported
+{
+    [ProtoMember(1)] public string[] Names { get; set; }
+    [ProtoMember(2)] public int? Maybe { get; set; }
+    [ProtoMember(3)] public List<int> ReadOnly { get; } = new();
 }
 
 [ProtoContract]
@@ -44,6 +89,7 @@ public class Derived : Base
     [ProtoMember(1)] public string Extra { get; set; }
 }
 
+/// <summary>Reaches a hierarchy, so it is dropped by cascade rather than on its own merits.</summary>
 [ProtoContract]
 public class Holder
 {
@@ -51,7 +97,12 @@ public class Holder
 }
 
 [ProtoModel]
-[ProtoSerializable(typeof(Awkward))]
+[ProtoSerializable(typeof(HasHashSet))]
+[ProtoSerializable(typeof(HasQueue))]
+[ProtoSerializable(typeof(HasLevel200DateTime))]
+[ProtoSerializable(typeof(HasBoolKeyedMap))]
+[ProtoSerializable(typeof(HasEnumKeyedMap))]
+[ProtoSerializable(typeof(Supported))]
 [ProtoSerializable(typeof(Holder))]
 public partial class ProbeModel : ProtoBuf.Meta.TypeModel
 {

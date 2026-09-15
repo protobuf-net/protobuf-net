@@ -171,7 +171,11 @@ namespace ProtoBuf.BuildTools.Generators
                 ProtoMemberKind.Message => member.MemberIsValueType ? null : $"{local} != null",
                 ProtoMemberKind.Uri or ProtoMemberKind.Parseable
                     => member.MemberIsValueType ? null : $"{local} != null",
-                ProtoMemberKind.DateTime => $"{local} != default(global::System.DateTime)",
+                // unconditional, matching the binary path: zero is a legitimate date, so there is no
+                // trivial value to skip - and protobuf-net therefore puts the Timestamp message on the
+                // wire always, which means a peer sees the field as PRESENT. Omitting it here made our
+                // JSON disagree with our own binary about the same instance
+                ProtoMemberKind.DateTime => null,
                 ProtoMemberKind.TimeSpan => $"{local} != global::System.TimeSpan.Zero",
                 ProtoMemberKind.Guid => $"{local} != global::System.Guid.Empty",
                 ProtoMemberKind.Decimal => $"{local} != 0m",
@@ -277,7 +281,15 @@ namespace ProtoBuf.BuildTools.Generators
                     Line(sb, indent, $"WriteJsonDuration(writer, {value});");
                     return;
 
+                // NOT Guid.ToString(): protobuf-net's level-300 GuidString writes an EMPTY payload
+                // for Guid.Empty (GuidHelper.Write's first branch) and the 'D' form otherwise, so a
+                // plain ToString puts "00000000-0000-0000-0000-000000000000" where the binary codec
+                // and every peer reading our schema see "". Note Guid also has no
+                // ToString(IFormatProvider) overload, which is how this first announced itself.
                 case ProtoMemberKind.Guid:
+                    Line(sb, indent, $"writer.WriteString{suffix}({named}JsonGuid({value}));");
+                    return;
+
                 case ProtoMemberKind.Decimal:
                     Line(sb, indent, $"writer.WriteString{suffix}({named}{value}.ToString({Invariant}));");
                     return;
@@ -338,7 +350,10 @@ namespace ProtoBuf.BuildTools.Generators
 
         private static string JsonMapKey(ProtoMemberPlan member, string value)
         {
-            if (member.Map.KeyEnumTypeName is { } enumType) return $"JsonEnumName_{Sanitise(enumType)}({value})";
+            // no enum branch: protobuf forbids an enum map key and the JSON pass refuses the shape
+            // before it reaches here. An `Enum.ToString()` fallback would be *accidentally plausible*
+            // - it produces the member name - which is exactly the kind of quietly-wrong output that
+            // survives a self-test, so there is deliberately nothing to fall back to
             return member.Map.KeyKind switch
             {
                 ProtoMemberKind.String => value,
@@ -564,10 +579,7 @@ namespace ProtoBuf.BuildTools.Generators
 
         private static string JsonMapKeyParse(ProtoMemberPlan member)
         {
-            if (member.Map.KeyEnumTypeName is { } enumType)
-            {
-                return $"ParseJsonEnumName_{Sanitise(enumType)}(key)";
-            }
+            // as for JsonMapKey: an enum key is refused, so there is nothing to parse
             return member.Map.KeyKind switch
             {
                 ProtoMemberKind.String => "key",
@@ -615,7 +627,7 @@ namespace ProtoBuf.BuildTools.Generators
                 ProtoMemberKind.Parseable => $"{typeName}.Parse(reader.GetString())",
                 ProtoMemberKind.DateTime => "ReadJsonTimestamp(ref reader)",
                 ProtoMemberKind.TimeSpan => "ReadJsonDuration(ref reader)",
-                ProtoMemberKind.Guid => $"global::System.Guid.Parse(reader.GetString())",
+                ProtoMemberKind.Guid => "ReadJsonGuid(ref reader)",
                 ProtoMemberKind.Decimal => $"decimal.Parse(reader.GetString(), {Invariant})",
                 // merging into the existing instance, exactly as the binary read does - so a caller
                 // deserializing over a populated object gets the same answer from either codec
@@ -735,6 +747,20 @@ namespace ProtoBuf.BuildTools.Generators
             Line(sb, indent + 1, $"if (ticks % 10000 == 0) return \".\" + (ticks / 10000).ToString(\"000\", {Invariant});");
             Line(sb, indent + 1, $"if (ticks % 10 == 0) return \".\" + (ticks / 10).ToString(\"000000\", {Invariant});");
             Line(sb, indent + 1, $"return \".\" + (ticks * 100).ToString(\"000000000\", {Invariant});");
+            Line(sb, indent, "}");
+            sb.AppendLine();
+
+            // protobuf-net's GuidString form, mirrored: empty payload for Guid.Empty, 'D' otherwise.
+            // The read is forgiving in the same way GuidHelper.Read is, which accepts the 32-char
+            // unhyphenated form as well as the 36-char one
+            Line(sb, indent, "private static string JsonGuid(global::System.Guid value)");
+            Line(sb, indent + 1, "=> value == global::System.Guid.Empty ? \"\" : value.ToString();");
+            sb.AppendLine();
+
+            Line(sb, indent, $"private static global::System.Guid ReadJsonGuid(ref {JsonReader} reader)");
+            Line(sb, indent, "{");
+            Line(sb, indent + 1, "var text = reader.GetString();");
+            Line(sb, indent + 1, "return string.IsNullOrEmpty(text) ? global::System.Guid.Empty : global::System.Guid.Parse(text);");
             Line(sb, indent, "}");
             sb.AppendLine();
 
