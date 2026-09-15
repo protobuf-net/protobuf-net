@@ -1865,6 +1865,31 @@ Each turned out to reuse machinery that was already here, which is why they went
 as the contrast — otherwise "only field 3 survives" is indistinguishable from the `[DataMember]`
 orders never having been read in the first place.
 
+### Connect lives in another repository now
+
+The **runtime** - `protobuf-net.Connect`, `.AspNetCore`, `.Google`, and every harness that exercised
+them - moved to [protobuf-net.Connect](https://github.com/protobuf-net/protobuf-net.Connect). What
+stays here is the **build-time tooling**, because that is where the rest of the tooling is and
+because it ships inside protobuf-net.Core rather than as a package of its own:
+
+| stays here | |
+| --- | --- |
+| `Generators/ProtoConnectGenerator*.cs` | the proxies and server bindings, from `[ProtoConnect]` |
+| `Internal/Connect/` | its plan types - same no-Roslyn-references rule as `Internal/Aot/` |
+| `Analyzers/ConnectContractFirstAnalyzer.cs` | PBN5007, authorization silently dropped |
+| `ProtoModelGenerator`'s JSON half | `ParseJson.cs` / `EmitJson.cs`, PBN3005 |
+| `BuildToolsUnitTests/Connect/` | the golden fixtures and analyzer tests for all of it |
+
+**The consequence to keep in mind when changing any of that: the other repository cannot see it until
+it ships.** `ProtoConnectGenerator` emits code naming `ProtoBuf.Connect` types, so the generator and
+the runtime it targets are now versioned apart. That is already load-bearing rather than theoretical -
+the generator **probes** for `ProtoBuf.Connect.JsonConnectCodec` before naming it, because a consumer
+may have a newer BuildTools and an older protobuf-net.Connect, and emitting it unconditionally is a
+build break in their project. Expect to need more of that shape, and prefer probing to assuming.
+
+Until a release carries `ProtoConnectGenerator`, that repository builds against a checkout of this
+one (`-p:ProtoBufSourcePath=...`), and its CI does the same.
+
 ### Build-time gRPC proxies (`GrpcProxyGenerator`)
 
 **`notes/aot/grpc.md` is the reference. It opens with a Handover section, followed by a "Plan forward"
