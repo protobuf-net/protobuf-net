@@ -3251,3 +3251,10 @@ rejects outright ("Key in map fields cannot be enum types"). With `int?` emittin
 `optional int32`, that is two — and both say the same thing: `GetProto` has never had to be an interop
 contract, and it shows.
 
+Verified since against plain protoc over every candidate key type: the enum case is the **only** schema
+protobuf-net emits that protoc will not compile, and `IsValidKey` is additionally *too strict* — `bool`,
+`char`, `nint` and `nuint` are all legal protobuf map keys that it models as repeated pairs instead.
+(An earlier note here had the bool half backwards.) Changing it is **not** a wire change: a map and a
+repeated key/value pair are byte-identical by construction, and the only behavioural reach is
+duplicate-key handling on read. See `json-spike.md`.
+

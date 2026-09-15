@@ -294,3 +294,64 @@ since narrowing the JSON surface must never narrow the other.
 
 Gate re-verified able to fail after widening, by emitting a `char` as a character rather than a
 number — caught in all three directions, including Google refusing to parse it.
+
+## `IsValidProtobufMap`: verified against plain protoc, and it cuts both ways
+
+The enum finding holds, and it is the **only** one. Every key type protobuf-net supports, run through
+plain `protoc 35.1` (`grpc.tools` 2.83.0) on the schema `GetProto` actually emits:
+
+| C# key | protobuf-net emits | protoc |
+| --- | --- | --- |
+| `int32`/`int64`/`uint32`/`uint64`/`byte`/`sbyte`/`short`/`ushort`/`string` | `map<…>` | OK |
+| `bool`, `char`, `nint`, `nuint` | `repeated KeyValuePair_…` | OK |
+| `float`, `double`, `DateTime`, `Guid`(L200) | `repeated KeyValuePair_…` | OK |
+| **`enum`** | **`map<Shade,int32>`** | **"Key in map fields cannot be enum types."** |
+
+And the spec side, tested directly by writing `map<K, int32>` by hand for each candidate: every
+integral type (including the `sint`/`fixed`/`sfixed` variants), **`bool`** and `string` are accepted;
+`float`, `double`, `bytes`, message **and enum** are refused.
+
+So `IsValidKey` is wrong in **both directions**:
+
+- **too lax**: `if (type.IsEnum) return true;` produces a schema no protobuf tool will compile;
+- **too strict**: `TypeCode.Boolean` is absent from its switch, and so are `char`, `nint` and `nuint`
+  — all of which have perfectly legal map-key schema types (`bool`, `uint32`, `int64`, `uint64`).
+
+**I reported the bool half backwards earlier** — I inferred "bool is not a legal map key" from
+protobuf-net emitting a repeated pair for it, which is protobuf-net's limitation and not the spec's.
+protoc accepts `map<bool, V>`.
+
+## What consumes it, and what changing it would cost
+
+Three call sites, and it is *nearly* schema-only:
+
+| site | what it decides |
+| --- | --- |
+| `RuntimeTypeModel.CascadeRepeated` | whether to also emit the `KeyValuePair_K_V` message — **schema only** |
+| `MetaType` ~line 1993 | `map<K,V>` versus `repeated KeyValuePair_K_V` — **schema only** |
+| `MetaType.ApplyDefaultBehaviour` ~line 1320 | sets `vm.IsMap`, which becomes `OptionFailOnDuplicateKey`'s *absence* |
+
+That third one is the only behavioural reach, and it is narrower than it looks. **The bytes are
+identical either way** — measured, not reasoned: a `Dictionary<int,int>` with and without
+`[ProtoMap(DisableMap = true)]` (which toggles exactly this flag) both serialize to
+`0A040801100A0A0408021014`. That is the protobuf spec working as intended, since a `map` *is* a
+repeated message of `{key = 1, value = 2}`.
+
+What the flag actually changes is **duplicate-key handling on read**, in `MapSerializer`:
+
+```
+as map  -> 99          (SetValues: last wins)
+as list -> ArgumentException: An item with the same key has already been added. Key: 1
+```
+
+So a fix is a schema change plus a duplicate-key behaviour change, and **not a wire change**:
+
+- **dropping the enum case** takes a `Dictionary<SomeEnum, V>` from an uncompilable schema to a
+  compilable one, and from last-wins to throw-on-duplicate. Nobody doing cross-language interop can
+  be relying on today's behaviour, because today's schema does not compile.
+- **adding `bool`/`char`/`nint`/`nuint`** takes them from `repeated KeyValuePair_…` to `map<…>`, and
+  from throw-on-duplicate to last-wins. Strictly more forgiving, and it removes a synthetic message
+  from the schema — but it *is* a visible schema change for users whose peers have generated code
+  from the current one. Safe at the wire, since the bytes do not move.
+
+Both are protobuf-net library changes rather than Connect ones, so they are not on this branch.

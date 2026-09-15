@@ -37,12 +37,15 @@ public class HasLevel200DateTime
 }
 
 /// <summary>
-/// <c>bool</c> is not a legal protobuf map key - nor are float, double or bytes.
+/// A <c>bool</c> key, which protobuf-net does not model as a map even though protobuf allows one.
 /// </summary>
 /// <remarks>
-/// protobuf-net models this as a <c>repeated KeyValuePair_Boolean_Int32</c>, which has no <c>map</c>
-/// form and therefore no canonical JSON. The guess that bool was a legal key cost a round of the
-/// breadth fixture.
+/// <b>The obvious reading of this is wrong, and I had it wrong first.</b> <c>bool</c> <em>is</em> a
+/// legal protobuf map key - verified against plain protoc, which accepts <c>map&lt;bool, V&gt;</c>.
+/// It is protobuf-net's <c>IsValidKey</c> that omits <c>TypeCode.Boolean</c>, so it emits a
+/// <c>repeated KeyValuePair_Boolean_Int32</c> instead. That schema is perfectly valid; it just is not
+/// a map, and canonical JSON has a map form only for a map. Same story for <c>char</c>, <c>nint</c>
+/// and <c>nuint</c>. The genuinely illegal keys are float, double, bytes and message - and enum.
 /// </remarks>
 [ProtoContract]
 public class HasBoolKeyedMap

@@ -73,10 +73,10 @@ public class Wide
     [ProtoMember(40)] public List<Leaf> RepeatedMessage { get; set; } = new();
 
     // --- map keys: every type protobuf allows as one, and no others ----------------------------
-    // Measured rather than assumed, and one guess here was wrong: **bool is not a legal protobuf map
-    // key**, alongside float, double and bytes. protobuf-net models those as a `repeated
-    // KeyValuePair_...` instead, which has no `map` form and so no canonical JSON; Probe.cs keeps a
-    // Dictionary<bool, int> to pin the refusal.
+    // Only the keys protobuf-net actually models as a map. Its set is NARROWER than protobuf's -
+    // bool, char, nint and nuint are all legal protobuf map keys that protobuf-net emits as a
+    // `repeated KeyValuePair_...` instead - and also WRONGLY WIDER, since it accepts an enum key that
+    // protoc rejects. Probe.cs pins both edges. Measured against plain protoc, not inferred.
     [ProtoMember(50)] public Dictionary<string, int> KeyString { get; set; } = new();
     [ProtoMember(51)] public Dictionary<int, int> KeyInt32 { get; set; } = new();
     [ProtoMember(52)] public Dictionary<long, int> KeyInt64 { get; set; } = new();

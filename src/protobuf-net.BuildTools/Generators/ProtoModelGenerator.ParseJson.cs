@@ -199,21 +199,28 @@ namespace ProtoBuf.BuildTools.Generators
 
             if (member.Map.Factory is not null)
             {
-                // canonical JSON writes a map as a JSON object, whose keys are always strings - so a
-                // shape protobuf cannot express as a `map` has nowhere to go. protobuf-net already
-                // treats these differently on the wire (OptionFailOnDuplicateKey), so the split is
-                // not new here, only sharper
+                // canonical JSON writes a map as a JSON object, so a dictionary protobuf-net does not
+                // model as a `map` has nowhere to go - it is a `repeated KeyValuePair_K_V` in the
+                // schema, and canonical JSON for that is an array of objects, not a map.
+                //
+                // Note the wording: protobuf-net's notion of a valid map key is NARROWER than
+                // protobuf's in places (bool, char, nint and nuint are all legal protobuf map keys
+                // and are modelled as repeated pairs anyway), so "protobuf cannot express this" would
+                // be false. The refusal is about what protobuf-net emits, not about what the spec
+                // allows.
                 if (!member.Map.IsValidProtobufMap || member.DisableMap)
                 {
-                    return "is a dictionary that protobuf cannot express as a map, and canonical JSON "
-                        + "has a form only for a map";
+                    return "is a dictionary protobuf-net does not model as a protobuf `map` - it is a "
+                        + "repeated key/value pair in the schema, and canonical JSON has a map form "
+                        + "only for a map";
                 }
                 // An ENUM KEY is not a protobuf map key, whatever protobuf-net thinks. Its
                 // IsValidProtobufMap accepts one and GetProto duly emits `map<Shade,int32>` - which
-                // protoc rejects outright: "Key in map fields cannot be enum types." The spec allows
-                // any integral or string type and nothing else, so there is no canonical JSON for
-                // this shape because there is no schema for it. (That is a protobuf-net schema bug in
-                // its own right; see notes/connect/json-spike.md.)
+                // protoc rejects outright: "Key in map fields cannot be enum types." Verified against
+                // plain protoc 35.1 over every candidate key type; an enum is the ONLY shape where
+                // protobuf-net emits a schema protoc will not compile. So there is no canonical JSON
+                // for this shape because there is no valid schema for it. (A protobuf-net schema bug
+                // in its own right; see notes/connect/json-spike.md.)
                 if (member.Map.KeyEnumTypeName is not null)
                 {
                     return "is a dictionary with an enum key, which protobuf does not allow as a map "
