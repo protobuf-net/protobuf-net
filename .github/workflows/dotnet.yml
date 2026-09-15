@@ -37,6 +37,34 @@ jobs:
         path: ~/.nuget/packages
         key: ${{ runner.os }}-nuget-${{ hashFiles('src/Directory.Packages.props', 'global.json', '**/*.csproj') }}
         restore-keys: ${{ runner.os }}-nuget-
+    # Prints the version this commit computes - i.e. the tag to type into the GitHub Release UI.
+    # nbgv derives it from version.json plus commit height, so it is a property of the COMMIT rather
+    # than of the release, and release.yml refuses a tag that disagrees with it. Written to the job
+    # summary as well as the log, so it is on the run page rather than buried.
+    #
+    # NuGetPackageVersion, not SimpleVersion: they coincide for a stable version released from main,
+    # and diverge the moment a prerelease is involved (0.1.1-alpha versus 0.1.1). The guard compares
+    # NuGetPackageVersion, so that is what has to be reported.
+    - name: Report the computed version
+      shell: bash
+      run: |
+        set -euo pipefail
+        dotnet tool restore
+        version=$(dotnet tool run nbgv -- get-version --project src --variable NuGetPackageVersion | tr -d '[:space:]')
+        assembly=$(dotnet tool run nbgv -- get-version --project src --variable AssemblyInformationalVersion | tr -d '[:space:]')
+        echo "computed version : $version"
+        echo "release tag      : $version"
+        {
+          echo "### Version"
+          echo ""
+          echo "| | |"
+          echo "| --- | --- |"
+          echo "| computed version | \`$version\` |"
+          echo "| **release tag** | \`$version\` |"
+          echo "| informational | \`$assembly\` |"
+          echo ""
+          echo "Releases → Draft a new release → tag \`$version\` → publish."
+        } >> "$GITHUB_STEP_SUMMARY"
     - name: Restore dependencies
       run: dotnet restore Build.csproj
     - name: Build
