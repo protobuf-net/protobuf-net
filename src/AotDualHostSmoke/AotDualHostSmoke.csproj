@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>ProtoBuf.AotDualHostSmoke</RootNamespace>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);PBN9001</NoWarn>
+    <PublishAot>true</PublishAot>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <TrimmerSingleWarn>false</TrimmerSingleWarn>
+    <SuppressTrimAnalysisWarnings>false</SuppressTrimAnalysisWarnings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- both transports, one host. protobuf-net.Grpc comes from the package (as in AotGrpcSmoke, so
+         the generated code binds to the shipped surface); protobuf-net.Connect is the local project.
+         The local protobuf-net must be referenced alongside protobuf-net.Grpc, which hard-depends on
+         2.4.8 where TypeModel lives in the protobuf-net assembly rather than Core. -->
+    <ProjectReference Include="../protobuf-net/protobuf-net.csproj" />
+    <ProjectReference Include="../protobuf-net.Connect.AspNetCore/protobuf-net.Connect.AspNetCore.csproj" />
+    <ProjectReference Include="../protobuf-net.BuildTools/protobuf-net.BuildTools.csproj"
+                      OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <PackageReference Include="protobuf-net.Grpc" />
+    <PackageReference Include="Grpc.AspNetCore.Server" />
+    <PackageReference Include="Grpc.Net.Client" />
+  </ItemGroup>
+
+</Project>

@@ -14,11 +14,33 @@ namespace BuildToolsUnitTests
         public GrpcMigrationAnalyzerTests(ITestOutputHelper log) : base(log) { }
 
         /// <summary>
+        /// Nullable is <b>enabled</b> for these compilations, and that is load-bearing rather than
+        /// tidiness.
+        /// </summary>
+        /// <remarks>
+        /// The shipped protobuf-net.Grpc annotates <c>CreateGrpcService</c>'s factory parameter, and a
+        /// metadata annotation is honoured whatever the consumer's context - so Roslyn reports that
+        /// parameter's type as <c>ClientFactory?</c>. A stub declared in a nullable-<em>disabled</em>
+        /// compilation has its <c>?</c> erased, which is exactly why PBN4016's false positive was
+        /// invisible here while reproducing in every real project.
+        /// </remarks>
+        protected override Microsoft.CodeAnalysis.Project SetupProject(Microsoft.CodeAnalysis.Project project)
+            => project.WithCompilationOptions(
+                ((Microsoft.CodeAnalysis.CSharp.CSharpCompilationOptions)project.CompilationOptions!)
+                    .WithNullableContextOptions(Microsoft.CodeAnalysis.NullableContextOptions.Enable));
+
+        /// <summary>
         /// Stubs, matched by full name exactly as the analyzer does - protobuf-net.Grpc cannot be
         /// referenced here, because BuildTools compiles protobuf-net.Core's sources in and every type in
         /// Core would become ambiguous.
         /// </summary>
         private const string Preamble = """
+            // extension methods need their namespace in scope, and a using must precede everything
+            // else in the file - so it lives here rather than in each body. Without it the REDUCED
+            // form does not compile at all, and a test asserting "no diagnostic" then passes because
+            // the compilation is broken rather than because the analyzer is quiet.
+            using ProtoBuf.Grpc.Client;
+
             namespace Grpc.Core { public class CallInvoker { } }
 
             namespace ProtoBuf.Grpc.Configuration
@@ -48,8 +70,20 @@ namespace BuildToolsUnitTests
                     public static TService CreateGrpcService<TService>(this global::Grpc.Core.CallInvoker client,
                         global::ProtoBuf.Grpc.Configuration.ClientFactory clientFactory = null)
                         where TService : class => null;
+
+                    // The ChannelBase overload, and NULLABLE-ANNOTATED as the shipped package's is.
+                    // Both details are load-bearing: the annotation is what made PBN4016 fire on a
+                    // call that already passed a factory, because the analyzer compared the parameter
+                    // type by *display string* and metadata renders it "ClientFactory?".
+                    #nullable enable
+                    public static TService CreateGrpcService<TService>(this global::Grpc.Core.ChannelBase channel,
+                        global::ProtoBuf.Grpc.Configuration.ClientFactory? clientFactory = null)
+                        where TService : class => null!;
+                    #nullable disable
                 }
             }
+
+            namespace Grpc.Core { public class ChannelBase { } }
 
             namespace Microsoft.Extensions.DependencyInjection { public interface IServiceCollection { } }
 
@@ -81,6 +115,76 @@ namespace BuildToolsUnitTests
                     => global::ProtoBuf.Grpc.Client.GrpcClientFactory.CreateGrpcService<IGreeter>(invoker);
             }
             """;
+
+
+        /// <summary>
+        /// A <c>[ProtoGrpc]</c> container, which is what <c>PBN4016</c> needs before it fires at all.
+        /// </summary>
+        private const string WithContainer = """
+            namespace ProtoBuf.Grpc.Configuration
+            {
+                [System.AttributeUsage(System.AttributeTargets.Class, AllowMultiple = true)]
+                public sealed class ProtoServiceAttribute : System.Attribute
+                {
+                    public ProtoServiceAttribute(System.Type contract) { }
+                }
+            }
+
+            [global::ProtoBuf.Grpc.Configuration.ProtoGrpc]
+            [global::ProtoBuf.Grpc.Configuration.ProtoService(typeof(IGreeter))]
+            public sealed partial class MyServices : global::ProtoBuf.Grpc.Configuration.ClientFactory
+            {
+                public static MyServices Instance => null;
+            }
+
+            """;
+
+        /// <summary>
+        /// <c>PBN4016</c> must stay silent when the factory is passed - in <b>either</b> call form.
+        /// </summary>
+        /// <remarks>
+        /// The extension-method spelling is the one people actually write
+        /// (<c>channel.CreateGrpcService&lt;T&gt;(factory)</c>) and the one that was never covered: the
+        /// existing "factory is passed" test uses the unreduced static form and asserts on PBN4015, so
+        /// a false positive here went unnoticed until a project without interceptors enabled hit it.
+        /// </remarks>
+        [Theory]
+        [InlineData("global::ProtoBuf.Grpc.Client.GrpcClientFactory.CreateGrpcService<IGreeter>(invoker, MyServices.Instance)")]
+        [InlineData("invoker.CreateGrpcService<IGreeter>(MyServices.Instance)")]
+        [InlineData("channel.CreateGrpcService<IGreeter>(MyServices.Instance)")]
+        public async Task FactoryPassedIsNotReportedInEitherCallForm(string call)
+        {
+            var diagnostics = await RunAsync(WithContainer + $$"""
+                public static class Consumer
+                {
+                    public static IGreeter Get(global::Grpc.Core.CallInvoker invoker,
+                        global::Grpc.Core.ChannelBase channel)
+                        => {{call}};
+                }
+                """);
+
+            Assert.DoesNotContain(diagnostics, x => x.Id == "PBN4016");
+        }
+
+
+        /// <summary>Positive control: without a factory, PBN4016 must fire - else the tests above are vacuous.</summary>
+        [Theory]
+        [InlineData("global::ProtoBuf.Grpc.Client.GrpcClientFactory.CreateGrpcService<IGreeter>(invoker)")]
+        [InlineData("invoker.CreateGrpcService<IGreeter>()")]
+        [InlineData("channel.CreateGrpcService<IGreeter>()")]
+        public async Task PlainCallIsReportedInEveryCallForm(string call)
+        {
+            var diagnostics = await RunAsync(WithContainer + $$"""
+                public static class Consumer
+                {
+                    public static IGreeter Get(global::Grpc.Core.CallInvoker invoker,
+                        global::Grpc.Core.ChannelBase channel)
+                        => {{call}};
+                }
+                """);
+
+            Assert.Contains(diagnostics, x => x.Id == "PBN4016");
+        }
 
         [Fact]
         public async Task PlainCreateGrpcServiceIsReported()

@@ -118,6 +118,16 @@ jobs:
     # self-contained: it hosts Kestrel on an ephemeral loopback port and calls itself, so it needs
     # nothing from the network. src/ConnectProbe is deliberately NOT here - it checks interoperability
     # against demo.connectrpc.com, and a third party's uptime has no business gating our builds.
+    # The headline claim, and the only check that exercises it: ONE [Service] contract, one
+    # implementation, one host, served over gRPC and Connect at the same time and called both ways.
+    # Every other check here runs a single transport, so route ownership, DI coexistence and the
+    # HTTP/2-versus-1.1 split were all asserted in comments and demonstrated nowhere until this
+    # existed. Native, because a pass then means both stacks survive ILC together rather than
+    # separately.
+    - name: Publish and run the dual-transport smoke test
+      run: |
+        dotnet publish src/AotDualHostSmoke/AotDualHostSmoke.csproj -c Release -r linux-x64 -o artifacts/aot-dual-host
+        ./artifacts/aot-dual-host/AotDualHostSmoke
     # The code-first JSON mapping, against Google's own JsonFormatter over protoc's C# for the same
     # schema. It is here rather than in the unit tests because the only useful oracle is an external
     # one: a JSON writer and reader of ours would round-trip perfectly against each other while

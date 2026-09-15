@@ -3280,3 +3280,57 @@ version independently. Expect more of that shape.
 
 Nothing is blocked on the decision. What *is* blocked on it is anyone outside this branch trying the
 work, which is worth remembering when judging how "done" it looks.
+
+## 55. One contract, both transports, one host - demonstrated at last
+
+`src/AotDualHostSmoke`. Until it existed, *"an existing protobuf-net.Grpc contract is served over
+Connect with no edit at all"* was asserted in `Contracts.cs`, in the readme and in the PR body, and
+**demonstrated nowhere**: every check in this repo runs one transport at a time. `MapGrpcService`
+appeared only in `AotGrpcSmoke` and in analyzer tests.
+
+One `[Service]` interface, one implementation, one `WebApplication`, one DI container, both stacks -
+8/8 checks, and **natively**: 77 IL warnings of which **zero** name `ProtoBuf.Connect` (43 are
+protobuf-net.Grpc's, 33 are Core's runtime-model fallbacks - both pre-existing).
+
+Three things it settled that were open:
+
+- **Route ownership is real and had to be decided.** Both protocols want `/{package.Service}/{Method}`
+  and ASP.NET Core will not route two endpoints to one pattern. gRPC keeps the canonical path; Connect
+  goes under a prefix (`/connect/...`), which the spec allows. Measured: a Connect content-type at the
+  bare path gets **415** from gRPC's endpoint, which is the correct and legible failure.
+- **Two listeners, and that is a plaintext artefact rather than a hosting one.** A plaintext port
+  cannot serve both (§24: no ALPN, and Kestrel answers h2c prior-knowledge on an `Http1AndHttp2`
+  endpoint with `HTTP_1_1_REQUIRED`). The *host* is genuinely shared - one endpoint table, one
+  container, one implementation - and with TLS one port would serve both.
+- **`ServerCallContext.RequestHeaders` is NOT the same set on the two transports.** grpc-dotnet filters
+  protocol headers out; a gRPC call here surfaces `user-agent` and nothing else, so `content-type` is
+  simply absent. The Connect implementation passes headers through. Both are defensible - a
+  content-type is a transport detail, not application metadata - but a handler reading a header must
+  not assume parity, which "one contract, both transports" could easily be read as promising. The
+  smoke pins the difference rather than papering over it.
+
+### It also found a shipped analyzer bug
+
+`PBN4016` told this project to pass the factory it was already passing. **A pre-existing false
+positive**, not new: `AotGrpcSmoke` reproduces it the moment interceptors are switched off, where it
+had been masked all along.
+
+The cause is worth keeping. `NoFactoryPassed` matched the parameter type by **display string**, and
+the shipped protobuf-net.Grpc declares it `ClientFactory?` - a nullable annotation carried in
+*metadata* is honoured whatever the consumer's own context, so `ToDisplayString()` renders the `?` and
+the comparison missed. Fixed by stripping the annotation before comparing.
+
+**Four hypotheses were wrong before that one was right**, and the reason it took four is the useful
+part: the analyzer's own tests could not reproduce it, because a `?` written in a *source* stub inside
+a nullable-disabled compilation is simply erased. Getting there needed a Roslyn probe against the real
+assembly, which printed the answer immediately:
+
+```
+arg kind=Explicit param='clientFactory' paramType='ProtoBuf.Grpc.Configuration.ClientFactory?'
+```
+
+**And the first two regression tests passed vacuously**, twice over: once because the stub overload
+was declared on a differently-named class the analyzer does not match, and once because the reduced
+extension form needs a `using` that must precede everything in the file, so the snippet did not
+compile at all and a broken compilation reports no diagnostics. A positive control - "without a
+factory, PBN4016 *must* fire" - is what exposed both. **Assert that a no-diagnostic test can fail.**
