@@ -131,15 +131,35 @@ namespace ConnectFixtures.Basic
             public void Bind(global::ProtoBuf.Connect.AspNetCore.ConnectServiceBinderContext<global::ConnectFixtures.Basic.GreeterService> context)
             {
                 context.AddUnaryMethod(Greeter.SayHello,
-                    static (service, request, ctx) => service.SayHelloAsync(request, new global::ProtoBuf.Grpc.CallContext(service, ctx)));
+                    static (service, request, ctx) => service.SayHelloAsync(request, new global::ProtoBuf.Grpc.CallContext(service, ctx)),
+                    new object[]
+                    {
+                        new global::ProtoBuf.Grpc.Configuration.ServiceAttribute("connectfixtures.v1.Greeter"),
+                    });
                 context.AddUnaryMethod(Greeter.Ping,
-                    static (service, request, ctx) => service.PingAsync(request, ctx.CancellationToken));
+                    static (service, request, ctx) => service.PingAsync(request, ctx.CancellationToken),
+                    new object[]
+                    {
+                        new global::ProtoBuf.Grpc.Configuration.ServiceAttribute("connectfixtures.v1.Greeter"),
+                    });
                 context.AddServerStreamingMethod(Greeter.Subscribe,
-                    static (service, request, ctx) => service.Subscribe(request, new global::ProtoBuf.Grpc.CallContext(service, ctx)));
+                    static (service, request, ctx) => service.Subscribe(request, new global::ProtoBuf.Grpc.CallContext(service, ctx)),
+                    new object[]
+                    {
+                        new global::ProtoBuf.Grpc.Configuration.ServiceAttribute("connectfixtures.v1.Greeter"),
+                    });
                 context.AddClientStreamingMethod(Greeter.Collect,
-                    static (service, requests, ctx) => service.CollectAsync(requests, new global::ProtoBuf.Grpc.CallContext(service, ctx)));
+                    static (service, requests, ctx) => service.CollectAsync(requests, new global::ProtoBuf.Grpc.CallContext(service, ctx)),
+                    new object[]
+                    {
+                        new global::ProtoBuf.Grpc.Configuration.ServiceAttribute("connectfixtures.v1.Greeter"),
+                    });
                 context.AddDuplexMethod(Greeter.Chat,
-                    static (service, requests, ctx) => service.Chat(requests, new global::ProtoBuf.Grpc.CallContext(service, ctx)));
+                    static (service, requests, ctx) => service.Chat(requests, new global::ProtoBuf.Grpc.CallContext(service, ctx)),
+                    new object[]
+                    {
+                        new global::ProtoBuf.Grpc.Configuration.ServiceAttribute("connectfixtures.v1.Greeter"),
+                    });
             }
         }
     }

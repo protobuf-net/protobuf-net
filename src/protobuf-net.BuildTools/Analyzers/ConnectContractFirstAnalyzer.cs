@@ -75,9 +75,12 @@ namespace ProtoBuf.BuildTools.Analyzers
                     var method = invocation.TargetMethod;
                     if (method.Name != MapConnectService || method.TypeArguments.Length != 1) return;
 
-                    // the contract-first overload is the one taking the generated BindService as a
-                    // delegate; the code-first one takes an IConnectServiceBinder and infers nothing,
-                    // so it has nothing to be wrong about
+                    // The contract-first overload is the one taking the generated BindService as a
+                    // delegate. The code-first one takes an IConnectServiceBinder, and that binder is
+                    // generated: ProtoConnectGenerator reconstructs each operation's endpoint metadata
+                    // at build time and passes it, so the attribute IS carried there and this rule has
+                    // nothing to say. Where it cannot reconstruct one, the generator reports PBN5008
+                    // rather than leaving it to this analyzer, which cannot see inside a binder.
                     if (!TakesABindServiceDelegate(method)) return;
 
                     // metadata supplied, explicitly: the consumer has answered the question
