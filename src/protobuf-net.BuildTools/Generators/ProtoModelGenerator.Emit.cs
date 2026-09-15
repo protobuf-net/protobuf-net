@@ -59,7 +59,11 @@ namespace ProtoBuf.BuildTools.Generators
                 sb.AppendLine($"namespace {plan.Namespace};").AppendLine();
             }
 
-            Line(sb, indent, $"partial class {plan.TypeName}");
+            Line(sb, indent, plan.JsonContracts.Count == 0
+                ? $"partial class {plan.TypeName}"
+                // a partial may add a base interface from another part, which is what lets the JSON
+                // seam attach without the consumer naming it
+                : $"partial class {plan.TypeName} : global::ProtoBuf.Connect.IJsonModel");
             Line(sb, indent, "{");
 
             // A shared instance, because a TypeModel is a cache: it is meant to be built once and
@@ -99,6 +103,18 @@ namespace ProtoBuf.BuildTools.Generators
             Line(sb, indent + 2, $"=> {Serializers}.SerializerCache.Get<{ServicesTypeName}, T>();");
             sb.AppendLine();
 
+            if (plan.JsonContracts.Count != 0)
+            {
+                // `as`, not a cast: a null answer is the correct one for a contract with no canonical
+                // JSON form, and there are always some - inheritance, null wrappers and the
+                // level-200 BCL types have no mapping to emit. The caller decides what to do about it
+                Line(sb, indent + 1, "/// <summary>The canonical protobuf JSON mapping for <typeparamref name=\"T\"/>,"
+                    + " or <c>null</c> where the contract's shape has none.</summary>");
+                Line(sb, indent + 1, $"{JsonSerializerInterface}<T> global::ProtoBuf.Connect.IJsonModel.GetJsonSerializer<T>()");
+                Line(sb, indent + 2, $"=> {ServicesTypeName}.JsonInstance as {JsonSerializerInterface}<T>;");
+                sb.AppendLine();
+            }
+
             Line(sb, indent + 1, $"private sealed class {ServicesTypeName}");
             var prefix = ':';
             foreach (var contract in plan.Contracts)
@@ -126,7 +142,19 @@ namespace ProtoBuf.BuildTools.Generators
             {
                 Line(sb, indent + 2, $", {Serializers}.ISerializerProxy<{collection.Key}>");
             }
+            foreach (var jsonContract in plan.JsonContracts)
+            {
+                Line(sb, indent + 2, $", {JsonSerializerInterface}<{jsonContract}>");
+            }
             Line(sb, indent + 1, "{");
+
+            if (plan.JsonContracts.Count != 0)
+            {
+                // one instance serves both codecs; the binary half reaches it through
+                // SerializerCache, which hands back an ISerializer<T> and so cannot serve here
+                Line(sb, indent + 2, $"internal static readonly {ServicesTypeName} JsonInstance = new();");
+                sb.AppendLine();
+            }
 
             EmitExternalCategoryAsserts(sb, indent + 2, plan);
 
@@ -141,6 +169,7 @@ namespace ProtoBuf.BuildTools.Generators
             EmitEnumProxies(sb, indent + 2, plan);
             EmitCollectionProxies(sb, indent + 2, plan);
             EmitAccessors(sb, indent + 2, plan);
+            EmitJsonSurface(sb, indent + 2, plan);
 
             Line(sb, indent + 1, "}");
             Line(sb, indent, "}");

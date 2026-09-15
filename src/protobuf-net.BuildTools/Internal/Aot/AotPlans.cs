@@ -266,8 +266,9 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             string? accessorField = null,
             ProtoDataFormat mapKeyFormat = ProtoDataFormat.Default,
             ProtoDataFormat mapValueFormat = ProtoDataFormat.Default,
-            bool disableMap = false, bool accessorReads = false)
+            bool disableMap = false, bool accessorReads = false, string? schemaName = null)
         {
+            SchemaName = schemaName;
             AccessorReads = accessorReads;
             MapKeyFormat = mapKeyFormat;
             MapValueFormat = mapValueFormat;
@@ -497,6 +498,18 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         /// <summary>The C# member name on the contract type.</summary>
         public string Name { get; }
 
+        /// <summary>
+        /// The field's name in the schema, from <c>[ProtoMember(Name = ...)]</c>; null where the
+        /// consumer pinned none, in which case the schema name <em>is</em> <see cref="Name"/>.
+        /// </summary>
+        /// <remarks>
+        /// Carried for JSON alone. The binary path needs only field numbers, which is why this was
+        /// parsed and discarded as "schema naming only" until canonical JSON made the schema name an
+        /// interop contract - the JSON key is derived from it mechanically, by the same rule protoc
+        /// applies, so both ends agree without anyone choosing a convention (see findings §48).
+        /// </remarks>
+        public string? SchemaName { get; }
+
         public ProtoMemberKind Kind { get; }
 
         /// <summary>
@@ -542,7 +555,8 @@ namespace ProtoBuf.BuildTools.Internal.Aot
                 && AccessorField == other.AccessorField && AccessorReads == other.AccessorReads
                 && MapKeyFormat == other.MapKeyFormat && MapValueFormat == other.MapValueFormat
                 && DisableMap == other.DisableMap
-                && WriteCondition == other.WriteCondition && SpecifiedMember == other.SpecifiedMember;
+                && WriteCondition == other.WriteCondition && SpecifiedMember == other.SpecifiedMember
+                && SchemaName == other.SchemaName;
 
         public override bool Equals(object? obj) => obj is ProtoMemberPlan other && Equals(other);
 
@@ -902,8 +916,12 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         public ProtoModelPlan(string? nameSpace, string typeName, EquatableArray<ProtoContractPlan> contracts,
             bool annotateTrimming = false, EquatableArray<ProtoEnumPlan> enums = default,
             EquatableArray<string> aliases = default, bool emitInstance = true,
-            bool emitConstructor = false, bool isSealed = false)
+            bool emitConstructor = false, bool isSealed = false,
+            EquatableArray<string> jsonContracts = default,
+            EquatableArray<ProtoJsonEnumPlan> jsonEnums = default)
         {
+            JsonContracts = jsonContracts;
+            JsonEnums = jsonEnums;
             Namespace = nameSpace;
             TypeName = typeName;
             Contracts = contracts;
@@ -982,6 +1000,23 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         /// </remarks>
         public bool AnnotateTrimming { get; }
 
+        /// <summary>
+        /// The contracts that also carry the canonical JSON mapping, by qualified type name.
+        /// </summary>
+        /// <remarks>
+        /// A <em>subset</em> of <see cref="Contracts"/>, and necessarily so: several shapes
+        /// protobuf-net serializes perfectly well in binary - inheritance, null wrappers, retained
+        /// unknown fields, the level-200 BCL types - have no canonical JSON form at all. Empty
+        /// unless the consumer references the assembly declaring the seam.
+        /// </remarks>
+        public EquatableArray<string> JsonContracts { get; }
+
+        /// <summary>
+        /// The name tables for every enum the JSON surface reaches, since canonical JSON writes an
+        /// enum as its name; empty when there is no JSON surface.
+        /// </summary>
+        public EquatableArray<ProtoJsonEnumPlan> JsonEnums { get; }
+
         /// <summary>Null for the global namespace.</summary>
         public string? Namespace { get; }
 
@@ -1001,12 +1036,14 @@ namespace ProtoBuf.BuildTools.Internal.Aot
                 && Contracts.Equals(other.Contracts) && AnnotateTrimming == other.AnnotateTrimming
                 && Enums.Equals(other.Enums) && Aliases.Equals(other.Aliases)
                 && EmitInstance == other.EmitInstance && EmitConstructor == other.EmitConstructor
-                && IsSealed == other.IsSealed;
+                && IsSealed == other.IsSealed
+                && JsonContracts.Equals(other.JsonContracts) && JsonEnums.Equals(other.JsonEnums);
 
         public override bool Equals(object? obj) => Equals(obj as ProtoModelPlan);
 
         public override int GetHashCode()
             => ((Namespace?.GetHashCode() ?? 0) * 397) ^ (TypeName.GetHashCode() * 31)
-                ^ Contracts.GetHashCode() ^ (Enums.GetHashCode() * 17) ^ (Aliases.GetHashCode() * 7);
+                ^ Contracts.GetHashCode() ^ (Enums.GetHashCode() * 17) ^ (Aliases.GetHashCode() * 7)
+                ^ (JsonContracts.GetHashCode() * 11) ^ (JsonEnums.GetHashCode() * 13);
     }
 }

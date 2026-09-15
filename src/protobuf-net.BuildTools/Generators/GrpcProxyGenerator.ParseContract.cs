@@ -52,7 +52,39 @@ namespace ProtoBuf.BuildTools.Generators
         /// <c>GrpcModelPlanShapeTests</c>. Void requests and responses contribute nothing, since
         /// <c>Empty</c> carries its own hand-written marshaller and is never serialized by a TypeModel.
         /// </remarks>
-        private static GrpcContractCandidate ParseContract(INamedTypeSymbol iface,
+        /// <summary>
+        /// The shapes no build-time generator can express, named in every diagnostic that rejects one.
+        /// </summary>
+        /// <remarks>
+        /// Deliberately says nothing about what <em>does</em> handle them. protobuf-net.Grpc has a
+        /// reflective runtime proxy and its own <c>PBN4002</c> message already says so; a Connect
+        /// generator sharing this parse has no runtime path at all, so a reason claiming one would be
+        /// false. The parse says what is wrong; each generator says what to do about it.
+        /// </remarks>
+        private const string RuntimeOnlyShapes =
+            "Stream, IObservable<T> and Grpc.Core's own call types cannot be generated against";
+
+        /// <summary>
+        /// Classifies a service contract into the transport-neutral model in <c>Internal/Grpc</c>.
+        /// </summary>
+        /// <remarks>
+        /// <b><c>internal</c> because it is shared with the Connect generator</b>, which needs exactly
+        /// this - the method shapes, the context kinds, the void/<c>Empty</c> handling, the
+        /// <c>[SubService]</c> walk - and must not fork it. Nothing it produces mentions a transport:
+        /// <c>GrpcMethodKind</c> maps straight onto <c>ConnectMethodType</c>, and the only gRPC names
+        /// left in this file are namespace literals used to <em>reject</em> types, which both
+        /// generators reject alike.
+        /// <para>
+        /// It stays on <see cref="GrpcProxyGenerator"/> rather than moving to a neutrally-named class
+        /// because the coupling runs both ways and is not worth unpicking for a name: this file needs
+        /// <c>One</c> (Parse.cs), <c>HasAttribute</c> and the three attribute-name constants
+        /// (GrpcProxyGenerator.cs), and <c>EmptyTypeName</c> / <c>BytesValueTypeName</c> - from
+        /// <b>Emit.cs</b> - while the siblings need <c>Display</c> and this method back. Extracting it
+        /// means moving eight members across five files of shipped, CI-gated code. If that is ever
+        /// done, this list is the starting point.
+        /// </para>
+        /// </remarks>
+        internal static GrpcContractCandidate ParseContract(INamedTypeSymbol iface,
             INamedTypeSymbol? implementation, CancellationToken cancellationToken,
             List<ITypeSymbol>? payloadSink = null, Compilation? compilation = null)
         {
@@ -248,8 +280,8 @@ namespace ProtoBuf.BuildTools.Generators
             var returnInfo = CategorizeReturn(method.ReturnType);
             if (returnInfo is null)
             {
-                reason = $"its return type '{Display(method.ReturnType)}' is a shape only the runtime proxy "
-                    + "handles - Stream, IObservable<T> and Grpc.Core's own call types are reshaped at run time";
+                reason = $"its return type '{Display(method.ReturnType)}' is not a shape the generator "
+                    + "can express; " + RuntimeOnlyShapes;
                 return false;
             }
             var (responseShape, impliedKind, responseSymbol, voidResponse) = returnInfo.Value;
@@ -299,8 +331,8 @@ namespace ProtoBuf.BuildTools.Generators
                     var element = firstKind == ArgKind.AsyncEnumerable ? GetElementType(first.Type) : null;
                     if (firstKind == ArgKind.AsyncEnumerable && (element is null || IsRuntimeOnlyPayload(element)))
                     {
-                        reason = $"the element type of request stream '{first.Name}' is a shape only the runtime "
-                            + "proxy handles - Stream, IObservable<T> and Grpc.Core's own call types are reshaped at run time";
+                        reason = $"the element type of request stream '{first.Name}' is not a shape the "
+                            + "generator can express; " + RuntimeOnlyShapes;
                         return false;
                     }
 
@@ -332,8 +364,7 @@ namespace ProtoBuf.BuildTools.Generators
                     reason = $"parameter '{first.Name}' has type '{Display(first.Type)}', which is "
                         + (IsType(first.Type, "Grpc.Core", "ServerCallContext") || IsType(first.Type, "Grpc.Core", "CallOptions")
                             ? "a server-side type rather than something a client contract can carry"
-                            : "a shape only the runtime proxy handles - Stream, IObservable<T> and Grpc.Core's own "
-                                + "call types are reshaped at run time");
+                            : "not a shape the generator can express; " + RuntimeOnlyShapes);
                     return false;
                 }
             }

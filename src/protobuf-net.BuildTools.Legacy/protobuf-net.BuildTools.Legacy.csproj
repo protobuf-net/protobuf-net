@@ -45,6 +45,10 @@
          Legacy serves very old SDKs, which never get GrpcProxyGenerator (generators are listed by
          name, above), so these would be dead weight. Same reasoning as the AOT fixers. -->
     <Compile Remove="../protobuf-net.BuildTools/Internal/Grpc/**/*.cs" />
+    <!-- and the Connect generator's, for the same reason. Note this is not optional tidiness: the
+         Connect plan reuses DiagnosticInfo and GrpcInterfaceModel from Internal/Grpc, which is removed
+         above, so leaving it in is a build break rather than dead weight - which is how it was found. -->
+    <Compile Remove="../protobuf-net.BuildTools/Internal/Connect/**/*.cs" />
     <Compile Include="../protobuf-net.BuildTools/Generators/ProtoFileGenerator.cs" Link="ProtoFileGenerator.cs" />
   </ItemGroup>
 
