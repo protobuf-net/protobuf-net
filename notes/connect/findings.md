@@ -3334,3 +3334,73 @@ was declared on a differently-named class the analyzer does not match, and once 
 extension form needs a `using` that must precede everything in the file, so the snippet did not
 compile at all and a broken compilation reports no diagnostics. A positive control - "without a
 factory, PBN4016 *must* fire" - is what exposed both. **Assert that a no-diagnostic test can fail.**
+
+## 56. Throughput, measured at last - one prediction confirmed, one refuted
+
+`src/ConnectBenchmark` (BenchmarkDotNet, net8.0-only, which is why it is a sibling of `src/Benchmark`
+rather than more files in it). **Not in CI**: benchmarks are slow and machine-sensitive, and this is a
+measurement to re-take rather than a threshold to gate on - the same call `src/Benchmark` already
+makes.
+
+.NET 8.0.29, linux-x64, 24 logical cores. An ordinary message: ten members - scalars, a string, 64
+bytes of blob, an enum, a nested message, and two small repeated fields.
+
+| | mean | vs binary write | allocated |
+| --- | ---: | ---: | ---: |
+| `Write_Proto` | **338 ns** | 1.00 | **0 B** |
+| `Write_Json_CodeFirst` | 484 ns | 1.43 | 264 B |
+| `Write_Json_ContractFirst` | 1,263 ns | 3.74 | 3,016 B |
+| `Read_Proto` | 590 ns | 1.75 | 664 B |
+| `Read_Json_CodeFirst` | 1,065 ns | 3.15 | 712 B |
+| `Read_Json_ContractFirst` | 2,375 ns | 7.03 | 4,088 B |
+| `Envelope_Proto` | 614 ns | 1.82 | **0 B** |
+| `Envelope_Json_CodeFirst` | **548 ns** | 1.62 | 296 B |
+
+Encoded sizes: **proto 173 B, JSON 321 B** (1.86x). The contract-first JSON is 358 B, and that gap is
+entirely Google's formatter spacing its separators - the two documents are otherwise identical, which
+the benchmark now asserts at setup rather than assuming.
+
+### Confirmed: the transcode is expensive
+
+Contract-first JSON goes bytes → `string` → bytes, because `JsonFormatter.Format` and
+`JsonParser.Parse` speak `string`. Against code-first JSON, which writes UTF-8 straight through
+`Utf8JsonWriter`:
+
+- **write: 2.6x the time and 11x the garbage** (1,263 ns / 3,016 B versus 484 ns / 264 B);
+- **read: 2.2x the time and 5.7x the garbage** (2,375 ns / 4,088 B versus 1,065 ns / 712 B).
+
+Worth stating plainly what this is and is not: the two rows serialize different CLR types through
+different implementations of the same mapping, so it is not an isolation of the transcode alone. It
+*is* the comparison a consumer faces - "I have a contract-first service" versus "a code-first one" -
+and on that question the answer is decisive.
+
+Also worth noting how modest JSON's cost is against **binary**: 1.43x to write and 1.81x to read.
+Less than I would have guessed for a text format, and it is the generated-code path that makes that
+true.
+
+### Refuted: measuring is not free, and the envelope is where it shows
+
+The standing prediction was that JSON would be *penalised* on the streaming path, because it returns
+`null` from `Measure` and so has to buffer before it can write a length prefix. `ConnectEnvelope`'s
+own remarks say as much, approvingly: *"protobuf-net's own codec takes the measured one and never
+buffers."*
+
+Backwards. **`Envelope_Json_CodeFirst` (548 ns) is faster than `Envelope_Proto` (614 ns).** The
+per-path cost of the framing tells the story:
+
+| | plain write | enveloped | framing costs |
+| --- | ---: | ---: | ---: |
+| proto | 338 ns | 614 ns | **+276 ns**, +0 B |
+| json | 484 ns | 548 ns | **+64 ns**, +32 B |
+
+Measuring is a near-full serialization pass, so binary encodes **twice** and pays ~82% on top of its
+write; JSON encodes once into scratch and copies, and pays ~13%.
+
+**It is a trade rather than a clear loss**, which is why this is recorded rather than acted on: the
+measured path allocates **nothing**, where buffering costs 296 B per message, and under streaming load
+allocation may well matter more than 66 ns. Two further caveats - a reused `ArrayBufferWriter`
+flatters both, and none of this touches **unary**, where `Measure` buys a real `Content-Length` and is
+clearly worth it.
+
+What is settled is that "measured, and therefore free" was never true. If the enveloped binary path is
+ever worth tuning, buffering it is the thing to try.

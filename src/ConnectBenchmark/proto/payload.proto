@@ -1,0 +1,29 @@
+// Not hand-written: `Serializer.GetProto<Payload>()` verbatim, with only the package and a
+// csharp_namespace changed, so protoc's C# describes exactly the same message the code-first
+// contract does. Regenerate with DUMP_PROTO=1; SchemaMatches() re-checks it on every run.
+syntax = "proto3";
+package bench;
+option csharp_namespace = "Bench";
+
+message Detail {
+   string Note = 1;
+   int32 Weight = 2;
+}
+enum Level {
+   None = 0;
+   Low = 1;
+   High = 2;
+}
+message Payload {
+   int32 Id = 1;
+   int64 Ticks = 2;
+   string Name = 3;
+   bool Active = 4;
+   double Score = 5;
+   bytes Blob = 6;
+   Level Level = 7;
+   Detail Detail = 8;
+   repeated string Tags = 9;
+   repeated int32 Counts = 10 [packed = false];
+}
+

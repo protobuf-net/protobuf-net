@@ -177,8 +177,9 @@ same trap AGENTS.md records for maps ("whatever it does not cover is not fine, i
   none of them, which is the single largest simplification against implementing protojson wholesale.
 - **Unknown fields are ignored**, where Google's parser rejects by default. A deliberate choice (a
   peer adding a field should not break us), worth revisiting if a conformance mode ever needs strict.
-- **Nothing is measured for throughput.** There is no transcode here — unlike the contract-first path,
-  which goes through `string` — so it should be the faster of the two, but that is untested.
+- ~~**Nothing is measured for throughput.**~~ Measured: findings §56. The prediction held and then
+  some - code-first JSON writes **2.6x faster with 11x less garbage** than the contract-first path,
+  and reads 2.2x faster with 5.7x less. Against binary it costs 1.43x to write and 1.81x to read.
 
 ## The codec (done)
 
