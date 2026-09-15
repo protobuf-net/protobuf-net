@@ -3404,3 +3404,64 @@ clearly worth it.
 
 What is settled is that "measured, and therefore free" was never true. If the enveloped binary path is
 ever worth tuning, buffering it is the thing to try.
+
+## 57. Connect versus gRPC, end to end, on one stack
+
+`src/ConnectLoad`. The only comparison against another implementation that isolates the thing worth
+isolating: **one `[Service]` contract, one implementation, one Kestrel, one DI container, one
+protobuf-net model producing the marshalling for both sides.** The single variable is the protocol.
+Sustained throughput at fixed concurrency rather than per-operation timing, because BenchmarkDotNet
+over a loopback socket mostly measures the loopback.
+
+32 workers, 5s per scenario, 256 B payload, .NET 8.0.29, 24 cores, client and server in one process.
+Stable to ~3% across runs.
+
+| scenario | ops/sec | p50 | p99 |
+| --- | ---: | ---: | ---: |
+| unary, gRPC over HTTP/2 | 98,700 | 314us | 606us |
+| unary, **Connect** over HTTP/2 | **160,900** | 190us | 343us |
+| unary, Connect over HTTP/1.1 | 327,100 | 93us | 160us |
+| stream x10, gRPC over HTTP/2 | 134,300 | 229us | 407us |
+| stream x10, **Connect** over HTTP/2 | **138,900** | 222us | 387us |
+| stream x10, Connect over HTTP/1.1 | 244,300 | 126us | 206us |
+
+### What it says
+
+- **Streaming is parity.** Connect 138.9k against gRPC 134.3k - about 3%, which is barely outside the
+  run-to-run spread. The two framings cost the same.
+- **Unary, Connect is ~1.6x** - and the interesting part is *why*, because it is not a Connect win so
+  much as a gRPC-unary cost. A **single-message server-streaming** gRPC call runs at 162k, against
+  104k for a gRPC unary call carrying exactly the same data. Connect shows no such gap: its unary
+  (164k) and its one-message stream (160k) are the same number. So something in grpc-dotnet's *unary*
+  path costs ~60%, and Connect's advantage is mostly the absence of it. Observed and reproducible;
+  **not diagnosed**, and stated that way.
+- **HTTP/1.1 is not a protocol result.** At this concurrency HttpClient gives HTTP/1.1 a socket per
+  worker while HTTP/2 multiplexes onto one (additional H2 connections open only once 100 streams are
+  exhausted), so that row measures connection parallelism as much as anything. What it shows without
+  qualification is that the option *exists* - gRPC cannot serve that port at all.
+
+### Two measurement traps, both hit
+
+**Connection parallelism was not equalised in the first run**, and it moved gRPC unary from 50,850 to
+91,052 - a 79% error, entirely from HTTP/1.1 getting 32 sockets while the HTTP/2 rows got one each.
+Any comparison like this has to pin connection counts before it says anything.
+
+**Three seconds was not long enough.** The unary rows read ~35% low at 3s and settled by 5s, which
+manufactured an apparent anomaly - "a ten-message stream is cheaper than a one-message unary call, on
+both protocols" - that simply evaporated. The gRPC-unary gap above is what was left once the noise
+was gone, and it would have been reported as something much more dramatic and much less true.
+
+Also asserted rather than assumed: every operation checks it received what it asked for (ten messages
+of the right size). A benchmark of a call that quietly does nothing is the easiest wrong number there
+is, and this file has produced three vacuous passes already in other contexts.
+
+### What is not worth doing
+
+**Cross-language, against connect-go or connect-es.** The conformance release ships only the runner -
+no reference binaries - so it would mean building the Go implementation, and the runner is a
+correctness driver rather than a load generator anyway. More importantly a .NET-versus-Go figure is
+mostly a Kestrel-versus-`net/http` figure: Connect is a thin protocol over HTTP, and the protocol
+layer is a small fraction of the cost. It would measure the runtimes, not the libraries.
+
+The one version of that which *would* be worth doing is a robustness experiment rather than a
+performance one: sustained load from a genuinely foreign client, checking our server stays correct.
