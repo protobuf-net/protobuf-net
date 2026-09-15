@@ -21,6 +21,15 @@ if (Environment.GetEnvironmentVariable("DUMP_WIDE") == "1")
     return 0;
 }
 
+if (Environment.GetEnvironmentVariable("DUMP_NAMED") == "1")
+{
+    Console.WriteLine(ProtoBuf.Serializer.GetProto<ProtoBuf.ConnectJsonDifferential.Named>());
+    Console.WriteLine(ProtoBuf.Serializer.GetProto<ProtoBuf.ConnectJsonDifferential.NamedByContract>());
+    Console.WriteLine(ProtoBuf.Serializer.GetProto<ProtoBuf.ConnectJsonDifferential.NamedByXml>());
+    Console.WriteLine(ProtoBuf.Serializer.GetProto<ProtoBuf.ConnectJsonDifferential.HasSurrogate>());
+    return 0;
+}
+
 SchemaMatchesContracts(failures);
 
 foreach (var (name, ours, theirs) in Cases.All())
@@ -29,6 +38,7 @@ foreach (var (name, ours, theirs) in Cases.All())
 }
 
 Boundary(failures);
+NamedSchemas(failures);
 Sweep.Run(JsonModel.Instance, failures);
 KnownDivergences(failures);
 
@@ -39,6 +49,59 @@ Console.WriteLine(failures.Count == 0
 return failures.Count == 0 ? 0 : 1;
 
 // -------------------------------------------------------------------------------------------
+
+/// <summary>
+/// The four places a schema name can come from, checked against Google rather than eyeballed.
+/// </summary>
+/// <remarks>
+/// Paired through the binary codec, as the breadth sweep is: what matters is that our JSON keys and
+/// protoc's agree, and protoc's are derived from the very schema <c>GetProto</c> emitted - so a
+/// precedence that drifted from <c>MetaType</c>'s would show up as two sets of keys that do not meet.
+/// </remarks>
+static void NamedSchemas(List<string> failures)
+{
+    var model = (IJsonModel)JsonModel.Instance;
+
+    Check(new Named
+    {
+        ByProtoMember = "a",
+        TagPinnedSoNameIgnored = "b",
+        BothSpellings = "c",
+        ByPartial = "d",
+    }, NamedOracle.Named.Parser);
+
+    Check(new NamedByContract { ByDataMember = "a", Plain = "b" }, NamedOracle.NamedByContract.Parser);
+    Check(new NamedByXml { ByXmlElement = "a", Plain = "b" }, NamedOracle.NamedByXml.Parser);
+
+    // a surrogated member: the JSON is the SURROGATE's shape, reached by converting at each end
+    Check(new HasSurrogate { Price = new Money(1999, Currency.Gbp) }, NamedOracle.HasSurrogate.Parser);
+    Check(new HasSurrogate(), NamedOracle.HasSurrogate.Parser);
+
+    void Check<T, TOracle>(T value, MessageParser<TOracle> parser) where TOracle : IMessage<TOracle>
+    {
+        var serializer = model.GetJsonSerializer<T>();
+        if (serializer is null)
+        {
+            failures.Add($"[names/{typeof(T).Name}] no JSON serializer was generated");
+            return;
+        }
+
+        var binary = new MemoryStream();
+        JsonModel.Instance.Serialize(binary, value);
+        var expected = JsonFormatter.Default.Format(parser.ParseFrom(binary.ToArray()));
+
+        var buffer = new MemoryStream();
+        using (var writer = new Utf8JsonWriter(buffer)) serializer.Write(writer, value);
+        var actual = Encoding.UTF8.GetString(buffer.ToArray());
+
+        if (Json.Canonical(actual) != Json.Canonical(expected))
+        {
+            failures.Add($"[names/{typeof(T).Name}] the JSON keys disagree"
+                + $"\n  ours:   {Json.Canonical(actual)}\n  google: {Json.Canonical(expected)}");
+        }
+    }
+}
+
 
 /// <summary>
 /// The JSON surface is a strict subset of the binary one, and this pins exactly where the line is.
@@ -61,6 +124,12 @@ static void Boundary(List<string> failures)
     Refused<Base>("[ProtoInclude] sub-type framing has no JSON form");
     Refused<Derived>("likewise");
     Refused<Holder>("and it cascades to anything reaching one");
+    Refused<Point>("an auto-tuple's read needs the construct-at-the-end shape");
+    Refused<HasTuple>("which cascades to anything holding one");
+
+    // ...and the surrogate now works, where it used to be refused
+    Supports<Money>("a surrogated type, whose JSON is the surrogate's shape");
+    Supports<HasSurrogate>("and a member holding one");
 
     Supports<Supported>("an array, a nullable and a getter-only List");
 
@@ -191,6 +260,9 @@ static Shapes Read(IJsonSerializer<Shapes> serializer, string json)
 static void SchemaMatchesContracts(List<string> failures)
 {
     Check("oracle.proto", Serializer.GetProto<Shapes>());
+    Check("named.proto", Serializer.GetProto<Named>()
+        + Serializer.GetProto<NamedByContract>() + Serializer.GetProto<NamedByXml>()
+        + Serializer.GetProto<HasSurrogate>());
     Check("wide.proto", Serializer.GetProto<Wide>());
 
     void Check(string file, string derivedProto)
@@ -208,6 +280,8 @@ static void SchemaMatchesContracts(List<string> failures)
     static string Normalise(string proto) => string.Join("\n", proto
         .Split('\n')
         .Select(x => x.Trim())
+        // `syntax` goes too: named.proto is three GetProto outputs concatenated, so the derived form
+        // carries the line three times where the file carries it once. It is a constant either way.
         .Where(x => x.Length != 0 && !x.StartsWith("//") && !x.StartsWith("package ")
-            && !x.StartsWith("option csharp_namespace")));
+            && !x.StartsWith("syntax ") && !x.StartsWith("option csharp_namespace")));
 }

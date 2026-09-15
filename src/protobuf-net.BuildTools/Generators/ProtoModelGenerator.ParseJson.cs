@@ -170,10 +170,15 @@ namespace ProtoBuf.BuildTools.Generators
             {
                 return "it is served by a hand-written serializer, whose JSON form is not knowable here";
             }
-            if (contract.SurrogateTypeName is not null)
+            // An auto-tuple's READ is a different emit shape - locals per constructor parameter,
+            // constructed at the end - because there is nothing to assign to. The JSON reader assigns,
+            // so emitting one produced CS0200 and CS7036 in the consumer's build: broken code, not a
+            // missing feature. Refused until that shape is written; the write half already works.
+            if (contract.IsTuple)
             {
-                return "it is surrogated; the JSON mapping would be the surrogate's, which this pass "
-                    + "does not yet resolve";
+                return "it is an auto-tuple, whose JSON read needs the construct-at-the-end shape the "
+                    + "binary path uses; the reader here assigns to members, and a tuple has none to "
+                    + "assign to";
             }
             if (contract.IsGroup)
             {
@@ -374,7 +379,9 @@ namespace ProtoBuf.BuildTools.Generators
             }
             if (names.Count == 0) return true;
 
-            if (!symbols.TryGetValue(contract.TypeName, out var owner)) return false;
+            // the SURROGATE's symbol where there is one: the plan carries the surrogate's members,
+            // so looking the enums up on the underlying type finds nothing and refuses the contract
+            if (!symbols.TryGetValue(contract.SurrogateTypeName ?? contract.TypeName, out var owner)) return false;
 
             // resolve each enum name against the types this contract's members actually mention,
             // rather than by parsing the display string back into a symbol - the name is a

@@ -107,6 +107,61 @@ public class Holder
 [ProtoSerializable(typeof(HasEnumKeyedMap))]
 [ProtoSerializable(typeof(Supported))]
 [ProtoSerializable(typeof(Holder))]
+[ProtoSerializable(typeof(HasSurrogate))]
+[ProtoSerializable(typeof(HasTuple))]
 public partial class ProbeModel : ProtoBuf.Meta.TypeModel
 {
+}
+
+// --- the two remaining gaps, probed rather than assumed ---------------------------------------
+
+/// <summary>A surrogated contract: the wire shape - and so the JSON - is the surrogate's.</summary>
+[ProtoContract(Surrogate = typeof(MoneySurrogate))]
+public struct Money
+{
+    public Money(long units, Currency currency) { Units = units; Currency = currency; }
+    public long Units { get; }
+    public Currency Currency { get; }
+}
+
+[ProtoContract]
+public class MoneySurrogate
+{
+    [ProtoMember(1)] public long Units { get; set; }
+    [ProtoMember(2)] public Currency Currency { get; set; }
+
+    public static implicit operator MoneySurrogate(Money value)
+        => new() { Units = value.Units, Currency = value.Currency };
+
+    public static implicit operator Money(MoneySurrogate value)
+        => value is null ? default : new Money(value.Units, value.Currency);
+}
+
+[ProtoContract]
+public enum Currency { Unknown = 0, Gbp = 1, Usd = 2 }
+
+[ProtoContract]
+public class HasSurrogate
+{
+    [ProtoMember(1)] public Money Price { get; set; }
+}
+
+/// <summary>
+/// An auto-tuple: no contract attribute, no public setters, one matching constructor.
+/// </summary>
+/// <remarks>
+/// Its <em>read</em> is a different emit shape - locals per constructor parameter, constructed at the
+/// end - because there is nothing to assign to. Whether the JSON emitter knows that is the question.
+/// </remarks>
+public sealed class Point
+{
+    public Point(int x, int y) { X = x; Y = y; }
+    public int X { get; }
+    public int Y { get; }
+}
+
+[ProtoContract]
+public class HasTuple
+{
+    [ProtoMember(1)] public Point Where { get; set; }
 }

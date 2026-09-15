@@ -167,12 +167,12 @@ same trap AGENTS.md records for maps ("whatever it does not cover is not fine, i
 
 ## What is not done
 
-- **`[ProtoPartialMember(Name = ...)]`** is still discarded; only `[ProtoMember(Name = ...)]` is
-  captured. Same one-line shape, not yet threaded.
-- **`[DataMember(Name = ...)]`** likewise — worth checking what `MetaType` does with it first.
-- **Surrogates** are refused rather than mapped. The members on the plan are the *surrogate's*, so
-  the enum-table lookup needs the surrogate's symbol; that is the whole of the work.
-- **Auto-tuples** are untested; a tuple's JSON read would need the construct-at-end shape.
+- ~~**`[ProtoPartialMember(Name)]`, `[DataMember(Name)]`, surrogates**~~ — done; see "The polish"
+  below.
+- **Auto-tuples** are now *refused* rather than emitting code that does not compile. The write half
+  already works; the read needs the construct-at-the-end shape (locals per constructor parameter,
+  seeded from the incoming value, constructed last) that the binary path uses. Contained work, not
+  started.
 - **`Any`, `Struct`, `FieldMask`, the wrapper types** — deliberately absent. A code-first contract has
   none of them, which is the single largest simplification against implementing protojson wholesale.
 - **Unknown fields are ignored**, where Google's parser rejects by default. A deliberate choice (a
@@ -356,3 +356,51 @@ So a fix is a schema change plus a duplicate-key behaviour change, and **not a w
   from the current one. Safe at the wire, since the bytes do not move.
 
 Both are protobuf-net library changes rather than Connect ones, so they are not on this branch.
+
+
+## The polish
+
+### All four name sources, with protobuf-net's precedence
+
+`MetaType.GetFieldName` is **first-wins** across four places — `[ProtoMember(Name)]`, the type's
+`[ProtoPartialMember(Name)]`, `[DataMember(Name)]`, and `[XmlElement`/`XmlArray(ElementName)]` — and
+the last two live inside blocks that run **only when no ProtoBuf-family attribute pinned a tag**
+(`done = tagIsPinned = fieldNumber > 0`).
+
+That gating is the part that reads wrong and is right: a member carrying both `[ProtoMember(5)]` and
+`[DataMember(Name = "x")]` keeps its **C# name**, because the block holding that `Name` is never
+reached. protobuf-net's own `GetProto` confirms it — `TagPinnedSoNameIgnored` comes out unrenamed.
+
+`Named.cs` fixtures all four, plus the two families where `[DataMember]`/`[XmlElement]` supply the tag
+and so their names *are* reached. The differential checks them against Google: our keys come from the
+plan, protoc's come from the schema `GetProto` emitted, so a precedence that drifted from `MetaType`'s
+shows up as two sets of keys that do not meet. Verified able to fail.
+
+### Surrogates: convert, then delegate
+
+The surrogate is already a contract in its own right with its own emitted JSON serializer, so a
+surrogated type needs only a conversion either side of a delegation:
+
+```csharp
+private static void WriteJson_Money(Utf8JsonWriter writer, Money value)
+    => WriteJson_MoneySurrogate(writer, (MoneySurrogate)value);
+```
+
+Smaller than the binary path, which *inlines* the surrogate's members — and more obviously right,
+since the surrogate's shape is emitted once by the code that owns it. The read seeds the surrogate
+from the incoming value so a merge behaves as the binary path's does.
+
+One non-obvious fix underneath it: `TryCollectEnums` looked the enum table up on the **underlying**
+type, while the plan carries the **surrogate's** members — so any surrogate with an enum member found
+nothing and refused the contract. It keys off `SurrogateTypeName ?? TypeName` now.
+
+### Auto-tuples: refused, because they were emitting broken code
+
+`HasTuple` produced `CS0200` (read-only property) and `CS7036` (no argument for parameter) **in the
+consumer's build** — the third time in this work that a shape emitted code that does not compile,
+after `HashSet`/`Queue` and the unemitted enum-key parser. Refused now, with a diagnostic naming the
+shape the read would need.
+
+**Three for three.** The pattern is worth naming: every one was a shape the *plan* supports and the
+JSON *emitter* had no case for, and none was caught by anything except pointing a fixture at it. A
+refusal list that is not exercised is a guess.

@@ -76,6 +76,29 @@ namespace ProtoBuf.BuildTools.Generators
             Line(sb, indent + 1, $"=> ReadJson_{name}(ref reader, value);");
             sb.AppendLine();
 
+            if (contract.SurrogateTypeName is { } surrogate)
+            {
+                // The surrogate is a contract in its own right and already has its own JSON
+                // serializer, so this is a conversion either side of a delegation - where the BINARY
+                // path inlines the surrogate's members instead. Delegating is both smaller and more
+                // obviously right: the surrogate's shape is emitted once, by the code that owns it.
+                var surrogateName = Sanitise(surrogate);
+                Line(sb, indent, $"private static void WriteJson_{name}({JsonWriter} writer, {type} value)");
+                Line(sb, indent, "{");
+                Line(sb, indent + 1, $"var surrogate = {ToSurrogate(contract, "value")};");
+                Line(sb, indent + 1, $"WriteJson_{surrogateName}(writer, surrogate);");
+                Line(sb, indent, "}");
+                sb.AppendLine();
+                Line(sb, indent, $"private static {type} ReadJson_{name}(ref {JsonReader} reader, {type} value)");
+                Line(sb, indent, "{");
+                // seeded from the incoming value, so a merge into an existing instance behaves as the
+                // binary path's does rather than silently starting from nothing
+                Line(sb, indent + 1, $"var surrogate = ReadJson_{surrogateName}(ref reader, {ToSurrogate(contract, "value")});");
+                Line(sb, indent + 1, $"return {ToUnderlying(contract, "surrogate")};");
+                Line(sb, indent, "}");
+                return;
+            }
+
             EmitJsonWrite(sb, indent, contract, enums, name, type);
             sb.AppendLine();
             EmitJsonRead(sb, indent, contract, enums, name, type);

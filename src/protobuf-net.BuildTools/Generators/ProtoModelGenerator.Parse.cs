@@ -787,9 +787,10 @@ namespace ProtoBuf.BuildTools.Generators
                 var mapValueFormat = ProtoDataFormat.Default;
                 var disableMap = false;
                 var hasProtoMap = false;
-                // the schema name, where the consumer pinned one. Binary has no use for it; canonical
-                // JSON derives its key from it, so it stops being decoration the moment JSON is on
-                string? schemaName = null;
+                // The schema name, where the consumer pinned one - from any of the four places
+                // MetaType takes it. Binary has no use for it; canonical JSON derives its key from
+                // it, so it stops being decoration the moment JSON is on.
+                string? schemaName = null, dataMemberName = null, xmlElementName = null;
                 AttributeData? declaredDefault = null;
                 foreach (var attribute in symbol.GetAttributes())
                 {
@@ -801,10 +802,13 @@ namespace ProtoBuf.BuildTools.Generators
                     else if (attributeName == DataMemberAttributeName)
                     {
                         dataMemberOrder = GetNamedInt(attribute, "Order");
+                        dataMemberName = GetNamedString(attribute, "Name");
                     }
                     else if (attributeName is XmlElementAttributeName or XmlArrayAttributeName)
                     {
                         xmlOrder = GetNamedInt(attribute, "Order");
+                        // note the argument is ElementName here, not Name
+                        xmlElementName ??= GetNamedString(attribute, "ElementName");
                     }
                     else if (attributeName is XmlIgnoreAttributeName or NonSerializedAttributeName
                         or ProtoIgnoreAttributeName)
@@ -957,11 +961,27 @@ namespace ProtoBuf.BuildTools.Generators
                     && partialMembers.TryGetValue(symbol.Name, out var partial) && partial.FieldNumber > 0)
                 {
                     fieldNumber = partial.FieldNumber;
+                    // first-wins, as GetFieldName is: the member's own [ProtoMember(Name)] would
+                    // already have set this, and cannot be overridden from the type
+                    schemaName ??= partial.Name;
                     isRequired = partial.IsRequired;
                     isPacked = partial.IsPacked;
                     dataFormat = partial.DataFormat;
                     overwriteList = partial.OverwriteList;
                 }
+                // The schema name follows the SAME precedence and the same gating, because it is
+                // read in the same blocks: MetaType's GetFieldName is first-wins, and its
+                // [DataMember] and Xml blocks run only `if (!done)` - where `done` means a
+                // ProtoBuf-family attribute pinned a tag. So a member with [ProtoMember(5)] and
+                // [DataMember(Name = "x")] keeps the C# name, because the block carrying that Name
+                // is never reached.
+                var protoBufPinned = fieldNumber is not null;
+                if (!protoBufPinned)
+                {
+                    schemaName ??= isDataContract ? dataMemberName : null;
+                    schemaName ??= isXmlType ? xmlElementName : null;
+                }
+
                 fieldNumber ??= isDataContract && dataMemberOrder >= 1
                     ? dataMemberOrder + dataMemberOffset : null;
                 fieldNumber ??= isXmlType && xmlOrder >= 1 ? xmlOrder : null;
@@ -1739,8 +1759,9 @@ namespace ProtoBuf.BuildTools.Generators
         private readonly struct PartialMember
         {
             public PartialMember(string memberName, int fieldNumber, bool isRequired, bool isPacked,
-                ProtoDataFormat dataFormat, bool overwriteList)
+                ProtoDataFormat dataFormat, bool overwriteList, string? name)
             {
+                Name = name;
                 MemberName = memberName;
                 FieldNumber = fieldNumber;
                 IsRequired = isRequired;
@@ -1748,6 +1769,9 @@ namespace ProtoBuf.BuildTools.Generators
                 DataFormat = dataFormat;
                 OverwriteList = overwriteList;
             }
+
+            /// <summary>The schema name this declaration pins, if any; for JSON, not for the wire.</summary>
+            public string? Name { get; }
 
             public string MemberName { get; }
             public int FieldNumber { get; }
@@ -1772,6 +1796,7 @@ namespace ProtoBuf.BuildTools.Generators
                 return null;
             }
             bool isRequired = false, isPacked = false, overwriteList = false;
+            string? pinnedName = null;
             var dataFormat = ProtoDataFormat.Default;
             foreach (var argument in attribute.NamedArguments)
             {
@@ -1792,7 +1817,11 @@ namespace ProtoBuf.BuildTools.Generators
                         }
                         dataFormat = parsed;
                         continue;
-                    // schema naming only
+                    // schema naming, which canonical JSON keys on - so it is carried rather than
+                    // discarded, exactly as for [ProtoMember(Name = ...)]
+                    case "Name" when argument.Value.Value is string partialName:
+                        pinnedName = partialName;
+                        continue;
                     case "Name":
                         continue;
                     // OverwriteList used to be refused here, because MetaType's partial-member branch
@@ -1808,7 +1837,7 @@ namespace ProtoBuf.BuildTools.Generators
                 return null;
             }
             return new PartialMember(memberName, fieldNumber, isRequired, isPacked, dataFormat,
-                overwriteList);
+                overwriteList, pinnedName);
         }
 
         /// <summary><c>System.Type</c>, or an array or collection of it.</summary>
@@ -2585,6 +2614,26 @@ namespace ProtoBuf.BuildTools.Generators
             foreach (var argument in attribute.NamedArguments)
             {
                 if (argument.Key == name && argument.Value.Value is int value) return value;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// A named <see cref="string"/> argument, or null where it is absent or empty.
+        /// </summary>
+        /// <remarks>
+        /// Empty counts as absent, matching <c>MetaType.GetFieldName</c>'s
+        /// <c>string.IsNullOrEmpty</c> test - a <c>[DataMember(Name = "")]</c> does not rename
+        /// anything there, and must not here either.
+        /// </remarks>
+        private static string? GetNamedString(AttributeData attribute, string name)
+        {
+            foreach (var argument in attribute.NamedArguments)
+            {
+                if (argument.Key == name && argument.Value.Value is string value && value.Length != 0)
+                {
+                    return value;
+                }
             }
             return null;
         }
