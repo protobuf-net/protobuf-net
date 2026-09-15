@@ -522,18 +522,26 @@ namespace ProtoBuf.BuildTools.Generators
                 // That is a legal contract - [Operation] gives them distinct names on the wire - and it
                 // used to compile perfectly and then fail at server startup.
                 //
-                // Reconstructing the attributes at compile time and dropping this call is deliberately
-                // NOT done, and the reason is a measurement rather than a limitation: the reflective
-                // route survives a native publish intact - AotGrpcSmoke carries attributes at all three
-                // levels plus a real [Authorize], and every one arrives after ILC, since the typeof()s
-                // just above root the metadata that keeps them.
+                // ...but that reflective call is the FALLBACK, not the norm: where the attributes can be
+                // reconstructed at compile time they are, and this branch is not emitted at all.
                 //
-                // So a constructed list would buy one less startup-time reflective call, and cost the
-                // consumer's override: GetMetadata is virtual and BinderConfiguration.Create takes a
-                // custom ServiceBinder, so building the list here silently ignores it - the very bug the
-                // paragraph above is about. The machinery to do it exists and is proven correct
-                // (MetadataGather, AttributeRenderer, and the src/AotGrpcMetadataDiff oracle); it is the
-                // trade that does not pay. See notes/aot/grpc.md.
+                // The paragraph that used to stand here said reconstruction was deliberately not done,
+                // on the grounds that reflective metadata might not survive AOT. It does - AotGrpcSmoke
+                // carries attributes at all three levels plus a real [Authorize], and every one arrives
+                // after ILC, since the typeof()s just above root the metadata that keeps them - so that
+                // premise was retired by measurement and the feature was then built for a better reason:
+                // the declared attributes become the authoritative source, and the last reflective call
+                // on the server binding path goes away. Recorded because the retired justification read
+                // as a live decision for a while.
+                //
+                // Its stated cost is real and is an accepted limitation rather than an oversight:
+                // GetMetadata is virtual and BinderConfiguration.Create takes a custom ServiceBinder, so
+                // a consumer who overrides it is ignored on every operation we reconstruct.
+                // protobuf-net.Grpc ships no ServiceBinder subclass at all, and the binder's other
+                // virtuals are about discovery and naming rather than metadata, so this is a bridge to
+                // cross if anyone reports standing on it - notes/aot/grpc.md records the declarative
+                // shape to build if they do. MetadataGather, AttributeRenderer and the
+                // src/AotGrpcMetadataDiff oracle are what make the reconstruction trustworthy.
                 if (operation.MetadataExpressions.IsDefault)
                 {
                     // something on this operation could not be reconstructed, so it keeps the reflective
