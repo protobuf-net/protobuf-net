@@ -422,9 +422,51 @@ namespace ProtoBuf.BuildTools.Generators
                 // symbols; the gRPC emitter never asks for it. Whether it is *meaningful* - it is not,
                 // on a streaming method - is ProtoConnectGenerator's to report, since a gRPC-only
                 // project carrying the attribute is not this file's business.
-                noSideEffects: HasAttribute(method, ProtoConnectGenerator.NoSideEffectsAttributeName));
+                noSideEffects: HasAttribute(method, ProtoConnectGenerator.NoSideEffectsAttributeName),
+                httpMethodAttribute: FindHttpMethodAttribute(compilation, method));
             return true;
         }
+
+        /// <summary>
+        /// An ASP.NET Core MVC <c>[HttpGet]</c>-family attribute on the operation, if any.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Matched by <em>base type</em> rather than by a list of names, so <c>[HttpGet]</c>,
+        /// <c>[HttpPost]</c>, <c>[AcceptVerbs]</c> and any consumer-defined derivative are all caught by
+        /// one test. That is safe here where name-matching is the rule elsewhere, because a consumer who
+        /// wrote the attribute necessarily has the symbol - their code would not compile otherwise.
+        /// </para>
+        /// <para>
+        /// Free opt-out for everyone without ASP.NET Core MVC in the compilation, which is most: no base
+        /// type, no walk. Note a *contract* assembly typically does not have it at all - MVC is in the
+        /// Microsoft.AspNetCore.App shared framework, and a transport-neutral contract has no reason to
+        /// take a framework reference - which is the main reason this is reported rather than honoured.
+        /// </para>
+        /// </remarks>
+        private static string? FindHttpMethodAttribute(Compilation? compilation, IMethodSymbol method)
+        {
+            // seeding parses with no compilation and discards diagnostics
+            if (compilation is null) return null;
+            if (compilation.GetTypeByMetadataName(HttpMethodAttributeName) is not INamedTypeSymbol baseType)
+            {
+                return null;
+            }
+
+            foreach (var attribute in method.GetAttributes())
+            {
+                for (var type = attribute.AttributeClass; type is not null; type = type.BaseType)
+                {
+                    if (SymbolEqualityComparer.Default.Equals(type, baseType))
+                    {
+                        return attribute.AttributeClass!.Name;
+                    }
+                }
+            }
+            return null;
+        }
+
+        private const string HttpMethodAttributeName = "Microsoft.AspNetCore.Mvc.Routing.HttpMethodAttribute";
 
         /// <summary>
         /// Reconstructs this operation's endpoint metadata as constructing expressions, or gives up for

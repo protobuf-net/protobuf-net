@@ -161,6 +161,16 @@ namespace ProtoBuf.BuildTools.Generators
                 // letting a consumer believe a streaming method is cacheable
                 foreach (var op in model.Operations)
                 {
+                    if (op.HttpMethodAttribute is { } verb)
+                    {
+                        diagnostics.Add(new DiagnosticInfo(
+                            GrpcDiagnosticKind.InertHttpMethodAttribute,
+                            contract.Locations.FirstOrDefault(),
+                            model.InterfaceFullName,
+                            op.MethodName,
+                            StripAttributeSuffix(verb)));
+                    }
+
                     if (op.NoSideEffects && op.Kind != GrpcMethodKind.Unary)
                     {
                         diagnostics.Add(new DiagnosticInfo(
@@ -192,6 +202,11 @@ namespace ProtoBuf.BuildTools.Generators
 
             return new ConnectCandidate(plan, new EquatableArray<DiagnosticInfo>(diagnostics.ToArray()));
         }
+
+        /// <summary>How the attribute is written in source, rather than its type name.</summary>
+        private static string StripAttributeSuffix(string name)
+            => name.EndsWith("Attribute", System.StringComparison.Ordinal)
+                ? name.Substring(0, name.Length - "Attribute".Length) : name;
 
         /// <summary>A method kind in the words a consumer would use.</summary>
         private static string Describe(GrpcMethodKind kind) => kind switch

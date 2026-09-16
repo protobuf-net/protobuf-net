@@ -31,6 +31,7 @@ namespace ProtoBuf.BuildTools.Generators
             GrpcDiagnosticKind.GenericInterfaceNotSupported => GenericInterfaceNotSupported,
             GrpcDiagnosticKind.MetadataNotConstructible => MetadataNotConstructible,
             GrpcDiagnosticKind.NoSideEffectsNotUnary => NoSideEffectsNotUnary,
+            GrpcDiagnosticKind.InertHttpMethodAttribute => InertHttpMethodAttribute,
             _ => UnsupportedContract,
         };
 
@@ -134,6 +135,54 @@ namespace ProtoBuf.BuildTools.Generators
             title: "[NoSideEffects] is only meaningful on a unary operation",
             messageFormat: "'{0}.{1}' is marked [NoSideEffects] but is {2}, and Connect GET is unary "
                 + "only - the attribute has no effect here",
+            category: Category,
+            defaultSeverity: DiagnosticSeverity.Warning,
+            isEnabledByDefault: true);
+
+        /// <summary>
+        /// An ASP.NET Core MVC verb attribute on a Connect contract method, where it does nothing.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Reported rather than honoured, and the reasons are worth keeping because <c>[HttpGet]</c> is
+        /// a perfectly reasonable thing for a .NET developer to reach for:
+        /// </para>
+        /// <list type="bullet">
+        /// <item><description>
+        /// a contract assembly usually <b>cannot see it</b> - MVC lives in the
+        /// <c>Microsoft.AspNetCore.App</c> shared framework, and a transport-neutral contract shared with
+        /// a client has no reason to take a framework reference;
+        /// </description></item>
+        /// <item><description>
+        /// it means something <b>narrower and exclusive</b> - "this action answers the GET verb" - where
+        /// Connect GET binds <b>GET and POST</b>, since a client that cannot use GET must still be able
+        /// to POST;
+        /// </description></item>
+        /// <item><description>
+        /// it has <b>no schema representation</b>, so the property would not survive into the
+        /// <c>.proto</c> and would be invisible to a client in another language - where
+        /// <c>[NoSideEffects]</c> mirrors <c>option idempotency_level = NO_SIDE_EFFECTS;</c>.
+        /// </description></item>
+        /// </list>
+        /// <para>
+        /// So the value here is purely discoverability: point the consumer at the attribute that does
+        /// work, rather than leaving theirs silently inert.
+        /// </para>
+        /// <para>
+        /// <b>It is anchored on the contract rather than on the offending method</b>, as <c>PBN5009</c>
+        /// is, and that is deliberate rather than unfinished: a per-operation location would have to
+        /// ride on <c>GrpcOperationModel</c>, which is the cached <em>plan</em>, and a location shifts
+        /// whenever anything above it moves - so the emit step would stop being cached across edits that
+        /// only move code around. The message names the method instead. Don't "fix" it by putting a
+        /// location on the plan.
+        /// </para>
+        /// </remarks>
+        internal static readonly DiagnosticDescriptor InertHttpMethodAttribute = new(
+            id: "PBN5010",
+            title: "ASP.NET Core MVC verb attributes do nothing on a Connect contract",
+            messageFormat: "'{0}.{1}' carries [{2}], which has no effect here - a Connect method's path "
+                + "and verbs come from the protocol, not from MVC routing. To make a unary method "
+                + "servable over GET, mark it [NoSideEffects]",
             category: Category,
             defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true);
