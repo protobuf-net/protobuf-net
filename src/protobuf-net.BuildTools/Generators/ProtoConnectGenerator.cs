@@ -32,6 +32,23 @@ namespace ProtoBuf.BuildTools.Generators
     {
         internal const string ProtoConnectAttributeName = "ProtoBuf.Connect.ProtoConnectAttribute";
 
+        /// <summary>
+        /// Marks an operation free of side effects, so it may be served over <c>GET</c>.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Matched by full name, like every other trigger here, and deliberately <em>not</em> probed for
+        /// before use: this only ever asks "does this method carry it", which is false in a compilation
+        /// that has never heard of the type. Nothing is emitted that names it.
+        /// </para>
+        /// <para>
+        /// It lives in protobuf-net.Connect rather than here, so a consumer needs a recent enough
+        /// runtime as well as recent enough tooling - the versioning cost the split imposes, and the
+        /// reason the attribute carries no data: there is nothing about it to evolve.
+        /// </para>
+        /// </remarks>
+        internal const string NoSideEffectsAttributeName = "ProtoBuf.Connect.NoSideEffectsAttribute";
+
         /// <summary>C# 12 is the floor, matching the other two generators here.</summary>
         internal const int MinimumLanguageVersion = 1200;
 
@@ -140,6 +157,31 @@ namespace ProtoBuf.BuildTools.Generators
                     continue;
                 }
 
+                // Connect GET is unary-only, so the attribute is inert anywhere else; say so rather than
+                // letting a consumer believe a streaming method is cacheable
+                foreach (var op in model.Operations)
+                {
+                    if (op.HttpMethodAttribute is { } verb)
+                    {
+                        diagnostics.Add(new DiagnosticInfo(
+                            GrpcDiagnosticKind.InertHttpMethodAttribute,
+                            contract.Locations.FirstOrDefault(),
+                            model.InterfaceFullName,
+                            op.MethodName,
+                            StripAttributeSuffix(verb)));
+                    }
+
+                    if (op.NoSideEffects && op.Kind != GrpcMethodKind.Unary)
+                    {
+                        diagnostics.Add(new DiagnosticInfo(
+                            GrpcDiagnosticKind.NoSideEffectsNotUnary,
+                            contract.Locations.FirstOrDefault(),
+                            model.InterfaceFullName,
+                            op.MethodName,
+                            Describe(op.Kind)));
+                    }
+                }
+
                 services.Add(model);
             }
 
@@ -160,6 +202,20 @@ namespace ProtoBuf.BuildTools.Generators
 
             return new ConnectCandidate(plan, new EquatableArray<DiagnosticInfo>(diagnostics.ToArray()));
         }
+
+        /// <summary>How the attribute is written in source, rather than its type name.</summary>
+        private static string StripAttributeSuffix(string name)
+            => name.EndsWith("Attribute", System.StringComparison.Ordinal)
+                ? name.Substring(0, name.Length - "Attribute".Length) : name;
+
+        /// <summary>A method kind in the words a consumer would use.</summary>
+        private static string Describe(GrpcMethodKind kind) => kind switch
+        {
+            GrpcMethodKind.ClientStreaming => "client-streaming",
+            GrpcMethodKind.ServerStreaming => "server-streaming",
+            GrpcMethodKind.DuplexStreaming => "bidirectional-streaming",
+            _ => "unary",
+        };
 
         /// <summary>
         /// The first operation returning a <see cref="System.IO.Stream"/>, if any.

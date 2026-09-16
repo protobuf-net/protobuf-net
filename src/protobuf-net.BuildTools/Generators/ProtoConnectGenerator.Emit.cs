@@ -106,7 +106,12 @@ namespace ProtoBuf.BuildTools.Generators
                 // written out in full rather than through a helper: a helper would only be expressible
                 // if every method shared one request/response pair, which a real contract does not
                 Line(sb, indent + 1, $"public static readonly global::ProtoBuf.Connect.ConnectMethod<{op.RequestTypeFullName}, {op.ResponseTypeFullName}> {op.OperationName} =");
-                Line(sb, indent + 2, $"new(global::ProtoBuf.Connect.ConnectMethodType.{MethodType(op.Kind)}, ServiceName, \"{op.OperationName}\");");
+                // `idempotent` is the GET gate on both sides: the server binds GET as well as POST for
+                // such a method, and the client's `useGet` has something to act on. It is stated only
+                // when true, so the overwhelmingly common descriptor stays short.
+                var idempotent = op.NoSideEffects && op.Kind == GrpcMethodKind.Unary
+                    ? ", idempotent: true" : "";
+                Line(sb, indent + 2, $"new(global::ProtoBuf.Connect.ConnectMethodType.{MethodType(op.Kind)}, ServiceName, \"{op.OperationName}\"{idempotent});");
             }
             Line(sb, indent, "}");
         }

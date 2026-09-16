@@ -121,7 +121,9 @@ namespace ProtoBuf.BuildTools.Internal.Grpc
             bool voidResponse,
             string returnTypeDisplay,
             ImmutableArray<GrpcParameterModel> parameters,
-            ImmutableArray<string> metadataExpressions)
+            ImmutableArray<string> metadataExpressions,
+            bool noSideEffects = false,
+            string? httpMethodAttribute = null)
         {
             OperationName = operationName;
             MethodName = methodName;
@@ -137,7 +139,26 @@ namespace ProtoBuf.BuildTools.Internal.Grpc
             ReturnTypeDisplay = returnTypeDisplay;
             Parameters = parameters;
             MetadataExpressions = metadataExpressions;
+            NoSideEffects = noSideEffects;
+            HttpMethodAttribute = httpMethodAttribute;
         }
+
+        /// <summary>
+        /// The simple name of an ASP.NET Core MVC <c>HttpMethodAttribute</c> on the operation
+        /// (<c>HttpGetAttribute</c> and friends), or null. Carried only so it can be reported as inert.
+        /// </summary>
+        public string? HttpMethodAttribute { get; }
+
+        /// <summary>
+        /// Whether the operation is declared free of side effects, and so may be served over
+        /// <c>GET</c> as well as <c>POST</c>.
+        /// </summary>
+        /// <remarks>
+        /// Connect's only, and meaningless to gRPC - but it belongs on the shared operation model
+        /// because the shared parse is the one thing that reads the contract's symbols. The gRPC
+        /// emitter simply never asks for it.
+        /// </remarks>
+        public bool NoSideEffects { get; }
 
         /// <summary>The logical gRPC operation name (after <c>[Operation]</c> / trailing-Async handling).</summary>
         public string OperationName { get; }
@@ -205,6 +226,8 @@ namespace ProtoBuf.BuildTools.Internal.Grpc
                 || VoidRequest != other.VoidRequest
                 || VoidResponse != other.VoidResponse
                 || !string.Equals(ReturnTypeDisplay, other.ReturnTypeDisplay, StringComparison.Ordinal)
+                || NoSideEffects != other.NoSideEffects
+                || !string.Equals(HttpMethodAttribute, other.HttpMethodAttribute, StringComparison.Ordinal)
                 || Parameters.Length != other.Parameters.Length
                 || MetadataExpressions.IsDefault != other.MetadataExpressions.IsDefault)
             {
@@ -244,6 +267,7 @@ namespace ProtoBuf.BuildTools.Internal.Grpc
             hash = (hash * -1521134295) + (int)ResponseShape;
             hash = (hash * -1521134295) + StringComparer.Ordinal.GetHashCode(RequestTypeFullName);
             hash = (hash * -1521134295) + StringComparer.Ordinal.GetHashCode(ResponseTypeFullName);
+            hash = (hash * -1521134295) + (NoSideEffects ? 1 : 0);
             hash = (hash * -1521134295) + Parameters.Length;
             hash = (hash * -1521134295) + (MetadataExpressions.IsDefault ? -1 : MetadataExpressions.Length);
             return hash;
@@ -410,6 +434,15 @@ namespace ProtoBuf.BuildTools.Internal.Grpc
         ModelCannotSerializePayload,
         UnresolvedContract,
         MetadataNotConstructible,
+        InertHttpMethodAttribute,
+
+        /// <summary>
+        /// Connect-only, and produced by <c>ProtoConnectGenerator</c> alone - the shared parse never
+        /// raises it, because a gRPC-only project carrying <c>[NoSideEffects]</c> is not doing anything
+        /// wrong. It lives in this enum because that is how a diagnostic reaches an emitter at all;
+        /// <c>GrpcProxyGenerator</c>'s own mapping would land it on a catch-all it can never reach.
+        /// </summary>
+        NoSideEffectsNotUnary,
     }
 
     /// <summary>
