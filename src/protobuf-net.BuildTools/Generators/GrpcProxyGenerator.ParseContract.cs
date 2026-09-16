@@ -417,7 +417,12 @@ namespace ProtoBuf.BuildTools.Generators
                 returnTypeDisplay: Display(method.ReturnType),
                 parameters: parameters.MoveToImmutable(),
                 metadataExpressions: BuildMetadata(compilation, contractType, method, implementation,
-                    diagnostics));
+                    diagnostics),
+                // Connect's, and read here because this is the only place holding the contract's
+                // symbols; the gRPC emitter never asks for it. Whether it is *meaningful* - it is not,
+                // on a streaming method - is ProtoConnectGenerator's to report, since a gRPC-only
+                // project carrying the attribute is not this file's business.
+                noSideEffects: HasAttribute(method, ProtoConnectGenerator.NoSideEffectsAttributeName));
             return true;
         }
 

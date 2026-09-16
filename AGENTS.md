@@ -309,7 +309,7 @@ it.
 | `PBN3010`–`PBN3013` | `AotMigrationAnalyzer` |
 | `PBN4000`–`PBN4014`, `PBN4018` | `GrpcProxyGenerator` — the language floor, the drop reasons, and the AOT escalation |
 | **`PBN4015`–`PBN4017`** | **`GrpcMigrationAnalyzer`** — a *different owner inside the same block* |
-| `PBN5000`–`PBN5006`, `PBN5008` | `ProtoConnectGenerator` — the language floor, the drop reasons, and unreconstructable endpoint metadata |
+| `PBN5000`–`PBN5006`, `PBN5008`–`PBN5009` | `ProtoConnectGenerator` — the language floor, the drop reasons, unreconstructable endpoint metadata, and `[NoSideEffects]` misuse |
 | **`PBN5007`** | **`ConnectContractFirstAnalyzer`** — a *different owner inside the same block*, again |
 | `PBN9001` | not an analyzer id at all; see below |
 
@@ -1911,6 +1911,26 @@ answer for the same method, in one host. Proven able to fail by short-circuiting
 it report. The golden fixtures (`Connect/Data/Authorization.input.cs`, and
 `Diagnostics/MetadataNotConstructible.input.cs` for `PBN5008`) pin the emitted shape and the ordering;
 they cannot tell you ASP.NET Core honours it.
+
+**Model seeding covers both container attributes, and for a while it covered only `[ProtoGrpc]`.**
+`GrpcProxyGenerator.CollectPayloadsForModel` walks `[ProtoGrpc]` *and* `[ProtoConnect]` declarations,
+contributing their `[ProtoService]` contracts' payload types to the named `[ProtoModel]`. Covering only
+the gRPC one meant a Connect-only code-first project got an **empty** model — and an empty model emits
+nothing at all, `Instance` included, so the consumer saw `CS0117` pointing into generated code with no
+diagnostic explaining it. That is exactly the shape the published getting-started guide has, so it was
+every code-first Connect consumer's first build.
+
+Worth knowing *why it survived*: `AotConnectSmoke` lists `[ProtoSerializable]` seeds explicitly and
+`AotDualHostSmoke` declares `[ProtoGrpc]` as well, so neither could see it. It was found by writing a
+new consumer **from the documentation, step by step** — which nothing else here does. That is a cheap
+test to repeat and it has now paid for itself twice.
+
+**`[NoSideEffects]` is Connect's, and lives in protobuf-net.Connect.** It marks a unary operation
+servable over `GET`; the generator turns it into the method descriptor's `idempotent` flag, which the
+server binding and the client's `useGet` already consulted. It rides on the shared `GrpcOperationModel`
+because the shared parse is the only thing holding the contract's symbols — the gRPC emitter never asks
+for it. Connect GET is unary-only, so on any other shape it is both reported (`PBN5009`) **and** ignored
+in the emitted descriptor; reporting without ignoring would bind a `GET` that cannot work.
 
 **The consequence to keep in mind when changing any of that: the other repository cannot see it until
 it ships.** `ProtoConnectGenerator` emits code naming `ProtoBuf.Connect` types, so the generator and

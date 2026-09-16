@@ -30,6 +30,7 @@ namespace ProtoBuf.BuildTools.Generators
             GrpcDiagnosticKind.ImplementationDoesNotImplement => ImplementationDoesNotImplement,
             GrpcDiagnosticKind.GenericInterfaceNotSupported => GenericInterfaceNotSupported,
             GrpcDiagnosticKind.MetadataNotConstructible => MetadataNotConstructible,
+            GrpcDiagnosticKind.NoSideEffectsNotUnary => NoSideEffectsNotUnary,
             _ => UnsupportedContract,
         };
 
@@ -115,6 +116,24 @@ namespace ProtoBuf.BuildTools.Generators
                 + "this path reflects, so an authorization attribute would not be honoured. Chain "
                 + ".RequireAuthorization(...) on the returned builder, or make the attribute "
                 + "constructible from this assembly",
+            category: Category,
+            defaultSeverity: DiagnosticSeverity.Warning,
+            isEnabledByDefault: true);
+
+        /// <summary>
+        /// <c>[NoSideEffects]</c> on an operation that cannot be served over <c>GET</c>.
+        /// </summary>
+        /// <remarks>
+        /// Connect GET is a unary-only form - there is no way to carry a stream in a query string - so
+        /// the attribute has nothing to act on anywhere else and would otherwise be silently inert.
+        /// Reported from this generator rather than from the shared parse, because a gRPC-only project
+        /// that happens to carry the attribute is not doing anything wrong.
+        /// </remarks>
+        internal static readonly DiagnosticDescriptor NoSideEffectsNotUnary = new(
+            id: "PBN5009",
+            title: "[NoSideEffects] is only meaningful on a unary operation",
+            messageFormat: "'{0}.{1}' is marked [NoSideEffects] but is {2}, and Connect GET is unary "
+                + "only - the attribute has no effect here",
             category: Category,
             defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true);

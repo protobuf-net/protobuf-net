@@ -20,3 +20,4 @@ PBN5005  | ProtoBuf.Connect | Warning  | Open generic service contract is not su
 PBN5006  | ProtoBuf.Connect | Warning  | Service contract not emitted, catch-all
 PBN5007  | ProtoBuf.Connect | Warning  | Authorization attributes are not carried onto Connect endpoints (`ConnectContractFirstAnalyzer`)
 PBN5008  | ProtoBuf.Connect | Warning  | Endpoint metadata could not be reconstructed (`ProtoConnectGenerator`)
+PBN5009  | ProtoBuf.Connect | Warning  | `[NoSideEffects]` on a non-unary operation (`ProtoConnectGenerator`)

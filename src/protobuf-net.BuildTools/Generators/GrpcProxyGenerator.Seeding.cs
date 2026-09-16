@@ -10,8 +10,8 @@ namespace ProtoBuf.BuildTools.Generators
     public sealed partial class GrpcProxyGenerator
     {
         /// <summary>
-        /// The payload types a <c>[ProtoGrpc]</c> declaration needs marshallers for, if that declaration
-        /// names <paramref name="model"/> as its serializer model.
+        /// The payload types a <c>[ProtoGrpc]</c> or <c>[ProtoConnect]</c> declaration needs serializers
+        /// for, if that declaration names <paramref name="model"/> as its serializer model.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -28,21 +28,43 @@ namespace ProtoBuf.BuildTools.Generators
         /// generator reports them, and reporting them twice from two generators would be worse than not
         /// reporting them at all.
         /// </para>
+        /// <para>
+        /// <b>Both container attributes count, and for a while only <c>[ProtoGrpc]</c> did.</b> The two
+        /// declarations are the same shape - a <c>Model</c> naming a <c>[ProtoModel]</c>, and
+        /// <c>[ProtoService]</c> attributes naming contracts - and want the same payloads, so the walk is
+        /// shared. Handling only the gRPC one meant a Connect-only project got an <em>empty</em> model;
+        /// and an empty model emits nothing at all, <c>Instance</c> included, so the consumer saw
+        /// <c>CS0117</c> pointing into generated code with no diagnostic explaining it. That is exactly
+        /// the shape the documented getting-started example has, so it was every code-first Connect
+        /// consumer's first build. The existing harnesses missed it because one lists
+        /// <c>[ProtoSerializable]</c> seeds explicitly and the other declares <c>[ProtoGrpc]</c> too.
+        /// </para>
+        /// <para>
+        /// A type carrying both attributes, or two containers naming one model, contributes its payloads
+        /// twice; that is harmless, since the model walk dedupes on the qualified type name.
+        /// </para>
         /// </remarks>
         internal static void CollectPayloadsForModel(Compilation compilation, INamedTypeSymbol model,
             List<ITypeSymbol> payloads, CancellationToken cancellationToken)
         {
-            // Free opt-out for everyone not using protobuf-net.Grpc, which is most consumers: without
-            // the attribute type in the compilation there can be no [ProtoGrpc] declaration to find, so
-            // the type walk below never happens. Same spirit as Utils.BuildToolsDisabled().
-            if (compilation.GetTypeByMetadataName(ProtoGrpcAttributeName) is null) return;
+            // Free opt-out for everyone using neither transport, which is most consumers: without either
+            // attribute type in the compilation there can be no declaration to find, so the type walk
+            // below never happens. Same spirit as Utils.BuildToolsDisabled().
+            var hasGrpc = compilation.GetTypeByMetadataName(ProtoGrpcAttributeName) is not null;
+            var hasConnect = compilation.GetTypeByMetadataName(
+                ProtoConnectGenerator.ProtoConnectAttributeName) is not null;
+            if (!hasGrpc && !hasConnect) return;
 
             foreach (var candidate in EnumerateTypes(compilation.Assembly.GlobalNamespace, cancellationToken))
             {
                 foreach (var attribute in candidate.GetAttributes())
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-                    if (attribute.AttributeClass?.ToDisplayString() != ProtoGrpcAttributeName) continue;
+                    var attributeName = attribute.AttributeClass?.ToDisplayString();
+                    var isContainer =
+                        (hasGrpc && attributeName == ProtoGrpcAttributeName)
+                        || (hasConnect && attributeName == ProtoConnectGenerator.ProtoConnectAttributeName);
+                    if (!isContainer) continue;
                     if (!NamesModel(attribute, model)) continue;
 
                     foreach (var contract in GetContracts(candidate))

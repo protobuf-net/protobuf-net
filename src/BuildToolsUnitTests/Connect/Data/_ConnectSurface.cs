@@ -20,6 +20,9 @@ namespace ProtoBuf.Connect
         public Type? Model { get; set; }
     }
 
+    [AttributeUsage(AttributeTargets.Method)]
+    public sealed class NoSideEffectsAttribute : Attribute { }
+
     public enum ConnectMethodType { Unary, ClientStreaming, ServerStreaming, DuplexStreaming }
 
     public sealed class ConnectMethod<TRequest, TResponse>
