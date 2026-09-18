@@ -43,7 +43,7 @@
     <PackageVersion Include="Nerdbank.GitVersioning" Version="3.10.94" PrivateAssets="All" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageVersion Include="NHibernate" Version="5.7.0" />
-    <PackageVersion Include="NodaTime" Version="3.3.3" />
+    <PackageVersion Include="NodaTime" Version="3.3.4" />
     <PackageVersion Include="NodaTime.Serialization.Protobuf" Version="2.0.2" />
     <PackageVersion Include="Pipelines.Sockets.Unofficial" Version="2.3.1" />
     <PackageVersion Include="protobuf-net.BuildTools" Version="3.2.46" />
