@@ -91,18 +91,37 @@ namespace ProtoBuf.Serializers
         Memory<T> IMemoryConverter<ArraySegment<T>, T>.GetMemory(in ArraySegment<T> value)
             => new Memory<T>(value.Array, value.Offset, value.Count);
 
+        /// <summary>
+        /// The int argument is the minimumLength for the ArrayPool 
+        /// </summary>
+        public static Func<ISerializationContext, int, T[]> ArrayFactory { get; set; }
+
         Memory<T> IMemoryConverter<ArraySegment<T>, T>.Expand(ISerializationContext context, ref ArraySegment<T> value, int additionalCapacity)
         {
             // we can't expand into the segment, because we don't know what else is using it;
             // so: allocate an entire array
             int oldCount = value.Count;
-            var arr = new T[oldCount + additionalCapacity];
-            if (oldCount != 0)
+            if (ArrayFactory == null)
             {
-                Array.Copy(value.Array, value.Offset, arr, 0, oldCount);
+                var arr = new T[oldCount + additionalCapacity];
+                if (oldCount != 0)
+                {
+                    Array.Copy(value.Array, value.Offset, arr, 0, oldCount);
+                }
+                value = new ArraySegment<T>(arr);
+                return new Memory<T>(arr, oldCount, additionalCapacity);
             }
-            value = new ArraySegment<T>(arr);
-            return new Memory<T>(arr, oldCount, additionalCapacity);
+            else
+            {
+                var arr = ArrayFactory.Invoke(context, oldCount + additionalCapacity);
+                System.Diagnostics.Debug.Assert(arr.Length >= oldCount + additionalCapacity, "in case of ArrayPool usage, the array may be longer then the requested size.");
+                if (oldCount != 0)
+                {
+                    Array.Copy(value.Array, value.Offset, arr, 0, oldCount);
+                }
+                value = new ArraySegment<T>(arr, 0, oldCount + additionalCapacity); //restrict the segment to the requested size also if the array from the pool is bigger!
+                return new Memory<T>(arr, oldCount, additionalCapacity);
+            }
         }
 
         Memory<T> IMemoryConverter<Memory<T>, T>.NonNull(in Memory<T> value) => value;
