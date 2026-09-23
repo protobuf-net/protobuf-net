@@ -104,7 +104,8 @@ namespace ProtoBuf.CodeFixes
         };
 
         // `T` becomes `T?`, and a `= null!` or `= default!` that only existed to silence CS8618 goes,
-        // since it no longer silences anything
+        // since it no longer silences anything - judged by the analyzer's own test, so that what is
+        // removed is exactly what it did not count as an initializer
         private static SyntaxNode DeclareNullable(SyntaxNode root, SyntaxNode declaration, TypeSyntax type)
         {
             var nullable = SyntaxFactory.NullableType(type.WithoutTrivia()).WithTriviaFrom(type);
@@ -112,27 +113,17 @@ namespace ProtoBuf.CodeFixes
             {
                 // a field's type belongs to the enclosing declaration, not to the declarator
                 case VariableDeclaratorSyntax { Parent: VariableDeclarationSyntax variables } variable:
-                    var declarator = variable.Initializer is { } assigned && IsSpelledOutNull(assigned.Value)
+                    var declarator = variable.Initializer is { } assigned && DataContractContext.IsSpelledOutNull(assigned.Value)
                         ? variable.WithInitializer(null).WithIdentifier(variable.Identifier.WithoutTrivia())
                         : variable;
                     return root.ReplaceNode(variables, variables.ReplaceNode(variable, declarator).WithType(nullable));
-                case PropertyDeclarationSyntax { Initializer.Value: var value, AccessorList: { } accessors } property when IsSpelledOutNull(value):
+                case PropertyDeclarationSyntax { Initializer.Value: var value, AccessorList: { } accessors } property
+                    when DataContractContext.IsSpelledOutNull(value):
                     return root.ReplaceNode(property, property.WithType(nullable).WithInitializer(null).WithSemicolonToken(default)
                         .WithAccessorList(accessors.WithTrailingTrivia(property.SemicolonToken.TrailingTrivia)));
                 default:
                     return root.ReplaceNode(type, nullable);
             }
-        }
-
-        private static bool IsSpelledOutNull(ExpressionSyntax value)
-        {
-            while (value is PostfixUnaryExpressionSyntax postfix && postfix.IsKind(SyntaxKind.SuppressNullableWarningExpression))
-            {
-                value = postfix.Operand;
-            }
-            return value is DefaultExpressionSyntax
-                || value.IsKind(SyntaxKind.NullLiteralExpression)
-                || value.IsKind(SyntaxKind.DefaultLiteralExpression);
         }
 
         // only what can be written without guessing: an empty one-dimensional array, or a class with

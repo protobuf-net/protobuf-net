@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
 using ProtoBuf.CodeFixes.DefaultValue.Abstractions;
 using ProtoBuf.Internal;
 using ProtoBuf.Internal.Roslyn.Extensions;
@@ -905,24 +906,28 @@ namespace ProtoBuf.BuildTools.Internal
 
                 // an oblivious member has promised nothing, and a value type cannot be null
                 if (annotation != NullableAnnotation.NotAnnotated || !memberType.IsReferenceType) continue;
-                if (!IsRepeatedLike(memberType) || IgnoresListHandling(memberType) || IsNullWrappedCollection(member)) continue;
 
-                // a partial type is visited once per declaration; the part declaring the member owns it
-                if (member.Locations.FirstOrDefault() is not { SourceTree: not null } location
+                // a partial type is visited once per declaration; the part declaring the member owns
+                // it - tested before anything that walks interfaces or attributes, since every other
+                // part of the type throws the member away here
+                if (member.Locations.IsEmpty
+                    || member.Locations[0] is not { SourceTree: not null } location
                     || location.SourceTree != context.Node.SyntaxTree
                     || !context.Node.FullSpan.Contains(location.SourceSpan)) continue;
 
+                if (!IsRepeatedLike(memberType) || IgnoresListHandling(memberType) || IsNullWrappedCollection(member)) continue;
+
                 if (notConstructed is null)
                 {
-                    if (HasNonNullInitializer(member)) continue;
+                    if (HasNonNullInitializer(member, context.CancellationToken)) continue;
                     // worked out once, and only for a type that has a candidate; nothing has been
                     // reported before the first time, so a type with no answer reports nothing
                     if (assignedByConstructor is null
-                        && !TryGetAssignedByConstructor(type, out assignedByConstructor)) return;
+                        && !TryGetAssignedByConstructor(type, context.CancellationToken, out assignedByConstructor)) return;
                     if (assignedByConstructor.Contains(member.Name)) continue;
                 }
 
-                restored ??= AssignedInDeserializationCallbacks(type);
+                restored ??= AssignedInDeserializationCallbacks(type, context.CancellationToken);
                 if (restored.Contains(member.Name)) continue;
 
                 // [NullWrappedCollection] only means anything on a member that is written at all, and
@@ -970,7 +975,7 @@ namespace ProtoBuf.BuildTools.Internal
         // them. False when that cannot be answered, which stands the whole check down: no
         // constructor to call is PBN0015's error rather than ours, and a `: this(...)` chain could
         // assign anything (a positional record's parameterless constructor must have one).
-        private static bool TryGetAssignedByConstructor(INamedTypeSymbol type, out HashSet<string> assigned)
+        private static bool TryGetAssignedByConstructor(INamedTypeSymbol type, CancellationToken cancellationToken, out HashSet<string> assigned)
         {
             assigned = new HashSet<string>(StringComparer.Ordinal);
             bool any = false;
@@ -980,7 +985,7 @@ namespace ProtoBuf.BuildTools.Internal
                 any = true;
                 foreach (var reference in ctor.DeclaringSyntaxReferences)
                 {
-                    if (reference.GetSyntax() is not ConstructorDeclarationSyntax declaration)
+                    if (reference.GetSyntax(cancellationToken) is not ConstructorDeclarationSyntax declaration)
                     {
                         // a primary constructor, declared by the type itself: a positional record's
                         // assigns its members from its parameters, which only an abstract type reaches
@@ -994,29 +999,36 @@ namespace ProtoBuf.BuildTools.Internal
             return any;
         }
 
-        // an initializer runs as part of every constructor, so anything but a spelled-out null
-        // counts; `= null!` and `= default!` are how CS8618 is routinely silenced, and assign nothing
-        private static bool HasNonNullInitializer(ISymbol member)
+        // an initializer runs as part of every constructor, so anything but a spelled-out null counts
+        private static bool HasNonNullInitializer(ISymbol member, CancellationToken cancellationToken)
         {
             foreach (var reference in member.DeclaringSyntaxReferences)
             {
-                var value = reference.GetSyntax() switch
+                var value = reference.GetSyntax(cancellationToken) switch
                 {
                     PropertyDeclarationSyntax property => property.Initializer?.Value,
                     VariableDeclaratorSyntax variable => variable.Initializer?.Value,
                     _ => null,
                 };
-                while (value is PostfixUnaryExpressionSyntax postfix
-                    && postfix.IsKind(SyntaxKind.SuppressNullableWarningExpression))
-                {
-                    value = postfix.Operand;
-                }
-                if (value is null || value is DefaultExpressionSyntax
-                    || value.IsKind(SyntaxKind.NullLiteralExpression)
-                    || value.IsKind(SyntaxKind.DefaultLiteralExpression)) continue;
-                return true;
+                if (value is not null && !IsSpelledOutNull(value)) return true;
             }
             return false;
+        }
+
+        // `null`, `default` or `default(T)`, with or without `!`: how CS8618 is routinely silenced on
+        // a DTO, and it assigns nothing. Shared with the code fix, which removes exactly what this
+        // treats as no initializer - were the two to drift, it would leave one behind or take a real
+        // one away
+        internal static bool IsSpelledOutNull(ExpressionSyntax value)
+        {
+            while (value is PostfixUnaryExpressionSyntax postfix
+                && postfix.IsKind(SyntaxKind.SuppressNullableWarningExpression))
+            {
+                value = postfix.Operand;
+            }
+            return value is DefaultExpressionSyntax
+                || value.IsKind(SyntaxKind.NullLiteralExpression)
+                || value.IsKind(SyntaxKind.DefaultLiteralExpression);
         }
 
         // an enumerable [ProtoContract(IgnoreListHandling = true)] type is a message rather than a
@@ -1045,7 +1057,7 @@ namespace ProtoBuf.BuildTools.Internal
         // sub-type a method counts only by overriding one the root declares, and its own attribute
         // does nothing (probed). Matched by name, as IsAssignedInInstanceConstructor is, since this
         // only ever suppresses a warning; `Items ??= new();` in an after-hook is the idiomatic form.
-        private static HashSet<string> AssignedInDeserializationCallbacks(INamedTypeSymbol type)
+        private static HashSet<string> AssignedInDeserializationCallbacks(INamedTypeSymbol type, CancellationToken cancellationToken)
         {
             var names = new HashSet<string>(StringComparer.Ordinal);
             bool isSubType = IsProtoSubType(type);
@@ -1054,7 +1066,7 @@ namespace ProtoBuf.BuildTools.Internal
                 if (!(isSubType ? OverridesDeserializationCallback(method) : IsDeserializationCallback(method))) continue;
                 foreach (var reference in method.DeclaringSyntaxReferences)
                 {
-                    CollectAssigned(reference.GetSyntax(), type, names);
+                    CollectAssigned(reference.GetSyntax(cancellationToken), type, names);
                 }
             }
             return names;
