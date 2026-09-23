@@ -45,8 +45,8 @@ using PM = ProtoBuf.ProtoMemberAttribute;
             "[ProtoContract(SkipConstructor = true)] public class Foo { [ProtoMember(1)] public string[]? Items = new string[0]; }")]
         // the motivating record: the parameter's type is what declares the property's
         [InlineData(
-            "[ProtoContract(SkipConstructor = true)] public record TestRecord(string[] {|PBN0027:Array|});",
-            "[ProtoContract(SkipConstructor = true)] public record TestRecord(string[]? Array);")]
+            "[ProtoContract(SkipConstructor = true)] public record TestRecord([property: ProtoMember(1)] string[] {|PBN0027:Array|});",
+            "[ProtoContract(SkipConstructor = true)] public record TestRecord([property: ProtoMember(1)] string[]? Array);")]
         public Task DeclaresNullable(string source, string expected)
             => RunAsync(source, expected, NonNullableCollectionCodeFixProvider.NullableKey);
 
@@ -94,8 +94,8 @@ using PM = ProtoBuf.ProtoMemberAttribute;
             "PBN0027.Nullable", "PBN0027.NullWrap")]
         [InlineData("[ProtoContract] public struct Foo { [ProtoMember(1)] public List<int> Items; }",
             "PBN0027.Nullable", "PBN0027.NullWrap")]
-        [InlineData("[ProtoContract(SkipConstructor = true)] public record TestRecord(string[] Array);",
-            "PBN0027.Nullable")]
+        [InlineData("[ProtoContract(SkipConstructor = true)] public record TestRecord([property: ProtoMember(1)] string[] Array);",
+            "PBN0027.Nullable", "PBN0027.NullWrap")]
         [InlineData("[ProtoContract] public class Foo { public List<int> Items { get; set; } = null!; }",
             "PBN0027.Nullable", "PBN0027.Initialize")]
         [InlineData("[ProtoContract] public class Foo { [ProtoMember(1)] public IList<int> Items { get; set; } = null!; }",

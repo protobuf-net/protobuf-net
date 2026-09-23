@@ -25,8 +25,8 @@ namespace System.Runtime.CompilerServices
         private async Task<List<Diagnostic>> NullCollectionDiagnosticsAsync(string source)
             => (await AnalyzeAsync(source)).Where(x => x.Descriptor == DataContractAnalyzer.NonNullableCollectionLeftNull).ToList();
 
-        // the shape that motivated the rule: no [ProtoMember], so nothing ever writes it, and
-        // SkipConstructor means the primary constructor never runs either - it is null every time
+        // the shape that motivated the rule: an empty array is not written, and SkipConstructor means
+        // the primary constructor never runs to assign it - so `new TestRecord([])` comes back null
         [Fact]
         public async Task ReportsPositionalRecordUnderSkipConstructor()
         {
@@ -34,13 +34,14 @@ namespace System.Runtime.CompilerServices
 #nullable enable
 using ProtoBuf;
 [ProtoContract(SkipConstructor = true)]
-public record TestRecord(string[] Array);
+public record TestRecord([property: ProtoMember(1)] string[] Array);
 " + IsExternalInit);
 
             var diag = Assert.Single(diags);
             Assert.Equal(DiagnosticSeverity.Warning, diag.Severity);
             var message = diag.GetMessage(CultureInfo.InvariantCulture);
             Assert.StartsWith("'Array' is a non-nullable collection, but SkipConstructor means no constructor or initializer runs on deserialize;", message);
+            Assert.EndsWith("To fix: declare it nullable, mark it [NullWrappedCollection] so that an empty one is written (this changes the wire format), or restore it in a deserialization callback.", message);
 
             var span = diag.Location.SourceSpan;
             var text = (await diag.Location.SourceTree!.GetTextAsync()).ToString().Substring(span.Start, span.Length);
