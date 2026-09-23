@@ -834,30 +834,24 @@ namespace ProtoBuf.BuildTools.Internal
                     if (reference.GetSyntax() is not ConstructorDeclarationSyntax declaration) continue;
                     foreach (var assignment in declaration.DescendantNodes().OfType<AssignmentExpressionSyntax>())
                     {
-                        if (AssignedName(assignment) == member.MemberName) return true;
+                        if (TargetName(assignment.Left) == member.MemberName) return true;
                     }
                 }
             }
             return false;
         }
 
-        // `x = ...` or `this.x = ...`, including `??=`; anything else is not recognisably ours
-        private static string? AssignedName(AssignmentExpressionSyntax assignment) => assignment.Left switch
-        {
-            IdentifierNameSyntax id => id.Identifier.ValueText,
-            MemberAccessExpressionSyntax { Expression: ThisExpressionSyntax } access => access.Name.Identifier.ValueText,
-            _ => null,
-        };
-
         // A collection is only assigned by deserialization when the payload carries it, and an empty
         // one is normally not written at all - so a sender holding [] leaves the receiver holding
         // whatever construction left there. When that is null, on a member the compiler believes is
-        // non-null, the result is an NRE nothing warned about. Construction leaves it null in two
-        // ways, both probed against RuntimeTypeModel rather than assumed:
+        // non-null, the result is an NRE nothing warned about. Construction leaves it null in three
+        // ways, all probed against RuntimeTypeModel rather than assumed:
         //
         // - SkipConstructor builds the instance with GetUninitializedObject, so no constructor runs
         //   and nor does any initializer, since those are compiled into the constructor: `= new()`,
         //   `{ get; } = new()` and a positional record parameter all come back null;
+        // - a struct contract is never constructed at all - TypeSerializer reads into `default` - so
+        //   the same holds for it, explicit parameterless constructor or not;
         // - otherwise, nothing assigns it: no initializer - or only `= null!`, the routine way of
         //   silencing CS8618 on a DTO, which `required` also silences - and no assignment in the
         //   parameterless constructor, which is the one protobuf-net calls. This is where protobuf
@@ -868,19 +862,25 @@ namespace ProtoBuf.BuildTools.Internal
         // nullable is one of those fixes, and the compiler then makes every reader deal with null.
         internal void ReportCollectionsLeftNull(SyntaxNodeAnalysisContext context, INamedTypeSymbol type)
         {
-            // with a surrogate the library constructs the surrogate and converts, never this type
+            // with a surrogate protobuf-net constructs the surrogate and converts, and with a
+            // hand-written serializer that serializer does the constructing - never us, either way
             if (!HasFlag(DataContractContextFlags.IsProtoContract)
                 || HasFlag(DataContractContextFlags.HasSurrogate)
+                || HasFlag(DataContractContextFlags.HasSerializer)
                 || type.TypeKind == TypeKind.Interface) return;
 
-            // SkipConstructor belongs to the type actually constructed, so on an abstract type it is
-            // inert: the concrete type's own setting decides, and it runs this type's constructor
-            // like any other base (probed both ways)
-            bool skipConstructor = HasFlag(DataContractContextFlags.SkipConstructor) && !type.IsAbstract;
+            // null when the type is constructed normally, otherwise why it is not. SkipConstructor
+            // belongs to the type actually constructed, so it is inert on an abstract type - the
+            // concrete type runs this constructor like any other base (probed both ways) - and on a
+            // type protobuf-net treats as a collection, which it activates rather than reads into
+            string? notConstructed = type.IsValueType
+                ? "a struct contract is never constructed on deserialize, so no constructor or initializer runs"
+                : HasFlag(DataContractContextFlags.SkipConstructor) && !type.IsAbstract
+                    && !(IsRepeatedLike(type) && !HasFlag(DataContractContextFlags.IgnoreListHandling))
+                ? "SkipConstructor means no constructor or initializer runs on deserialize"
+                : null;
 
             HashSet<string>? assignedByConstructor = null;
-            if (!skipConstructor && !TryGetAssignedByConstructor(type, out assignedByConstructor)) return;
-
             HashSet<string>? restored = null;
             foreach (var candidate in type.GetMembers())
             {
@@ -905,18 +905,30 @@ namespace ProtoBuf.BuildTools.Internal
 
                 // an oblivious member has promised nothing, and a value type cannot be null
                 if (annotation != NullableAnnotation.NotAnnotated || !memberType.IsReferenceType) continue;
-                if (!IsRepeatedLike(memberType)) continue;
+                if (!IsRepeatedLike(memberType) || IgnoresListHandling(memberType) || IsNullWrappedCollection(member)) continue;
 
                 // a partial type is visited once per declaration; the part declaring the member owns it
                 if (member.Locations.FirstOrDefault() is not { SourceTree: not null } location
                     || location.SourceTree != context.Node.SyntaxTree
                     || !context.Node.FullSpan.Contains(location.SourceSpan)) continue;
 
-                if (!skipConstructor
-                    && (HasNonNullInitializer(member) || assignedByConstructor!.Contains(member.Name))) continue;
+                if (notConstructed is null)
+                {
+                    if (HasNonNullInitializer(member)) continue;
+                    // worked out once, and only for a type that has a candidate; nothing has been
+                    // reported before the first time, so a type with no answer reports nothing
+                    if (assignedByConstructor is null
+                        && !TryGetAssignedByConstructor(type, out assignedByConstructor)) return;
+                    if (assignedByConstructor.Contains(member.Name)) continue;
+                }
 
                 restored ??= AssignedInDeserializationCallbacks(type);
                 if (restored.Contains(member.Name)) continue;
+
+                // [NullWrappedCollection] only means anything on a member that is written at all
+                bool serialized = member.GetAttributes().Any(attrib
+                    => attrib.AttributeClass is { Name: nameof(ProtoMemberAttribute) } ac && ac.InProtoBufNamespace());
+                bool constructed = notConstructed is null;
 
                 context.ReportDiagnostic(Diagnostic.Create(
                     descriptor: DataContractAnalyzer.NonNullableCollectionLeftNull,
@@ -924,14 +936,31 @@ namespace ProtoBuf.BuildTools.Internal
                     messageArgs: new object[]
                     {
                         member.Name,
-                        skipConstructor
-                            ? "SkipConstructor means no constructor or initializer runs on deserialize"
-                            : "nothing assigns it when protobuf-net constructs the instance",
+                        notConstructed ?? "nothing assigns it when protobuf-net constructs the instance",
+                        DescribeCollectionFixes(constructed, serialized),
                     },
                     additionalLocations: null,
-                    properties: null
+                    properties: DiagnosticPropertiesBuilder.Create()
+                        .Add(CollectionLeftNullConstructedKey, constructed ? "true" : "false")
+                        .Add(CollectionLeftNullSerializedKey, serialized ? "true" : "false")
+                        .Build()
                 ));
             }
+        }
+
+        // which remedies apply, for the message and for the code fix: an initializer only helps when
+        // a constructor runs, null-wrapping only when the member is written, and a callback is the
+        // one thing that works when nothing is constructed
+        internal const string CollectionLeftNullConstructedKey = "Constructed";
+        internal const string CollectionLeftNullSerializedKey = "Serialized";
+
+        private static string DescribeCollectionFixes(bool constructed, bool serialized)
+        {
+            var fixes = new List<string> { "declare it nullable" };
+            if (constructed) fixes.Add("initialize it");
+            if (serialized) fixes.Add("mark it [NullWrappedCollection] so that an empty one is written (this changes the wire format)");
+            if (!constructed) fixes.Add("restore it in a deserialization callback");
+            return string.Join(", ", fixes.Take(fixes.Count - 1)) + ", or " + fixes[fixes.Count - 1];
         }
 
         // The names assigned by whichever constructors can run when protobuf-net creates the type:
@@ -939,7 +968,7 @@ namespace ProtoBuf.BuildTools.Internal
         // them. False when that cannot be answered, which stands the whole check down: no
         // constructor to call is PBN0015's error rather than ours, and a `: this(...)` chain could
         // assign anything (a positional record's parameterless constructor must have one).
-        private static bool TryGetAssignedByConstructor(INamedTypeSymbol type, out HashSet<string>? assigned)
+        private static bool TryGetAssignedByConstructor(INamedTypeSymbol type, out HashSet<string> assigned)
         {
             assigned = new HashSet<string>(StringComparer.Ordinal);
             bool any = false;
@@ -957,10 +986,7 @@ namespace ProtoBuf.BuildTools.Internal
                         continue;
                     }
                     if (declaration.Initializer?.IsKind(SyntaxKind.ThisConstructorInitializer) == true) return false;
-                    foreach (var assignment in declaration.DescendantNodes().OfType<AssignmentExpressionSyntax>())
-                    {
-                        if (AssignedName(assignment) is { } name) assigned.Add(name);
-                    }
+                    CollectAssigned(declaration, type, assigned);
                 }
             }
             return any;
@@ -991,25 +1017,77 @@ namespace ProtoBuf.BuildTools.Internal
             return false;
         }
 
-        // A deserialization callback can restore a member on either path - including under
-        // SkipConstructor, where nothing else can: MetaType invokes it on the uninitialized
-        // instance, before or after the fields are read. Matched by name, as IsAssignedInInstanceConstructor is, since this only
-        // ever suppresses a warning; `Items ??= new();` in an after-hook is the idiomatic form.
+        // an enumerable [ProtoContract(IgnoreListHandling = true)] type is a message rather than a
+        // collection, and an empty message *is* written - so the premise here does not apply to it
+        private static bool IgnoresListHandling(ITypeSymbol type)
+        {
+            foreach (var attrib in type.GetAttributes())
+            {
+                if (attrib.AttributeClass is { Name: nameof(ProtoContractAttribute) } ac && ac.InProtoBufNamespace())
+                {
+                    return attrib.TryGetBooleanByName(nameof(ProtoContractAttribute.IgnoreListHandling), out var ignore) && ignore;
+                }
+            }
+            return false;
+        }
+
+        // [NullWrappedCollection] frames the collection in a wrapper message that *is* written when
+        // empty - telling null from empty is its whole point - so it comes back empty (probed)
+        private static bool IsNullWrappedCollection(ISymbol member)
+            => member.GetAttributes().Any(attrib => attrib.AttributeClass is { Name: nameof(NullWrappedCollectionAttribute) } ac
+                && ac.InProtoBufNamespace());
+
+        // The names a deserialization callback assigns: the one thing that restores a member however
+        // the instance was made, since it runs on the new instance before or after the fields are
+        // read. Only the hierarchy root's callbacks run - TypeSerializer checks IsRootType - so on a
+        // sub-type a method counts only by overriding one the root declares, and its own attribute
+        // does nothing (probed). Matched by name, as IsAssignedInInstanceConstructor is, since this
+        // only ever suppresses a warning; `Items ??= new();` in an after-hook is the idiomatic form.
         private static HashSet<string> AssignedInDeserializationCallbacks(INamedTypeSymbol type)
         {
             var names = new HashSet<string>(StringComparer.Ordinal);
+            bool isSubType = IsProtoSubType(type);
             foreach (var method in type.GetMembers().OfType<IMethodSymbol>())
             {
-                if (!IsDeserializationCallback(method)) continue;
+                if (!(isSubType ? OverridesDeserializationCallback(method) : IsDeserializationCallback(method))) continue;
                 foreach (var reference in method.DeclaringSyntaxReferences)
                 {
-                    foreach (var assignment in reference.GetSyntax().DescendantNodes().OfType<AssignmentExpressionSyntax>())
-                    {
-                        if (AssignedName(assignment) is { } name) names.Add(name);
-                    }
+                    CollectAssigned(reference.GetSyntax(), type, names);
                 }
             }
             return names;
+        }
+
+        // below another contract in a hierarchy: a contract base class (PBN0013 covers one that does
+        // not include this type), or a contract interface whose [ProtoInclude] names it
+        private static bool IsProtoSubType(INamedTypeSymbol type)
+        {
+            if (type.BaseType is { } baseType && baseType.GetAttributes().Any(IsProtoContractAttribute)) return true;
+            foreach (var iface in type.AllInterfaces)
+            {
+                foreach (var attrib in iface.GetAttributes())
+                {
+                    if (attrib.AttributeClass is { Name: nameof(ProtoIncludeAttribute) } ac && ac.InProtoBufNamespace()
+                        && attrib.TryGetTypeByName(nameof(ProtoIncludeAttribute.KnownType), out var known)
+                        && SymbolEqualityComparer.Default.Equals(known.OriginalDefinition, type.OriginalDefinition))
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+
+            static bool IsProtoContractAttribute(AttributeData attrib)
+                => attrib.AttributeClass is { Name: nameof(ProtoContractAttribute) } ac && ac.InProtoBufNamespace();
+        }
+
+        private static bool OverridesDeserializationCallback(IMethodSymbol method)
+        {
+            for (var overridden = method.OverriddenMethod; overridden is not null; overridden = overridden.OverriddenMethod)
+            {
+                if (IsDeserializationCallback(overridden)) return true;
+            }
+            return false;
         }
 
         // both callback families MetaType honours, at the two points that run on the receiving end
@@ -1030,6 +1108,69 @@ namespace ProtoBuf.BuildTools.Internal
             }
             return false;
         }
+
+        // What a constructor or callback body assigns, by name: `x = ...` and `this.x = ...` (so
+        // `??=` too), each element of a tuple deconstruction, and whatever [MemberNotNull] promises
+        // for a helper it calls or a property setter it assigns through - which is how nullable-aware
+        // code initializes from a helper, and the compiler accepts it as initialized.
+        private static void CollectAssigned(SyntaxNode body, INamedTypeSymbol type, HashSet<string> names)
+        {
+            foreach (var node in body.DescendantNodes())
+            {
+                switch (node)
+                {
+                    case AssignmentExpressionSyntax assignment:
+                        AddTarget(assignment.Left);
+                        break;
+                    case InvocationExpressionSyntax invocation when TargetName(invocation.Expression) is { } called:
+                        foreach (var method in type.GetMembers(called).OfType<IMethodSymbol>()) AddMemberNotNull(method);
+                        break;
+                }
+            }
+
+            void AddTarget(ExpressionSyntax target)
+            {
+                if (target is TupleExpressionSyntax tuple)
+                {
+                    foreach (var argument in tuple.Arguments) AddTarget(argument.Expression);
+                }
+                else if (TargetName(target) is { } name && names.Add(name))
+                {
+                    foreach (var property in type.GetMembers(name).OfType<IPropertySymbol>()) AddMemberNotNull(property.SetMethod);
+                }
+            }
+
+            void AddMemberNotNull(IMethodSymbol? method)
+            {
+                if (method is null) return;
+                foreach (var attrib in method.GetAttributes())
+                {
+                    if (attrib.AttributeClass is not { Name: "MemberNotNullAttribute" } ac
+                        || !ac.InNamespace("System", "Diagnostics", "CodeAnalysis")
+                        || attrib.ConstructorArguments.Length != 1) continue;
+                    var arg = attrib.ConstructorArguments[0];
+                    if (arg.Kind == TypedConstantKind.Array)
+                    {
+                        foreach (var value in arg.Values)
+                        {
+                            if (value.Value is string member) names.Add(member);
+                        }
+                    }
+                    else if (arg.Value is string member)
+                    {
+                        names.Add(member);
+                    }
+                }
+            }
+        }
+
+        // `x` or `this.x`; anything else is not recognisably ours
+        private static string? TargetName(ExpressionSyntax expression) => expression switch
+        {
+            IdentifierNameSyntax id => id.Identifier.ValueText,
+            MemberAccessExpressionSyntax { Expression: ThisExpressionSyntax } access => access.Name.Identifier.ValueText,
+            _ => null,
+        };
 
         /// <remarks>Ensure to validate member before (i.e. calculate default value of member)</remarks>
         private bool ShouldDeclareDefault(Member member, object? memberInitValue)
@@ -1106,11 +1247,17 @@ namespace ProtoBuf.BuildTools.Internal
             }
             if (attrib.TryGetBooleanByName(nameof(ProtoContractAttribute.IgnoreUnknownSubTypes), out val) && val)
                 _flags |= DataContractContextFlags.IgnoreUnknownSubTypes;
+            if (attrib.TryGetBooleanByName(nameof(ProtoContractAttribute.IgnoreListHandling), out val) && val)
+                _flags |= DataContractContextFlags.IgnoreListHandling;
             foreach (var named in attrib.NamedArguments)
             {
                 if (named.Key == nameof(ProtoContractAttribute.Surrogate) && named.Value.Value is not null)
                 {
                     _flags |= DataContractContextFlags.HasSurrogate;
+                }
+                if (named.Key == nameof(ProtoContractAttribute.Serializer) && named.Value.Value is not null)
+                {
+                    _flags |= DataContractContextFlags.HasSerializer;
                 }
             }
         }

@@ -237,7 +237,7 @@ internal static readonly DiagnosticDescriptor DeclaredAndIgnored = new(
         internal static readonly DiagnosticDescriptor NonNullableCollectionLeftNull = new(
             id: "PBN0027",
             title: nameof(DataContractAnalyzer) + "." + nameof(NonNullableCollectionLeftNull),
-            messageFormat: "'{0}' is a non-nullable collection, but {1}; it is null whenever the payload does not carry it, and an empty collection is normally not written at all.",
+            messageFormat: "'{0}' is a non-nullable collection, but {1}; it is null whenever the payload does not carry it, and an empty collection is normally not written at all. To fix: {2}.",
             category: Literals.CategoryUsage,
             defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true,

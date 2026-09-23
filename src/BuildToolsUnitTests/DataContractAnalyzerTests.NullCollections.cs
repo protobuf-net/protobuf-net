@@ -67,22 +67,86 @@ public record TestRecord(string[] Array);
         [InlineData(@"[ProtoMember(1)] public List<int> Items { get; set; } = new();
                       public int Other { get; set; }
                       [ProtoAfterDeserialization] public void After() => Other = 1;")]
-        // a struct contract is not constructed either
-        [InlineData("[ProtoMember(1)] public List<int> Items { get; set; }", "struct")]
-        public async Task ReportsUnderSkipConstructor(string body, string kind = "class")
+        public async Task ReportsUnderSkipConstructor(string body)
         {
             var diags = await NullCollectionDiagnosticsAsync($@"
 #nullable enable
 using ProtoBuf;
 using System.Collections.Generic;
 [ProtoContract(SkipConstructor = true)]
-public {kind} Foo {{
+public class Foo {{
     {body}
 }}
 " + IsExternalInit);
 
             var diag = Assert.Single(diags);
             Assert.StartsWith("'Items' is a non-nullable collection, but SkipConstructor means", diag.GetMessage(CultureInfo.InvariantCulture));
+        }
+
+        // a struct contract is read into `default` and never constructed, SkipConstructor or not -
+        // so neither its initializers nor its explicit parameterless constructor run (probed)
+        [Theory]
+        [InlineData("[ProtoContract]", "[ProtoMember(1)] public List<int> Items = new(); public Foo() { }")]
+        [InlineData("[ProtoContract]", "[ProtoMember(1)] public List<int> Items; public Foo() { Items = new(); }")]
+        [InlineData("[ProtoContract(SkipConstructor = true)]", "[ProtoMember(1)] public List<int> Items { get; set; }")]
+        public async Task ReportsOnStructContract(string contract, string body)
+        {
+            var diags = await NullCollectionDiagnosticsAsync($@"
+#nullable enable
+using ProtoBuf;
+using System.Collections.Generic;
+{contract}
+public struct Foo {{
+    {body}
+}}");
+
+            var diag = Assert.Single(diags);
+            Assert.StartsWith("'Items' is a non-nullable collection, but a struct contract is never constructed on deserialize", diag.GetMessage(CultureInfo.InvariantCulture));
+        }
+
+        // only the hierarchy root's callbacks are invoked (TypeSerializer checks IsRootType), so a
+        // sub-type's own callback restores nothing at run time and must not silence the warning
+        [Theory]
+        [InlineData("[ProtoContract(SkipConstructor = true)]", "= new();")]
+        [InlineData("[ProtoContract]", "= null!;")]
+        public async Task ReportsWhenOnlyASubTypeCallbackRestores(string contract, string initializer)
+        {
+            var diags = await NullCollectionDiagnosticsAsync($@"
+#nullable enable
+using ProtoBuf;
+using System.Collections.Generic;
+[ProtoContract, ProtoInclude(10, typeof(Derived))]
+public class Base {{ }}
+{contract}
+public class Derived : Base {{
+    [ProtoMember(1)] public List<int> Items {{ get; set; }} {initializer}
+    [ProtoAfterDeserialization] public void After() => Items ??= new();
+}}");
+
+            var diag = Assert.Single(diags);
+            Assert.Contains("'Items'", diag.GetMessage(CultureInfo.InvariantCulture));
+        }
+
+        // ...but overriding a virtual callback the root declares does run, since the root's method
+        // is invoked virtually
+        [Fact]
+        public async Task DoesNotReportWhenASubTypeOverridesTheRootCallback()
+        {
+            var diags = await NullCollectionDiagnosticsAsync(@"
+#nullable enable
+using ProtoBuf;
+using System.Collections.Generic;
+[ProtoContract, ProtoInclude(10, typeof(Derived))]
+public class Base {
+    [ProtoAfterDeserialization] public virtual void After() { }
+}
+[ProtoContract(SkipConstructor = true)]
+public class Derived : Base {
+    [ProtoMember(1)] public List<int> Items { get; set; } = new();
+    public override void After() => Items ??= new();
+}");
+
+            Assert.Empty(diags);
         }
 
         [Theory]
@@ -111,8 +175,34 @@ public class Foo {{
 
             var diag = Assert.Single(diags);
             Assert.Equal(
-                "'Items' is a non-nullable collection, but nothing assigns it when protobuf-net constructs the instance; it is null whenever the payload does not carry it, and an empty collection is normally not written at all.",
+                "'Items' is a non-nullable collection, but nothing assigns it when protobuf-net constructs the instance; it is null whenever the payload does not carry it, and an empty collection is normally not written at all. To fix: declare it nullable, initialize it, or mark it [NullWrappedCollection] so that an empty one is written (this changes the wire format).",
                 diag.GetMessage(CultureInfo.InvariantCulture));
+        }
+
+        // the message suggests only what works: an initializer needs a constructor that runs,
+        // null-wrapping needs a member that is written, and with no constructor a callback is left
+        [Theory]
+        [InlineData("[ProtoContract]", "public List<int> Items { get; set; } = null!;",
+            "declare it nullable, or initialize it")]
+        [InlineData("[ProtoContract(SkipConstructor = true)]", "[ProtoMember(1)] public List<int> Items { get; set; } = new();",
+            "declare it nullable, mark it [NullWrappedCollection] so that an empty one is written (this changes the wire format), or restore it in a deserialization callback")]
+        [InlineData("[ProtoContract(SkipConstructor = true)]", "public List<int> Items { get; set; } = new();",
+            "declare it nullable, or restore it in a deserialization callback")]
+        public async Task SuggestsOnlyFixesThatWork(string contract, string body, string fixes)
+        {
+            var diags = await NullCollectionDiagnosticsAsync($@"
+#nullable enable
+using ProtoBuf;
+using System.Collections.Generic;
+{contract}
+public class Foo {{
+    {body}
+}}");
+
+            var diag = Assert.Single(diags);
+            Assert.EndsWith(" To fix: " + fixes + ".", diag.GetMessage(CultureInfo.InvariantCulture));
+            Assert.Equal(!contract.Contains("SkipConstructor") ? "true" : "false", diag.Properties["Constructed"]);
+            Assert.Equal(body.Contains("ProtoMember") ? "true" : "false", diag.Properties["Serialized"]);
         }
 
         // an abstract base is constructed as part of the concrete type, which runs its constructor
@@ -172,21 +262,68 @@ public class Derived : Base { }");
         [InlineData("#nullable enable", "[ProtoContract(SkipConstructor = true, Surrogate = typeof(FooSurrogate))]", "[ProtoMember(1)] public List<int> Items { get; set; } = new();")]
         // with no parameterless constructor there is nothing to deserialize into - PBN0015's error
         [InlineData("#nullable enable", "[ProtoContract]", "[ProtoMember(1)] public List<int> Items { get; set; } public Foo(int x) { Items = null!; }")]
-        public async Task DoesNotReport(string nullable, string contract, string body, string kind = "class")
+        // an abstract type is constructed through whichever constructor the concrete type picks
+        [InlineData("#nullable enable", "[ProtoContract]", "[ProtoMember(1)] public List<int> Items { get; set; } protected Foo(List<int> items) { Items = items; }", "abstract class")]
+        // a hand-written serializer does its own constructing
+        [InlineData("#nullable enable", "[ProtoContract(SkipConstructor = true, Serializer = typeof(FooSerializer))]", "[ProtoMember(1)] public List<int> Items { get; set; } = new();")]
+        // null-wrapping writes the wrapper even for an empty collection, which then comes back empty
+        [InlineData("#nullable enable", "[ProtoContract(SkipConstructor = true)]", "[ProtoMember(1), NullWrappedCollection] public List<int> Items { get; set; } = new();")]
+        [InlineData("#nullable enable", "[ProtoContract]", "[ProtoMember(1), NullWrappedCollection] public Dictionary<int, string> Items { get; set; } = null!;")]
+        [InlineData("#nullable enable", "[ProtoContract]", "[ProtoMember(1), NullWrappedCollection(AsGroup = true)] public int[] Items = null!;")]
+        // an enumerable message is written even when empty, so it is no collection here
+        [InlineData("#nullable enable", "[ProtoContract(SkipConstructor = true)]", "[ProtoMember(1)] public PathMessage Path { get; set; } = new();")]
+        // a type protobuf-net treats as a collection is activated with its constructor, so
+        // SkipConstructor has no effect on it
+        [InlineData("#nullable enable", "[ProtoContract(SkipConstructor = true)]", "public List<string> Tags { get; } = new();", "class", " : List<int>")]
+        // assignments the compiler itself accepts as initializing: a [MemberNotNull] helper or
+        // setter, and a tuple deconstruction
+        [InlineData("#nullable enable", "[ProtoContract]", @"[ProtoMember(1)] public List<int> Items { get; set; }
+                      public Foo() { Init(); }
+                      [System.Diagnostics.CodeAnalysis.MemberNotNull(nameof(Items))] private void Init() => Items = new();")]
+        [InlineData("#nullable enable", "[ProtoContract]", @"private List<int> _items;
+                      [ProtoMember(1)] public List<int> Items { get => _items; [System.Diagnostics.CodeAnalysis.MemberNotNull(nameof(_items))] set => _items = value; }
+                      public Foo() { Items = new(); }")]
+        [InlineData("#nullable enable", "[ProtoContract]", @"[ProtoMember(1)] public List<int> Items { get; set; }
+                      [ProtoMember(2)] public List<int> Others { get; set; }
+                      public Foo() { (Items, Others) = (new(), new()); }")]
+        [InlineData("#nullable enable", "[ProtoContract(SkipConstructor = true)]", @"[ProtoMember(1)] public List<int> Items { get; set; }
+                      [ProtoAfterDeserialization] public void After() => Restore();
+                      [System.Diagnostics.CodeAnalysis.MemberNotNull(nameof(Items))] private void Restore() => Items ??= new();")]
+        public async Task DoesNotReport(string nullable, string contract, string body, string kind = "class", string bases = "")
         {
             var diags = await NullCollectionDiagnosticsAsync($@"
 {nullable}
 using ProtoBuf;
 using System.Collections.Generic;
 {contract}
-public {kind} Foo {{
+public {kind} Foo{bases} {{
     {body}
 }}
 [ProtoContract]
 public class FooSurrogate {{
     public static implicit operator Foo?(FooSurrogate? value) => null;
     public static implicit operator FooSurrogate?(Foo? value) => null;
+}}
+public class FooSerializer {{ }}
+[ProtoContract(IgnoreListHandling = true)]
+public class PathMessage : IEnumerable<int> {{
+    public IEnumerator<int> GetEnumerator() => throw null!;
+    System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => throw null!;
 }}");
+
+            Assert.Empty(diags);
+        }
+
+        // the motivating record, fixed by null-wrapping: the wrapper is written for an empty array
+        [Fact]
+        public async Task DoesNotReportNullWrappedPositionalRecord()
+        {
+            var diags = await NullCollectionDiagnosticsAsync(@"
+#nullable enable
+using ProtoBuf;
+[ProtoContract(SkipConstructor = true)]
+public record TestRecord([property: ProtoMember(1), NullWrappedCollection] string[] Array);
+" + IsExternalInit);
 
             Assert.Empty(diags);
         }
