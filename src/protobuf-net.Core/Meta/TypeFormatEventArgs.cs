@@ -9,13 +9,13 @@ namespace ProtoBuf.Meta
     /// </summary>
     public class TypeFormatEventArgs : EventArgs
     {
-        private Type type;
-        private string formattedName;
+        private Type? type;
+        private string? formattedName;
         private readonly bool typeFixed;
         /// <summary>
         /// The type involved in this map; if this is initially null, a Type is expected to be provided for the string in FormattedName.
         /// </summary>
-        public Type Type
+        public Type? Type
         {
             get { return type; }
             set
@@ -31,7 +31,7 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// The formatted-name involved in this map; if this is initially null, a formatted-name is expected from the type in Type.
         /// </summary>
-        public string FormattedName
+        public string? FormattedName
         {
             get { return formattedName; }
             set
@@ -53,7 +53,7 @@ namespace ProtoBuf.Meta
 
         internal TypeFormatEventArgs(Type type)
         {
-            if (type is null) ThrowHelper.ThrowArgumentNullException(nameof(type));
+            ThrowHelper.ThrowIfNull(type, nameof(type));
             this.type = type;
             typeFixed = true;
         }

@@ -5500,7 +5500,7 @@ the *write*. The fixture then sat red through a full session because the conform
 with `--no-build` against a stale binary more than once. `--no-build` after editing anything the
 generator or the library compiles is not a shortcut, it is a different test.
 
-### B51. The shipping libraries are not NRT-enabled — **agreed for the next major (Marc, 2026-08-25). ServiceModel and Reflection DONE, and protogen now EMITS annotations; Core and protobuf-net remain**
+### B51. The shipping libraries are not NRT-enabled — **agreed for the next major (Marc, 2026-08-25). ServiceModel and Reflection DONE (PR #1332) and protogen now EMITS annotations; `protobuf-net.Core` is IN FLIGHT on `nrt-core` (573 -> 369); `protobuf-net` and BuildTools remain**
 
 **Marc:** *"I believe the libraries are not currently NRT enabled. we should fix that, mostly by just
 turning it on and dealing with any build warnings. as a follow-up step after, we should fix the
@@ -5660,6 +5660,233 @@ Also note **`IsNullableType` is about `Nullable<T>` on VALUE types only**, gated
 
 Separately, and independent of codegen: the library own `TryGet`-shaped APIs want
 `[NotNullWhen(true)]` on their `out` parameters when Core goes NRT. Real quality win, easy to miss.
+
+#### Stage 4 (`protobuf-net.Core`) — IN FLIGHT on `nrt-core`, and re-sized (2026-08-26)
+
+**The sizing in this entry was ~4x too high, and that matters for planning.** Measured properly —
+`<Nullable>enable</Nullable>` on the project, one full traversal build, deduped by
+file/line/column/code across every TFM:
+
+| project | recorded above | measured |
+| --- | ---: | ---: |
+| `protobuf-net.Core` | 1952 | **573** |
+| `protobuf-net` | 1876 | **622** (measured with Core already annotated) |
+| cascade into `protobuf-net.Reflection` (already NRT) | — | **50** |
+| cascade into `protobuf-net.ServiceModel` (already NRT) | — | **5** |
+
+The old figures were almost certainly counted once per *consuming project's* build without deduping
+across those builds; the ratio matches the number of consumers. The whole remaining rollout is about
+the size of the Reflection stage, not four times it.
+
+**Gates on `nrt-core` as it stands** (2026-08-26): `dotnet build Build.csproj -c Debug` 0 errors;
+`protobuf-net.Test` 1584/1583; `protobuf-net.Reflection.Test` 616/616; `BuildToolsUnitTests` 659;
+`AotConformanceTests` 1842; `AotDifferential` **3134 compared, 100% match**, exit 0. So the branch is
+safe to build on - it is unfinished, not broken. `AotSmoke`'s native publish has NOT been re-run
+since `nrt-reflection`; do that before merging, because gap B48's measured throw-helper shape is
+exactly what this work is tempted to rewrite.
+
+**What is done on the branch** (573 -> 369, solution green):
+
+- Core has its **own** copy of the polyfills - it cannot share Reflection's, see above - so
+  BuildTools and BuildTools.Legacy each `Compile Remove` the Reflection copy or they see `CS0101`;
+- `where TKey : notnull` on the MapSerializer family, **as a declared break**; see below;
+- the `object userState` family; `X name = null` parameter defaults; `T value = default` on the
+  generic entry points; the Deserialize `object value` / `Type type` / `TypeResolver` families; and
+  the internal aux/`DynamicStub` plumbing they call into.
+
+**What is left: 369 sites**, and the sweepable phase is over - `CS8604` is now the largest code and
+is spread over **101 distinct callee/parameter pairs**. It concentrates in `Meta/TypeModel.cs` (64),
+`ProtoReader.State.ReadMethods.cs` (34), `ProtoWriter.Stream.cs` (30), `Internal/DynamicStub.cs`
+(25), `ProtoWriter.cs` (23) and `Internal/PrimaryTypeProvider.Primitives.cs` (21). Most of what
+remains is one question asked many times - *is this reader/writer state active here?* - which is
+semantic, not mechanical, and wants a fresh head rather than a bigger regex.
+
+**Position-driven sweeps are the fast route while they last.** The compiler already knows every
+site, so drive the edit from the warning coordinates rather than reading files: local declarations
+(28), uninitialised fields and properties (55) and return types (55) each went in a single pass.
+Two guards that a return-type sweep needs and mine lacked: **skip value types** (`IsDefined` briefly
+became `bool?`) and **skip interface-bound returns** (`KeyValuePairSerializer.Read` cannot be
+`KeyValuePair<,>?` and still implement `ISerializer<T>`). Both were caught by the build.
+
+**The one it got wrong that the build could NOT catch, and the rule that comes out of it:** a method
+whose only null-return sits *after a throw helper* never returns null, so making it nullable is a
+false annotation that propagates to every consumer. `ProtoReader.State.ReadString` became `string?`
+on exactly that basis. Fourteen members were restored, with the unreachable return asserted in
+place - and that shape must NOT be "fixed" with `[DoesNotReturn]`: the note on gap B48 in
+`TypeModel.cs` records that a void helper plus an explicit return **terminates in IL**, which is
+what lets ILC drop the rest of the method, while `[DoesNotReturn]` is flow analysis only and
+measured **12 warnings / 3.89 MB against 8 / 3.84 MB**. A `#pragma` is IL-neutral; changing the
+shape is not.
+
+The same "the impossible case should throw" reasoning covers two other assertions, both documented
+where they sit: the `ISerializable` constructors in `DiscriminatedUnion.Serializable.cs` (a null
+`SerializationInfo` entry means a corrupt payload) and the nullable-scalar `Write` overloads in
+`PrimaryTypeProvider` (only reached when the value is present; `GetValueOrDefault()` would silently
+write a zero instead).
+
+**Three things about running this stage, each of which cost time:**
+
+- **the warning count goes UP before it goes down, and that is correct.** Annotating a declaration
+  honestly moves the work into the bodies that use it: the Deserialize parameter pass took Core from
+  477 to 497. Do not read the count as progress until the declaration layers are settled;
+- **an incremental build reports nothing for a project that did not recompile**, which looks exactly
+  like a clean project. Measure with `--no-incremental`. This produced a "Core = 0" reading twice;
+- **build the whole traversal, not just the project.** `dotnet build` on Core alone misses ApiCompat
+  (it fires from `GeneratePackageOnBuild`, in Debug as well as Release) and misses the cascade into
+  Reflection/ServiceModel. A narrower loop declared success while the solution had 82 errors.
+
+**The map-key break, decided with evidence (Marc, 2026-08-26).** `where TKey : notnull` is the only
+way to clear the 44 `CS8714`s in that family, and ApiCompat rejects it as **`CP0021`** (72 errors
+across the TFMs). What a null map key does *today*, probed rather than assumed:
+
+- reading can never produce one - `TypeHelper<T>.Default` is `""` for string and `0` for integrals,
+  so an entry whose key field is absent deserializes to `""`;
+- `Dictionary<,>` refuses one outright (`ArgumentNullException` from `Add`);
+- a custom `IDictionary` that *does* hold one is accepted and written as an **absent key field**
+  (`0A-02-10-07`, byte-identical to "no key"), which reads back as `""`.
+
+So a null key is neither rejected nor preserved: it is **silently coerced**. The constraint therefore
+replaces a silent data change with a compile error, for the one shape that could reach it. Taken -
+*"I don't think anyone will be bitten by this"* - and recorded in
+`src/protobuf-net.Core/CompatibilitySuppressions.xml`, which explains itself and warns against
+regenerating it wholesale to make a build pass.
+
+#### Stage 4, continued (2026-09-11): 372 -> 182, and what the remainder is made of
+
+Picked up after merging current `v4` in (the branch predates the main merge, xunit/MTP, the .NET 11
+SDK and B53; that merge cost **3** sites). Five techniques did most of the work, and the first three
+generalise to stages 5 and 6:
+
+- **a null guard the compiler believes.** `if (x is null) ThrowHelper.ThrowArgumentNullException(...)`
+  does not establish non-nullness, it **destroys** it: testing a value for null widens it to
+  maybe-null for the rest of the method, so the guard whose purpose is to prove the value is there is
+  exactly what makes the compiler doubt it. `[DoesNotReturn]` is the usual answer and is closed to us
+  (B48 measured it as 4 warnings and 47 KB worse), but **`[NotNull]` as a post-condition costs
+  nothing** - it is flow analysis only and emits no IL. `ThrowHelper.ThrowIfNull<T>([NotNull] T?,
+  string)` now carries it, with one CS8777 suppression inside that single method standing in for the
+  warning at every call site. 24 guards swept across 11 files. The same tool works on a `ref`:
+  `PrepareDeserialize(object?, [NotNull] ref Type?)` retired the repeat check in four Deserialize
+  overloads;
+- **a pooled field is not nullable, it has a null WINDOW.** `StreamProtoWriter.dest`/`ioBuffer` were
+  `?` to describe the gap between `Cleanup` and the next rent, which put a null test on ~30 uses for
+  a state none of them can be in. Declared non-nullable with one `null!` at the clearing site - the
+  convention `ProtoReader.State.Raw.cs` already set for its leased `_buffer`. **30 sites for two
+  declarations**, the best ratio found;
+- **a loop that walks a chain must not walk the parameter.** `type = type.BaseType` inside three
+  `DynamicStub` loops is what made each method's own argument maybe-null. The walk gets a local;
+  the parameter keeps meaning what it says;
+- **check whether the `?` was ever true.** `SlowGet` was declared `DynamicStub?` and returns a stub on
+  every path, which was also why `Get` could not promise one. One wrong `?` cost two warnings and
+  made a hot path look fallible;
+- **`!` to assert an invariant the compiler cannot see is not the same as `!` to hide one it can.**
+  The `ISerializer<T?>` forwarders call `.Value` deliberately - the writer only reaches them when the
+  value is present, and `GetValueOrDefault()` would silently write a zero. That decision was already
+  written in `PrimaryTypeProvider.Primitives.cs`; its suppression simply closed in the wrong place,
+  at `char?`, leaving the identical shape warning in eleven other files.
+
+**A real bug fell out**, in `TypeModel.Formatter`: the guard on `type` reported `nameof(model)`. It
+survived the sweep precisely because the sweep only rewrote guards whose tested variable and `nameof`
+agreed - a mismatch was the one thing it would not touch.
+
+##### The blocker: `T?` on an unconstrained type parameter cannot be used yet — **cause UNKNOWN**
+
+**`protobuf-net.BuildTools` fails CS0453 on it** - "the type 'T' must be a non-nullable value type",
+i.e. `T?` is being read as `Nullable<T>` there - while `protobuf-net.Core` compiles the identical
+source. It is an *error*, so it breaks that build rather than adding noise. Found by trying it on
+`TypeModel.InputOutput.cs`'s three `IProtoInput<T>.Deserialize` implementations; reverted twice.
+
+**The obvious explanation is wrong and was tested.** It is not the nullable context: BuildTools is now
+`<Nullable>annotations</Nullable>` and `enable` was tried as the decisive experiment - CS0453 persists
+under both. Ruled out by measurement rather than by reasoning:
+
+| | BuildTools | Core |
+| --- | --- | --- |
+| csc `/nullable:` | `enable` | `enable` |
+| csc `/langversion:` | `latest` | `latest` |
+| `#nullable` directive in either file | none | none |
+| definitions of `IProtoInput<TInput>` visible | 1 | 1 |
+| `IProtoInputT.cs` excluded? | no | no |
+| result | **CS0453** | compiles |
+
+**There is a minimal repro, and it involves none of our types.** Drop this in a file and build it in
+each project; it compiles in `protobuf-net.Core` and is three errors in `protobuf-net.BuildTools`:
+
+```csharp
+internal interface INrtProbe<TIn> { T Go<T>(TIn source, T? value = default); }
+internal sealed class NrtProbe : INrtProbe<string>
+{
+    T INrtProbe<string>.Go<T>(string source, T? value) => value!;   // CS0453 + CS0539 (+CS0535)
+}
+```
+
+Narrowed to this much: **`T?` on an unconstrained `T` is fine in BuildTools on an ordinary method** -
+`static T? Echo<T>(T? value) => value;` compiles there - so the compilation supports the feature. It
+is the **explicit interface implementation** that fails, and only in that project.
+
+**Read errors by owning project when testing this.** Building Core builds BuildTools first (it is
+Core's analyzer), so Core's build reports BuildTools' errors and looks broken when it is not; filter
+on the `[...csproj]` suffix. That cost two wrong readings, including an earlier claim - now retracted
+- that the nullable context was the mechanism.
+
+That is not a detail, it is the shape of what is left. **49 of the remaining 225 sites are the
+unconstrained-generic families** - `RepeatedSerializer` (+`.Immutable`), `MapSerializer`,
+`TypeHelperT`, `KeyValuePairSerializer` - and they all want the same tool. **Stage 6 (BuildTools)
+therefore has to come before the end of stage 4**, which inverts the sequencing below; the
+`CS8632` `NoWarn` those projects carry is the same knot.
+
+##### Two questions that are design calls, not annotations - owed to a human
+
+- **`ISerializer<T>.Read(ref State state, T value)`.** `value` is the merge seed and is routinely
+  `default`/null, so `T?` is the truthful annotation - and it is the single most common callee in
+  what remains. The cost is that every implementor that declares `T value` gets **CS8767**, and the
+  implementors include **every generated model**, so the warning would land in consumers' builds
+  until the generator emits the matching annotation. The sequencing already defers the generator
+  ("a separate later tranche, also Marc's call"), so this belongs with it rather than here;
+- **`ISerializationContext.Model` is declared `TypeModel` and the implementations store a
+  `TypeModel?`.** Null is genuinely reachable - the constructors take `TypeModel? model`, the null
+  writer is built from one, and `ResolveSerializer` handles a null model - so either the interface
+  should say `TypeModel?`, or the implementations should coalesce to `DefaultModel`, which is a
+  **runtime behaviour change** rather than an annotation. Left alone deliberately; annotating the
+  backing fields alone just moves the warning to the property.
+
+##### Three more tools, added as the grind went on
+
+- **`[return: NotNullIfNotNull(nameof(x))]`** for null-in-null-out, which is checkable and travels
+  with the method instead of with one of its callers. `Intern` and `DynamicStub.GetEffectiveType`
+  both had a `?` return whose only null path was unreachable for a non-null argument; the attribute
+  retired a `!` at the call site *and*, for `GetEffectiveType`, the CS8777 that
+  `PrepareDeserialize`'s own `[NotNull]` was failing;
+- **`[NotNullWhen(true)] out T?`** for the `TryGet` shape - `ResolveUniqueEnumerableT` assigns its out
+  parameter only on success, and saying so retires the re-test in every caller. The rest of Core's
+  `Try*`/`Can*` methods hand back value types, where there is nothing to annotate;
+- **check whether the `?` was ever true**, which keeps paying: `Singleton` was `ref T?` over `T[]`
+  storage (12 sites for one line), `SlowGet` never returned null, and `GetWireType` dereferenced its
+  `Type?` on the first line with no guard.
+
+##### Where the rest sits
+
+`Meta/TypeModel.cs` (35), `ProtoReader.State.ReadMethods.cs` (23), `Internal/DynamicStub.cs` (13),
+`MapSerializer` (12), then a tail. Of the 182, **21 are the two deferred widens** and **7 are the
+`Model` question**; the other ~154 are one question at a time, which is what the 2026-08-26 note
+predicted.
+
+**The CS0453 blocker turned out to be far narrower than first feared** - it hits only *explicit
+interface implementations*, not `T?` generally - so the collection families were never blocked by it
+at all, and most of them are now done.
+
+**BuildTools and Legacy are in a nullable ANNOTATION context now** (`<Nullable>annotations</Nullable>`),
+which retired the `CS8632` `NoWarn` both carried and revealed four latent mismatches, all fixed:
+`IFileSystem.OpenText` was declared non-nullable over two implementations that return null, and
+`DiagnosticPropertiesBuilder` built an `ImmutableDictionary<string, string>` where Roslyn wants
+`<string, string?>`. It did **not** unblock the generic families - see above.
+
+**One measuring trap worth adding to the list**: the traversal reports ~1,340 warnings on
+`--no-incremental` and ~275 incrementally, because a project that does not recompile reports nothing.
+The low number is the artefact, and it is reassuring in exactly the wrong direction.
+
+Gates at 182: traversal 0 errors; `dotnet test Build.csproj` **5504 / 0 failed**; `AotDifferential`
+3137 compared, 100% match; `AotGrpcMetadataDiff` 0 failing; `AotSmoke`, `AotNodaTimeSmoke` and
+`AotGrpcSmoke` all passed; Release packing build with package validation clean.
 
 #### Sequencing
 

@@ -298,6 +298,15 @@ namespace ProtoBuf.Internal
 
         byte[] IFactory<byte[]>.Create(ISerializationContext context) => Array.Empty<byte>();
 
+        // The nullable-scalar Write and Measure overloads below are only reached when the value is
+        // PRESENT - the writer skips a member whose HasValue is false - so `.Value` throwing is the
+        // right answer for a case that cannot arise. Asserted rather than changed to
+        // GetValueOrDefault(), which would silently write a zero instead.
+        //
+        // The suppression runs to the end of the type: it previously closed part-way through, at
+        // char?, which left the identical shape warning for every kind after it (bool? onward, and
+        // the whole IMeasuringSerializer block) for no reason anyone had decided.
+#pragma warning disable CS8629 // nullable value type may be null
         SerializerFeatures ISerializer<int?>.Features => ((ISerializer<int>)this).Features;
         void ISerializer<int?>.Write(ref ProtoWriter.State state, int? value) => ((ISerializer<int>)this).Write(ref state, value.Value);
         int? ISerializer<int?>.Read(ref ProtoReader.State state, int? value) => ((ISerializer<int>)this).Read(ref state, value.GetValueOrDefault());
@@ -478,6 +487,7 @@ namespace ProtoBuf.Internal
 
         bool IValueChecker<UIntPtr?>.HasNonTrivialValue(UIntPtr? value) => value.GetValueOrDefault() != UIntPtr.Zero;
         bool IValueChecker<UIntPtr?>.IsNull(UIntPtr? value) => !value.HasValue;
+#pragma warning restore CS8629
 
     }
 }

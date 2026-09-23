@@ -16,7 +16,7 @@ namespace ProtoBuf
         /// <summary>
         /// Serialize the provided value
         /// </summary>
-        void Serialize<T>(TOutput destination, T value, object userState = null);
+        void Serialize<T>(TOutput destination, T value, object? userState = null);
     }
 
     /// <summary>
@@ -28,7 +28,7 @@ namespace ProtoBuf
         /// <summary>
         /// Measure the length of a value in advance of serialization
         /// </summary>
-        MeasureState<T> Measure<T>(T value, object userState = null);
+        MeasureState<T> Measure<T>(T value, object? userState = null);
 
         /// <summary>
         /// Serialize the previously measured value

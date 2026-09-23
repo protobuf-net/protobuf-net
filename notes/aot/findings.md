@@ -8,6 +8,14 @@ native-AOT smoke test (`src/AotSmoke`) — i.e. by comparison, not by reading th
 
 ## Handover — **current as of 2026-09-11**; read this first on a cold start
 
+**A branch IS in flight: `nrt-core`**, carrying gap B51 **stage 4** - NRT on `protobuf-net.Core`.
+Pushed, **unfinished but green**: the solution builds with 0 errors and every gate passes, but Core
+still reports NRT warnings. It is committed in that state deliberately, so the structural decisions
+are reviewable apart from the per-site grind. **`notes/gaps.md` B51's "Stage 4" section is the
+working document** - read it before touching Core; it has the file-by-file breakdown, the sweep
+technique, and three traps that have already produced wrong annotations. `AGENTS.md`'s notes table
+has its "current on" column restored for the duration.
+
 **Where the work is.** The stack lives on **`v4`**, and **no branch is in flight** — `nrt-reflection`
 merged as #1332, so `AGENTS.md`'s notes table has its "current on" column dropped again, per its own
 rule. `v4` last took `main` on **2026-09-11** (the 3.4.21 line, ten commits); five of those had
@@ -65,13 +73,30 @@ around, which matters because this is where the work happens.
 **What is open.** `notes/gaps.md` is the entry point and its last entry is **B54**; **B53 and B54 both
 closed on 2026-09-11**. The live ones:
 
-- **B51 (NRT)** - ServiceModel and **`protobuf-net.Reflection` are done**, and protogen now EMITS
-  annotations (C# only; VB has no NRT). **Next slice is `protobuf-net.Core` (1952 sites)**, which
-  drags `protobuf-net.BuildTools` with it because BuildTools compiles Core's sources in - the
-  `CS8632` `NoWarn` now in BuildTools and BuildTools.Legacy is exactly what that stage removes. Read
-  the entry's "The Reflection stage" section first: the order that works is code -> generator ->
-  regenerate -> baseline, and a polyfilled attribute **must live in the assembly that uses it** or it
-  is a runtime `TypeLoadException` that no build catches;
+- **B51 (NRT)** - ServiceModel and `protobuf-net.Reflection` are **done and merged**, and protogen
+  now EMITS annotations (C# only; VB has no NRT). **Stage 4, `protobuf-net.Core`, is IN FLIGHT on
+  `nrt-core` and is the live task: 573 -> 182 sites.** The recorded sizing in that entry was ~4x too
+  high and has been corrected by measurement - the whole remaining rollout is ~1,250 sites, not
+  5,125. What is left is per-site and semantic; the sweepable phase is over.
+
+  **Two things from 2026-09-11 change the plan**, both in B51's "Stage 4, continued" section.
+  **`T?` on an unconstrained type parameter fails CS0453 in BuildTools and compiles in Core, on the
+  identical source, and nobody knows why yet** - `/nullable:enable /langversion:latest` in both, no
+  directives, one interface definition. It hits only EXPLICIT INTERFACE IMPLEMENTATIONS, not T? generally, so it blocks far less than first thought - the collection families were never blocked by it and are now done.
+  The nullable context was the obvious culprit and has been ruled out by test; BuildTools is in an
+  annotation context now regardless, which retired the `CS8632` `NoWarn`. And **two
+  items are design calls owed to a human rather than annotations**: `ISerializer<T>.Read`'s merge
+  seed (truthfully `T?`, but that lands CS8767 in every consumer's generated code until the generator
+  tranche matches it) and whether `ISerializationContext.Model` may be null (the alternative to
+  annotating is coalescing to `DefaultModel`, a runtime behaviour change).
+
+  Three traps to carry: a polyfilled attribute **must live in the assembly that uses it** (a shared
+  one is a runtime `TypeLoadException` no build catches); a method whose only null-return follows a
+  **throw helper** never returns null, so annotating it nullable is a false claim that no gate
+  catches; and a null **guard** does not establish non-nullness - it destroys it - which is what
+  `ThrowHelper.ThrowIfNull`'s `[NotNull]` post-condition now fixes centrally.
+  After Core: `protobuf-net` (~622), then `protobuf-net.BuildTools`, which is what removes the
+  `CS8632` `NoWarn` now carried by BuildTools and BuildTools.Legacy;
 - **B48 (trim warnings)** - 23 -> 5, paused there deliberately: *"5 is a defensible preview
   position"*. All five are design-level, not annotations anyone forgot. (Now **6**: the
   `Dictionary<int, List<Customer>>` member added to `AotSmoke` for #1337 costs one `IL2067`. The

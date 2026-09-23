@@ -1,4 +1,4 @@
-using ProtoBuf.Internal;
+﻿using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
 using System;
@@ -575,7 +575,12 @@ namespace ProtoBuf
             /// </summary>
             [MethodImpl(HotPath)]
 #pragma warning disable IDE0060 // map isn't implemented yet, but we definitely want it
-            public string ReadString(StringMap map = null)
+            // the null-return below is unreachable: the helper above always throws. It is written as a
+            // void helper + explicit return DELIBERATELY - see the note in TypeModel.cs on gap B48: that
+            // shape terminates in IL, which is what lets ILC drop the rest of the method, and
+            // [DoesNotReturn] does NOT (it is flow analysis only, and measured 12 warnings / 3.89MB
+            // against 8 / 3.84MB). So the annotation is asserted here rather than changed.
+            public string ReadString(StringMap? map = null)
 #pragma warning restore IDE0060
             {
                 if (_wireType == WireType.String)
@@ -585,7 +590,9 @@ namespace ProtoBuf
                     return s;
                 }
                 ThrowWireTypeException();
+                #pragma warning disable CS8603 // possible null reference return
                 return default;
+                #pragma warning restore CS8603
             }
 
             /// <summary>
@@ -620,7 +627,7 @@ namespace ProtoBuf
             /// Reads a byte-sequence from the stream, appending them to an existing byte-sequence (which can be null); supported wire-types: String
             /// </summary>
             [MethodImpl(ProtoReader.HotPath)]
-            public TStorage AppendBytes<TStorage>(TStorage value, IMemoryConverter<TStorage, byte> converter = null)
+            public TStorage AppendBytes<TStorage>(TStorage value, IMemoryConverter<TStorage, byte>? converter = null)
                 => AppendBytesImpl(value, converter ?? DefaultMemoryConverter<byte>.GetFor<TStorage>(Model));
 
             /// <summary>
@@ -664,7 +671,9 @@ namespace ProtoBuf
                         return AppendRawBytesCore(value, converter);
                     default:
                         ThrowWireTypeException();
+                        #pragma warning disable CS8603 // possible null reference return
                         return default;
+                        #pragma warning restore CS8603
                 }
             }
 
@@ -674,7 +683,7 @@ namespace ProtoBuf
                 if (len == 0) return converter.NonNull(value);
                 if (len < 0) ThrowInvalidLength(len);
 
-                byte[] oversized = CanAllocate(len) ? null : ReadBytesOversized(len);
+                byte[]? oversized = CanAllocate(len) ? null : ReadBytesOversized(len);
                 try
                 {
 #if DEBUG
@@ -1089,10 +1098,10 @@ namespace ProtoBuf
             /// parsing the message in accordance with the model associated with the reader
             /// </summary>
             [MethodImpl(HotPath)]
-            internal object ReadObject(object value, Type type) => ReadTypedObject(value, type);
+            internal object? ReadObject(object? value, Type type) => ReadTypedObject(value, type);
 
             [MethodImpl(MethodImplOptions.NoInlining)]
-            internal object ReadTypedObject(object value, Type type)
+            internal object? ReadTypedObject(object? value, Type type)
             {
                 var model = Model;
                 if (model is null) ThrowInvalidOperationException("Cannot deserialize sub-objects unless a model is provided");
@@ -1130,7 +1139,7 @@ namespace ProtoBuf
             [MethodImpl(MethodImplOptions.NoInlining)]
             public void AppendExtensionData(IExtensible instance)
             {
-                if (instance is null) ThrowHelper.ThrowArgumentNullException(nameof(instance));
+                ThrowHelper.ThrowIfNull(instance, nameof(instance));
                 // reconstruct the tag from state (the join the raw path never splits), then the
                 // raw capture: byte-preserving, allocation-free - replacing the legacy
                 // ProtoWriter-based re-encode outright
@@ -1144,7 +1153,7 @@ namespace ProtoBuf
             [MethodImpl(MethodImplOptions.NoInlining)]
             public void AppendExtensionData(ITypedExtensible instance, Type type)
             {
-                if (instance is null) ThrowHelper.ThrowArgumentNullException(nameof(instance));
+                ThrowHelper.ThrowIfNull(instance, nameof(instance));
                 AppendExtensionData((uint)((_fieldNumber << 3) | ((int)_wireType & 7)), instance, type);
                 _wireType = WireType.None;
             }
@@ -1155,14 +1164,14 @@ namespace ProtoBuf
             /// Reads a sub-item from the input reader
             /// </summary>
             [MethodImpl(HotPath)]
-            public T ReadMessage<T>(T value = default)
+            public T ReadMessage<T>(T? value = default)
                 => ReadMessage<T>(default, value, null);
 
             /// <summary>
             /// Reads a sub-item from the input reader
             /// </summary>
             [MethodImpl(ProtoReader.HotPath)]
-            public T ReadMessage<T>(SerializerFeatures features, T value = default, ISerializer<T> serializer = null)
+            public T ReadMessage<T>(SerializerFeatures features, T? value = default, ISerializer<T>? serializer = null)
                 => ReadMessage<ISerializer<T>, T>(features, value, serializer ?? TypeModel.ResolveSerializer<T>(Model));
 
 #pragma warning disable IDE0060 // unused (yet!) features arg
@@ -1184,14 +1193,14 @@ namespace ProtoBuf
             /// Reads a value or sub-item from the input reader
             /// </summary>
             [MethodImpl(HotPath)]
-            public T ReadAny<T>(T value = default)
+            public T ReadAny<T>(T? value = default)
                 => ReadAny<T>(default, value, null);
 
             /// <summary>
             /// Reads a value or sub-item from the input reader
             /// </summary>
             [MethodImpl(HotPath)]
-            public T ReadAny<T>(SerializerFeatures features, T value = default, ISerializer<T> serializer = null)
+            public T ReadAny<T>(SerializerFeatures features, T? value = default, ISerializer<T>? serializer = null)
             {
                 serializer ??= TypeModel.ResolveSerializer<T>(Model);
                 var serializerFeatures = serializer.Features;
@@ -1214,14 +1223,16 @@ namespace ProtoBuf
                         return serializer.Read(ref this, value);
                     default:
                         features.ThrowInvalidCategory();
+                        #pragma warning disable CS8603 // possible null reference return
                         return default;
+                        #pragma warning restore CS8603
                 }
             }
 
             /// <summary>
             /// Read a value or sub-item with an additional level of message wrapping, that can be used to express <c>null</c> values of arbitrary types (as field 1)
             /// </summary>
-            public T ReadWrapped<T>(SerializerFeatures features, T value, ISerializer<T> serializer = null)
+            public T ReadWrapped<T>(SerializerFeatures features, T value, ISerializer<T>? serializer = null)
             {
                 serializer ??= TypeModel.ResolveSerializer<T>(Model);
                 features.InheritFrom(serializer.Features);
@@ -1263,7 +1274,7 @@ namespace ProtoBuf
             /// Reads a sub-item from the input reader
             /// </summary>
             [MethodImpl(MethodImplOptions.NoInlining)]
-            public T ReadBaseType<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] TBaseType, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(T value = null, ISubTypeSerializer<TBaseType> serializer = null)
+            public T ReadBaseType<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] TBaseType, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(T? value = null, ISubTypeSerializer<TBaseType>? serializer = null)
                 where TBaseType : class
                 where T : class, TBaseType
             {
@@ -1274,7 +1285,7 @@ namespace ProtoBuf
             /// Creates a new instance of the supplied type
             /// </summary>
             [MethodImpl(MethodImplOptions.NoInlining)]
-            public T CreateInstance<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(ISerializer<T> serializer = null)
+            public T CreateInstance<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(ISerializer<T>? serializer = null)
             {
                 var obj = TypeModel.CreateInstance<T>(Context, serializer);
 #if FEAT_DYNAMIC_REF
@@ -1289,7 +1300,7 @@ namespace ProtoBuf
             /// Deserialize an instance of the provided type
             /// </summary>
             [MethodImpl(MethodImplOptions.NoInlining)]
-            public T DeserializeRoot<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(T value = default, ISerializer<T> serializer = null)
+            public T DeserializeRoot<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(T? value = default, ISerializer<T>? serializer = null)
             {
                 value = ReadAsRoot<T>(value, serializer ?? TypeModel.GetSerializer<T>(Model));
                 CheckFullyConsumed();
@@ -1344,7 +1355,7 @@ namespace ProtoBuf
                 }
             }
 
-            internal object DeserializeRootFallbackWithModel(object value, Type type, TypeModel overrideModel)
+            internal object? DeserializeRootFallbackWithModel(object? value, Type? type, TypeModel? overrideModel)
             {
                 var oldModel = _model;
                 try
@@ -1358,7 +1369,7 @@ namespace ProtoBuf
                 }
             }
 
-            internal object DeserializeRootFallback(object value, Type type)
+            internal object? DeserializeRootFallback(object? value, Type? type)
             {
                 bool autoCreate = TypeModel.PrepareDeserialize(value, ref type);
                 object obj = Model.DeserializeRootAny(ref this, type, value, autoCreate);
@@ -1366,7 +1377,7 @@ namespace ProtoBuf
                 return obj;
             }
 
-            internal T DeserializeRootImpl<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(T value = default)
+            internal T DeserializeRootImpl<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(T? value = default)
             {
                 var serializer = TypeModel.TryGetSerializer<T>(Model);
                 if (serializer is null)
@@ -1416,7 +1427,7 @@ namespace ProtoBuf
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
-            internal void ThrowInvalidOperationException(string message = null)
+            internal void ThrowInvalidOperationException(string? message = null)
             {
                 var ex = string.IsNullOrWhiteSpace(message) ? new InvalidOperationException() : new InvalidOperationException(message);
                 throw AddErrorData(ex, ref this);
@@ -1447,13 +1458,21 @@ namespace ProtoBuf
             [MethodImpl(MethodImplOptions.NoInlining)]
             public void ThrowEnumException(Type type, int value)
             {
-                string desc = type is null ? "<null>" : type.FullName;
+                string? desc = type is null ? "<null>" : type.FullName;
                 throw AddErrorData(new ProtoException("No " + desc + " enum is mapped to the wire-value " + value.ToString()), ref this);
             }
 
+            /// <remarks>
+            /// Returns the same exception it was given, so the callers can <c>throw</c> the result.
+            /// The former <c>exception is not null</c> test is gone: the parameter is not nullable,
+            /// every caller passes a freshly constructed or freshly caught exception, and the test
+            /// was what made the RETURN nullable - which turned all six `throw AddErrorData(...)`
+            /// sites into CS8597 "thrown value may be null". A null argument now faults here rather
+            /// than at the `throw`, which is the same NullReferenceException either way.
+            /// </remarks>
             internal static Exception AddErrorData(Exception exception, ref State state)
             {
-                if (exception is not null && !exception.Data.Contains("protoSource"))
+                if (!exception.Data.Contains("protoSource"))
                 {
                     exception.Data.Add("protoSource", string.Format("tag={0}; wire-type={1}; offset={2}; depth={3}",
                         state._fieldNumber, state._wireType, state.GetPosition(), state._depth));
@@ -1469,14 +1488,14 @@ namespace ProtoBuf
         internal sealed class StateContext : ISerializationContext
         {
             private readonly TypeModel _model;
-            private readonly object _userState;
-            internal StateContext(TypeModel model, object userState)
+            private readonly object? _userState;
+            internal StateContext(TypeModel? model, object? userState)
             {
                 _model = model;
                 _userState = userState;
             }
             TypeModel ISerializationContext.Model => _model;
-            object ISerializationContext.UserState => _userState;
+            object? ISerializationContext.UserState => _userState;
         }
     }
 }

@@ -13,20 +13,24 @@ namespace ProtoBuf.Serializers
         /// <summary>Create a map serializer that operates on immutable dictionaries</summary>
         [MethodImpl(ProtoReader.HotPath)]
         public static MapSerializer<ImmutableDictionary<TKey, TValue>, TKey, TValue> CreateImmutableDictionary<TKey, TValue>()
+            where TKey : notnull
             => SerializerCache<ImmutableDictionarySerializer<TKey, TValue>>.InstanceField;
 
         /// <summary>Create a map serializer that operates on immutable dictionaries</summary>
         [MethodImpl(ProtoReader.HotPath)]
         public static MapSerializer<ImmutableSortedDictionary<TKey, TValue>, TKey, TValue> CreateImmutableSortedDictionary<TKey, TValue>()
+            where TKey : notnull
             => SerializerCache<ImmutableSortedDictionarySerializer<TKey, TValue>>.InstanceField;
 
         /// <summary>Create a map serializer that operates on immutable dictionaries</summary>
         [MethodImpl(ProtoReader.HotPath)]
         public static MapSerializer<IImmutableDictionary<TKey, TValue>, TKey, TValue> CreateIImmutableDictionary<TKey, TValue>()
+            where TKey : notnull
             => SerializerCache<ImmutableIDictionarySerializer<TKey, TValue>>.InstanceField;
     }
 
     sealed class ImmutableDictionarySerializer<TKey, TValue> : MapSerializer<ImmutableDictionary<TKey, TValue>, TKey, TValue>
+        where TKey : notnull
     {
         protected override ImmutableDictionary<TKey, TValue> Clear(ImmutableDictionary<TKey, TValue> values, ISerializationContext context)
             => values.Clear();
@@ -59,6 +63,7 @@ namespace ProtoBuf.Serializers
     }
 
     sealed class ImmutableSortedDictionarySerializer<TKey, TValue> : MapSerializer<ImmutableSortedDictionary<TKey, TValue>, TKey, TValue>
+        where TKey : notnull
     {
         protected override ImmutableSortedDictionary<TKey, TValue> Clear(ImmutableSortedDictionary<TKey, TValue> values, ISerializationContext context)
             => values.Clear();
@@ -91,6 +96,7 @@ namespace ProtoBuf.Serializers
     }
 
     sealed class ImmutableIDictionarySerializer<TKey, TValue> : MapSerializer<IImmutableDictionary<TKey, TValue>, TKey, TValue>
+        where TKey : notnull
     {
         protected override IImmutableDictionary<TKey, TValue> Clear(IImmutableDictionary<TKey, TValue> values, ISerializationContext context)
             => values.Clear();

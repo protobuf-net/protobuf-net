@@ -17,28 +17,28 @@ namespace ProtoBuf
             /// <summary>
             /// Create a new ProtoWriter that targets a buffer writer
             /// </summary>
-            public static State Create(IBufferWriter<byte> writer, TypeModel model, object userState = null)
+            public static State Create(IBufferWriter<byte> writer, TypeModel? model, object? userState = null)
                 => BufferWriterProtoWriter.CreateBufferWriterProtoWriter(writer, model, userState);
         }
 
         private sealed class BufferWriterProtoWriter : ProtoWriter
         {
-            internal static State CreateBufferWriterProtoWriter(IBufferWriter<byte> writer, TypeModel model, object userState)
+            internal static State CreateBufferWriterProtoWriter(IBufferWriter<byte> writer, TypeModel? model, object? userState)
             {
-                if (writer is null) ThrowHelper.ThrowArgumentNullException(nameof(writer));
+                ThrowHelper.ThrowIfNull(writer, nameof(writer));
                 var obj = Pool<BufferWriterProtoWriter>.TryGet() ?? new BufferWriterProtoWriter();
                 obj.Init(model, userState, true);
                 obj._writer = writer;
                 return new State(obj);
             }
 
-            internal override void Init(TypeModel model, object userState, bool impactCount)
+            internal override void Init(TypeModel? model, object? userState, bool impactCount)
             {
                 base.Init(model, userState, impactCount);
                 _nullWriter.Init(model, userState, impactCount: false);
             }
 
-            private IBufferWriter<byte> _writer;
+            private IBufferWriter<byte>? _writer;
 
             private BufferWriterProtoWriter()
             {
@@ -105,7 +105,7 @@ namespace ProtoBuf
             /// </summary>
             private const int UsableLease = 16;
 
-            private byte[] _ownedLease; // non-null once the destination proved unusable
+            private byte[]? _ownedLease; // non-null once the destination proved unusable
 
             private protected override bool TryFlush(ref State state)
             {
@@ -479,7 +479,7 @@ namespace ProtoBuf
             private protected override void ImplEndLengthPrefixedSubItem(ref State state, SubItemToken token, PrefixStyle style)
                 => ThrowHelper.ThrowNotSupportedException("You must use the WriteMessage API with this writer type");
 
-            private protected override SubItemToken ImplStartLengthPrefixedSubItem(ref State state, object instance, PrefixStyle style)
+            private protected override SubItemToken ImplStartLengthPrefixedSubItem(ref State state, object? instance, PrefixStyle style)
             {
                 ThrowHelper.ThrowNotSupportedException("You must use the WriteMessage API with this writer type");
                 return default;

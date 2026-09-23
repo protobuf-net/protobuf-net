@@ -44,8 +44,11 @@ namespace ProtoBuf.Internal
 
         Timestamp? ISerializer<Timestamp?>.Read(ref ProtoReader.State state, Timestamp? value)
             => ((ISerializer<Timestamp>)this).Read(ref state, value.GetValueOrDefault());
+        // the nullable forwarder is only reached when the value is PRESENT, so `!` asserts rather
+        // than hides: GetValueOrDefault() here would silently write a zero. See the long-form note in
+        // Internal/PrimaryTypeProvider.Primitives.cs.
         void ISerializer<Timestamp?>.Write(ref ProtoWriter.State state, Timestamp? value)
-            => ((ISerializer<Timestamp>)this).Write(ref state, value.Value);
+            => ((ISerializer<Timestamp>)this).Write(ref state, value!.Value);
     }
 }
 namespace ProtoBuf.WellKnownTypes

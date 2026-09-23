@@ -13,6 +13,7 @@ namespace ProtoBuf.Serializers
     /// <typeparam name="TKey">key to the collection</typeparam>
     /// <typeparam name="TValue">type of the value held within the collection</typeparam>
     public abstract class ExternalMapSerializer<TCollection, TKey, TValue> : MapSerializer<TCollection, TKey, TValue> where TCollection : IEnumerable<KeyValuePair<TKey, TValue>>
+        where TKey : notnull
     {
         internal override void Write(ref ProtoWriter.State state, int fieldNumber, WireType wireType, TCollection values, in KeyValuePairSerializer<TKey, TValue> pairSerializer)
         {

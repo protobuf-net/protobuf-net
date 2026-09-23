@@ -11,7 +11,7 @@ namespace ProtoBuf
         private bool frozen;
         internal void Freeze() { frozen = true; }
         private void ThrowIfFrozen() { if (frozen) ThrowHelper.ThrowInvalidOperationException("The serialization-context cannot be changed once it is in use"); }
-        private object context;
+        private object? context;
         /// <summary>
         /// Gets or sets a user-defined object containing additional information about this serialization/deserialization operation.
         /// </summary>

@@ -11,14 +11,14 @@ namespace ProtoBuf
 {
     public partial class ProtoWriter
     {
-        internal static State CreateNull(TypeModel model, object userState, long abortAfter)
+        internal static State CreateNull(TypeModel? model, object? userState, long abortAfter)
             => NullProtoWriter.CreateNullProtoWriter(model, userState, abortAfter);
 
         internal sealed class NullProtoWriter : ProtoWriter
         {
             protected internal override State DefaultState() => new State(this);
 
-            internal static State CreateNullProtoWriter(TypeModel model, object userState, long abortAfter)
+            internal static State CreateNullProtoWriter(TypeModel? model, object? userState, long abortAfter)
             {
                 var obj = Pool<NullProtoWriter>.TryGet() ?? new NullProtoWriter();
                 obj.Init(model, userState, true);
@@ -170,7 +170,7 @@ namespace ProtoBuf
                 AdvanceSubMessage(ref state, len, PrefixStyle.Base128);
             }
 
-            private protected override SubItemToken ImplStartLengthPrefixedSubItem(ref State state, object instance, PrefixStyle style)
+            private protected override SubItemToken ImplStartLengthPrefixedSubItem(ref State state, object? instance, PrefixStyle style)
             {
                 WireType = WireType.None;
                 return new SubItemToken(_position64);

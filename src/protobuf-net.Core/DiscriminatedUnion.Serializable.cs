@@ -1,4 +1,9 @@
-﻿using System;
+﻿// The ISerializable constructors below unbox SerializationInfo entries with a plain cast. A null
+// there means the payload is corrupt, and throwing is the intended answer - which is exactly what
+// the cast already does - so CS8605 is asserted rather than fixed. (It only fires on the TFMs whose
+// reference assemblies annotate SerializationEntry.Value; the others are oblivious.)
+#pragma warning disable CS8605 // Unboxing a possibly null value
+using System;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 

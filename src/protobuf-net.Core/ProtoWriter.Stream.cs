@@ -19,7 +19,7 @@ namespace ProtoBuf
         /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to serialize sub-objects</param>
         /// <param name="context">Additional context about this serialization operation</param>
         [Obsolete(ProtoReader.PreferStateAPI, false)]
-        public static ProtoWriter Create(Stream dest, TypeModel model, SerializationContext context = null)
+        public static ProtoWriter Create(Stream dest, TypeModel? model, SerializationContext? context = null)
             => StreamProtoWriter.CreateStreamProtoWriter(dest, model, context);
 
         partial struct State
@@ -30,7 +30,7 @@ namespace ProtoBuf
             /// <param name="dest">The destination stream</param>
             /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to serialize sub-objects</param>
             /// <param name="userState">Additional context about this serialization operation</param>
-            public static State Create(Stream dest, TypeModel model, object userState = null)
+            public static State Create(Stream dest, TypeModel? model, object? userState = null)
             {
                 var writer = StreamProtoWriter.CreateStreamProtoWriter(dest, model, userState);
                 return new State(writer);
@@ -39,7 +39,11 @@ namespace ProtoBuf
 
         private class StreamProtoWriter : ProtoWriter
         {
-            private Stream dest;
+            // non-null for the whole life of an ACTIVE writer: set by CreateStreamProtoWriter and
+            // cleared in Cleanup, which is the pooled-object window. Declared non-nullable so the
+            // ~30 uses do not each carry a null test for a state they cannot be in; the one place
+            // it is untrue says so with null!.
+            private Stream dest = null!;
             private int flushLock;
 
             private protected override bool ImplDemandFlushOnDispose => true;
@@ -92,11 +96,11 @@ namespace ProtoBuf
                         return;
                 }
             }
-            internal static StreamProtoWriter CreateStreamProtoWriter(Stream dest, TypeModel model, object userState)
+            internal static StreamProtoWriter CreateStreamProtoWriter(Stream dest, TypeModel? model, object? userState)
             {
                 var obj = Pool<StreamProtoWriter>.TryGet() ?? new StreamProtoWriter();
                 obj.Init(model, userState, true);
-                if (dest is null) ThrowHelper.ThrowArgumentNullException(nameof(dest));
+                ThrowHelper.ThrowIfNull(dest, nameof(dest));
                 if (!dest.CanWrite) ThrowHelper.ThrowArgumentException("Cannot write to stream", nameof(dest));
                 //if (model is null) ThrowHelper.ThrowArgumentNullException("model");
                 obj.dest = dest;
@@ -104,7 +108,7 @@ namespace ProtoBuf
                 return obj;
             }
 
-            internal override void Init(TypeModel model, object userState, bool impactCount)
+            internal override void Init(TypeModel? model, object? userState, bool impactCount)
             {
                 base.Init(model, userState, impactCount);
                 _nullWriter.Init(model, userState, impactCount: false);
@@ -123,7 +127,7 @@ namespace ProtoBuf
                 base.Cleanup();
                 // importantly, this does **not** own the stream, and does not dispose it
                 _nullWriter.Cleanup();
-                dest = null;
+                dest = null!; // dead until the next CreateStreamProtoWriter
                 BufferPool.ReleaseBufferToPool(ref ioBuffer);
             }
 
@@ -147,7 +151,7 @@ namespace ProtoBuf
             // active over the buffer, which is the museum API's world (one State per call, see
             // the bridge on ProtoWriter). Everything else asks Pending.
 
-            private byte[] ioBuffer;
+            private byte[] ioBuffer = null!; // non-null while active - see dest
             private int ioIndex;
 
             /// <summary>
@@ -403,7 +407,7 @@ namespace ProtoBuf
                     }
                 }
             }
-            private protected override SubItemToken ImplStartLengthPrefixedSubItem(ref State state, object instance, PrefixStyle style)
+            private protected override SubItemToken ImplStartLengthPrefixedSubItem(ref State state, object? instance, PrefixStyle style)
             {
                 switch (WireType)
                 {

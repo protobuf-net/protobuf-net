@@ -28,8 +28,11 @@ namespace ProtoBuf.Internal
 
         Empty? ISerializer<Empty?>.Read(ref ProtoReader.State state, Empty? value)
             => ((ISerializer<Empty>)this).Read(ref state, value.GetValueOrDefault());
+        // the nullable forwarder is only reached when the value is PRESENT, so `!` asserts rather
+        // than hides: GetValueOrDefault() here would silently write a zero. See the long-form note in
+        // Internal/PrimaryTypeProvider.Primitives.cs.
         void ISerializer<Empty?>.Write(ref ProtoWriter.State state, Empty? value)
-            => ((ISerializer<Empty>)this).Write(ref state, value.Value);
+            => ((ISerializer<Empty>)this).Write(ref state, value!.Value);
     }
 }
 

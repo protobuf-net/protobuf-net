@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 namespace ProtoBuf.Internal
@@ -20,6 +21,27 @@ namespace ProtoBuf.Internal
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static void ThrowArgumentNullException(string paramName, string message)
             => throw new ArgumentNullException(paramName, message);
+
+        /// <summary>
+        /// Throws <see cref="ArgumentNullException"/> when <paramref name="value"/> is null, and
+        /// tells the compiler it is not null on return.
+        /// </summary>
+        /// <remarks>
+        /// The <c>[NotNull]</c> post-condition is the whole point, and it is what a bare
+        /// <c>if (x is null) ThrowArgumentNullException(...)</c> cannot give: testing a value for
+        /// null WIDENS it to maybe-null for the rest of the method, so the guard meant to establish
+        /// non-nullness is precisely what destroys it. The throw helpers here deliberately do not
+        /// carry <c>[DoesNotReturn]</c> - gap B51/B48 records that it is flow analysis only and that
+        /// the void-helper-plus-explicit-return shape is what lets ILC drop a gated body, measured.
+        /// This attribute is flow analysis only too, so it emits no IL and costs nothing at runtime;
+        /// the actual throw stays behind the NoInlining helper.
+        /// </remarks>
+#pragma warning disable CS8777 // ThrowArgumentNullException always throws; it just cannot say so
+        public static void ThrowIfNull<T>([NotNull] T? value, string paramName)
+        {
+            if (value is null) ThrowArgumentNullException(paramName);
+        }
+#pragma warning restore CS8777
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static void ThrowIndexOutOfRangeException()
@@ -43,7 +65,7 @@ namespace ProtoBuf.Internal
 
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowInvalidOperationException(string message = null, Exception innerException = null)
+        internal static void ThrowInvalidOperationException(string? message = null, Exception? innerException = null)
         {
             if (string.IsNullOrWhiteSpace(message))
             {
@@ -82,7 +104,7 @@ namespace ProtoBuf.Internal
             => throw new NotSupportedException(message);
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowProtoException(string message, Exception inner = null)
+        internal static void ThrowProtoException(string message, Exception? inner = null)
             => throw (inner is null ? new ProtoException(message) : new ProtoException(message, inner));
 
         [MethodImpl(MethodImplOptions.NoInlining)]
@@ -90,7 +112,7 @@ namespace ProtoBuf.Internal
             => throw new OverflowException();
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowNotImplementedException([CallerMemberName] string message = null)
+        internal static void ThrowNotImplementedException([CallerMemberName] string? message = null)
             => throw new NotImplementedException(message);
 
         [MethodImpl(MethodImplOptions.NoInlining)]

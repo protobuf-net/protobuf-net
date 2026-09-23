@@ -17,7 +17,7 @@ namespace ProtoBuf.Internal
     //    bool IEquatable<GuidBytes>.Equals(GuidBytes other) => ValueField.Equals(other.ValueField);
     //    public override int GetHashCode() => ValueField.GetHashCode();
     //    public override string ToString() => ValueField.ToString();
-    //    public override bool Equals(object obj) => obj is GuidBytes other && ValueField.Equals(other.ValueField);
+    //    public override bool Equals(object? obj) => obj is GuidBytes other && ValueField.Equals(other.ValueField);
     //}
 
     //internal readonly struct GuidString : IEquatable<GuidString>
@@ -31,7 +31,7 @@ namespace ProtoBuf.Internal
     //    bool IEquatable<GuidString>.Equals(GuidString other) => ValueField.Equals(other.ValueField);
     //    public override int GetHashCode() => ValueField.GetHashCode();
     //    public override string ToString() => ValueField.ToString();
-    //    public override bool Equals(object obj) => obj is GuidString other && ValueField.Equals(other.ValueField);
+    //    public override bool Equals(object? obj) => obj is GuidString other && ValueField.Equals(other.ValueField);
     //}
 
     internal static class GuidHelper

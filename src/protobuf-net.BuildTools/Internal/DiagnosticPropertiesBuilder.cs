@@ -5,8 +5,8 @@ namespace ProtoBuf.Internal
 {
     internal class DiagnosticPropertiesBuilder
     {
-        private readonly ImmutableDictionary<string, string>.Builder _builder 
-            = ImmutableDictionary.CreateBuilder<string, string>();
+        private readonly ImmutableDictionary<string, string?>.Builder _builder 
+            = ImmutableDictionary.CreateBuilder<string, string?>();
 
         private DiagnosticPropertiesBuilder()
         {
@@ -16,10 +16,10 @@ namespace ProtoBuf.Internal
 
         public DiagnosticPropertiesBuilder Add(string key, string value)
         {
-            _builder.Add(new KeyValuePair<string, string>(key, value));
+            _builder.Add(new KeyValuePair<string, string?>(key, value));
             return this;
         }
 
-        public ImmutableDictionary<string, string> Build() => _builder.ToImmutableDictionary();
+        public ImmutableDictionary<string, string?> Build() => _builder.ToImmutableDictionary();
     }
 }

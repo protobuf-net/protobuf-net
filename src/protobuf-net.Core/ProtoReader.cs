@@ -107,7 +107,7 @@ namespace ProtoBuf
         /// <summary>
         /// Additional information about this deserialization operation.
         /// </summary>
-        public object UserState => _snapshot.UserState;
+        public object? UserState => _snapshot.UserState;
 
         /// <summary>
         /// Additional information about this deserialization operation.
@@ -390,7 +390,7 @@ namespace ProtoBuf
         public static void DirectReadBytes(Stream source, byte[] buffer, int offset, int count)
         {
             int read;
-            if (source is null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+            ThrowHelper.ThrowIfNull(source, nameof(source));
             while (count > 0 && (read = source.Read(buffer, offset, count)) > 0)
             {
                 count -= read;
@@ -547,7 +547,7 @@ namespace ProtoBuf
             return default;
         }
 
-        internal static void Seek(Stream source, long count, byte[] buffer)
+        internal static void Seek(Stream source, long count, byte[]? buffer)
         {
             if (source.CanSeek)
             {
@@ -602,7 +602,7 @@ namespace ProtoBuf
         /// </summary>
         public static bool HasSubValue(ProtoBuf.WireType wireType, ProtoReader source)
         {
-            if (source is null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+            ThrowHelper.ThrowIfNull(source, nameof(source));
             var s__ = source.Liquify();
             try
             {
@@ -643,7 +643,7 @@ namespace ProtoBuf
         /// </summary>
         public static void NoteObject(object value, ProtoReader reader)
         {
-            if (reader is null) ThrowHelper.ThrowArgumentNullException(nameof(reader));
+            ThrowHelper.ThrowIfNull(reader, nameof(reader));
             if (reader.trapCount != 0)
             {
                 reader.netCache.RegisterTrappedObject(value);
@@ -675,9 +675,9 @@ namespace ProtoBuf
         /// Merge two objects using the details from the current reader; this is used to change the type
         /// of objects when an inheritance relationship is discovered later than usual during deserilazation.
         /// </summary>
-        public static object Merge(ProtoReader parent, object from, object to)
+        public static object? Merge(ProtoReader parent, object from, object to)
         {
-            if (parent is null) ThrowHelper.ThrowArgumentNullException(nameof(parent));
+            ThrowHelper.ThrowIfNull(parent, nameof(parent));
             TypeModel model = parent.Model;
             var userState = parent.UserState;
             if (model is null) ThrowHelper.ThrowInvalidOperationException("Types cannot be merged unless a type-model has been specified");
@@ -710,10 +710,10 @@ namespace ProtoBuf
         // internal, exactly as the pre-swap shape: the public museum overload takes
         // SerializationContext (see ProtoReader.Stream.cs), so adding a public object-taking
         // sibling would make historical call sites ambiguous
-        internal static ProtoReader Create(Stream source, TypeModel model, object userState, long length)
+        internal static ProtoReader Create(Stream source, TypeModel? model, object? userState, long length)
             => new SnapshotProtoReader(State.Create(source, model, userState, length).Snapshot());
 
-        internal static ProtoReader Create(ReadOnlyMemory<byte> source, TypeModel model, object userState = null)
+        internal static ProtoReader Create(ReadOnlyMemory<byte> source, TypeModel? model, object? userState = null)
             => new SnapshotProtoReader(State.Create(source, model, userState).Snapshot());
     }
 }

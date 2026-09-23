@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using ProtoBuf.Internal;
 using System.Diagnostics.CodeAnalysis;
 
@@ -51,16 +51,16 @@ namespace ProtoBuf
         /// and <see cref="ToType"/>. When omitted, a cast is used in both directions, which covers
         /// the usual conversion operators.
         /// </summary>
-        public Type Converter { get; set; }
+        public Type? Converter { get; set; }
 
         /// <summary>
         /// The <see cref="Converter"/> method converting <see cref="Type"/> to <see cref="Surrogate"/>.
         /// </summary>
-        public string ToSurrogate { get; set; }
+        public string? ToSurrogate { get; set; }
 
         /// <summary>
         /// The <see cref="Converter"/> method converting <see cref="Surrogate"/> back to <see cref="Type"/>.
         /// </summary>
-        public string ToType { get; set; }
+        public string? ToType { get; set; }
     }
 }

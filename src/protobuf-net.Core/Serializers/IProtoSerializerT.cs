@@ -1,4 +1,4 @@
-using ProtoBuf.Internal;
+﻿using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 using System;
 using System.Diagnostics.CodeAnalysis;
@@ -203,7 +203,7 @@ namespace ProtoBuf.Serializers
             => (features & values) != 0;
 
         [MethodImpl(ProtoReader.HotPath)]
-        public static T DefaultFor<T>(this SerializerFeatures features)
+        public static T? DefaultFor<T>(this SerializerFeatures features)
             // prefer true nunll when wrapped
             => features.HasAny(SerializerFeatures.OptionWrappedValue) ? default(T) : TypeHelper<T>.Default;
 
@@ -433,7 +433,7 @@ namespace ProtoBuf.Serializers
         /// <summary>
         /// Parse the input as a sub-type of the instance
         /// </summary>
-        public void ReadSubType<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] TSubType>(ref ProtoReader.State state, ISubTypeSerializer<TSubType> serializer = null) where TSubType : class, T
+        public void ReadSubType<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] TSubType>(ref ProtoReader.State state, ISubTypeSerializer<TSubType>? serializer = null) where TSubType : class, T
         {
             var tok = state.StartSubItem();
             _value = (serializer ?? TypeModel.GetSubTypeSerializer<TSubType>(_context.Model)).ReadSubType(ref state,

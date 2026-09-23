@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using ProtoBuf.Internal;
 using System.Diagnostics.CodeAnalysis;
 
@@ -117,6 +117,6 @@ namespace ProtoBuf
         /// <summary>
         /// The schema to include, as a path; <c>null</c> for every schema in the project.
         /// </summary>
-        public string Path { get; }
+        public string? Path { get; }
     }
 }

@@ -21,7 +21,7 @@ namespace ProtoBuf
         /// this ensures that we don't get issues with subclasses declaring conflicting types -
         /// the caller must respect the fields defined for the type they pass in.
         /// </summary>
-        internal static IEnumerable<TValue> GetExtendedValues<TValue>(TypeModel model, IExtensible instance, int tag, DataFormat format, bool singleton, bool allowDefinedTag)
+        internal static IEnumerable<TValue> GetExtendedValues<TValue>(TypeModel? model, IExtensible instance, int tag, DataFormat format, bool singleton, bool allowDefinedTag)
         {
             // the typed path where the format selects nothing, so that reading back what
             // AppendValue wrote does not need reflection either; see TryGetExtendedValuesTyped.
@@ -30,7 +30,7 @@ namespace ProtoBuf
             // does them, and going straight to the extension object bypassed them - which
             // Examples.Extensibility's invalid-tag tests caught, since they expect
             // ArgumentOutOfRangeException and were getting an empty result instead.
-            if (instance is null) ThrowHelper.ThrowArgumentNullException(nameof(instance));
+            ThrowHelper.ThrowIfNull(instance, nameof(instance));
             if (tag <= 0) ThrowHelper.ThrowArgumentOutOfRangeException(nameof(tag));
             if (format == DataFormat.Default)
             {
@@ -58,10 +58,10 @@ namespace ProtoBuf
         /// this ensures that we don't get issues with subclasses declaring conflicting types -
         /// the caller must respect the fields defined for the type they pass in.
         /// </summary>
-        internal static IEnumerable GetExtendedValues(TypeModel model, Type type, IExtensible instance, int tag, DataFormat format, bool singleton, bool allowDefinedTag)
+        internal static IEnumerable GetExtendedValues(TypeModel? model, Type type, IExtensible instance, int tag, DataFormat format, bool singleton, bool allowDefinedTag)
 #pragma warning restore RCS1163, IDE0060 // Unused parameter.
         {
-            if (instance is null) ThrowHelper.ThrowArgumentNullException(nameof(instance));
+            ThrowHelper.ThrowIfNull(instance, nameof(instance));
             if (tag <= 0) ThrowHelper.ThrowArgumentOutOfRangeException(nameof(tag));
             return GetExtendedValues(model, type, instance.GetExtensionObject(false), tag, format, singleton);
         }
@@ -99,7 +99,7 @@ namespace ProtoBuf
         /// an API you can append to but not read back from would be worse than one that refuses.
         /// Returns false when there is no typed serializer, so the caller can fall back.
         /// </remarks>
-        internal static bool TryGetExtendedValuesTyped<TValue>(TypeModel model, IExtension extn, int tag,
+        internal static bool TryGetExtendedValuesTyped<TValue>(TypeModel? model, IExtension extn, int tag,
             bool singleton, List<TValue> results)
         {
             model ??= TypeModel.DefaultModel;
@@ -124,10 +124,10 @@ namespace ProtoBuf
                 var state = ProtoReader.State.Create(stream, model, new SerializationContext(), ProtoReader.TO_EOF);
                 try
                 {
-                    TValue current = default;
+                    TValue? current = default;
                     var any = false;
                     int field;
-                    List<TValue> packed = null;
+                    List<TValue>? packed = null;
                     while ((field = state.ReadFieldHeader()) > 0)
                     {
                         if (field != tag)
@@ -182,7 +182,7 @@ namespace ProtoBuf
             return true;
         }
 
-        internal static IEnumerable GetExtendedValues(TypeModel model, Type type, IExtension extn, int tag, DataFormat format, bool singleton)
+        internal static IEnumerable GetExtendedValues(TypeModel? model, Type type, IExtension extn, int tag, DataFormat format, bool singleton)
         {
             model ??= TypeModel.DefaultModel;
 
@@ -194,7 +194,7 @@ namespace ProtoBuf
             Stream stream = extn.BeginQuery();
             try
             {
-                object value = null;
+                object? value = null;
                 SerializationContext ctx = new SerializationContext();
                 var state = ProtoReader.State.Create(stream, model, ctx, ProtoReader.TO_EOF).Solidify();
                 try
@@ -242,10 +242,10 @@ namespace ProtoBuf
             }
         }
 
-        internal static void AppendExtendValue<TValue>(TypeModel model, IExtensible instance, int tag, DataFormat format, TValue value)
+        internal static void AppendExtendValue<TValue>(TypeModel? model, IExtensible instance, int tag, DataFormat format, TValue value)
         {
-            if (instance is null) ThrowHelper.ThrowArgumentNullException(nameof(instance));
-            if (value is null) ThrowHelper.ThrowArgumentNullException(nameof(value));
+            ThrowHelper.ThrowIfNull(instance, nameof(instance));
+            ThrowHelper.ThrowIfNull(value, nameof(value));
             // obtain the extension object and prepare to write
             AppendExtendValue<TValue>(model, instance.GetExtensionObject(true), tag, format, value);
         }
@@ -254,7 +254,7 @@ namespace ProtoBuf
         // shape boxed to `object` here and then asked TrySerializeAuxiliaryType to work the type out
         // again by reflection, which is precisely what native AOT cannot do. Keeping TValue means a
         // contract the model knows is resolved without reflection.
-        internal static void AppendExtendValue<TValue>(TypeModel model, IExtension extn, int tag, DataFormat format, TValue value)
+        internal static void AppendExtendValue<TValue>(TypeModel? model, IExtension extn, int tag, DataFormat format, TValue value)
         {
             model ??= TypeModel.DefaultModel;
             

@@ -20,10 +20,17 @@ namespace ProtoBuf.Serializers
         /// <summary>Create a serializer that indicates that a scenario is not supported</summary>
         [MethodImpl(MethodImplOptions.NoInlining)]
         [Obsolete("Since this isn't supported, you probably shouldn't be doing it...", false)]
+        // the null-return below is unreachable: the helper above always throws. It is written as a
+        // void helper + explicit return DELIBERATELY - see the note in TypeModel.cs on gap B48: that
+        // shape terminates in IL, which is what lets ILC drop the rest of the method, and
+        // [DoesNotReturn] does NOT (it is flow analysis only, and measured 12 warnings / 3.89MB
+        // against 8 / 3.84MB). So the annotation is asserted here rather than changed.
         public static RepeatedSerializer<TCollection, T> CreateNestedDataNotSupported<TCollection, T>()
         {
             ThrowHelper.ThrowNestedDataNotSupported(typeof(TCollection));
+            #pragma warning disable CS8603 // possible null reference return
             return default;
+            #pragma warning restore CS8603
         }
 
         /// <summary>Create a serializer that indicates that a scenario is not supported</summary>
@@ -32,7 +39,9 @@ namespace ProtoBuf.Serializers
         public static RepeatedSerializer<TCollection, T> CreateNotSupported<TCollection, T>()
         {
             ThrowHelper.ThrowNotSupportedException($"Repeated data of type {typeof(TCollection)} is not supported");
+            #pragma warning disable CS8603 // possible null reference return
             return default;
+            #pragma warning restore CS8603
         }
 
         /// <summary>Create a serializer that operates on lists</summary>
@@ -100,7 +109,14 @@ namespace ProtoBuf.Serializers
         [MethodImpl(ProtoReader.HotPath)] // note: not "in" because ArraySegment<T> isn't "readonly" on all TFMs
         internal static void ReverseInPlace<T>(this ref ArraySegment<T> values) => Array.Reverse(values.Array, values.Offset, values.Count);
         [MethodImpl(ProtoReader.HotPath)]
-        internal static ref T Singleton<T>(this ref ArraySegment<T> values) => ref values.Array[values.Offset];
+        /// <remarks>
+        /// <c>ref T</c>, not <c>ref T?</c>: the storage is a <c>T[]</c>, so that is what the ref
+        /// aliases - and protobuf-net rejects null elements inside a collection outright
+        /// (<c>ThrowNullRepeatedContents</c>), so a null element is not a state this can be in.
+        /// The `!` is on Array, which ArraySegment declares nullable and which every caller here
+        /// has already sized.
+        /// </remarks>
+        internal static ref T Singleton<T>(this ref ArraySegment<T> values) => ref values.Array![values.Offset];
     }
 
 
@@ -150,7 +166,7 @@ namespace ProtoBuf.Serializers
         /// <summary>
         /// Serialize a sequence of values to the supplied writer
         /// </summary>
-        public void WriteRepeated(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures features, TCollection values, ISerializer<TItem> serializer = null)
+        public void WriteRepeated(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures features, TCollection values, ISerializer<TItem>? serializer = null)
         {
             if (features.HasAny(SerializerFeatures.OptionWrappedCollection))
             {
@@ -355,7 +371,7 @@ namespace ProtoBuf.Serializers
         /// <summary>
         /// Deserializes a sequence of values from the supplied reader
         /// </summary>
-        public TCollection ReadRepeated(ref ProtoReader.State state, SerializerFeatures features, TCollection values, ISerializer<TItem> serializer = null)
+        public TCollection ReadRepeated(ref ProtoReader.State state, SerializerFeatures features, TCollection values, ISerializer<TItem>? serializer = null)
         {
             if (features.HasAny(SerializerFeatures.OptionWrappedCollection))
             {

@@ -20,7 +20,7 @@ namespace ProtoBuf
         /// <summary>
         /// Compare with another ProtoMemberAttribute for sorting purposes
         /// </summary>
-        public int CompareTo(object other) => CompareTo(other as ProtoMemberAttribute);
+        public int CompareTo(object? other) => CompareTo(other as ProtoMemberAttribute);
         /// <summary>
         /// Compare with another ProtoMemberAttribute for sorting purposes
         /// </summary>
@@ -46,15 +46,17 @@ namespace ProtoBuf
             this.tag = tag;
         }
 
-        internal MemberInfo Member, BackingMember;
+        // assigned by the model builder after construction, not by the attribute itself - the
+        // attribute is what the consumer writes, and these are how the model annotates it
+        internal MemberInfo Member = null!, BackingMember = null!;
         internal bool TagIsPinned;
 
         /// <summary>
         /// Gets or sets the original name defined in the .proto; not used
         /// during serialization.
         /// </summary>
-        public string Name { get { return name; } set { name = value; } }
-        private string name;
+        public string? Name { get { return name; } set { name = value; } }
+        private string? name;
 
         /// <summary>
         /// Gets or sets the data-format to be used when encoding this value.

@@ -16,6 +16,6 @@ namespace ProtoBuf
         /// <summary>
         /// Additional information about this serialization operation.
         /// </summary>
-        object UserState { get; }
+        object? UserState { get; }
     }
 }

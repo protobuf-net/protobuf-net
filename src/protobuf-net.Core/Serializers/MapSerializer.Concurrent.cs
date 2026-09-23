@@ -13,11 +13,13 @@ namespace ProtoBuf.Serializers
         /// <summary>Create a map serializer that operates on concurrent dictionaries</summary>
         [MethodImpl(ProtoReader.HotPath)]
         public static MapSerializer<TCollection, TKey, TValue> CreateConcurrentDictionary<TCollection, TKey, TValue>()
+            where TKey : notnull
             where TCollection : ConcurrentDictionary<TKey, TValue>
             => SerializerCache<ConcurrentDictionarySerializer<TCollection, TKey, TValue>>.InstanceField;
     }
 
     sealed class ConcurrentDictionarySerializer<TCollection, TKey, TValue> : MapSerializer<TCollection, TKey, TValue>
+        where TKey : notnull
         where TCollection : ConcurrentDictionary<TKey, TValue>
     {
         protected override TCollection Clear(TCollection values, ISerializationContext context)

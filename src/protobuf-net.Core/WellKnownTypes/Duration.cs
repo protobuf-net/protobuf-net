@@ -33,8 +33,11 @@ namespace ProtoBuf.Internal
 
         Duration? ISerializer<Duration?>.Read(ref ProtoReader.State state, Duration? value)
             => ((ISerializer<Duration>)this).Read(ref state, value.GetValueOrDefault());
+        // the nullable forwarder is only reached when the value is PRESENT, so `!` asserts rather
+        // than hides: GetValueOrDefault() here would silently write a zero. See the long-form note in
+        // Internal/PrimaryTypeProvider.Primitives.cs.
         void ISerializer<Duration?>.Write(ref ProtoWriter.State state, Duration? value)
-            => ((ISerializer<Duration>)this).Write(ref state, value.Value);
+            => ((ISerializer<Duration>)this).Write(ref state, value!.Value);
 
         Duration ISerializer<Duration>.Read(ref ProtoReader.State state, Duration value)
             => ReadDuration(ref state, value);
