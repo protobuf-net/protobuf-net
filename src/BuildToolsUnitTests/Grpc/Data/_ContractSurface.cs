@@ -51,6 +51,8 @@ namespace Grpc.Core
             Marshaller<TRequest> requestMarshaller, Marshaller<TResponse> responseMarshaller) { }
     }
 
+    public readonly struct CallOptions { }
+
     public abstract class CallInvoker { }
 
     public abstract class ChannelBase
@@ -150,6 +152,11 @@ namespace Microsoft.Extensions.DependencyInjection.Extensions
     {
         public static void TryAddEnumerable(this IServiceCollection services, ServiceDescriptor descriptor) { }
 
+        // the Connect generator's registration uses this: a service implementation is resolved per call
+        // from DI, so it has to be registered, and TryAdd means a consumer who registered their own -
+        // different lifetime, or a decorator - keeps theirs
+        public static void TryAddScoped<TService>(this IServiceCollection services) where TService : class { }
+
         // TryAddSingleton is the single-service form; TryAddEnumerable above is for sets, which is what
         // the IServiceMethodProvider registrations need and what a ClientFactory registration must not use
         public static void TryAddSingleton<TService>(this IServiceCollection services, TService instance)
@@ -189,6 +196,10 @@ namespace ProtoBuf.Grpc
         public static readonly CallContext Default = default;
         public CallContext(object server, ServerCallContext context) { }
         public static explicit operator CallContext(CancellationToken cancellationToken) => default;
+        // the real type has both; the Connect generator's client proxy reads them, so the snapshot
+        // would otherwise be a less accurate picture of protobuf-net.Grpc than it could be
+        public global::Grpc.Core.CallOptions CallOptions => default;
+        public CancellationToken CancellationToken => default;
     }
 }
 

@@ -8,12 +8,24 @@
 
 ### New Rules
 
-Rule ID  | Category | Severity | Notes
----------|----------|----------|--------------------
-PBN1900  | ProtoBuf | Warning  | Unrecognised value for a `.proto` item-metadata option
-PBN3020  | ProtoBuf | Warning  | No additional file matches a `[ProtoSchema]` path
-PBN3021  | ProtoBuf | Warning  | A `[ProtoSchema]` path matches more than one additional file
-PBN3022  | ProtoBuf | Warning  | A `[ProtoSchema]` file could not be parsed
-PBN3023  | ProtoBuf | Warning  | A `[ProtoSchema]` shape is not supported by the AOT model yet
-PBN0027  | Usage    | Warning  | A `[ProtoDataFormat]` declaration whose type can never be matched
-PBN3014  | ProtoBuf | Warning  | Extension accessor needs a model for this value type
+Rule ID  | Category         | Severity | Notes
+---------|------------------|----------|--------------------
+PBN1900  | ProtoBuf         | Warning  | Unrecognised value for a `.proto` item-metadata option
+PBN3020  | ProtoBuf         | Warning  | No additional file matches a `[ProtoSchema]` path
+PBN3021  | ProtoBuf         | Warning  | A `[ProtoSchema]` path matches more than one additional file
+PBN3022  | ProtoBuf         | Warning  | A `[ProtoSchema]` file could not be parsed
+PBN3023  | ProtoBuf         | Warning  | A `[ProtoSchema]` shape is not supported by the AOT model yet
+PBN0027  | Usage            | Warning  | A `[ProtoDataFormat]` declaration whose type can never be matched
+PBN3014  | ProtoBuf         | Warning  | Extension accessor needs a model for this value type
+PBN3005  | ProtoBuf         | Info     | No canonical protobuf JSON mapping for a contract (`ProtoModelGenerator`)
+PBN5000  | ProtoBuf.Connect | Warning  | Language version below the C# 12 floor (`ProtoConnectGenerator`)
+PBN5001  | ProtoBuf.Connect | Warning  | Service method shape not emitted (`ProtoConnectGenerator`)
+PBN5002  | ProtoBuf.Connect | Warning  | `[ProtoService]` names a type that is not a service contract
+PBN5003  | ProtoBuf.Connect | Warning  | Service contract declares no recognised operations
+PBN5004  | ProtoBuf.Connect | Warning  | Implementation does not implement the named contract
+PBN5005  | ProtoBuf.Connect | Warning  | Open generic service contract is not supported
+PBN5006  | ProtoBuf.Connect | Warning  | Service contract not emitted, catch-all
+PBN5007  | ProtoBuf.Connect | Warning  | Authorization attributes are not carried onto Connect endpoints (`ConnectContractFirstAnalyzer`)
+PBN5008  | ProtoBuf.Connect | Warning  | Endpoint metadata could not be reconstructed (`ProtoConnectGenerator`)
+PBN5009  | ProtoBuf.Connect | Warning  | `[NoSideEffects]` on a non-unary operation (`ProtoConnectGenerator`)
+PBN5010  | ProtoBuf.Connect | Warning  | ASP.NET Core MVC verb attribute on a Connect contract method (`ProtoConnectGenerator`)

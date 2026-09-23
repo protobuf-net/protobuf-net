@@ -400,17 +400,33 @@ namespace ProtoBuf.BuildTools.Analyzers
         /// shape we would ask for. An omitted optional argument arrives as
         /// <c>ArgumentKind.DefaultValue</c>, and an explicit null is the same thing said out loud.
         /// </summary>
+        /// <remarks>
+        /// <b>The annotation has to be stripped before the name is compared.</b> The shipped
+        /// protobuf-net.Grpc declares the parameter as <c>ClientFactory?</c>, and a nullable annotation
+        /// carried in metadata is honoured whatever the consumer's own nullable context - so
+        /// <c>ToDisplayString()</c> renders it <c>"ProtoBuf.Grpc.Configuration.ClientFactory?"</c>, the
+        /// comparison missed, and PBN4016 told people to pass the factory they had already passed.
+        /// <para>
+        /// It went unnoticed because it cannot be reproduced from a <em>source</em> stub in a
+        /// nullable-disabled compilation, which erases the <c>?</c> - the analyzer's own tests looked
+        /// right. It is also invisible in any project with interceptors enabled, which is why
+        /// <c>AotGrpcSmoke</c> never showed it.
+        /// </para>
+        /// </remarks>
         private static bool NoFactoryPassed(IInvocationOperation invocation)
         {
             foreach (var argument in invocation.Arguments)
             {
                 if (argument.Parameter?.Type is not INamedTypeSymbol type) continue;
-                if (type.ToDisplayString() != "ProtoBuf.Grpc.Configuration.ClientFactory") continue;
+                if (Unannotated(type) != "ProtoBuf.Grpc.Configuration.ClientFactory") continue;
 
                 return argument.ArgumentKind == ArgumentKind.DefaultValue
                     || argument.Value.ConstantValue is { HasValue: true, Value: null };
             }
             return true;
+
+            static string Unannotated(ITypeSymbol type)
+                => type.WithNullableAnnotation(NullableAnnotation.None).ToDisplayString();
         }
     }
 }

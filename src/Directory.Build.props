@@ -57,8 +57,13 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <!-- No Microsoft.SourceLink.GitHub reference: the SDK has included Source Link by default since
+             8.0.100, so an explicit one only overrides the SDK's version with a hand-managed one - a
+             maintenance burden, and somewhere a transitive advisory has to be chased. Verified rather
+             than assumed before removing: building with and without produced a byte-identical
+             *.sourcelink.json on all four TFMs (net462 and netstandard2.0 included) and the same nuspec
+             <repository> element. Following StackExchange.Redis#3222. -->
         <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="all" />
-        <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All"/>
         <PackageReference Include="Nerdbank.GitVersioning" PrivateAssets="All" />
         <!-- oh gawd, I'm just not emotionally prepared for this...
     <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.4">

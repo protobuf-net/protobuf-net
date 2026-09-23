@@ -1,0 +1,3 @@
+Generator produced 1 diagnostics:
+Warning PBN5009 Connect/Data/Idempotent.input.cs L35 C18
+'global::ConnectFixtures.Idempotent.ILookup.WatchAsync' is marked [NoSideEffects] but is server-streaming, and Connect GET is unary only - the attribute has no effect here

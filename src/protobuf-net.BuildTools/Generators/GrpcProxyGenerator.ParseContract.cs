@@ -52,7 +52,39 @@ namespace ProtoBuf.BuildTools.Generators
         /// <c>GrpcModelPlanShapeTests</c>. Void requests and responses contribute nothing, since
         /// <c>Empty</c> carries its own hand-written marshaller and is never serialized by a TypeModel.
         /// </remarks>
-        private static GrpcContractCandidate ParseContract(INamedTypeSymbol iface,
+        /// <summary>
+        /// The shapes no build-time generator can express, named in every diagnostic that rejects one.
+        /// </summary>
+        /// <remarks>
+        /// Deliberately says nothing about what <em>does</em> handle them. protobuf-net.Grpc has a
+        /// reflective runtime proxy and its own <c>PBN4002</c> message already says so; a Connect
+        /// generator sharing this parse has no runtime path at all, so a reason claiming one would be
+        /// false. The parse says what is wrong; each generator says what to do about it.
+        /// </remarks>
+        private const string RuntimeOnlyShapes =
+            "Stream, IObservable<T> and Grpc.Core's own call types cannot be generated against";
+
+        /// <summary>
+        /// Classifies a service contract into the transport-neutral model in <c>Internal/Grpc</c>.
+        /// </summary>
+        /// <remarks>
+        /// <b><c>internal</c> because it is shared with the Connect generator</b>, which needs exactly
+        /// this - the method shapes, the context kinds, the void/<c>Empty</c> handling, the
+        /// <c>[SubService]</c> walk - and must not fork it. Nothing it produces mentions a transport:
+        /// <c>GrpcMethodKind</c> maps straight onto <c>ConnectMethodType</c>, and the only gRPC names
+        /// left in this file are namespace literals used to <em>reject</em> types, which both
+        /// generators reject alike.
+        /// <para>
+        /// It stays on <see cref="GrpcProxyGenerator"/> rather than moving to a neutrally-named class
+        /// because the coupling runs both ways and is not worth unpicking for a name: this file needs
+        /// <c>One</c> (Parse.cs), <c>HasAttribute</c> and the three attribute-name constants
+        /// (GrpcProxyGenerator.cs), and <c>EmptyTypeName</c> / <c>BytesValueTypeName</c> - from
+        /// <b>Emit.cs</b> - while the siblings need <c>Display</c> and this method back. Extracting it
+        /// means moving eight members across five files of shipped, CI-gated code. If that is ever
+        /// done, this list is the starting point.
+        /// </para>
+        /// </remarks>
+        internal static GrpcContractCandidate ParseContract(INamedTypeSymbol iface,
             INamedTypeSymbol? implementation, CancellationToken cancellationToken,
             List<ITypeSymbol>? payloadSink = null, Compilation? compilation = null)
         {
@@ -248,8 +280,8 @@ namespace ProtoBuf.BuildTools.Generators
             var returnInfo = CategorizeReturn(method.ReturnType);
             if (returnInfo is null)
             {
-                reason = $"its return type '{Display(method.ReturnType)}' is a shape only the runtime proxy "
-                    + "handles - Stream, IObservable<T> and Grpc.Core's own call types are reshaped at run time";
+                reason = $"its return type '{Display(method.ReturnType)}' is not a shape the generator "
+                    + "can express; " + RuntimeOnlyShapes;
                 return false;
             }
             var (responseShape, impliedKind, responseSymbol, voidResponse) = returnInfo.Value;
@@ -299,8 +331,8 @@ namespace ProtoBuf.BuildTools.Generators
                     var element = firstKind == ArgKind.AsyncEnumerable ? GetElementType(first.Type) : null;
                     if (firstKind == ArgKind.AsyncEnumerable && (element is null || IsRuntimeOnlyPayload(element)))
                     {
-                        reason = $"the element type of request stream '{first.Name}' is a shape only the runtime "
-                            + "proxy handles - Stream, IObservable<T> and Grpc.Core's own call types are reshaped at run time";
+                        reason = $"the element type of request stream '{first.Name}' is not a shape the "
+                            + "generator can express; " + RuntimeOnlyShapes;
                         return false;
                     }
 
@@ -332,8 +364,7 @@ namespace ProtoBuf.BuildTools.Generators
                     reason = $"parameter '{first.Name}' has type '{Display(first.Type)}', which is "
                         + (IsType(first.Type, "Grpc.Core", "ServerCallContext") || IsType(first.Type, "Grpc.Core", "CallOptions")
                             ? "a server-side type rather than something a client contract can carry"
-                            : "a shape only the runtime proxy handles - Stream, IObservable<T> and Grpc.Core's own "
-                                + "call types are reshaped at run time");
+                            : "not a shape the generator can express; " + RuntimeOnlyShapes);
                     return false;
                 }
             }
@@ -386,9 +417,56 @@ namespace ProtoBuf.BuildTools.Generators
                 returnTypeDisplay: Display(method.ReturnType),
                 parameters: parameters.MoveToImmutable(),
                 metadataExpressions: BuildMetadata(compilation, contractType, method, implementation,
-                    diagnostics));
+                    diagnostics),
+                // Connect's, and read here because this is the only place holding the contract's
+                // symbols; the gRPC emitter never asks for it. Whether it is *meaningful* - it is not,
+                // on a streaming method - is ProtoConnectGenerator's to report, since a gRPC-only
+                // project carrying the attribute is not this file's business.
+                noSideEffects: HasAttribute(method, ProtoConnectGenerator.NoSideEffectsAttributeName),
+                httpMethodAttribute: FindHttpMethodAttribute(compilation, method));
             return true;
         }
+
+        /// <summary>
+        /// An ASP.NET Core MVC <c>[HttpGet]</c>-family attribute on the operation, if any.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Matched by <em>base type</em> rather than by a list of names, so <c>[HttpGet]</c>,
+        /// <c>[HttpPost]</c>, <c>[AcceptVerbs]</c> and any consumer-defined derivative are all caught by
+        /// one test. That is safe here where name-matching is the rule elsewhere, because a consumer who
+        /// wrote the attribute necessarily has the symbol - their code would not compile otherwise.
+        /// </para>
+        /// <para>
+        /// Free opt-out for everyone without ASP.NET Core MVC in the compilation, which is most: no base
+        /// type, no walk. Note a *contract* assembly typically does not have it at all - MVC is in the
+        /// Microsoft.AspNetCore.App shared framework, and a transport-neutral contract has no reason to
+        /// take a framework reference - which is the main reason this is reported rather than honoured.
+        /// </para>
+        /// </remarks>
+        private static string? FindHttpMethodAttribute(Compilation? compilation, IMethodSymbol method)
+        {
+            // seeding parses with no compilation and discards diagnostics
+            if (compilation is null) return null;
+            if (compilation.GetTypeByMetadataName(HttpMethodAttributeName) is not INamedTypeSymbol baseType)
+            {
+                return null;
+            }
+
+            foreach (var attribute in method.GetAttributes())
+            {
+                for (var type = attribute.AttributeClass; type is not null; type = type.BaseType)
+                {
+                    if (SymbolEqualityComparer.Default.Equals(type, baseType))
+                    {
+                        return attribute.AttributeClass!.Name;
+                    }
+                }
+            }
+            return null;
+        }
+
+        private const string HttpMethodAttributeName = "Microsoft.AspNetCore.Mvc.Routing.HttpMethodAttribute";
 
         /// <summary>
         /// Reconstructs this operation's endpoint metadata as constructing expressions, or gives up for
