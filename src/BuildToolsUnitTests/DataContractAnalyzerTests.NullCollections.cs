@@ -127,6 +127,44 @@ public class Derived : Base {{
             Assert.Contains("'Items'", diag.GetMessage(CultureInfo.InvariantCulture));
         }
 
+        // a list-like type that opts out of list handling is an ordinary message, so SkipConstructor
+        // applies to it like any other contract
+        [Fact]
+        public async Task ReportsOnListLikeContractThatIgnoresListHandling()
+        {
+            var diags = await NullCollectionDiagnosticsAsync(@"
+#nullable enable
+using ProtoBuf;
+using System.Collections.Generic;
+[ProtoContract(SkipConstructor = true, IgnoreListHandling = true)]
+public class Foo : List<int> {
+    [ProtoMember(1)] public List<string> Tags { get; } = new();
+}");
+
+            var diag = Assert.Single(diags);
+            Assert.StartsWith("'Tags' is a non-nullable collection, but SkipConstructor means", diag.GetMessage(CultureInfo.InvariantCulture));
+        }
+
+        // a contract base that does not [ProtoInclude] the type leaves it a root of its own, and a
+        // root's callbacks run (probed) - PBN0013 is what reports the missing include
+        [Fact]
+        public async Task DoesNotReportWhenAnUnincludedSubTypeCallbackRestores()
+        {
+            var diags = await NullCollectionDiagnosticsAsync(@"
+#nullable enable
+using ProtoBuf;
+using System.Collections.Generic;
+[ProtoContract]
+public class Base { }
+[ProtoContract(SkipConstructor = true)]
+public class Derived : Base {
+    [ProtoMember(1)] public List<int> Items { get; set; } = new();
+    [ProtoAfterDeserialization] public void After() => Items ??= new();
+}");
+
+            Assert.Empty(diags);
+        }
+
         // ...but overriding a virtual callback the root declares does run, since the root's method
         // is invoked virtually
         [Fact]
@@ -202,7 +240,7 @@ public class Foo {{
             var diag = Assert.Single(diags);
             Assert.EndsWith(" To fix: " + fixes + ".", diag.GetMessage(CultureInfo.InvariantCulture));
             Assert.Equal(!contract.Contains("SkipConstructor") ? "true" : "false", diag.Properties["Constructed"]);
-            Assert.Equal(body.Contains("ProtoMember") ? "true" : "false", diag.Properties["Serialized"]);
+            Assert.Equal(body.Contains("ProtoMember") ? "true" : "false", diag.Properties["HasProtoMember"]);
         }
 
         // an abstract base is constructed as part of the concrete type, which runs its constructor

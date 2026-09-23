@@ -925,8 +925,10 @@ namespace ProtoBuf.BuildTools.Internal
                 restored ??= AssignedInDeserializationCallbacks(type);
                 if (restored.Contains(member.Name)) continue;
 
-                // [NullWrappedCollection] only means anything on a member that is written at all
-                bool serialized = member.GetAttributes().Any(attrib
+                // [NullWrappedCollection] only means anything on a member that is written at all, and
+                // is only offered where [ProtoMember] says so - conservative, since ImplicitFields and
+                // [DataMember] also serialize, but it never suggests wrapping something that is not
+                bool hasProtoMember = member.GetAttributes().Any(attrib
                     => attrib.AttributeClass is { Name: nameof(ProtoMemberAttribute) } ac && ac.InProtoBufNamespace());
                 bool constructed = notConstructed is null;
 
@@ -937,12 +939,12 @@ namespace ProtoBuf.BuildTools.Internal
                     {
                         member.Name,
                         notConstructed ?? "nothing assigns it when protobuf-net constructs the instance",
-                        DescribeCollectionFixes(constructed, serialized),
+                        DescribeCollectionFixes(constructed, hasProtoMember),
                     },
                     additionalLocations: null,
                     properties: DiagnosticPropertiesBuilder.Create()
                         .Add(CollectionLeftNullConstructedKey, constructed ? "true" : "false")
-                        .Add(CollectionLeftNullSerializedKey, serialized ? "true" : "false")
+                        .Add(CollectionLeftNullHasProtoMemberKey, hasProtoMember ? "true" : "false")
                         .Build()
                 ));
             }
@@ -952,13 +954,13 @@ namespace ProtoBuf.BuildTools.Internal
         // a constructor runs, null-wrapping only when the member is written, and a callback is the
         // one thing that works when nothing is constructed
         internal const string CollectionLeftNullConstructedKey = "Constructed";
-        internal const string CollectionLeftNullSerializedKey = "Serialized";
+        internal const string CollectionLeftNullHasProtoMemberKey = "HasProtoMember";
 
-        private static string DescribeCollectionFixes(bool constructed, bool serialized)
+        private static string DescribeCollectionFixes(bool constructed, bool hasProtoMember)
         {
             var fixes = new List<string> { "declare it nullable" };
             if (constructed) fixes.Add("initialize it");
-            if (serialized) fixes.Add("mark it [NullWrappedCollection] so that an empty one is written (this changes the wire format)");
+            if (hasProtoMember) fixes.Add("mark it [NullWrappedCollection] so that an empty one is written (this changes the wire format)");
             if (!constructed) fixes.Add("restore it in a deserialization callback");
             return string.Join(", ", fixes.Take(fixes.Count - 1)) + ", or " + fixes[fixes.Count - 1];
         }
@@ -1058,14 +1060,21 @@ namespace ProtoBuf.BuildTools.Internal
             return names;
         }
 
-        // below another contract in a hierarchy: a contract base class (PBN0013 covers one that does
-        // not include this type), or a contract interface whose [ProtoInclude] names it
+        // below another contract in a hierarchy: a base class or interface whose [ProtoInclude] names
+        // this type. A contract base that does *not* include it leaves this type a root of its own,
+        // whose callbacks do run (probed) - PBN0013 is what reports that shape
         private static bool IsProtoSubType(INamedTypeSymbol type)
         {
-            if (type.BaseType is { } baseType && baseType.GetAttributes().Any(IsProtoContractAttribute)) return true;
+            if (type.BaseType is { } baseType && Includes(baseType)) return true;
             foreach (var iface in type.AllInterfaces)
             {
-                foreach (var attrib in iface.GetAttributes())
+                if (Includes(iface)) return true;
+            }
+            return false;
+
+            bool Includes(INamedTypeSymbol candidate)
+            {
+                foreach (var attrib in candidate.GetAttributes())
                 {
                     if (attrib.AttributeClass is { Name: nameof(ProtoIncludeAttribute) } ac && ac.InProtoBufNamespace()
                         && attrib.TryGetTypeByName(nameof(ProtoIncludeAttribute.KnownType), out var known)
@@ -1074,11 +1083,8 @@ namespace ProtoBuf.BuildTools.Internal
                         return true;
                     }
                 }
+                return false;
             }
-            return false;
-
-            static bool IsProtoContractAttribute(AttributeData attrib)
-                => attrib.AttributeClass is { Name: nameof(ProtoContractAttribute) } ac && ac.InProtoBufNamespace();
         }
 
         private static bool OverridesDeserializationCallback(IMethodSymbol method)

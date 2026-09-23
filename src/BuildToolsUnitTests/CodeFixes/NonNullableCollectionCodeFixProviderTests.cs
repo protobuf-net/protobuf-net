@@ -28,12 +28,18 @@ namespace BuildToolsUnitTests.CodeFixes
         private static string Wrap(string body) => @"#nullable enable
 using ProtoBuf;
 using System.Collections.Generic;
+using PM = ProtoBuf.ProtoMemberAttribute;
 " + body;
 
         [Theory]
+        // the `= null!` existed only to silence CS8618, and goes with it
         [InlineData(
             "[ProtoContract] public class Foo { [ProtoMember(1)] public List<int> {|PBN0027:Items|} { get; set; } = null!; }",
-            "[ProtoContract] public class Foo { [ProtoMember(1)] public List<int>? Items { get; set; } = null!; }")]
+            "[ProtoContract] public class Foo { [ProtoMember(1)] public List<int>? Items { get; set; } }")]
+        [InlineData(
+            "[ProtoContract] public class Foo { [ProtoMember(1)] public string[] {|PBN0027:Items|} = default!; }",
+            "[ProtoContract] public class Foo { [ProtoMember(1)] public string[]? Items; }")]
+        // a real initializer stays: it is just not enough under SkipConstructor
         [InlineData(
             "[ProtoContract(SkipConstructor = true)] public class Foo { [ProtoMember(1)] public string[] {|PBN0027:Items|} = new string[0]; }",
             "[ProtoContract(SkipConstructor = true)] public class Foo { [ProtoMember(1)] public string[]? Items = new string[0]; }")]
@@ -47,17 +53,17 @@ using System.Collections.Generic;
         [Theory]
         [InlineData(
             "[ProtoContract] public class Foo { [ProtoMember(1)] public List<int> {|PBN0027:Items|} { get; set; } }",
-            "[ProtoContract] public class Foo { [ProtoMember(1)] public List<int> Items { get; set; } = new List<int>(); }")]
+            "[ProtoContract] public class Foo { [ProtoMember(1)] public List<int> Items { get; set; } = new(); }")]
         // a spelled-out null is replaced rather than added to
         [InlineData(
             "[ProtoContract] public class Foo { [ProtoMember(1)] public Dictionary<int, string> {|PBN0027:Items|} { get; set; } = null!; }",
-            "[ProtoContract] public class Foo { [ProtoMember(1)] public Dictionary<int, string> Items { get; set; } = new Dictionary<int, string>(); }")]
+            "[ProtoContract] public class Foo { [ProtoMember(1)] public Dictionary<int, string> Items { get; set; } = new(); }")]
         [InlineData(
             "[ProtoContract] public class Foo { [ProtoMember(1)] public string[] {|PBN0027:Items|} = default!; }",
-            "[ProtoContract] public class Foo { [ProtoMember(1)] public string[] Items = new string[0]; }")]
+            "[ProtoContract] public class Foo { [ProtoMember(1)] public string[] Items = System.Array.Empty<string>(); }")]
         [InlineData(
             "[ProtoContract] public class Foo { [ProtoMember(1)] public required HashSet<string> {|PBN0027:Items|} { get; init; } }",
-            "[ProtoContract] public class Foo { [ProtoMember(1)] public required HashSet<string> Items { get; init; } = new HashSet<string>(); }")]
+            "[ProtoContract] public class Foo { [ProtoMember(1)] public required HashSet<string> Items { get; init; } = new(); }")]
         public Task Initializes(string source, string expected)
             => RunAsync(source, expected, NonNullableCollectionCodeFixProvider.InitializeKey);
 
@@ -69,10 +75,13 @@ using System.Collections.Generic;
         [InlineData(
             "[ProtoContract(SkipConstructor = true)] public record TestRecord([property: ProtoMember(1)] string[] {|PBN0027:Array|});",
             "[ProtoContract(SkipConstructor = true)] public record TestRecord([property: ProtoMember(1), NullWrappedCollection] string[] Array);")]
-        // and is spelled the way [ProtoMember] is
+        // however [ProtoMember] is spelled, the new attribute is as short as the using directives allow
         [InlineData(
             "[ProtoContract] public class Foo { [ProtoBuf.ProtoMemberAttribute(1)] public IList<int> {|PBN0027:Items|} { get; set; } = null!; }",
-            "[ProtoContract] public class Foo { [ProtoBuf.ProtoMemberAttribute(1), ProtoBuf.NullWrappedCollection] public IList<int> Items { get; set; } = null!; }")]
+            "[ProtoContract] public class Foo { [ProtoBuf.ProtoMemberAttribute(1), NullWrappedCollection] public IList<int> Items { get; set; } = null!; }")]
+        [InlineData(
+            "[ProtoContract] public class Foo { [PM(1)] public IList<int> {|PBN0027:Items|} { get; set; } = null!; }",
+            "[ProtoContract] public class Foo { [PM(1), NullWrappedCollection] public IList<int> Items { get; set; } = null!; }")]
         public Task NullWraps(string source, string expected)
             => RunAsync(source, expected, NonNullableCollectionCodeFixProvider.NullWrapKey);
 
@@ -91,6 +100,9 @@ using System.Collections.Generic;
             "PBN0027.Nullable", "PBN0027.Initialize")]
         [InlineData("[ProtoContract] public class Foo { [ProtoMember(1)] public IList<int> Items { get; set; } = null!; }",
             "PBN0027.Nullable", "PBN0027.NullWrap")]
+        // `List<int>?` would change A as well as B, so only the initializer is offered
+        [InlineData("[ProtoContract] public class Foo { public List<int> A = new(), B; }",
+            "PBN0027.Initialize")]
         public async Task OffersOnlyWhatWorks(string source, params string[] expected)
         {
             var offered = await OfferedFixesAsync(Wrap(source));
