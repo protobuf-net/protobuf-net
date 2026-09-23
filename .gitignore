@@ -34,3 +34,4 @@ profile.arm.json
 bench-*/
 # local worktree location for subagent-driven development
 .worktrees/
+.connect/

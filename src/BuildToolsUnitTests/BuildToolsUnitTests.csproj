@@ -46,6 +46,12 @@
     <Compile Remove="Grpc/Data/**/*.cs" />
     <None Include="Grpc/Data/**/*.*" />
     <None Update="Grpc/Data/**/*.*" CopyToOutputDirectory="PreserveNewest" />
+    <!-- same unqualified glob as Grpc/Data, and for the same reason: _ConnectSurface.cs has no inner
+         dot and must not be compiled into the test assembly - it is a snapshot of protobuf-net.Connect's
+         surface, fed to the in-memory compilation so the emitted code is actually compiled there. -->
+    <Compile Remove="Connect/Data/**/*.cs" />
+    <None Include="Connect/Data/**/*.*" />
+    <None Update="Connect/Data/**/*.*" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

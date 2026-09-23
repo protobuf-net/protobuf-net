@@ -83,6 +83,11 @@ namespace ProtoBuf.BuildTools.Generators
             // them moves, and putting them in the plan would invalidate the cached emit step
             var locations = new Dictionary<string, PlanLocation>(StringComparer.Ordinal);
 
+            // kept only for the JSON pass, which needs to read enum members back off the symbols -
+            // canonical JSON writes an enum as its *name*, which the binary path never asks for and
+            // so the plan never carried. Nothing else may hold a symbol past this method.
+            var symbols = new Dictionary<string, INamedTypeSymbol>(StringComparer.Ordinal);
+
             // off by default, exactly as RuntimeTypeModel.AllowParseableTypes is: it changes the wire
             // form of any member whose type qualifies, so it has to be opted into on both sides
             var allowParseableTypes = false;
@@ -199,7 +204,11 @@ namespace ProtoBuf.BuildTools.Generators
                 var contract = ParseContract(compilation, type, diagnostics, surrogates, serializers,
                     declaredSubTypes,
                     allowParseableTypes, out var reachable, tupleLevels, tupleConflicts, cancellationToken);
-                if (contract is not null) parsed.Add(key, contract);
+                if (contract is not null)
+                {
+                    parsed.Add(key, contract);
+                    symbols[key] = type;
+                }
                 foreach (var next in reachable) pending.Enqueue(next);
             }
 
@@ -216,6 +225,16 @@ namespace ProtoBuf.BuildTools.Generators
             }
 
             DropUnsatisfiable(parsed, locations, diagnostics);
+
+            // the JSON surface, and only where the seam is referenced: a model in a project that has
+            // never heard of Connect emits none of this, and pays nothing for it
+            var jsonContracts = new HashSet<string>(StringComparer.Ordinal);
+            var jsonEnums = System.Array.Empty<ProtoJsonEnumPlan>();
+            if (compilation.GetTypeByMetadataName(JsonSerializerInterfaceName) is not null)
+            {
+                PlanJson(parsed, symbols, compilation, locations, diagnostics,
+                    out jsonContracts, out jsonEnums);
+            }
 
             ProtoModelPlan? plan = null;
             // a [ProtoSchema] model legitimately has NOTHING at this point: its contracts come from
@@ -279,7 +298,9 @@ namespace ProtoBuf.BuildTools.Generators
                     // consumer may well have it while lacking CollectionsMarshal
                     immutableArrayAsSpan: compilation.GetTypeByMetadataName("System.Collections.Immutable.ImmutableArray`1")
                         is { } immutableArray
-                        && immutableArray.GetMembers("AsSpan").Length != 0);
+                        && immutableArray.GetMembers("AsSpan").Length != 0,
+                    jsonContracts: new(jsonContracts.OrderBy(static x => x, StringComparer.Ordinal).ToArray()),
+                    jsonEnums: new(jsonEnums));
             }
 
             return new ProtoParseResult(plan, new(diagnostics.ToArray()),
@@ -894,6 +915,10 @@ namespace ProtoBuf.BuildTools.Generators
                 var mapValueFormat = ProtoDataFormat.Default;
                 var disableMap = false;
                 var hasProtoMap = false;
+                // The schema name, where the consumer pinned one - from any of the four places
+                // MetaType takes it. Binary has no use for it; canonical JSON derives its key from
+                // it, so it stops being decoration the moment JSON is on.
+                string? schemaName = null, dataMemberName = null, xmlElementName = null;
                 AttributeData? declaredDefault = null;
                 foreach (var attribute in symbol.GetAttributes())
                 {
@@ -905,10 +930,13 @@ namespace ProtoBuf.BuildTools.Generators
                     else if (attributeName == DataMemberAttributeName)
                     {
                         dataMemberOrder = GetNamedInt(attribute, "Order");
+                        dataMemberName = GetNamedString(attribute, "Name");
                     }
                     else if (attributeName is XmlElementAttributeName or XmlArrayAttributeName)
                     {
                         xmlOrder = GetNamedInt(attribute, "Order");
+                        // note the argument is ElementName here, not Name
+                        xmlElementName ??= GetNamedString(attribute, "ElementName");
                     }
                     else if (attributeName is XmlIgnoreAttributeName or NonSerializedAttributeName
                         or ProtoIgnoreAttributeName)
@@ -996,7 +1024,12 @@ namespace ProtoBuf.BuildTools.Generators
                                 case "IsRequired" when argument.Value.Value is bool required:
                                     isRequired = required;
                                     continue;
-                                // schema naming only
+                                // schema naming, which is *not* only decoration once JSON is in play:
+                                // the canonical JSON key is derived from this name, so the binary
+                                // path still ignores it while the JSON emitter keys on it
+                                case "Name" when argument.Value.Value is string pinned:
+                                    schemaName = pinned;
+                                    continue;
                                 case "Name":
                                     continue;
                                 // the constant is the DataFormat enum's underlying int
@@ -1056,11 +1089,27 @@ namespace ProtoBuf.BuildTools.Generators
                     && partialMembers.TryGetValue(symbol.Name, out var partial) && partial.FieldNumber > 0)
                 {
                     fieldNumber = partial.FieldNumber;
+                    // first-wins, as GetFieldName is: the member's own [ProtoMember(Name)] would
+                    // already have set this, and cannot be overridden from the type
+                    schemaName ??= partial.Name;
                     isRequired = partial.IsRequired;
                     isPacked = partial.IsPacked;
                     dataFormat = partial.DataFormat;
                     overwriteList = partial.OverwriteList;
                 }
+                // The schema name follows the SAME precedence and the same gating, because it is
+                // read in the same blocks: MetaType's GetFieldName is first-wins, and its
+                // [DataMember] and Xml blocks run only `if (!done)` - where `done` means a
+                // ProtoBuf-family attribute pinned a tag. So a member with [ProtoMember(5)] and
+                // [DataMember(Name = "x")] keeps the C# name, because the block carrying that Name
+                // is never reached.
+                var protoBufPinned = fieldNumber is not null;
+                if (!protoBufPinned)
+                {
+                    schemaName ??= isDataContract ? dataMemberName : null;
+                    schemaName ??= isXmlType ? xmlElementName : null;
+                }
+
                 fieldNumber ??= isDataContract && dataMemberOrder >= 1
                     ? dataMemberOrder + dataMemberOffset : null;
                 fieldNumber ??= isXmlType && xmlOrder >= 1 ? xmlOrder : null;
@@ -1447,7 +1496,7 @@ namespace ProtoBuf.BuildTools.Generators
                     members.Add(new ProtoMemberPlan(fieldNumber.Value, symbol.Name, kind,
                         declaredTypeName: declaredTypeName, map: mapPlan,
                         isPacked: isPacked, overwriteList: overwriteList, wrappedValue: wrappedValue, wrappedValueGroup: wrappedValueGroup, wrappedCollection: wrappedCollection, wrappedCollectionGroup: wrappedCollectionGroup,
-                        dataFormat: dataFormat, isRequired: isRequired, usesAccessor: usesAccessor, compatibilityLevel: compatibilityLevel, declaredCompatibilityLevel: declaredCompatibilityLevel, isReadOnly: isReadOnly, writeCondition: writeCondition, specifiedMember: specifiedMember, accessorField: accessorField, accessorReads: accessorReads, mapKeyFormat: mapKeyFormat, mapValueFormat: mapValueFormat, disableMap: disableMap));
+                        dataFormat: dataFormat, isRequired: isRequired, usesAccessor: usesAccessor, compatibilityLevel: compatibilityLevel, declaredCompatibilityLevel: declaredCompatibilityLevel, isReadOnly: isReadOnly, writeCondition: writeCondition, specifiedMember: specifiedMember, accessorField: accessorField, accessorReads: accessorReads, mapKeyFormat: mapKeyFormat, mapValueFormat: mapValueFormat, disableMap: disableMap, schemaName: schemaName));
                 }
                 else if (kind == ProtoMemberKind.Message)
                 {
@@ -1512,7 +1561,7 @@ namespace ProtoBuf.BuildTools.Generators
                         repeated: shape.Repeated, elementTypeName: shape.ElementTypeName,
                         declaredTypeName: declaredTypeName,
                         isPacked: isPacked, overwriteList: overwriteList, wrappedValue: wrappedValue, wrappedValueGroup: wrappedValueGroup, wrappedCollection: wrappedCollection, wrappedCollectionGroup: wrappedCollectionGroup,
-                        dataFormat: dataFormat, isRequired: isRequired, usesAccessor: usesAccessor, compatibilityLevel: compatibilityLevel, declaredCompatibilityLevel: declaredCompatibilityLevel, isReadOnly: isReadOnly, writeCondition: writeCondition, specifiedMember: specifiedMember, accessorField: accessorField, accessorReads: accessorReads, mapKeyFormat: mapKeyFormat, mapValueFormat: mapValueFormat, disableMap: disableMap));
+                        dataFormat: dataFormat, isRequired: isRequired, usesAccessor: usesAccessor, compatibilityLevel: compatibilityLevel, declaredCompatibilityLevel: declaredCompatibilityLevel, isReadOnly: isReadOnly, writeCondition: writeCondition, specifiedMember: specifiedMember, accessorField: accessorField, accessorReads: accessorReads, mapKeyFormat: mapKeyFormat, mapValueFormat: mapValueFormat, disableMap: disableMap, schemaName: schemaName));
                 }
             }
 
@@ -1900,8 +1949,9 @@ namespace ProtoBuf.BuildTools.Generators
         private readonly struct PartialMember
         {
             public PartialMember(string memberName, int fieldNumber, bool isRequired, bool isPacked,
-                ProtoDataFormat dataFormat, bool overwriteList)
+                ProtoDataFormat dataFormat, bool overwriteList, string? name)
             {
+                Name = name;
                 MemberName = memberName;
                 FieldNumber = fieldNumber;
                 IsRequired = isRequired;
@@ -1909,6 +1959,9 @@ namespace ProtoBuf.BuildTools.Generators
                 DataFormat = dataFormat;
                 OverwriteList = overwriteList;
             }
+
+            /// <summary>The schema name this declaration pins, if any; for JSON, not for the wire.</summary>
+            public string? Name { get; }
 
             public string MemberName { get; }
             public int FieldNumber { get; }
@@ -1933,6 +1986,7 @@ namespace ProtoBuf.BuildTools.Generators
                 return null;
             }
             bool isRequired = false, isPacked = false, overwriteList = false;
+            string? pinnedName = null;
             var dataFormat = ProtoDataFormat.Default;
             foreach (var argument in attribute.NamedArguments)
             {
@@ -1953,7 +2007,11 @@ namespace ProtoBuf.BuildTools.Generators
                         }
                         dataFormat = parsed;
                         continue;
-                    // schema naming only
+                    // schema naming, which canonical JSON keys on - so it is carried rather than
+                    // discarded, exactly as for [ProtoMember(Name = ...)]
+                    case "Name" when argument.Value.Value is string partialName:
+                        pinnedName = partialName;
+                        continue;
                     case "Name":
                         continue;
                     // OverwriteList used to be refused here, because MetaType's partial-member branch
@@ -1969,7 +2027,7 @@ namespace ProtoBuf.BuildTools.Generators
                 return null;
             }
             return new PartialMember(memberName, fieldNumber, isRequired, isPacked, dataFormat,
-                overwriteList);
+                overwriteList, pinnedName);
         }
 
         /// <summary><c>System.Type</c>, or an array or collection of it.</summary>
@@ -3082,6 +3140,26 @@ namespace ProtoBuf.BuildTools.Generators
             foreach (var argument in attribute.NamedArguments)
             {
                 if (argument.Key == name && argument.Value.Value is int value) return value;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// A named <see cref="string"/> argument, or null where it is absent or empty.
+        /// </summary>
+        /// <remarks>
+        /// Empty counts as absent, matching <c>MetaType.GetFieldName</c>'s
+        /// <c>string.IsNullOrEmpty</c> test - a <c>[DataMember(Name = "")]</c> does not rename
+        /// anything there, and must not here either.
+        /// </remarks>
+        private static string? GetNamedString(AttributeData attribute, string name)
+        {
+            foreach (var argument in attribute.NamedArguments)
+            {
+                if (argument.Key == name && argument.Value.Value is string value && value.Length != 0)
+                {
+                    return value;
+                }
             }
             return null;
         }

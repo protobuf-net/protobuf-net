@@ -27,6 +27,8 @@ namespace ProtoBuf.BuildTools.Internal.Aot
 
         /// <summary>A schema shape the front-end cannot project into a plan yet.</summary>
         SchemaUnsupported,
+
+        JsonOmitted,
     }
 
     /// <summary>
