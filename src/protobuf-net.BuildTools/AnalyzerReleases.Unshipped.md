@@ -10,6 +10,7 @@
 
 Rule ID  | Category         | Severity | Notes
 ---------|------------------|----------|--------------------
+PBN0027  | Usage            | Warning  | Non-nullable collection that nothing initializes on deserialize (`DataContractAnalyzer`)
 PBN3005  | ProtoBuf          | Info     | No canonical protobuf JSON mapping for a contract (`ProtoModelGenerator`)
 PBN5000  | ProtoBuf.Connect | Warning  | Language version below the C# 12 floor (`ProtoConnectGenerator`)
 PBN5001  | ProtoBuf.Connect | Warning  | Service method shape not emitted (`ProtoConnectGenerator`)

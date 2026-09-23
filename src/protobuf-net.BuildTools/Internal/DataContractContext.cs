@@ -834,15 +834,198 @@ namespace ProtoBuf.BuildTools.Internal
                     if (reference.GetSyntax() is not ConstructorDeclarationSyntax declaration) continue;
                     foreach (var assignment in declaration.DescendantNodes().OfType<AssignmentExpressionSyntax>())
                     {
-                        switch (assignment.Left)
-                        {
-                            case IdentifierNameSyntax id when id.Identifier.ValueText == member.MemberName:
-                                return true;
-                            case MemberAccessExpressionSyntax { Expression: ThisExpressionSyntax } access
-                                when access.Name.Identifier.ValueText == member.MemberName:
-                                return true;
-                        }
+                        if (AssignedName(assignment) == member.MemberName) return true;
                     }
+                }
+            }
+            return false;
+        }
+
+        // `x = ...` or `this.x = ...`, including `??=`; anything else is not recognisably ours
+        private static string? AssignedName(AssignmentExpressionSyntax assignment) => assignment.Left switch
+        {
+            IdentifierNameSyntax id => id.Identifier.ValueText,
+            MemberAccessExpressionSyntax { Expression: ThisExpressionSyntax } access => access.Name.Identifier.ValueText,
+            _ => null,
+        };
+
+        // A collection is only assigned by deserialization when the payload carries it, and an empty
+        // one is normally not written at all - so a sender holding [] leaves the receiver holding
+        // whatever construction left there. When that is null, on a member the compiler believes is
+        // non-null, the result is an NRE nothing warned about. Construction leaves it null in two
+        // ways, both probed against RuntimeTypeModel rather than assumed:
+        //
+        // - SkipConstructor builds the instance with GetUninitializedObject, so no constructor runs
+        //   and nor does any initializer, since those are compiled into the constructor: `= new()`,
+        //   `{ get; } = new()` and a positional record parameter all come back null;
+        // - otherwise, nothing assigns it: no initializer - or only `= null!`, the routine way of
+        //   silencing CS8618 on a DTO, which `required` also silences - and no assignment in the
+        //   parameterless constructor, which is the one protobuf-net calls. This is where protobuf
+        //   parts company with JSON, which writes `[]` and so gets the collection back.
+        //
+        // Reported per member, at the member, because each has a fix of its own - unlike PBN0026,
+        // where no arrangement of the member helps. Only for a *non-nullable* reference: declaring it
+        // nullable is one of those fixes, and the compiler then makes every reader deal with null.
+        internal void ReportCollectionsLeftNull(SyntaxNodeAnalysisContext context, INamedTypeSymbol type)
+        {
+            // with a surrogate the library constructs the surrogate and converts, never this type
+            if (!HasFlag(DataContractContextFlags.IsProtoContract)
+                || HasFlag(DataContractContextFlags.HasSurrogate)
+                || type.TypeKind == TypeKind.Interface) return;
+
+            // SkipConstructor belongs to the type actually constructed, so on an abstract type it is
+            // inert: the concrete type's own setting decides, and it runs this type's constructor
+            // like any other base (probed both ways)
+            bool skipConstructor = HasFlag(DataContractContextFlags.SkipConstructor) && !type.IsAbstract;
+
+            HashSet<string>? assignedByConstructor = null;
+            if (!skipConstructor && !TryGetAssignedByConstructor(type, out assignedByConstructor)) return;
+
+            HashSet<string>? restored = null;
+            foreach (var candidate in type.GetMembers())
+            {
+                if (candidate.IsStatic) continue; // const included
+                ISymbol member;
+                ITypeSymbol memberType;
+                NullableAnnotation annotation;
+                switch (candidate)
+                {
+                    // an auto-property's storage is its backing field, which is how a getter-only
+                    // one and a positional record parameter are caught; reported as the property,
+                    // since that is what the reader wrote
+                    case IFieldSymbol { IsImplicitlyDeclared: true, AssociatedSymbol: IPropertySymbol property }:
+                        (member, memberType, annotation) = (property, property.Type, property.NullableAnnotation);
+                        break;
+                    case IFieldSymbol { IsImplicitlyDeclared: false } field:
+                        (member, memberType, annotation) = (field, field.Type, field.NullableAnnotation);
+                        break;
+                    default:
+                        continue;
+                }
+
+                // an oblivious member has promised nothing, and a value type cannot be null
+                if (annotation != NullableAnnotation.NotAnnotated || !memberType.IsReferenceType) continue;
+                if (!IsRepeatedLike(memberType)) continue;
+
+                // a partial type is visited once per declaration; the part declaring the member owns it
+                if (member.Locations.FirstOrDefault() is not { SourceTree: not null } location
+                    || location.SourceTree != context.Node.SyntaxTree
+                    || !context.Node.FullSpan.Contains(location.SourceSpan)) continue;
+
+                if (!skipConstructor
+                    && (HasNonNullInitializer(member) || assignedByConstructor!.Contains(member.Name))) continue;
+
+                restored ??= AssignedInDeserializationCallbacks(type);
+                if (restored.Contains(member.Name)) continue;
+
+                context.ReportDiagnostic(Diagnostic.Create(
+                    descriptor: DataContractAnalyzer.NonNullableCollectionLeftNull,
+                    location: location,
+                    messageArgs: new object[]
+                    {
+                        member.Name,
+                        skipConstructor
+                            ? "SkipConstructor means no constructor or initializer runs on deserialize"
+                            : "nothing assigns it when protobuf-net constructs the instance",
+                    },
+                    additionalLocations: null,
+                    properties: null
+                ));
+            }
+        }
+
+        // The names assigned by whichever constructors can run when protobuf-net creates the type:
+        // the parameterless one, or - for an abstract type, where the concrete type picks - any of
+        // them. False when that cannot be answered, which stands the whole check down: no
+        // constructor to call is PBN0015's error rather than ours, and a `: this(...)` chain could
+        // assign anything (a positional record's parameterless constructor must have one).
+        private static bool TryGetAssignedByConstructor(INamedTypeSymbol type, out HashSet<string>? assigned)
+        {
+            assigned = new HashSet<string>(StringComparer.Ordinal);
+            bool any = false;
+            foreach (var ctor in type.InstanceConstructors)
+            {
+                if (ctor.Parameters.Length != 0 && !type.IsAbstract) continue;
+                any = true;
+                foreach (var reference in ctor.DeclaringSyntaxReferences)
+                {
+                    if (reference.GetSyntax() is not ConstructorDeclarationSyntax declaration)
+                    {
+                        // a primary constructor, declared by the type itself: a positional record's
+                        // assigns its members from its parameters, which only an abstract type reaches
+                        if (ctor.Parameters.Length != 0) return false;
+                        continue;
+                    }
+                    if (declaration.Initializer?.IsKind(SyntaxKind.ThisConstructorInitializer) == true) return false;
+                    foreach (var assignment in declaration.DescendantNodes().OfType<AssignmentExpressionSyntax>())
+                    {
+                        if (AssignedName(assignment) is { } name) assigned.Add(name);
+                    }
+                }
+            }
+            return any;
+        }
+
+        // an initializer runs as part of every constructor, so anything but a spelled-out null
+        // counts; `= null!` and `= default!` are how CS8618 is routinely silenced, and assign nothing
+        private static bool HasNonNullInitializer(ISymbol member)
+        {
+            foreach (var reference in member.DeclaringSyntaxReferences)
+            {
+                var value = reference.GetSyntax() switch
+                {
+                    PropertyDeclarationSyntax property => property.Initializer?.Value,
+                    VariableDeclaratorSyntax variable => variable.Initializer?.Value,
+                    _ => null,
+                };
+                while (value is PostfixUnaryExpressionSyntax postfix
+                    && postfix.IsKind(SyntaxKind.SuppressNullableWarningExpression))
+                {
+                    value = postfix.Operand;
+                }
+                if (value is null || value is DefaultExpressionSyntax
+                    || value.IsKind(SyntaxKind.NullLiteralExpression)
+                    || value.IsKind(SyntaxKind.DefaultLiteralExpression)) continue;
+                return true;
+            }
+            return false;
+        }
+
+        // A deserialization callback can restore a member on either path - including under
+        // SkipConstructor, where nothing else can: MetaType invokes it on the uninitialized
+        // instance, before or after the fields are read. Matched by name, as IsAssignedInInstanceConstructor is, since this only
+        // ever suppresses a warning; `Items ??= new();` in an after-hook is the idiomatic form.
+        private static HashSet<string> AssignedInDeserializationCallbacks(INamedTypeSymbol type)
+        {
+            var names = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var method in type.GetMembers().OfType<IMethodSymbol>())
+            {
+                if (!IsDeserializationCallback(method)) continue;
+                foreach (var reference in method.DeclaringSyntaxReferences)
+                {
+                    foreach (var assignment in reference.GetSyntax().DescendantNodes().OfType<AssignmentExpressionSyntax>())
+                    {
+                        if (AssignedName(assignment) is { } name) names.Add(name);
+                    }
+                }
+            }
+            return names;
+        }
+
+        // both callback families MetaType honours, at the two points that run on the receiving end
+        private static bool IsDeserializationCallback(IMethodSymbol method)
+        {
+            foreach (var attrib in method.GetAttributes())
+            {
+                var ac = attrib.AttributeClass;
+                if (ac is null) continue;
+                switch (ac.Name)
+                {
+                    case nameof(ProtoBeforeDeserializationAttribute) when ac.InProtoBufNamespace():
+                    case nameof(ProtoAfterDeserializationAttribute) when ac.InProtoBufNamespace():
+                    case "OnDeserializingAttribute" when ac.InNamespace("System", "Runtime", "Serialization"):
+                    case "OnDeserializedAttribute" when ac.InNamespace("System", "Runtime", "Serialization"):
+                        return true;
                 }
             }
             return false;

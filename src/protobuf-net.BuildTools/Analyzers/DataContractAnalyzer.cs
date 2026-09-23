@@ -234,6 +234,15 @@ internal static readonly DiagnosticDescriptor DeclaredAndIgnored = new(
             isEnabledByDefault: true,
             helpLinkUri: "https://stackoverflow.com/a/3162253/1882616");
 
+        internal static readonly DiagnosticDescriptor NonNullableCollectionLeftNull = new(
+            id: "PBN0027",
+            title: nameof(DataContractAnalyzer) + "." + nameof(NonNullableCollectionLeftNull),
+            messageFormat: "'{0}' is a non-nullable collection, but {1}; it is null whenever the payload does not carry it, and an empty collection is normally not written at all.",
+            category: Literals.CategoryUsage,
+            defaultSeverity: DiagnosticSeverity.Warning,
+            isEnabledByDefault: true,
+            helpLinkUri: "https://docs.protobuf-net.dev/rules/PBN0027");
+
         internal static readonly DiagnosticDescriptor ProtoContractOnInterface = new(
             id: "PBN0023",
             title: nameof(DataContractAnalyzer) + "." + nameof(ProtoContractOnInterface),
@@ -657,6 +666,10 @@ internal static readonly DiagnosticDescriptor DeclaredAndIgnored = new(
                         properties: null
                     ));
                 }
+                // not inside ReportProblems: that bails when no member is annotated, and a contract
+                // with no [ProtoMember] at all is where this is sharpest - the member is then never
+                // written, so it is null after *every* deserialize
+                typeContext.ReportCollectionsLeftNull(context, type);
                 typeContext.ReportProblems(context, type);
             }
 
