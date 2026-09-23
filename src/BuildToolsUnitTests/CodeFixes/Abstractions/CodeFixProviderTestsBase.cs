@@ -23,10 +23,13 @@ namespace BuildToolsUnitTests.CodeFixes.Abstractions
             string expectedCode,
             DiagnosticResult? diagnosticResult = null,
             string? targetFramework = null,
+            string? codeActionEquivalenceKey = null,
             params DiagnosticResult[] standardExpectedDiagnostics)
                 where TDiagnosticAnalyzer : DiagnosticAnalyzer, new()
         {
             var codeFixTest = CodeFixProviderTestsBase<TCodeFixProvider>.BuildCSharpCodeFixTest<TDiagnosticAnalyzer>(sourceCode, expectedCode, targetFramework);
+            // picks one fix where a provider offers several; null takes the first
+            codeFixTest.CodeActionEquivalenceKey = codeActionEquivalenceKey;
 
             if (diagnosticResult is not null)
             {
