@@ -346,7 +346,7 @@ namespace ProtoBuf.Serializers
         /// </summary>
         public static SubTypeState<T> Create<TValue>(ISerializationContext context, TValue value)
             where TValue : class, T
-            => new SubTypeState<T>(context, TypeHelper<T>.Factory, value, null);
+            => new SubTypeState<T>(context, TypeHelper<TValue>.Factory, value, null);
 
         private SubTypeState(ISerializationContext context, Func<ISerializationContext, object> ctor,
             object value, Action<T, ISerializationContext> onBeforeDeserialize)
