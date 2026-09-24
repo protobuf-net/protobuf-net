@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <!-- enables trim/AOT analysis at ordinary build time too, so annotation regressions are caught
+         without paying for a native publish - the same reason src/AotSmoke sets it -->
+    <PublishAot>true</PublishAot>
+    <!-- Opts this project into C# interceptors for the namespace the generator emits into. Without it,
+         the generator emits no interceptor at all - an [InterceptsLocation] in a namespace the consumer
+         has not enabled is CS9137, an error - and the plain CreateGrpcService call below would fall back
+         to the reflective factory, which is exactly what fails under AOT. So this one line is what the
+         "no factory argument" check downstream is really testing. -->
+    <InterceptorsNamespaces>$(InterceptorsNamespaces);ProtoBuf.AOT</InterceptorsNamespaces>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <!-- the [ProtoModel]/[ProtoSerializable] trigger attributes are [Experimental] -->
+    <NoWarn>$(NoWarn);PBN9001</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- the local protobuf-net, so the AOT serializer generator under test is the one that runs;
+         protobuf-net.Grpc comes from the package, which is the point - this proves the generated
+         code binds to the *shipped* runtime surface, where the golden tests use a snapshot -->
+    <ProjectReference Include="../protobuf-net/protobuf-net.csproj" />
+    <ProjectReference Include="../protobuf-net.BuildTools/protobuf-net.BuildTools.csproj"
+                      OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <PackageReference Include="protobuf-net.Grpc" />
+    <PackageReference Include="Grpc.AspNetCore.Server" />
+    <PackageReference Include="Grpc.Net.Client" />
+  </ItemGroup>
+
+</Project>

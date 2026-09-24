@@ -1,4 +1,4 @@
-using ProtoBuf.Internal;
+﻿using ProtoBuf.Internal;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -13,52 +13,52 @@ namespace ProtoBuf.Serializers
     {
         /// <summary>Create a serializer that operates on immutable arrays</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static RepeatedSerializer<ImmutableArray<T>, T> CreateImmutableArray<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
+        public static RepeatedSerializer<ImmutableArray<T>, T> CreateImmutableArray<T>()
             => SerializerCache<ImmutableArraySerializer<T>>.InstanceField;
 
         /// <summary>Create a serializer that operates on immutable lists</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static RepeatedSerializer<ImmutableList<T>, T> CreateImmutableList<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
+        public static RepeatedSerializer<ImmutableList<T>, T> CreateImmutableList<T>()
             => SerializerCache<ImmutableListSerializer<T>>.InstanceField;
 
         /// <summary>Create a serializer that operates on immutable lists</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static RepeatedSerializer<IImmutableList<T>, T> CreateImmutableIList<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
+        public static RepeatedSerializer<IImmutableList<T>, T> CreateImmutableIList<T>()
             => SerializerCache<ImmutableIListSerializer<T>>.InstanceField;
 
         /// <summary>Create a serializer that operates on immutable queues</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static RepeatedSerializer<ImmutableQueue<T>, T> CreateImmutableQueue<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
+        public static RepeatedSerializer<ImmutableQueue<T>, T> CreateImmutableQueue<T>()
             => SerializerCache<ImmutableQueueSerializer<T>>.InstanceField;
 
         /// <summary>Create a serializer that operates on immutable queues</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static RepeatedSerializer<IImmutableQueue<T>, T> CreateImmutableIQueue<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
+        public static RepeatedSerializer<IImmutableQueue<T>, T> CreateImmutableIQueue<T>()
             => SerializerCache<ImmutableIQueueSerializer<T>>.InstanceField;
 
         /// <summary>Create a serializer that operates on immutable stacks</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static RepeatedSerializer<ImmutableStack<T>, T> CreateImmutableStack<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
+        public static RepeatedSerializer<ImmutableStack<T>, T> CreateImmutableStack<T>()
             => SerializerCache<ImmutableStackSerializer<T>>.InstanceField;
 
         /// <summary>Create a serializer that operates on immutable stacks</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static RepeatedSerializer<IImmutableStack<T>, T> CreateImmutableIStack<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
+        public static RepeatedSerializer<IImmutableStack<T>, T> CreateImmutableIStack<T>()
             => SerializerCache<ImmutableIStackSerializer<T>>.InstanceField;
 
         /// <summary>Create a serializer that operates on immutable sets</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static RepeatedSerializer<ImmutableHashSet<T>, T> CreateImmutableHashSet<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
+        public static RepeatedSerializer<ImmutableHashSet<T>, T> CreateImmutableHashSet<T>()
             => SerializerCache<ImmutableHashSetSerializer<T>>.InstanceField;
 
         /// <summary>Create a serializer that operates on immutable sets</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static RepeatedSerializer<ImmutableSortedSet<T>, T> CreateImmutableSortedSet<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
+        public static RepeatedSerializer<ImmutableSortedSet<T>, T> CreateImmutableSortedSet<T>()
             => SerializerCache<ImmutableSortedSetSerializer<T>>.InstanceField;
 
         /// <summary>Create a serializer that operates on immutable sets</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static RepeatedSerializer<IImmutableSet<T>, T> CreateImmutableISet<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
+        public static RepeatedSerializer<IImmutableSet<T>, T> CreateImmutableISet<T>()
             => SerializerCache<ImmutableISetSerializer<T>>.InstanceField;
 
 
@@ -73,8 +73,14 @@ namespace ProtoBuf.Serializers
             => values.Clear();
         protected override ImmutableArray<T> AddRange(ImmutableArray<T> values, ref ArraySegment<T> newValues, ISerializationContext context)
             => newValues.Count == 1 ? values.Add(newValues.Singleton()) : values.AddRange(
-#if BUILD_TOOLS // can't ref the updated lib
-                newValues
+#if BUILD_TOOLS
+                // BuildTools compiles against whatever System.Collections.Immutable the Roslyn
+                // baseline supplies, which is older and has no span-taking AddRange. The cast is
+                // not decoration: ArraySegment<T> converts implicitly to BOTH IEnumerable<T> and
+                // ReadOnlySpan<T>, so the moment a newer Immutable is visible here the call is
+                // CS0121-ambiguous. #1322 hit exactly that. Naming the overload keeps this source
+                // compiling against either version.
+                (System.Collections.Generic.IEnumerable<T>)newValues
 #else
                 new ReadOnlySpan<T>(newValues.Array, newValues.Offset, newValues.Count)
 #endif

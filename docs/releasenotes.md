@@ -1,5 +1,9 @@
 # Release Notes
 
+**From v4 onwards, [the GitHub releases page](https://github.com/protobuf-net/protobuf-net/releases) is the
+primary source of release notes** — that is where each release is described, as it happens. The notes below
+remain as the history for v3 and earlier.
+
 Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/protobuf-net), or it can be built [from source](https://github.com/protobuf-net/protobuf-net/tree/main/src)
 
 ## Roadmap
@@ -8,13 +12,64 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 - 2.4.*: critical maintenance only (no feature work planned)
 - 3.0: new custom serializer API (message+scalar); "pipelines" support; split core and reflection code-bases into separate libs
 - 3.1: adds model depth validation, which may impact some models; see `TypeModel.MaxDepth`
+- 3.3: build-time serializer generation from code-first contracts, for [native AOT and trimming](https://docs.protobuf-net.dev/aot); build tools included by default
 - future: `Any` support; custom list API support; support for `[ReadOnly]Memory<T>`, `ReadOnlySequence<T>`, `IMemoryOwner<T>`
 - future: protogen support for emitting pre-coded custom serializers
-- future: build-time tooling from code-first (aka "generators")
 
 ## unreleased
 
+- **the AOT generator's diagnostic ids move from `PBN2000+` to `PBN3000+`**, keeping the last three
+  digits (`PBN2001` → `PBN3001`, `PBN2010` → `PBN3010`, and so on). They collided with the gRPC
+  service-contract analyzers, which have owned `PBN2001`–`PBN2010` since long before and ship in the
+  same package: because a severity or suppression is applied by id, `dotnet_diagnostic.PBN2002.severity
+  = none` to quiet an AOT drop **also silenced an unrelated gRPC error**. If you copied a
+  `WarningsAsErrors`, `NoWarn` or `.editorconfig` entry from the 3.3 AOT docs, update it — the old ids
+  are still live and still mean something, just not this, so a stale entry now fails quietly
+- **`protobuf-net.BuildTools` is no longer published** (last standalone version: 3.3.8, deprecated):
+  the same tooling ships inside protobuf-net.Core and reaches every consumer by default;
+  `protobuf-net.BuildTools.Legacy` (for very old SDKs) is unaffected
+- the build-time tooling now ships inside **protobuf-net.Core** rather than protobuf-net, so
+  compile-time serialization works with only a Core reference; it still reaches consumers who
+  reference only protobuf-net (the dependency edge forwards it), and the legacy
+  `protobuf-net.BuildTools` package alongside remains harmless
+- **fix**: `protobuf-net.NodaTime` did not produce a package from a plain build (missing
+  `GeneratePackageOnBuild`), and packed with a placeholder description
+- **fix**: `PBN3010`'s example now shows `Model.Instance.Serialize` — the generated accessor that
+  actually exists — rather than an imaginary camel-cased local
+- **fix**: the "add an AOT model" code fix now generates the model as `internal` (a fixer should not
+  add to the public surface) and inside the project's namespace (or the anchor contract's), rather
+  than a `public` type in the global root
+- **fix**: `PBN0022` ("should declare `IsRequired`") no longer fires for collection members —
+  `List<T> Lines { get; } = [];` is the standard pattern, an empty collection has no wire presence
+  to force, and `IsRequired` is only observable for value-type scalars anyway
+
+## 3.3.0
+
+- **compile-time serializers, for native AOT and trimming** ([docs](https://docs.protobuf-net.dev/aot)):
+  opt in with `[ProtoModel] partial class MyModel : TypeModel`, seeded by `[ProtoSerializable(typeof(...))]`;
+  the generator builds the serializers at compile time, so publishing native AOT works and cold start
+  improves even on an ordinary JIT build. The trigger attributes are `[Experimental]` (`PBN9001`)
+  while the shape settles. `[ProtoSurrogate]` on the model or assembly is the compile-time
+  `SetSurrogate`, and `[ProtoContract(IsScalar = true)]` lets a hand-written serializer state its
+  category where the generator cannot see its `Features`
+- **the build tools now ship inside the protobuf-net package** (analyzers and generators; previously
+  the separate `protobuf-net.BuildTools` package): installed by default, declined entirely with
+  `<ProtoBufDisableBuildTools>true</ProtoBufDisableBuildTools>`
 - support of deserializing `ISet<T>` and `IReadOnlySet<T>` (ladeak)
+- **fix**: `[ProtoPartialMember(..., OverwriteList = true)]` was silently ignored; the option was read
+  from the member's own `[ProtoMember]`, which is necessarily absent when the partial-member path
+  runs. It is now honoured, so such a member **replaces** rather than appends when deserializing into
+  an existing collection — a behaviour change for anyone who had set it and not noticed it doing
+  nothing
+- **fix**: merging two *unrelated* sub-types of one base (a payload carrying the same field twice with
+  conflicting sub-type markers) recursed without bound and killed the process with a
+  `StackOverflowException`, which cannot be caught and was reachable from untrusted input; it now
+  throws a catchable `InvalidOperationException` naming both types
+- **fix**: `Extensible.AppendValue` discarded the result of the underlying write and reported success
+  regardless, so a failure was silent data loss; it now throws if it cannot write
+- `Extensible.AppendValue<T>`/`GetValue<T>`/`TryGetValue<T>` now keep `T` rather than boxing to
+  `object` and re-resolving by reflection, so they **work under native AOT** at the default
+  `DataFormat`; other formats and the legacy `object`-based overload are unchanged
 
 ## 3.2.30
 
@@ -28,7 +83,7 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 
 ## 3.2.16
 
-- implement `[NullWrappedCollection]`, usage [as here](https://protobuf-net.github.io/protobuf-net/nullwrappers#null-collections) (#1044)
+- implement `[NullWrappedCollection]`, usage [as here](https://docs.protobuf-net.dev/nullwrappers#null-collections) (#1044)
 - support `nint` (`IntPtr`) and `nuint` (`UIntPtr`) with layout per `long`/`ulong` (#1043; fixes #1042, fixes grpc 282)
 
 ## 3.2.12
@@ -375,7 +430,7 @@ Other changes:
 ## v2.3.0-alpha
 
 - [further reading](https://blog.marcgravell.com/2017/06/protobuf-net-gets-proto3-support.html)
-- proto2/proto3 DSL processing tools to make a resurgance; [preview is available here](https://protogen.marcgravell.com/)
+- proto2/proto3 DSL processing tools to make a resurgance; [preview is available here](https://protobuf-net.dev/)
 - proto3 schema generation
 - full support for `map<,>`, `Timestamp`, `Duration`
 - dictionaries are now "maps" by default - duplicated keys *replace* values rather than causing exceptions

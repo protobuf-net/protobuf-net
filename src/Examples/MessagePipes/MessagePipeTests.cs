@@ -6,7 +6,7 @@ using System.IO.Pipes;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace ProtoBuf.MessagePipeTests
 {
@@ -51,7 +51,7 @@ namespace ProtoBuf.MessagePipeTests
                 var receive = Task.Run(async () =>
                 {
                     Log("[Server] waiting for connection...");
-                    await server.WaitForConnectionAsync();
+                    await server.WaitForConnectionAsync(TestContext.Current.CancellationToken);
                     Log($"[Server] connected; receiving...");
 
                     await foreach (var message in MessagePipe.ReceiveAsync<Message>(server, options))
@@ -60,32 +60,32 @@ namespace ProtoBuf.MessagePipeTests
                         received.Add(message);
                     }
                     Log("[Server] completed");
-                });
+                }, TestContext.Current.CancellationToken);
 
                 Log("Creating client...");
                 using (var client = new NamedPipeClientStream(".", name, PipeDirection.Out,
                     PipeOptions.Asynchronous | PipeOptions.WriteThrough))
                 {
                     Log("[Client] connecting...");
-                    await client.ConnectAsync();
+                    await client.ConnectAsync(TestContext.Current.CancellationToken);
                     Log("[Client] connected");
 
                     var channel = Channel.CreateUnbounded<Message>();
                     var send = MessagePipe.SendAsync(client, channel.Reader, options);
 
                     Log("[Client] writing message 1...");
-                    await channel.Writer.WriteAsync(new Message { Id = 1, Foo = "abc", Bar = 1.0 });
+                    await channel.Writer.WriteAsync(new Message { Id = 1, Foo = "abc", Bar = 1.0 }, TestContext.Current.CancellationToken);
                     Log("[Client] writing message 3...");
-                    await channel.Writer.WriteAsync(new Message { Id = 2, Foo = "def", Bar = 2.0 });
+                    await channel.Writer.WriteAsync(new Message { Id = 2, Foo = "def", Bar = 2.0 }, TestContext.Current.CancellationToken);
                     Log("[Client] writing message 3...");
-                    await channel.Writer.WriteAsync(new Message { Id = 3, Foo = "ghi", Bar = 3.0 });
+                    await channel.Writer.WriteAsync(new Message { Id = 3, Foo = "ghi", Bar = 3.0 }, TestContext.Current.CancellationToken);
                     Log("[Client] writing outbound...");
                     channel.Writer.Complete();
                     Log("[Client] awaiting send completion...");
 
                     await WithTimeout(send.AsTask(), TimeSpan.FromSeconds(5), "send"); // all sent
 
-                    await client.FlushAsync();
+                    await client.FlushAsync(TestContext.Current.CancellationToken);
                 } // client is toast
                 Log("[Client] end");
 
@@ -143,21 +143,21 @@ namespace ProtoBuf.MessagePipeTests
                     //    Log($"[Server] replied");
                     //}
                     Log("[Server] done");
-                });
+                }, TestContext.Current.CancellationToken);
 
                 Log("Creating client...");
                 using (var client = new NamedPipeClientStream(".", name, PipeDirection.InOut,
                     PipeOptions.Asynchronous | PipeOptions.WriteThrough))
                 {
                     Log("[Client] connecting...");
-                    await client.ConnectAsync();
+                    await client.ConnectAsync(TestContext.Current.CancellationToken);
                     await using var send = MessagePipe.DuplexAsync<Ping, Pong>(client, options);
 
                     for (int i = 0; i < 5; i++)
                     {
                         var ping = new Ping { Token = i };
                         Log($"[Client] sending ping {ping?.Token}...");
-                        var pongPending = send.UnaryAsync(ping).AsTask();
+                        var pongPending = send.UnaryAsync(ping, TestContext.Current.CancellationToken).AsTask();
                         await WithTimeout(pongPending, TimeSpan.FromSeconds(5), "UnaryAsync");
                         var pong = await pongPending;
                         Log($"[Client] received pong {pong?.Token}...");

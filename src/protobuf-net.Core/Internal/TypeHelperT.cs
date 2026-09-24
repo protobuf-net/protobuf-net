@@ -148,14 +148,6 @@ namespace ProtoBuf.Internal
             return false;
         }
 
-        internal static object GetValueTypeChecker(Type type)
-        {
-            var underlying = Nullable.GetUnderlyingType(type) ?? type;
-            return typeof(StructValueChecker<>).MakeGenericType(underlying)
-                .GetField(nameof(StructValueChecker<int>.Instance))
-                .GetValue(null);
-        }
-
         internal static object CreateNonTrivialDefault(Type type)
         {
             if (type.IsValueType) return Activator.CreateInstance(Nullable.GetUnderlyingType(type) ?? type);
@@ -174,7 +166,15 @@ namespace ProtoBuf.Internal
         public static readonly IValueChecker<T> ValueChecker =
             SerializerCache<PrimaryTypeProvider>.InstanceField as IValueChecker<T>
             ?? ReferenceValueChecker.Instance as IValueChecker<T>
-            ?? (IValueChecker<T>)TypeHelper.GetValueTypeChecker(typeof(T));
+            // Anything reaching here is a value type: a reference type was taken by the checker
+            // above, since IValueChecker<in T> is contravariant. So this is either a plain struct -
+            // always present, never null, both answers constant - or a Nullable<T>, where both
+            // answers are just HasValue.
+            //
+            // Both are named *statically*, which is what keeps them alive under AOT. This used to go
+            // through MakeGenericType, which ILC cannot see: StructValueChecker<TStruct> was never
+            // generated, and the first serialize of an affected member threw "missing native code".
+            ?? (CanBeNull ? NullableValueChecker<T>.Instance : NonNullValueChecker<T>.Instance);
 
         public static readonly bool CanBePacked = !IsReferenceType && TypeHelper.CanBePacked(typeof(T));
 
@@ -208,14 +208,36 @@ namespace ProtoBuf.Internal
         /// </summary>
         bool IValueChecker<object>.IsNull(object value) => value is null;
     }
-    internal sealed class StructValueChecker<T> : IValueChecker<T?>, IValueChecker<T>
-        where T : struct
+    /// <summary>
+    /// The checker for a non-nullable value type, where both answers are constants.
+    /// </summary>
+    /// <remarks>
+    /// Deliberately unconstrained, so <see cref="TypeHelper{T}"/> can name it without knowing that
+    /// T is a struct — which is what makes it statically reachable, and so AOT-safe.
+    /// </remarks>
+    internal sealed class NonNullValueChecker<T> : IValueChecker<T>
     {
-        private StructValueChecker() { }
-        public static readonly StructValueChecker<T> Instance = new StructValueChecker<T>();
-        bool IValueChecker<T?>.HasNonTrivialValue(T? value) => value.HasValue;
-        bool IValueChecker<T?>.IsNull(T? value) => !value.HasValue;
+        private NonNullValueChecker() { }
+        public static readonly NonNullValueChecker<T> Instance = new NonNullValueChecker<T>();
         bool IValueChecker<T>.HasNonTrivialValue(T value) => true;
         bool IValueChecker<T>.IsNull(T value) => false;
+    }
+
+    /// <summary>
+    /// The checker for a <see cref="Nullable{T}"/>, where both answers are just <c>HasValue</c>.
+    /// </summary>
+    /// <remarks>
+    /// Unconstrained for the same reason <see cref="NonNullValueChecker{T}"/> is: so that
+    /// <see cref="TypeHelper{T}"/> can name it without knowing the underlying type, which is what
+    /// makes it statically reachable and so AOT-safe. The <c>is null</c> test looks like it would
+    /// box, but a box of a nullable followed by a null comparison is a JIT peephole that reads
+    /// <c>HasValue</c> directly — and this generic is specialised per value type, so it is seen.
+    /// </remarks>
+    internal sealed class NullableValueChecker<T> : IValueChecker<T>
+    {
+        private NullableValueChecker() { }
+        public static readonly NullableValueChecker<T> Instance = new NullableValueChecker<T>();
+        bool IValueChecker<T>.HasNonTrivialValue(T value) => value is not null;
+        bool IValueChecker<T>.IsNull(T value) => value is null;
     }
 }

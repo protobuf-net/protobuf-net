@@ -169,6 +169,7 @@ namespace ProtoBuf
             //EnumPassthruHasValue = 128,
             IsGroup = 256,
             IgnoreUnknownSubTypes = 512,
+            IsScalar = 1024,
         }
 
         /// <summary>
@@ -192,5 +193,23 @@ namespace ProtoBuf
         /// </summary>
         [DynamicallyAccessedMembers(DynamicAccess.Serializer)]
         public Type Serializer { get; set; }
+
+        /// <summary>
+        /// States that the <see cref="Serializer"/> presents this type as a <em>scalar</em> rather
+        /// than as a message, i.e. that its <c>Features</c> declare <c>CategoryScalar</c>.
+        /// </summary>
+        /// <remarks>
+        /// A compile-time hint for the AOT source generator, and ignored by the runtime model, which
+        /// asks the serializer directly. The generator cannot: <c>Features</c> is a property it would
+        /// have to <em>execute</em>. It reads the declaration from source where it can, but a
+        /// serializer arriving through a compiled reference has no source to read - which is what
+        /// this is for. Getting it wrong changes the framing on the wire, so the generator reports a
+        /// diagnostic where it can see both and they disagree.
+        /// </remarks>
+        public bool IsScalar
+        {
+            get { return HasFlag(TypeOptions.IsScalar); }
+            set { SetFlag(TypeOptions.IsScalar, value); }
+        }
     }
 }

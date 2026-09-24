@@ -1,15 +1,19 @@
 {
   "$schema": "https://raw.githubusercontent.com/AArnott/Nerdbank.GitVersioning/master/src/NerdBank.GitVersioning/version.schema.json",
-  "version": "3.3",
-  "versionHeightOffset": 0,
+  "version": "3.4",
+  "versionHeightOffset": -1,
   "assemblyVersion": "3.0",
   "nugetPackageVersion": {
     "semVer": 2
   },
   "publicReleaseRefSpec": [
     "^refs/heads/main$",
+    "^refs/tags/\\d+\\.\\d+",
     "^refs/tags/v\\d+\\.\\d+"
   ],
+  "release": {
+    "tagName": "{version}"
+  },
   "cloudBuild": {
     "buildNumber": {
       "enabled": true,

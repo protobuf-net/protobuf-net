@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>ProtoBuf.BuildTools</RootNamespace>
@@ -6,6 +6,7 @@
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <NoWarn>$(NoWarn);RS2007;NU5128</NoWarn>
+    <Title>protobuf-net.BuildTools.Legacy</Title>
     <Description>Analyzer and Generator support for protobuf-net, using build SDK 3</Description>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoPackageAnalysis>true</NoPackageAnalysis>
@@ -30,6 +31,24 @@
     <Compile Include="../protobuf-net.BuildTools/Analyzers/DataContractAnalyzer.cs" />
     <Compile Include="../protobuf-net.BuildTools/Analyzers/ServiceContractAnalyzer.cs" />
     <Compile Include="../protobuf-net.BuildTools/CodeFixes/**/*.cs" />
+    <!-- the AOT migration analyzer and its fixer are deliberately *not* here: this package exists to
+         serve very old SDKs, which do not get ProtoModelGenerator, so no [ProtoModel] can exist and
+         both would be inert. Note the asymmetry that made this a build break rather than a no-op -
+         the analyzers above are listed by name, the code fixes by glob, so a new fixer arrives here
+         on its own unless it is removed. -->
+    <Compile Remove="../protobuf-net.BuildTools/CodeFixes/UseAotModelCodeFixProvider.cs" />
+    <Compile Remove="../protobuf-net.BuildTools/CodeFixes/AddProtoModelCodeFixProvider.cs" />
+    <!-- same for the gRPC one: it fixes PBN4016, which GrpcMigrationAnalyzer reports, and that analyzer
+         is not listed above either -->
+    <Compile Remove="../protobuf-net.BuildTools/CodeFixes/UseGeneratedClientFactoryCodeFixProvider.cs" />
+    <!-- Internal/** is a glob too, so the gRPC generator's plan types arrive here on their own.
+         Legacy serves very old SDKs, which never get GrpcProxyGenerator (generators are listed by
+         name, above), so these would be dead weight. Same reasoning as the AOT fixers. -->
+    <Compile Remove="../protobuf-net.BuildTools/Internal/Grpc/**/*.cs" />
+    <!-- and the Connect generator's, for the same reason. Note this is not optional tidiness: the
+         Connect plan reuses DiagnosticInfo and GrpcInterfaceModel from Internal/Grpc, which is removed
+         above, so leaving it in is a build break rather than dead weight - which is how it was found. -->
+    <Compile Remove="../protobuf-net.BuildTools/Internal/Connect/**/*.cs" />
     <Compile Include="../protobuf-net.BuildTools/Generators/ProtoFileGenerator.cs" Link="ProtoFileGenerator.cs" />
   </ItemGroup>
 
@@ -64,4 +83,8 @@
         <EmbeddedResource Include="../protobuf-net.Reflection/protobuf-net/bcl.proto" Link="protobuf-net/bcl.proto" />
         <EmbeddedResource Include="../protobuf-net.Reflection/protobuf-net/protogen.proto" Link="protobuf-net/protogen.proto" />
     </ItemGroup>
+  <PropertyGroup Label="package validation">
+    <EnablePackageValidation>true</EnablePackageValidation>
+    <PackageValidationBaselineVersion>$(ProtoBufPackageBaseline)</PackageValidationBaselineVersion>
+  </PropertyGroup>
 </Project>

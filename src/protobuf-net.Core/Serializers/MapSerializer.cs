@@ -1,4 +1,4 @@
-﻿using ProtoBuf.Internal;
+using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 using System;
 using System.Collections.Generic;
@@ -15,25 +15,32 @@ namespace ProtoBuf.Serializers
     {
         /// <summary>Create a map serializer that operates on dictionaries</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static MapSerializer<Dictionary<TKey, TValue>, TKey, TValue> CreateDictionary<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] TKey, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TValue>()
+        public static MapSerializer<Dictionary<TKey, TValue>, TKey, TValue> CreateDictionary<TKey, TValue>()
             => SerializerCache<DictionarySerializer<TKey, TValue>>.InstanceField;
 
         /// <summary>Create a map serializer that operates on dictionaries</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static MapSerializer<TCollection, TKey, TValue> CreateDictionary<TCollection, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TKey, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TValue>()
+        public static MapSerializer<TCollection, TKey, TValue> CreateDictionary<[DynamicallyAccessedMembers(DynamicAccess.Activated)] TCollection, TKey, TValue>()
             where TCollection : IDictionary<TKey, TValue>
             => SerializerCache<DictionarySerializer<TCollection, TKey, TValue>>.InstanceField;
 
         /// <summary>Create a map serializer that operates on dictionaries</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static MapSerializer<IReadOnlyDictionary<TKey, TValue>, TKey, TValue> CreateIReadOnlyDictionary<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] TKey, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TValue>()
+        public static MapSerializer<IReadOnlyDictionary<TKey, TValue>, TKey, TValue> CreateIReadOnlyDictionary<TKey, TValue>()
             => SerializerCache<DictionaryOfIReadOnlyDictionarySerializer<TKey, TValue>>.InstanceField;
     }
 
     /// <summary>
     /// Base class for dictionary-like collection serializers
     /// </summary>
-    public abstract class MapSerializer<TCollection, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TKey, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TValue> : IRepeatedSerializer<TCollection>, IFactory<TCollection>
+    /// <remarks>
+    /// Neither <typeparamref name="TKey"/> nor <typeparamref name="TValue"/> carries a
+    /// <see cref="DynamicallyAccessedMembersAttribute"/>, for the reason given on
+    /// <see cref="RepeatedSerializer{TCollection, TItem}"/>: the only thing that wanted one was the
+    /// <c>??=</c> fallback in <see cref="GetSerializer"/>, which a generated model never reaches, and
+    /// <see cref="TypeModel.ResolveSerializer"/> confines that demand to the arm ILC removes.
+    /// </remarks>
+    public abstract class MapSerializer<TCollection, TKey, TValue> : IRepeatedSerializer<TCollection>, IFactory<TCollection>
     {
         SerializerFeatures ISerializer<TCollection>.Features => SerializerFeatures.CategoryRepeated;
 
@@ -57,8 +64,8 @@ namespace ProtoBuf.Serializers
         static KeyValuePairSerializer<TKey, TValue> GetSerializer(
             TypeModel model, SerializerFeatures keyFeatures, SerializerFeatures valueFeatures, ISerializer<TKey> keySerializer, ISerializer<TValue> valueSerializer)
         {
-            keySerializer ??= TypeModel.GetSerializer<TKey>(model);
-            valueSerializer ??= TypeModel.GetSerializer<TValue>(model);
+            keySerializer ??= TypeModel.ResolveSerializer<TKey>(model);
+            valueSerializer ??= TypeModel.ResolveSerializer<TValue>(model);
 
             keyFeatures.InheritFrom(keySerializer.Features);
             valueFeatures.InheritFrom(valueSerializer.Features);
@@ -215,7 +222,7 @@ namespace ProtoBuf.Serializers
             Write(ref state, fieldNumber, wireType, ref iter, pairSerializer);
         }
     }
-    class DictionarySerializer<TCollection, TKey, TValue> : MapSerializer<TCollection, TKey, TValue>
+    class DictionarySerializer<[DynamicallyAccessedMembers(DynamicAccess.Activated)] TCollection, TKey, TValue> : MapSerializer<TCollection, TKey, TValue>
         where TCollection : IDictionary<TKey, TValue>
     {
         protected override TCollection Initialize(TCollection values, ISerializationContext context)

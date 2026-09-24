@@ -9,7 +9,7 @@ using ProtoBuf.Meta;
 using System.Reflection;
 using Xunit;
 using System.Text.RegularExpressions;
-using Xunit.Abstractions;
+
 
 namespace Examples
 {

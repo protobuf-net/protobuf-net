@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using Xunit;
 using ProtoBuf.Meta;
-using Xunit.Abstractions;
+
 
 namespace ProtoBuf.unittest.Meta
 {   

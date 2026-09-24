@@ -1,0 +1,18 @@
+Microsoft.Extensions.DependencyInjection.ProtoBufMvcBuilderExtensions
+override ProtoBuf.AspNetCore.Formatters.ProtoInputFormatter.ReadAsync(Microsoft.AspNetCore.Mvc.Formatters.InputFormatterContext context) -> System.Threading.Tasks.Task<Microsoft.AspNetCore.Mvc.Formatters.InputFormatterResult>
+override ProtoBuf.AspNetCore.Formatters.ProtoInputFormatter.ReadRequestBodyAsync(Microsoft.AspNetCore.Mvc.Formatters.InputFormatterContext context) -> System.Threading.Tasks.Task<Microsoft.AspNetCore.Mvc.Formatters.InputFormatterResult>
+override ProtoBuf.AspNetCore.Formatters.ProtoOutputFormatter.WriteResponseBodyAsync(Microsoft.AspNetCore.Mvc.Formatters.OutputFormatterWriteContext context) -> System.Threading.Tasks.Task
+ProtoBuf.AspNetCore.Formatters.ProtoInputFormatter
+ProtoBuf.AspNetCore.Formatters.ProtoInputFormatter.ProtoInputFormatter(ProtoBuf.AspNetCore.MvcProtoBufNetOptions options, Microsoft.AspNetCore.Mvc.MvcOptions mvcOptions) -> void
+ProtoBuf.AspNetCore.Formatters.ProtoOutputFormatter
+ProtoBuf.AspNetCore.Formatters.ProtoOutputFormatter.ProtoOutputFormatter(ProtoBuf.AspNetCore.MvcProtoBufNetOptions options, Microsoft.AspNetCore.Mvc.MvcOptions mvcOptions) -> void
+ProtoBuf.AspNetCore.MvcProtoBufNetOptions
+ProtoBuf.AspNetCore.MvcProtoBufNetOptions.Model.get -> ProtoBuf.Meta.TypeModel
+ProtoBuf.AspNetCore.MvcProtoBufNetOptions.Model.set -> void
+ProtoBuf.AspNetCore.MvcProtoBufNetOptions.MvcProtoBufNetOptions() -> void
+ProtoBuf.AspNetCore.MvcProtoBufNetOptions.ReadMemoryBufferThreshold.get -> int
+ProtoBuf.AspNetCore.MvcProtoBufNetOptions.ReadMemoryBufferThreshold.set -> void
+ProtoBuf.AspNetCore.MvcProtoBufNetOptions.WriteMaxLength.get -> long
+ProtoBuf.AspNetCore.MvcProtoBufNetOptions.WriteMaxLength.set -> void
+static Microsoft.Extensions.DependencyInjection.ProtoBufMvcBuilderExtensions.AddProtoBufNet(this Microsoft.Extensions.DependencyInjection.IMvcBuilder builder, System.Action<ProtoBuf.AspNetCore.MvcProtoBufNetOptions> setupAction = null) -> Microsoft.Extensions.DependencyInjection.IMvcBuilder
+static Microsoft.Extensions.DependencyInjection.ProtoBufMvcBuilderExtensions.AddProtoBufNet(this Microsoft.Extensions.DependencyInjection.IMvcCoreBuilder builder, System.Action<ProtoBuf.AspNetCore.MvcProtoBufNetOptions> setupAction = null) -> Microsoft.Extensions.DependencyInjection.IMvcCoreBuilder

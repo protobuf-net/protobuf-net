@@ -12,17 +12,17 @@ namespace ProtoBuf.Serializers
 
         /// <summary>Create a map serializer that operates on immutable dictionaries</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static MapSerializer<ImmutableDictionary<TKey, TValue>, TKey, TValue> CreateImmutableDictionary<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] TKey, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TValue>()
+        public static MapSerializer<ImmutableDictionary<TKey, TValue>, TKey, TValue> CreateImmutableDictionary<TKey, TValue>()
             => SerializerCache<ImmutableDictionarySerializer<TKey, TValue>>.InstanceField;
 
         /// <summary>Create a map serializer that operates on immutable dictionaries</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static MapSerializer<ImmutableSortedDictionary<TKey, TValue>, TKey, TValue> CreateImmutableSortedDictionary<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] TKey, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TValue>()
+        public static MapSerializer<ImmutableSortedDictionary<TKey, TValue>, TKey, TValue> CreateImmutableSortedDictionary<TKey, TValue>()
             => SerializerCache<ImmutableSortedDictionarySerializer<TKey, TValue>>.InstanceField;
 
         /// <summary>Create a map serializer that operates on immutable dictionaries</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static MapSerializer<IImmutableDictionary<TKey, TValue>, TKey, TValue> CreateIImmutableDictionary<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] TKey, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TValue>()
+        public static MapSerializer<IImmutableDictionary<TKey, TValue>, TKey, TValue> CreateIImmutableDictionary<TKey, TValue>()
             => SerializerCache<ImmutableIDictionarySerializer<TKey, TValue>>.InstanceField;
     }
 

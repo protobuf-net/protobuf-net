@@ -60,7 +60,9 @@ namespace ProtoBuf.Issues
                 testClassClone = model.Deserialize<UninitializedImmutableArrayTestClass>(ms);
             }
 
-            Assert.Equal(testClass.Array, testClassClone.Array);
+            Assert.Equal(MakeSafe(testClass.Array), MakeSafe(testClassClone.Array));
+            static ImmutableArray<T> MakeSafe<T>(ImmutableArray<T> array) // blame xunit
+                => array.IsDefault ? ImmutableArray<T>.Empty : array;
         }
 
         [Theory]

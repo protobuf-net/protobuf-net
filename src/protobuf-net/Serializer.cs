@@ -430,6 +430,8 @@ namespace ProtoBuf
                     {
                         case ProtoSyntax.Proto2:
                         case ProtoSyntax.Proto3:
+                        case ProtoSyntax.Edition2023:
+                        case ProtoSyntax.Edition2024:
                             _defaultSyntax = value;
                             break;
                         default:
@@ -443,6 +445,8 @@ namespace ProtoBuf
             {
                 ProtoSyntax.Proto2 => syntax,
                 ProtoSyntax.Proto3 => syntax,
+                ProtoSyntax.Edition2023 => syntax,
+                ProtoSyntax.Edition2024 => syntax,
                 _ => DefaultSyntax,
             };
         }

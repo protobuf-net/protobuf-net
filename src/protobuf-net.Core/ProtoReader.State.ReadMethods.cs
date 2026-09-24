@@ -1,7 +1,8 @@
-﻿using ProtoBuf.Internal;
+using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
@@ -243,6 +244,111 @@ namespace ProtoBuf
                 } while (TryReadFieldHeader(field));
             }
 
+            /// <summary>
+            /// The maximum number of bytes that could still be read at this point: the lesser of what
+            /// the source can supply and what the enclosing length-based sub-message allows. Negative
+            /// if neither is knowable (an unbounded stream, outside of any sub-message).
+            /// </summary>
+            private readonly long GetMaxRemaining()
+            {
+                var reader = _reader;
+                var fromSource = reader.MaxRemaining;
+
+                var blockEnd = reader.blockEnd64;
+                if (blockEnd == long.MaxValue) return fromSource; // not inside a length-based block
+
+                var fromBlock = blockEnd - reader._longPosition;
+                return fromSource < 0 ? fromBlock : Math.Min(fromSource, fromBlock);
+            }
+
+            /// <summary>
+            /// Rejects a length taken from the payload when the source provably cannot satisfy it; this
+            /// is what stops a tiny message from claiming a huge length. Lengths at or below
+            /// <see cref="ProtoReader.EagerAllocationLimit"/> are not policed, and neither is anything
+            /// on a source whose remaining length is unknowable.
+            /// </summary>
+            [MethodImpl(HotPath)]
+            internal void AssertPlausibleLength(long length)
+            {
+                if (length > ProtoReader.EagerAllocationLimit) AssertPlausibleLengthSlow(length);
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            private void AssertPlausibleLengthSlow(long length)
+            {
+                var remaining = GetMaxRemaining();
+                if (remaining >= 0 && length > remaining) ThrowImplausibleLength(length, remaining);
+            }
+
+            /// <summary>
+            /// Indicates whether it is safe to allocate <paramref name="length"/> bytes for data that
+            /// hasn't been read yet. Throws if the source is known to be too short; returns
+            /// <c>false</c> if the length is large and the source can't confirm it, in which case the
+            /// caller must read the data in bounded chunks rather than trusting the prefix.
+            /// </summary>
+            [MethodImpl(HotPath)]
+            internal bool CanAllocate(long length)
+                => length <= ProtoReader.EagerAllocationLimit || CanAllocateSlow(length);
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            private bool CanAllocateSlow(long length)
+            {
+                var remaining = GetMaxRemaining();
+                if (remaining < 0) return false; // unknowable; the caller needs to chunk it
+                if (length > remaining) ThrowImplausibleLength(length, remaining);
+                return true;
+            }
+
+            /// <summary>
+            /// Reads <paramref name="length"/> bytes into a pooled buffer that grows only as data
+            /// actually arrives, so that a payload overstating its length fails with EOF having cost
+            /// an allocation proportional to what it supplied rather than what it claimed. The caller
+            /// must return the buffer to <see cref="ArrayPool{T}.Shared"/>.
+            /// </summary>
+            private byte[] ReadBytesOversized(int length)
+            {
+                var pool = ArrayPool<byte>.Shared;
+                var buffer = pool.Rent(Math.Min(length, ProtoReader.EagerAllocationLimit));
+                try
+                {
+                    int have = 0;
+                    while (have < length)
+                    {
+                        if (have == buffer.Length)
+                        {   // double up, but never past what was claimed
+                            var larger = pool.Rent((int)Math.Min((long)buffer.Length * 2, length));
+                            Buffer.BlockCopy(buffer, 0, larger, 0, have);
+                            pool.Return(buffer);
+                            buffer = larger;
+                        }
+                        // cap each read so that the reader's own buffer stays bounded too
+                        var take = Math.Min(Math.Min(buffer.Length, length) - have, ProtoReader.EagerAllocationLimit);
+                        _reader.ImplReadBytes(ref this, new Span<byte>(buffer, have, take)); // EOF if short
+                        have += take;
+                    }
+                    return buffer;
+                }
+                catch
+                {
+                    pool.Return(buffer);
+                    throw;
+                }
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            internal string ReadStringOversized(int bytes)
+            {
+                var buffer = ReadBytesOversized(bytes);
+                try
+                {
+                    return ProtoReader.UTF8.GetString(buffer, 0, bytes);
+                }
+                finally
+                {
+                    ArrayPool<byte>.Shared.Return(buffer);
+                }
+            }
+
             [MethodImpl(ProtoReader.HotPath)]
             private void ReadPackedScalar<TSerializer, TList, T>(ref TList list, WireType wireType, in TSerializer serializer)
                 where TSerializer : ISerializer<T>
@@ -251,6 +357,7 @@ namespace ProtoBuf
                 var bytes = (int)ReadUInt32Varint(Read32VarintMode.Unsigned);
                 if (bytes == 0) return;
                 if (bytes < 0) ThrowInvalidLength(bytes);
+                AssertPlausibleLength(bytes);
                 switch (wireType)
                 {
                     case WireType.Fixed32:
@@ -287,6 +394,76 @@ namespace ProtoBuf
                         ThrowHelper.ThrowInvalidPackedOperationException(WireType, typeof(T));
                         break;
                 }
+            }
+
+            /// <summary>
+            /// Begins a packed run of scalar values, returning the absolute position at which it ends.
+            /// </summary>
+            /// <remarks>
+            /// The serializer-driven equivalent is <c>ReadPackedScalar</c>; this pair exists for the
+            /// reflective aux path, which holds a <see cref="Type"/> rather than an <c>ISerializer{T}</c>
+            /// and so has to drive the element loop itself.
+            /// </remarks>
+            internal long StartPackedScalar(WireType elementWireType, Type type)
+            {
+                var bytes = (int)ReadUInt32Varint(Read32VarintMode.Unsigned);
+                if (bytes < 0) ThrowInvalidLength(bytes);
+                AssertPlausibleLength(bytes);
+                switch (elementWireType)
+                {
+                    case WireType.Fixed32:
+                        if ((bytes % 4) != 0) ThrowHelper.ThrowInvalidOperationException("packed length should be multiple of 4");
+                        break;
+                    case WireType.Fixed64:
+                        if ((bytes % 8) != 0) ThrowHelper.ThrowInvalidOperationException("packed length should be multiple of 8");
+                        break;
+                    case WireType.Varint:
+                    case WireType.SignedVarint:
+                        break;
+                    default:
+                        ThrowHelper.ThrowInvalidPackedOperationException(elementWireType, type);
+                        break;
+                }
+                return GetPosition() + bytes;
+            }
+
+            /// <summary>
+            /// Advances to the next element of a packed run started by <see cref="StartPackedScalar"/>,
+            /// re-arming the wire type; returns <c>false</c> once the run is exhausted.
+            /// </summary>
+            internal bool ContinuePackedScalar(long end, WireType elementWireType)
+            {
+                var position = GetPosition();
+                if (position >= end)
+                {
+                    if (position != end) ThrowHelper.ThrowInvalidOperationException("over-read packed data");
+                    return false;
+                }
+                _reader.WireType = elementWireType;
+                return true;
+            }
+
+            /// <summary>
+            /// Reads a packed run of scalar values into <paramref name="values"/>, reporting whether
+            /// the current field was in fact a packed run of a packable scalar.
+            /// </summary>
+            /// <remarks>
+            /// The repeated serializers reach packed data through <see cref="FillBuffer"/>, which owns
+            /// the whole field sequence; the extension APIs cannot, since they see one field at a time
+            /// and have no list to read into. This is the narrow entry point for that case.
+            /// </remarks>
+            internal bool TryReadPackedScalar<T>(ISerializer<T> serializer, ICollection<T> values)
+            {
+                // the wire type is never "string" for a type that *can* be packed, so a length-delimited
+                // payload here is packed data - the same inference PrepareToReadRepeated makes
+                if (!TypeHelper<T>.CanBePacked || WireType != WireType.String) return false;
+
+                SerializerFeatures features = default;
+                features.InheritFrom(serializer.Features);
+                if (features.GetCategory() != SerializerFeatures.CategoryScalar) return false;
+
+                ReadPackedScalar<ISerializer<T>, ICollection<T>, T>(ref values, features.GetWireType(), serializer);
+                return true;
             }
 
             internal ReadBuffer<T> FillBuffer<TSerializer, T>(SerializerFeatures features, in TSerializer serializer, T initialValue)
@@ -377,19 +554,31 @@ namespace ProtoBuf
                         if (len == 0) return converter.NonNull(value);
                         if (len < 0) ThrowInvalidLength(len);
 
-                        // expand the storage
+                        // Expand allocates the full claimed length before we've read a byte of it; if
+                        // the source can't confirm that it holds that much, buffer the payload first
+                        // (growing only as data arrives) so that a lie costs us what it supplied
+                        byte[] oversized = CanAllocate(len) ? null : ReadBytesOversized(len);
+                        try
+                        {
+                            // expand the storage
 #if DEBUG
-                        var oldLength = converter.GetLength(value);
+                            var oldLength = converter.GetLength(value);
 #endif
-                        var newChunk = converter.Expand(Context, ref value, len);
+                            var newChunk = converter.Expand(Context, ref value, len);
 #if DEBUG
-                        if (converter.GetLength(value) != (oldLength + len))
-                            ThrowHelper.ThrowInvalidOperationException($"The memory converter ({converter.GetType().NormalizeName()}) got the lengths wrong for the updated value; expected {oldLength + len}, got {converter.GetLength(value)}");
-                        if (newChunk.Length != len)
-                            ThrowHelper.ThrowInvalidOperationException($"The memory converter ({converter.GetType().NormalizeName()}) got the lengths wrong for the returned chunk; expected {len}, got {newChunk.Length}");
-#endif               
-                        // read the data into the new part
-                        _reader.ImplReadBytes(ref this, newChunk.Span);
+                            if (converter.GetLength(value) != (oldLength + len))
+                                ThrowHelper.ThrowInvalidOperationException($"The memory converter ({converter.GetType().NormalizeName()}) got the lengths wrong for the updated value; expected {oldLength + len}, got {converter.GetLength(value)}");
+                            if (newChunk.Length != len)
+                                ThrowHelper.ThrowInvalidOperationException($"The memory converter ({converter.GetType().NormalizeName()}) got the lengths wrong for the returned chunk; expected {len}, got {newChunk.Length}");
+#endif
+                            // read the data into the new part
+                            if (oversized is null) _reader.ImplReadBytes(ref this, newChunk.Span);
+                            else new ReadOnlySpan<byte>(oversized, 0, len).CopyTo(newChunk.Span);
+                        }
+                        finally
+                        {
+                            if (oversized is not null) ArrayPool<byte>.Shared.Return(oversized);
+                        }
 
                         return value;
                     //case WireType.Varint:
@@ -515,6 +704,10 @@ namespace ProtoBuf
                     case WireType.String:
                         long len = (long)ReadUInt64Varint();
                         if (len < 0) ThrowInvalidOperationException();
+                        // deliberately *not* vetting len against the source length here: nothing is
+                        // allocated from it, and callers depend on corruption being reported by the
+                        // existing end-group/sub-message checks instead (see issue 697). The
+                        // allocating paths still bound themselves via blockEnd64.
                         long lastEnd = reader.blockEnd64;
                         reader.blockEnd64 = reader._longPosition + len;
                         if (reader.IncrDepth()) ThrowTooDeep();
@@ -824,6 +1017,10 @@ namespace ProtoBuf
             internal void ThrowInvalidLength(long length) => ThrowInvalidOperationException("Invalid length: " + length.ToString());
 
             [MethodImpl(MethodImplOptions.NoInlining)]
+            internal void ThrowImplausibleLength(long length, long remaining)
+                => ThrowInvalidOperationException($"Invalid length: {length}; the source has at most {remaining} bytes remaining");
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
             internal void ThrowArgumentException(string message)
             {
                 throw AddErrorData(new ArgumentException(message), _reader, ref this);
@@ -999,22 +1196,22 @@ namespace ProtoBuf
             /// Reads a sub-item from the input reader
             /// </summary>
             [MethodImpl(HotPath)]
-            public T ReadMessage<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(T value = default)
+            public T ReadMessage<T>(T value = default)
                 => ReadMessage<T>(default, value, null);
 
             /// <summary>
             /// Reads a sub-item from the input reader
             /// </summary>
             [MethodImpl(ProtoReader.HotPath)]
-            public T ReadMessage<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(SerializerFeatures features, T value = default, ISerializer<T> serializer = null)
-                => ReadMessage<ISerializer<T>, T>(features, value, serializer ?? TypeModel.GetSerializer<T>(Model));
+            public T ReadMessage<T>(SerializerFeatures features, T value = default, ISerializer<T> serializer = null)
+                => ReadMessage<ISerializer<T>, T>(features, value, serializer ?? TypeModel.ResolveSerializer<T>(Model));
 
 #pragma warning disable IDE0060 // unused (yet!) features arg
             /// <summary>
             /// Reads a sub-item from the input reader
             /// </summary>
             [MethodImpl(MethodImplOptions.NoInlining)]
-            internal T ReadMessage<TSerializer, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(SerializerFeatures features, T value, in TSerializer serializer)
+            internal T ReadMessage<TSerializer, T>(SerializerFeatures features, T value, in TSerializer serializer)
                 where TSerializer : ISerializer<T>
 #pragma warning restore IDE0060
             {
@@ -1035,16 +1232,16 @@ namespace ProtoBuf
             /// Reads a value or sub-item from the input reader
             /// </summary>
             [MethodImpl(HotPath)]
-            public T ReadAny<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(T value = default)
+            public T ReadAny<T>(T value = default)
                 => ReadAny<T>(default, value, null);
 
             /// <summary>
             /// Reads a value or sub-item from the input reader
             /// </summary>
             [MethodImpl(HotPath)]
-            public T ReadAny<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(SerializerFeatures features, T value = default, ISerializer<T> serializer = null)
+            public T ReadAny<T>(SerializerFeatures features, T value = default, ISerializer<T> serializer = null)
             {
-                serializer ??= TypeModel.GetSerializer<T>(Model);
+                serializer ??= TypeModel.ResolveSerializer<T>(Model);
                 var serializerFeatures = serializer.Features;
                 features.InheritFrom(serializerFeatures);
 
@@ -1072,9 +1269,9 @@ namespace ProtoBuf
             /// <summary>
             /// Read a value or sub-item with an additional level of message wrapping, that can be used to express <c>null</c> values of arbitrary types (as field 1)
             /// </summary>
-            public T ReadWrapped<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(SerializerFeatures features, T value, ISerializer<T> serializer = null)
+            public T ReadWrapped<T>(SerializerFeatures features, T value, ISerializer<T> serializer = null)
             {
-                serializer ??= TypeModel.GetSerializer<T>(Model);
+                serializer ??= TypeModel.ResolveSerializer<T>(Model);
                 features.InheritFrom(serializer.Features);
 
                 ProtoWriter.State.AssertWrappedAndGetWireType(ref features, out var fieldPresence);
@@ -1250,7 +1447,7 @@ namespace ProtoBuf
             }
 
             [MethodImpl(HotPath)]
-            internal T DeserializeRootImpl<T>(T value = default)
+            internal T DeserializeRootImpl<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(T value = default)
             {
                 var serializer = TypeModel.TryGetSerializer<T>(Model);
                 if (serializer is null)

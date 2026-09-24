@@ -1,7 +1,11 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <!-- the compile-time model attributes are [Experimental] while the shape settles -->
+    <NoWarn>$(NoWarn);PBN9001</NoWarn>
     <TargetFramework>net8.0</TargetFramework>
+    <!-- an MTP test app is its own host, so it must be an exe; Directory.Build.props defaults to Library -->
+    <OutputType>Exe</OutputType>
     <RootNamespace>BuildToolsUnitTests</RootNamespace>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <Nullable>enable</Nullable>
@@ -10,18 +14,19 @@
   <ItemGroup>
     <!--<PackageReference Include="Microsoft.Build" />-->
     <!--<PackageReference Include="Microsoft.Build.Utilities.Core" />-->
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing.XUnit" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing.XUnit" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeRefactoring.Testing.XUnit" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeRefactoring.Testing" />
     
     <PackageReference Include="System.Collections.Immutable" />
-    <PackageReference Include="xunit" />
-    <PackageReference Include="xunit.runner.visualstudio">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.v3" />
+    <!-- The shipped analyzer still compiles against the low Roslyn baseline (4.3.1); the tests need a
+         newer one for two reasons, and neither touches what ships:
+           * to parse C# 12, which is the serializer generator's declared floor;
+           * 4.11+ for SemanticModel.GetInterceptableLocation, which the interceptor emit reaches
+             reflectively off the host. Below it, InterceptableLocations.IsSupported is false and the
+             interceptor path could not be tested in-process at all. -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" VersionOverride="4.11.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -31,6 +36,29 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- golden-file fixtures: input/output pairs are data, not code to compile -->
+    <Compile Remove="Aot/Data/**/*.*.cs" />
+    <None Include="Aot/Data/**/*.*" />
+    <None Update="Aot/Data/**/*.*" CopyToOutputDirectory="PreserveNewest" />
+    <!-- unlike Aot/Data, this glob is unqualified: _ContractSurface.cs has no inner dot, and it must
+         not be compiled into the test assembly - it is a *snapshot* of protobuf-net.Grpc's surface,
+         fed to the golden tests' own in-memory compilation -->
+    <Compile Remove="Grpc/Data/**/*.cs" />
+    <None Include="Grpc/Data/**/*.*" />
+    <None Update="Grpc/Data/**/*.*" CopyToOutputDirectory="PreserveNewest" />
+    <!-- same unqualified glob as Grpc/Data, and for the same reason: _ConnectSurface.cs has no inner
+         dot and must not be compiled into the test assembly - it is a snapshot of protobuf-net.Connect's
+         surface, fed to the in-memory compilation so the emitted code is actually compiled there. -->
+    <Compile Remove="Connect/Data/**/*.cs" />
+    <None Include="Connect/Data/**/*.*" />
+    <None Update="Connect/Data/**/*.*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="../protobuf-net.BuildTools/protobuf-net.BuildTools.csproj" ReferenceOutputAssembly="true" />
+    <!-- compiled in rather than referenced: AotRefGen is a net472 exe. One copy of the normalisation
+         rule, because two that drifted would fail every fixture at once for a reason that looks like a
+         generator bug and is not. -->
+    <Compile Include="../AotRefGen/ReferenceProvenance.cs" Link="Aot/ReferenceProvenance.cs" />
   </ItemGroup>
 </Project>

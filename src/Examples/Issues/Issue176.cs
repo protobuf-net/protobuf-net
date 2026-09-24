@@ -7,7 +7,6 @@ using System.Linq;
 using DAL;
 using ProtoBuf.Meta;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Examples.Issues
 {

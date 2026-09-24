@@ -14,9 +14,9 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace ProtoBuf.Schemas
 {
@@ -199,10 +199,10 @@ namespace ProtoBuf.Schemas
             Assert.Equal(service, method.GetParentService());
         }
 
-        [SkippableFact]
+        [Fact]
         public void EverythingProtoLangver3()
         {
-            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
+            Assert.SkipUnless(RuntimeInformation.IsOSPlatform(OSPlatform.Windows), "windows only");
             var schemaPath = Path.Combine(Directory.GetCurrentDirectory(), SchemaPath);
             const string path = "everything.proto";
 
@@ -244,10 +244,10 @@ namespace ProtoBuf.Schemas
             catch (PlatformNotSupportedException) { }
         }
 
-        [SkippableFact()]
+        [Fact]
         public void DescriptorProtoVB()
         {
-            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
+            Assert.SkipUnless(RuntimeInformation.IsOSPlatform(OSPlatform.Windows), "windows only");
             var schemaPath = Path.Combine(Directory.GetCurrentDirectory(), SchemaPath);
             const string path = "descriptor.proto";
 
@@ -390,8 +390,8 @@ namespace ProtoBuf.Schemas
                 psi.UseShellExecute = false;
                 psi.WorkingDirectory = schemaPath;
                 proc.Start();
-                var stdout = proc.StandardOutput.ReadToEndAsync();
-                var stderr = proc.StandardError.ReadToEndAsync();
+                var stdout = proc.StandardOutput.ReadToEndAsync(TestContext.Current.CancellationToken);
+                var stderr = proc.StandardError.ReadToEndAsync(TestContext.Current.CancellationToken);
                 if (!proc.WaitForExit(5000))
                 {
                     try { proc.Kill(); } catch { }
@@ -438,8 +438,8 @@ namespace ProtoBuf.Schemas
                 psi.UseShellExecute = false;
                 psi.WorkingDirectory = schemaPath;
                 proc.Start();
-                var stdout = proc.StandardOutput.ReadToEndAsync();
-                var stderr = proc.StandardError.ReadToEndAsync();
+                var stdout = proc.StandardOutput.ReadToEndAsync(TestContext.Current.CancellationToken);
+                var stderr = proc.StandardError.ReadToEndAsync(TestContext.Current.CancellationToken);
                 if (!proc.WaitForExit(5000))
                 {
                     try { proc.Kill(); } catch { }
@@ -530,26 +530,18 @@ namespace ProtoBuf.Schemas
 
             if (exitCode == 0)
             {
+                Assert.SkipUnless(File.Exists(protocBinPath), "no output");
                 var protocHex = GetPrettyHex(File.ReadAllBytes(protocBinPath));
                 File.WriteAllText(Path.ChangeExtension(protocBinPath, "protoc.hex"), protocHex);
 
                 switch(path)
                 {
                     case "google/protobuf/unittest_custom_options.proto":
-                    case "advancedOptions.proto":
-                        // these are special cases; the two encoders choose slightly different
-                        // layouts for the same data; both are valid; I'm happy that this is OK
-                        // - this was why the "decode" tool (on the website) was written!
-                        break;
-                    case "google/protobuf/unittest.proto":
-                        // ^^^ different layout of an integer; "2e+8" vs "200000000" - I'm fine with it
-                        //
-                        // the following end up importing unittest.proto, so have the same symptom
-                    case "google/protobuf/map_unittest.proto" when (includeImports):
-                    case "google/protobuf/unittest_optimize_for.proto" when (includeImports):
-                    case "google/protobuf/unittest_embed_optimize_for.proto" when (includeImports):
-                    case "google/protobuf/unittest_lite_imports_nonlite.proto" when (includeImports):
-                    case "google/protobuf/unittest_no_field_presence.proto" when (includeImports):
+                        // special case: the two encoders choose slightly different layouts for
+                        // the same data; both are valid; I'm happy that this is OK - this was
+                        // why the "decode" tool (on the website) was written! (the rest of the
+                        // historical skip list - advancedOptions, and the unittest.proto float
+                        // cluster - was retired by the protoc-35.1 compat fixes)
                         break;
                     default:
                         // compare results
@@ -612,3 +604,11 @@ namespace ProtoBuf.Schemas
 #endif
     }
 }
+
+#if !NET
+internal static class StreamReaderExtensions
+{
+    public static Task<string> ReadToEndAsync(this StreamReader reader, CancellationToken _)
+        => reader.ReadToEndAsync(); // cancellation not available, meh
+}
+#endif

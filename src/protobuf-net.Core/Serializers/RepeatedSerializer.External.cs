@@ -12,7 +12,7 @@ namespace ProtoBuf.Serializers
     /// <typeparam name="TCollection">the collection type being provided (e.g. Map for F#) </typeparam>
     /// <typeparam name="T">type of the value held within the collection</typeparam>
 
-    public abstract class ExternalSerializer<TCollection, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] T> : RepeatedSerializer<TCollection, T> where TCollection : IEnumerable<T>
+    public abstract class ExternalSerializer<TCollection, T> : RepeatedSerializer<TCollection, T> where TCollection : IEnumerable<T>
     {
         internal override long Measure(TCollection values, IMeasuringSerializer<T> serializer, ISerializationContext context, WireType wireType)
         {

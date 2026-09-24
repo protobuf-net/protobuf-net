@@ -1,0 +1,2 @@
+edition = "2023";
+message M { int32 x = 1 [features.field_presence = IMPLICIT, default = 5]; }

@@ -6,8 +6,12 @@ name: .NET
 on:
   push:
     branches: [ "main" ]
+  # deliberately NOT filtered by branch: the filter matches the PR's BASE, so any PR
+  # targeting a branch missing from the list gets zero checks - and a PR with no checks
+  # looks clean rather than broken, which is the wrong failure mode. Every PR is a
+  # proposal to merge somewhere, so every PR gets built. The push filter above stays,
+  # since that one genuinely stops each topic-branch push burning a Windows runner.
   pull_request:
-    branches: [ "main" ]
 
 jobs:
   build:
@@ -15,19 +19,203 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         fetch-depth: 0  # Fetch the full history (for versioning)
+    # 11.0.x is required by the test step: global.json selects the Microsoft.Testing.Platform
+    # runner, and `dotnet test` can only see a traversal project on the .NET 11 SDK
+    # (dotnet/sdk#55297). The bare channel is deliberate - it resolves to whatever is newest there,
+    # so this becomes GA with no edit. Do NOT add `dotnet-quality: preview`, which pins to the last
+    # preview forever: measured, `--channel 10.0 --quality preview` still resolves to 10.0.100-rc.2
+    # months after 10.0 shipped.
     - name: Setup .NET
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
       with:
         dotnet-version: |
           8.0.x
-          9.0.x
           10.0.x
+          11.0.x
+    # Restore dominates the cold-runner build time, and the package set changes rarely; the
+    # same treatment measurably helped SE.Redis (StackExchange/StackExchange.Redis@74bfe78).
+    - name: Cache NuGet packages
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('src/Directory.Packages.props', 'global.json', '**/*.csproj') }}
+        restore-keys: ${{ runner.os }}-nuget-
+    # Prints the version this commit computes - i.e. the tag to type into the GitHub Release UI.
+    # nbgv derives it from version.json plus commit height, so it is a property of the COMMIT rather
+    # than of the release, and release.yml refuses a tag that disagrees with it. Written to the job
+    # summary as well as the log, so it is on the run page rather than buried.
+    #
+    # NuGetPackageVersion, not SimpleVersion: they coincide for a stable version released from main,
+    # and diverge the moment a prerelease is involved (0.1.1-alpha versus 0.1.1). The guard compares
+    # NuGetPackageVersion, so that is what has to be reported.
+    - name: Report the computed version
+      shell: bash
+      run: |
+        set -euo pipefail
+        dotnet tool restore
+        version=$(dotnet tool run nbgv -- get-version --project src --variable NuGetPackageVersion | tr -d '[:space:]')
+        assembly=$(dotnet tool run nbgv -- get-version --project src --variable AssemblyInformationalVersion | tr -d '[:space:]')
+        echo "computed version : $version"
+        echo "release tag      : $version"
+        {
+          echo "### Version"
+          echo ""
+          echo "| | |"
+          echo "| --- | --- |"
+          echo "| computed version | \`$version\` |"
+          echo "| **release tag** | \`$version\` |"
+          echo "| informational | \`$assembly\` |"
+          echo ""
+          echo "Releases → Draft a new release → tag \`$version\` → publish."
+        } >> "$GITHUB_STEP_SUMMARY"
     - name: Restore dependencies
       run: dotnet restore Build.csproj
     - name: Build
       run: dotnet build Build.csproj --no-restore
     - name: Test
       run: dotnet test Build.csproj --no-build --verbosity normal
+    # Runs the AOT generator over every [ProtoContract] in the already-built test assemblies and
+    # compares its bytes against RuntimeTypeModel's. Exits non-zero only on a *byte mismatch*, which
+    # is a generator bug by construction - the same instance serialized two ways, disagreeing on the
+    # wire. Worth a CI step because that class of bug compiles cleanly and passes every other test
+    # here; several shipped for months before this existed. Needs no extra build: the traversal
+    # project above already produces the assemblies it scans.
+    - name: AOT differential
+      run: dotnet run --project src/AotDifferential/AotDifferential.csproj --no-build
+    # The same idea applied to gRPC endpoint metadata: reconstructs each endpoint's metadata from
+    # symbols, compiles and *runs* it, and compares the resulting objects against what
+    # ServiceBinder.GetMetadata produces reflectively. Gated because the failure mode is silent and
+    # security-relevant - a dropped [Authorize] is a more permissive endpoint, with no error anywhere.
+    # A difference against the pinned package is reported rather than failed where a released
+    # protobuf-net.Grpc is known to differ; anything else exits non-zero.
+    - name: gRPC endpoint-metadata differential
+      run: dotnet run --project src/AotGrpcMetadataDiff/AotGrpcMetadataDiff.csproj --no-build
+    # Package validation (ApiCompat) runs at pack time, so without a pack here it would run only in
+    # release.yml - after the change had been merged and tagged, which is far too late to stop
+    # anything. Packing=true restricts the traversal to the shipping projects, so this is a much
+    # smaller build than the one above rather than a second full one; it is Release because that is
+    # what ships, and a Debug surface can differ.
+    - name: Pack (runs package validation)
+      run: |
+        dotnet build Build.csproj -c Release -p:Packing=true -p:GeneratePackageOnBuild=false
+        dotnet pack Build.csproj --no-build -c Release -p:Packing=true -p:PackageOutputPath=${{ github.workspace }}/.nupkgs
+
+  # The only leg that proves the AOT story on a second platform. Deliberately NOT the traversal:
+  # Build.csproj globs src\*\*.csproj, which includes net4x-only projects, and that is exactly why the
+  # job above is windows-latest. These two are net8.0 apps, and although protobuf-net multi-targets down
+  # to net462, a net8.0 consumer resolves only the net8.0 TFM - so net4x is never built here.
+  #
+  # It *runs* the published binaries rather than only publishing them: both exit non-zero on mismatch,
+  # and under a native publish the reflective fallbacks are simply absent, so a pass here means the
+  # generated path carried the whole thing. Publishing alone would prove it links, which is not the claim.
+  #
+  # Gated on exit code only, never on the IL warning count: that count tracks the fixtures, so pinning it
+  # would turn every legitimate fixture change into a CI failure. It is a measurement to re-take, not a
+  # threshold - see notes/aot/findings.md.
+  native-aot-linux:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        fetch-depth: 0  # versioning
+    # 11.0.x is required by the test step: global.json selects the Microsoft.Testing.Platform
+    # runner, and `dotnet test` can only see a traversal project on the .NET 11 SDK
+    # (dotnet/sdk#55297). The bare channel is deliberate - it resolves to whatever is newest there,
+    # so this becomes GA with no edit. Do NOT add `dotnet-quality: preview`, which pins to the last
+    # preview forever: measured, `--channel 10.0 --quality preview` still resolves to 10.0.100-rc.2
+    # months after 10.0 shipped.
+    - name: Setup .NET
+      uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+      with:
+        dotnet-version: |
+          8.0.x
+          10.0.x
+          11.0.x
+    - name: Cache NuGet packages
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('src/Directory.Packages.props', 'global.json', '**/*.csproj') }}
+        restore-keys: ${{ runner.os }}-nuget-
+    # ILC shells out to the platform toolchain to link; clang is on the image, zlib is not always
+    - name: Install the native toolchain
+      run: sudo apt-get update && sudo apt-get install -y clang zlib1g-dev
+    # -o rather than the default path: these two are on different TFMs (net10.0 and net8.0) and would
+    # move again, so naming bin/Release/<tfm>/... here is a break waiting to happen
+    - name: Publish and run the serializer smoke test
+      run: |
+        dotnet publish src/AotSmoke/AotSmoke.csproj -c Release -r linux-x64 -o artifacts/aot-smoke
+        ./artifacts/aot-smoke/AotSmoke
+    - name: Publish and run the gRPC smoke test
+      run: |
+        dotnet publish src/AotGrpcSmoke/AotGrpcSmoke.csproj -c Release -r linux-x64 -o artifacts/aot-grpc-smoke
+        ./artifacts/aot-grpc-smoke/AotGrpcSmoke
+
+  # Builds protobuf-net.Connect against THIS checkout's tooling, and runs its checks.
+  #
+  # It exists because the Connect split took the only real-runtime coverage with it. What remains
+  # here is BuildToolsUnitTests/Connect, whose fixtures compile against `_ConnectSurface.cs` - a
+  # SNAPSHOT of the runtime surface, and one whose own header records that it can drift and that a
+  # smoke project is what catches it. That smoke project now lives in the other repository, so
+  # without this a generator change can produce code that compiles against the snapshot and not
+  # against the real thing, and nothing here would say so.
+  #
+  # Direction matters: protobuf-net.Connect's CI proves "does the released tooling still serve me",
+  # which is the wrong question for a PR here. This one asks "does the tooling I am about to ship
+  # still serve the downstream", and asks it before the release rather than after.
+  #
+  # Tracks main rather than pinning: the question is whether this change breaks the CURRENT Connect.
+  # Deliberately a subset of that repository's own CI - no native publishes and no conformance run,
+  # which are its job. What is wanted here is that generated code compiles, and executes correctly
+  # enough to exercise the generator's output.
+  downstream-connect:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        fetch-depth: 0  # versioning
+    - name: Check out protobuf-net.Connect
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        repository: protobuf-net/protobuf-net.Connect
+        ref: ${{ vars.CONNECT_REF || 'main' }}
+        path: .connect
+        fetch-depth: 0
+    - name: Setup .NET
+      uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+      with:
+        dotnet-version: |
+          8.0.x
+          10.0.x
+    - name: Cache NuGet packages
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-downstream-${{ hashFiles('src/Directory.Packages.props', '.connect/Directory.Packages.props') }}
+        restore-keys: ${{ runner.os }}-nuget-
+    # ProtoBufSourcePath swaps every protobuf-net package reference in that repository for a project
+    # reference into this checkout, tooling included - so the generators under test are the ones in
+    # this PR, not the ones on nuget.org. Nesting is safe: protobuf-net has no root
+    # Directory.Build.props/targets/Packages.props, so MSBuild's walk up from .connect/src/... stops
+    # inside .connect and nothing leaks across.
+    - name: Build protobuf-net.Connect against this tooling
+      working-directory: .connect
+      run: dotnet build Build.csproj -p:ProtoBufSourcePath=${{ github.workspace }}
+    - name: Contract-first checks
+      working-directory: .connect
+      run: dotnet run --project tests/ConnectContractFirst/ConnectContractFirst.csproj --no-build -p:ProtoBufSourcePath=${{ github.workspace }}
+    # exercises ProtoModelGenerator's JSON half against Google's own formatter
+    - name: Code-first JSON differential
+      working-directory: .connect
+      run: dotnet run --project tests/ConnectJsonDifferential/ConnectJsonDifferential.csproj --no-build -p:ProtoBufSourcePath=${{ github.workspace }}
+    # one contract over gRPC AND Connect on one host: the broadest single exercise of generated code
+    - name: Dual-transport smoke test
+      working-directory: .connect
+      run: dotnet run --project tests/AotDualHostSmoke/AotDualHostSmoke.csproj --no-build -p:ProtoBufSourcePath=${{ github.workspace }}

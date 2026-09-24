@@ -47,12 +47,20 @@ Additional configuration options can be specified as attributes against each `<A
 - `RepeatedAsList` - use `List<T>` etc instead of `T[]` for *all* collections (i.e. including primitives)
 - `IncludeInOutput` - controls whether the file is included in the output; this can be useful for adding a file to the virtual file system for importing without generating code as it might be generated elsewhere
 
+## Editions
+
+`.proto` files can also use [editions](https://docs.protobuf-net.dev/editions) - `edition = "2023";` in place
+of `syntax = "proto2";` / `"proto3"` - which protobuf-net parses, resolves and generates from in exactly the
+same way. One editions feature is worth knowing about specifically:
+[`features.message_encoding = DELIMITED`](https://docs.protobuf-net.dev/delimited), which generates
+`DataFormat.Group` and is usually the faster framing to write.
+
 ## That doesn't work for you?
 
 protobuf-net also provides:
 
 - [protobuf-net.Protogen](https://www.nuget.org/packages/protobuf-net.Protogen/), a .NET Global Tool for command-line usage
-- [https://protogen.marcgravell.com/](https://protogen.marcgravell.com/) - an online version of the same
+- [https://protobuf-net.dev/](https://protobuf-net.dev/) - an online version of the same, running entirely in your browser
 - [protobuf-net.MSBuild](https://www.nuget.org/packages/protobuf-net.MSBuild/) - a ".targets" based way of integrated protobuf-net's tools into the build
 - `protogen` - a standalone executable version of the same tools
 

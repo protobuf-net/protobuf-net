@@ -335,6 +335,10 @@ namespace ProtoBuf
 
             private protected override string ImplReadString(ref State state, int bytes)
             {
+                // Ensure would grow _ioBuffer to the full claimed length before reading a single
+                // byte of it; if we can't vouch for that length, read in chunks instead
+                if (!state.CanAllocate(bytes)) return state.ReadStringOversized(bytes);
+
                 if (_available < bytes) Ensure(ref state, bytes, true);
 
                 string s = UTF8.GetString(_ioBuffer, _ioIndex, bytes);
@@ -347,6 +351,19 @@ namespace ProtoBuf
 
             private protected override bool IsFullyConsumed(ref State state) =>
                 (_isFixedLength ? _dataRemaining64 : _available) == 0;
+
+            private protected override long MaxRemaining
+            {
+                get
+                {
+                    // no source means the whole payload was handed to us as a single buffer
+                    if (_source is null) return _available;
+                    // otherwise: what we've buffered, plus what we're still allowed to pull
+                    if (_isFixedLength) return _available + _dataRemaining64;
+                    // an unbounded stream; we genuinely cannot know
+                    return TO_EOF;
+                }
+            }
 
             private protected override uint ImplReadUInt32Fixed(ref State state)
             {

@@ -1,0 +1,9 @@
+edition = "2023";
+
+package editions.opts;
+
+import "google/protobuf/descriptor.proto";
+
+extend google.protobuf.FieldOptions {
+  bool tagged = 60000;
+}

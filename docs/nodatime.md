@@ -1,7 +1,7 @@
 # Using protobuf-net with Noda Time
 
 [Noda Time](https://nodatime.org/) is "an alternative date and time API for .NET". protobuf-net has always had support for `DateTime` and `TimeSpan` (including support
-for the well-known protobuf types, `Timestamp` and `Duration` via [`CompatibilityLevel`](http://protobuf-net.github.io/protobuf-net/compatibilitylevel)), but protobuf-net
+for the well-known protobuf types, `Timestamp` and `Duration` via [`CompatibilityLevel`](https://docs.protobuf-net.dev/compatibilitylevel)), but protobuf-net
 now offers optional support for Noda Time types.
 
 For example, say we have a type that we want to serialize, which makes use of `NodaTime.Instant` to represent a point in time (broadly similar to `DateTime`), or a `NodaTime.Duration`

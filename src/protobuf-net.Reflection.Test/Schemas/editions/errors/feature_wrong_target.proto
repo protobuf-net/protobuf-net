@@ -1,0 +1,2 @@
+edition = "2023";
+enum E { option features.field_presence = EXPLICIT; E_ZERO = 0; }

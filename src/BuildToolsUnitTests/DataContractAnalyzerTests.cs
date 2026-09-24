@@ -5,7 +5,6 @@ using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace BuildToolsUnitTests
 {
@@ -89,7 +88,12 @@ public partial class Foo
     }
     public Foo (){}
 } "});
-            Assert.Empty(diagnostics);
+            // this fixture pairs SkipConstructor with [DefaultValue(3)], which PBN0026 reports and
+            // is right to: the instance is built without running a constructor, so Bar arrives as 0
+            // while a sender holding 3 writes nothing. Asserted as the *only* diagnostic, so the
+            // test still fails if a partial declaration provokes anything else - which is its point
+            var diag = Assert.Single(diagnostics);
+            Assert.Equal(DataContractAnalyzer.DeclaredDefaultUnderSkipConstructor, diag.Descriptor);
         }
 
 
@@ -296,7 +300,11 @@ public class Foo
 }
 ");
             var diag = Assert.Single(diagnostics, x => x.Descriptor == DataContractAnalyzer.DeclaredAndIgnored);
-            Assert.Equal(DiagnosticSeverity.Error, diag.Severity);
+            // Warning rather than Error, deliberately: [ProtoPartialIgnore] wins over everything,
+            // including a [ProtoMember] the member declares itself, so this shape has *defined*
+            // behaviour and builds working code. Worth flagging as a contradiction; not worth
+            // breaking a build over. Partial.input.cs relies on that same precedence.
+            Assert.Equal(DiagnosticSeverity.Warning, diag.Severity);
             Assert.Equal($"The member 'A' is marked to be ignored; additional annotations will be ignored.", diag.GetMessage(CultureInfo.InvariantCulture));
         }
 
@@ -449,7 +457,9 @@ public class SuperFoo : Foo {}
 ");
             var diag = Assert.Single(diagnostics, x => x.Descriptor == DataContractAnalyzer.IncludeNotDeclared);
             Assert.Equal(DiagnosticSeverity.Warning, diag.Severity);
-            Assert.Equal($"The base-type 'Foo' is a proto-contract, but no include is declared for 'SuperFoo' and the IgnoreUnknownSubTypes flag is not set.", diag.GetMessage(CultureInfo.InvariantCulture));
+            Assert.Equal("The base-type 'Foo' is a proto-contract, but does not declare 'SuperFoo' as a sub-type; "
+                + "use [ProtoIncludeAttribute], or [ProtoSubType] where 'Foo' cannot name 'SuperFoo', or set IgnoreUnknownSubTypes.",
+                diag.GetMessage(CultureInfo.InvariantCulture));
         }
 
         [Fact]
@@ -726,6 +736,311 @@ public record Test(
             diag = Assert.Single(diagnostics, x => x.Descriptor == DataContractAnalyzer.ConstructorMissing);
             Assert.Equal(DiagnosticSeverity.Error, diag.Severity);
             Assert.Equal("There is no suitable (parameterless) constructor available for the proto-contract, and the SkipConstructor flag is not set.", diag.GetMessage(CultureInfo.InvariantCulture));
+        }
+
+        [Fact]
+        public async Task ReportsProtoContractOnInterface()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[ProtoContract]
+[ProtoInclude(10, typeof(Bar))]
+public interface IFoo
+{
+    [ProtoMember(1)] string Name {get;set;}
+}
+[ProtoContract]
+public class Bar : IFoo
+{
+    [ProtoMember(1)] public string Name {get;set;}
+}");
+            var diag = Assert.Single(diagnostics, x => x.Descriptor == DataContractAnalyzer.ProtoContractOnInterface);
+            Assert.Equal(DiagnosticSeverity.Warning, diag.Severity);
+        }
+
+        [Fact]
+        public async Task DoesntReportIncludeNonDerivedForAnInterfaceRoot()
+        {
+            // an interface include is a legal hierarchy - protobuf-net treats implementing one exactly
+            // as deriving - so PBN0012 (an *error*) must not fire on it
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[ProtoContract]
+[ProtoInclude(10, typeof(Bar))]
+public interface IFoo { }
+[ProtoContract]
+public class Bar : IFoo
+{
+    [ProtoMember(1)] public string Name {get;set;}
+}");
+            Assert.Empty(diagnostics.Where(x => x.Descriptor == DataContractAnalyzer.IncludeNonDerived));
+        }
+
+        [Fact]
+        public async Task DoesntReportIncludeNotDeclaredWhenLinkedOutOfBand()
+        {
+            // [ProtoSubType] is the answer *for* the shape PBN0013 complains about - a base that
+            // cannot name its sub-type - so nagging for a [ProtoInclude] the consumer is unable to
+            // write would be noise. Only the assembly and module sites are seen; see DeclaredOutOfBand
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+#pragma warning disable PBN9001
+[assembly: ProtoSubType(typeof(Foo), typeof(Bar), 10)]
+#pragma warning restore PBN9001
+[ProtoContract]
+public class Foo
+{
+    [ProtoMember(1)] public string Name {get;set;}
+}
+[ProtoContract]
+public class Bar : Foo
+{
+    [ProtoMember(2)] public string Extra {get;set;}
+}");
+            Assert.Empty(diagnostics.Where(x => x.Descriptor == DataContractAnalyzer.IncludeNotDeclared));
+        }
+
+        [Fact]
+        public async Task DoesntReportIncludeNotDeclaredWhenLinkedOnAModel()
+        {
+            // the third declaration site: on the [ProtoModel] itself, which is where someone writing
+            // a model by hand is most likely to put it. This is why the analyzer looks at the types
+            // the compilation declares and not only at its assembly and module attributes
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+using ProtoBuf.Meta;
+[ProtoContract]
+public class Foo
+{
+    [ProtoMember(1)] public string Name {get;set;}
+}
+[ProtoContract]
+public class Bar : Foo
+{
+    [ProtoMember(2)] public string Extra {get;set;}
+}
+#pragma warning disable PBN9001
+[ProtoModel]
+[ProtoSerializable(typeof(Foo))]
+[ProtoSubType(typeof(Foo), typeof(Bar), 10)]
+public partial class MyModel : TypeModel { }
+#pragma warning restore PBN9001");
+            Assert.Empty(diagnostics.Where(x => x.Descriptor == DataContractAnalyzer.IncludeNotDeclared));
+        }
+
+        [Fact]
+        public async Task DoesntReportIncludeNotDeclaredForAGenericConstruction()
+        {
+            // the motivating shape for [ProtoSubType]: the declaration names a *closed* construction,
+            // while this diagnostic is reported against the open declaration it came from - so the
+            // two are matched on their original definitions
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+#pragma warning disable PBN9001
+[assembly: ProtoSubType(typeof(Foo), typeof(Tagged<int>), 10)]
+#pragma warning restore PBN9001
+[ProtoContract]
+public class Foo
+{
+    [ProtoMember(1)] public string Name {get;set;}
+}
+[ProtoContract]
+public class Tagged<T> : Foo
+{
+    [ProtoMember(2)] public T Value {get;set;}
+}");
+            Assert.Empty(diagnostics.Where(x => x.Descriptor == DataContractAnalyzer.IncludeNotDeclared));
+        }
+
+        [Fact]
+        public async Task DoesReportIncludeNotDeclaredWhenTheDeclarationNamesSomethingElse()
+        {
+            // ...and the suppression has to be specific: a declaration about another pair says
+            // nothing about this one
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+#pragma warning disable PBN9001
+[assembly: ProtoSubType(typeof(Foo), typeof(Other), 10)]
+#pragma warning restore PBN9001
+[ProtoContract]
+public class Foo
+{
+    [ProtoMember(1)] public string Name {get;set;}
+}
+[ProtoContract]
+public class Other : Foo
+{
+    [ProtoMember(2)] public string Extra {get;set;}
+}
+[ProtoContract]
+public class Bar : Foo
+{
+    [ProtoMember(3)] public string More {get;set;}
+}");
+            Assert.Single(diagnostics, x => x.Descriptor == DataContractAnalyzer.IncludeNotDeclared);
+        }
+
+        [Fact]
+        public async Task DoesReportIncludeOfAnUnrelatedType()
+        {
+            // ...but the check still has to catch a genuinely unrelated include
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[ProtoContract]
+[ProtoInclude(10, typeof(Bar))]
+public interface IFoo { }
+[ProtoContract]
+public class Bar
+{
+    [ProtoMember(1)] public string Name {get;set;}
+}");
+            Assert.Single(diagnostics, x => x.Descriptor == DataContractAnalyzer.IncludeNonDerived);
+        }
+
+        [Fact]
+        public async Task DoesntReportIncludeNonDerivedForAGenericInterfaceRoot()
+        {
+            // the attribute lives on the *open* IFoo<T> while Bar implements the *closed* IFoo<int>,
+            // so a symbol comparison finds no link - but ref-emit resolves it on both its paths, so
+            // PBN0012 (an error) firing here would fail the build for a working pattern
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[ProtoContract]
+[ProtoInclude(10, typeof(Bar))]
+public interface IFoo<T> { }
+[ProtoContract]
+public class Bar : IFoo<int>
+{
+    [ProtoMember(1)] public string Name {get;set;}
+}");
+            Assert.Empty(diagnostics.Where(x => x.Descriptor == DataContractAnalyzer.IncludeNonDerived));
+        }
+
+        [Fact]
+        public async Task DoesntReportIncludeNonDerivedForAGenericBaseClass()
+        {
+            // the same shape one level down: a generic base class rather than a generic interface
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[ProtoContract]
+[ProtoInclude(10, typeof(Bar))]
+public class Foo<T> { }
+[ProtoContract]
+public class Bar : Foo<int>
+{
+    [ProtoMember(1)] public string Name {get;set;}
+}");
+            Assert.Empty(diagnostics.Where(x => x.Descriptor == DataContractAnalyzer.IncludeNonDerived));
+        }
+
+        [Fact]
+        public async Task DoesntReportDuplicateFieldNumberAcrossGenericConstructions()
+        {
+            // a generic base declares its include list once and shares it with every construction,
+            // but each one matches only the includes that derive from it - so Holder<int> sees Bar
+            // at 1 and Holder<string> sees Baz at 1, never two at once. PBN0003 is an *error*, so
+            // reporting it here fails the build for a pattern ref-emit serializes happily
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[ProtoContract]
+[ProtoInclude(1, typeof(Bar))]
+[ProtoInclude(1, typeof(Baz))]
+public class Holder<T> { }
+[ProtoContract]
+public class Bar : Holder<int> { }
+[ProtoContract]
+public class Baz : Holder<string> { }");
+            Assert.Empty(diagnostics.Where(x => x.Descriptor == DataContractAnalyzer.DuplicateFieldNumber));
+        }
+
+        [Fact]
+        public async Task DoesReportDuplicateFieldNumberWithinOneGenericConstruction()
+        {
+            // ...but two includes on the *same* construction still collide, so the relaxation is
+            // per-construction rather than a blanket exemption for generics
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[ProtoContract]
+[ProtoInclude(1, typeof(Bar))]
+[ProtoInclude(1, typeof(Baz))]
+public class Holder<T> { }
+[ProtoContract]
+public class Bar : Holder<int> { }
+[ProtoContract]
+public class Baz : Holder<int> { }");
+            Assert.Single(diagnostics, x => x.Descriptor == DataContractAnalyzer.DuplicateFieldNumber);
+        }
+
+        [Fact]
+        public async Task DoesReportIncludeClashingWithAMemberOnAGenericType()
+        {
+            // and a member still cannot share a number with an include, whatever the construction:
+            // the member belongs to every one of them
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[ProtoContract]
+[ProtoInclude(1, typeof(Bar))]
+public class Holder<T>
+{
+    [ProtoMember(1)] public int Value {get;set;}
+}
+[ProtoContract]
+public class Bar : Holder<int> { }");
+            Assert.Single(diagnostics, x => x.Descriptor == DataContractAnalyzer.DuplicateFieldNumber);
+        }
+
+        [Fact]
+        public async Task DoesReportIncludeOfAnUnrelatedGenericType()
+        {
+            // ...and an unrelated generic is still caught, so the relaxation is not blanket
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[ProtoContract]
+[ProtoInclude(10, typeof(Bar))]
+public interface IFoo<T> { }
+[ProtoContract]
+public class Bar : System.Collections.Generic.List<int>
+{
+    [ProtoMember(1)] public string Name {get;set;}
+}");
+            Assert.Single(diagnostics, x => x.Descriptor == DataContractAnalyzer.IncludeNonDerived);
+        }
+
+        /// <summary>
+        /// `[DataContract]` and `[XmlType]` are contract markers in their own right, and the families
+        /// *mix*: a `[DataContract]` type may pin one member with `[ProtoMember]` and let
+        /// `[DataMember(Order)]` supply the rest. protobuf-net honours both — verified by serializing
+        /// this shape, which gives field 1 from the DataMember and field 3 from the ProtoMember — so
+        /// PBN0009's "additional annotations will be ignored" was both false and, as an error, a
+        /// build break for working code.
+        /// </summary>
+        [Fact]
+        public async Task MixedContractFamiliesAreNotReported()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+using System.Runtime.Serialization;
+[DataContract]
+public class Mixed
+{
+    [ProtoMember(3)] public int Pinned { get; set; }
+    [DataMember(Order = 1)] public int Ordered { get; set; }
+}");
+            Assert.Empty(diagnostics.Where(x => x.Id == "PBN0009"));
+        }
+
+        /// <summary>...but a type with no contract marker at all really does ignore them.</summary>
+        [Fact]
+        public async Task AnnotationsWithNoContractMarkerAtAllAreStillAnError()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+public class NoContract
+{
+    [ProtoMember(1)] public int Nope { get; set; }
+}");
+            var hit = Assert.Single(diagnostics.Where(x => x.Id == "PBN0009"));
+            Assert.Equal(Microsoft.CodeAnalysis.DiagnosticSeverity.Error, hit.Severity);
         }
     }
 }

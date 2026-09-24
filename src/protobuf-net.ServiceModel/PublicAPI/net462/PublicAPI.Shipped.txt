@@ -1,0 +1,4 @@
+override ProtoBuf.ServiceModel.ProtoBehaviorExtension.BehaviorType.get -> System.Type
+override ProtoBuf.ServiceModel.ProtoBehaviorExtension.CreateBehavior() -> object
+ProtoBuf.ServiceModel.ProtoBehaviorExtension
+ProtoBuf.ServiceModel.ProtoBehaviorExtension.ProtoBehaviorExtension() -> void

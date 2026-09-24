@@ -19,5 +19,13 @@ namespace ProtoBuf.Meta
         /// https://developers.google.com/protocol-buffers/docs/proto3
         /// </summary>
         Proto3 = 1,
+        /// <summary>
+        /// https://protobuf.dev/editions/overview/
+        /// </summary>
+        Edition2023 = 2,
+        /// <summary>
+        /// https://protobuf.dev/editions/overview/
+        /// </summary>
+        Edition2024 = 3,
     }
 }

@@ -1,0 +1,3 @@
+Generator produced 1 diagnostics:
+Warning PBN4010 Grpc/Data/Diagnostics/NoModel.input.cs L38 C29
+'NoModelServices' generates gRPC proxies but names no Model, so payloads will be marshalled through RuntimeTypeModel.Default, which reflects; the proxies will be AOT-safe and the serializers will not. Set [ProtoGrpc(Model = typeof(YourModel))] naming a [ProtoModel] type

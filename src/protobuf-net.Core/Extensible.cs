@@ -132,7 +132,7 @@ namespace ProtoBuf
         /// <param name="tag">The field identifier; the tag should not be defined as a known data-field for the instance.</param>
         /// <param name="value">The value to append.</param>
         public static void AppendValue<TValue>(IExtensible instance, int tag, TValue value)
-            => ExtensibleUtil.AppendExtendValue(default, instance, tag, DataFormat.Default, value);
+            => ExtensibleUtil.AppendExtendValue<TValue>(default, instance, tag, DataFormat.Default, value);
 
         /// <summary>
         /// Appends the value as an additional (unexpected) data-field for the instance.
@@ -148,7 +148,7 @@ namespace ProtoBuf
         /// <param name="tag">The field identifier; the tag should not be defined as a known data-field for the instance.</param>
         /// <param name="value">The value to append.</param>
         public static void AppendValue<TValue>(IExtensible instance, int tag, DataFormat format, TValue value)
-            => ExtensibleUtil.AppendExtendValue(default, instance, tag, format, value);
+            => ExtensibleUtil.AppendExtendValue<TValue>(default, instance, tag, format, value);
 
         /// <summary>
         /// Appends the value as an additional (unexpected) data-field for the instance.
@@ -165,7 +165,7 @@ namespace ProtoBuf
         /// <param name="tag">The field identifier; the tag should not be defined as a known data-field for the instance.</param>
         /// <param name="value">The value to append.</param>
         public static void AppendValue<TValue>(TypeModel model, IExtensible instance, int tag, TValue value, DataFormat format = DataFormat.Default)
-            => ExtensibleUtil.AppendExtendValue(model, instance, tag, format, value);
+            => ExtensibleUtil.AppendExtendValue<TValue>(model, instance, tag, format, value);
 
         /// <summary>
         /// Queries an extensible object for an additional (unexpected) data-field for the instance.
@@ -375,6 +375,8 @@ namespace ProtoBuf
         /// <param name="tag">The field identifier; the tag should not be defined as a known data-field for the instance.</param>
         /// <param name="value">The value to append.</param>
         public static void AppendValue(TypeModel model, IExtensible instance, int tag, DataFormat format, object value)
-            => ExtensibleUtil.AppendExtendValue(model, instance, tag, format, value);
+            // genuinely untyped - this overload never knew the type - so it takes the reflective path
+            // and, under AOT, reports rather than losing the value. Prefer the generic overloads.
+            => ExtensibleUtil.AppendExtendValue<object>(model, instance, tag, format, value);
     }
 }

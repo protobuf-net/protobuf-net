@@ -6,7 +6,7 @@ using System.Globalization;
 using System.IO;
 using System.Reflection;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace ProtoBuf.Test
 {

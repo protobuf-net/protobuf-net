@@ -66,7 +66,7 @@ namespace ProtoBuf.Internal
                 try { throw ex; } // this is just to set the stack-trace
                 catch (Exception inner)
                 {
-                    ex = new InvalidOperationException($"Type '{type.NormalizeName()}' looks like a Google.Protobuf type; it cannot be used directly with protobuf-net without manual configuration; it may be possible to generate a protobuf-net type instead; see https://protobuf-net.github.io/protobuf-net/contract_first", inner);
+                    ex = new InvalidOperationException($"Type '{type.NormalizeName()}' looks like a Google.Protobuf type; it cannot be used directly with protobuf-net without manual configuration; it may be possible to generate a protobuf-net type instead; see https://docs.protobuf-net.dev/contract_first", inner);
                 }
             }
             // attempt to detect Google protobuf types, and give a suitable message

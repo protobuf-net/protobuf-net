@@ -8,16 +8,21 @@ but which makes it really easy to work with idiomatic .NET types, including pre-
 
 ## Release Notes
 
-[Change history and pending changes are here](http://protobuf-net.github.io/protobuf-net/releasenotes)
+[Change history and pending changes are here](https://docs.protobuf-net.dev/releasenotes)
 
 ## Other topics
 
-- [Handling `null` values/collections](https://protobuf-net.github.io/protobuf-net/nullwrappers)
-- [`CompatibilityLevel`](http://protobuf-net.github.io/protobuf-net/compatibilitylevel)
-- [Build Tools for protobuf-net and protobuf-net.Grpc](https://protobuf-net.github.io/protobuf-net/build_tools)
-- [Generating code from .proto files at build-time](http://protobuf-net.github.io/protobuf-net/contract_first)
-- [Schema analysis tools](http://protobuf-net.github.io/protobuf-net/schemas)
-- [Using protobuf-net with Noda Time](http://protobuf-net.github.io/protobuf-net/nodatime)
+- [Handling `null` values/collections](https://docs.protobuf-net.dev/nullwrappers)
+- [`CompatibilityLevel`](https://docs.protobuf-net.dev/compatibilitylevel)
+- [Build Tools for protobuf-net and protobuf-net.Grpc](https://docs.protobuf-net.dev/build_tools)
+- [Compile-time serializers, for native AOT and trimming](https://docs.protobuf-net.dev/aot)
+- [Generating code from .proto files at build-time](https://docs.protobuf-net.dev/contract_first)
+- [Editions](https://docs.protobuf-net.dev/editions)
+- [Delimited encoding (groups), and why it is usually faster to write](https://docs.protobuf-net.dev/delimited)
+- [Schema analysis tools](https://docs.protobuf-net.dev/schemas)
+- [protobuf-net.dev](https://protobuf-net.dev/) - generate code from a `.proto` schema, or decode a raw protobuf payload, in your browser
+- [Memory use and message size limits](https://docs.protobuf-net.dev/memory_and_size_limits)
+- [Using protobuf-net with Noda Time](https://docs.protobuf-net.dev/nodatime)
 
 ## Donate
 

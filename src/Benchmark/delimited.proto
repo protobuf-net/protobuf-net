@@ -1,0 +1,18 @@
+edition = "2023";
+package benchmark.delimited;
+option csharp_namespace = "Benchmark.Delimited";
+
+// two identical shapes; the only difference is how the sub-messages are framed
+// on the wire - see DelimitedEncodingBenchmarks
+
+message LengthPrefixedNode {
+  int32 value = 1;
+  LengthPrefixedNode child = 2;
+  repeated LengthPrefixedNode children = 3;
+}
+
+message DelimitedNode {
+  int32 value = 1;
+  DelimitedNode child = 2 [features.message_encoding = DELIMITED];
+  repeated DelimitedNode children = 3 [features.message_encoding = DELIMITED];
+}
