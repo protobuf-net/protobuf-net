@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 using Xunit;
-using Xunit.Abstractions;
+
 using static ProtoBuf.Test.BufferWriteCountTests;
 
 #nullable enable
@@ -76,6 +76,7 @@ message Foo {
    int32 Id = 1;
 }
 message ManualWrappedGroupEquivalent {
+   // warning: 'group' is not valid in proto3; DELIMITED encoding requires edition 2023 or later (features.message_encoding = DELIMITED)
    group WrapperLayer Wrapper = 4;
 }
 message WrapperLayer {

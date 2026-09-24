@@ -1,0 +1,9 @@
+ProtoBuf.ProtoReader.State.ReadIntPtr() -> nint
+ProtoBuf.ProtoReader.State.ReadUIntPtr() -> nuint
+ProtoBuf.ProtoWriter.State.WriteIntPtr(nint value) -> void
+ProtoBuf.ProtoWriter.State.WriteUIntPtr(nuint value) -> void
+static ProtoBuf.BclHelpers.ReadDateOnly(ref ProtoBuf.ProtoReader.State state) -> System.DateOnly
+static ProtoBuf.BclHelpers.ReadTimeOnly(ref ProtoBuf.ProtoReader.State state) -> System.TimeOnly
+static ProtoBuf.BclHelpers.WriteDateOnly(ref ProtoBuf.ProtoWriter.State state, System.DateOnly value) -> void
+static ProtoBuf.BclHelpers.WriteTimeOnly(ref ProtoBuf.ProtoWriter.State state, System.TimeOnly value) -> void
+static ProtoBuf.Serializers.RepeatedSerializer.CreateReadOnySet<T>() -> ProtoBuf.Serializers.RepeatedSerializer<System.Collections.Generic.IReadOnlySet<T>, T>

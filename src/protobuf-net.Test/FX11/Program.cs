@@ -8,7 +8,7 @@ using ProtoBuf.Meta;
 using SampleDto;
 using Xunit;
 using ProtoBuf.unittest;
-using Xunit.Abstractions;
+
 using System.Text;
 
 namespace FX11

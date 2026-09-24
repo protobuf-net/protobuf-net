@@ -1,0 +1,3 @@
+Generator produced 1 diagnostics:
+Warning PBN4001 Grpc/Data/Diagnostics/NestedInterface.input.cs L32 C22
+Interface 'IThing' is a service contract but is nested inside another type; build-time proxies are only generated for top-level interfaces. Move the interface out of 'GrpcFixtures.NestedInterface.Outer'

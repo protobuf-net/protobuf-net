@@ -428,8 +428,10 @@ namespace ProtoBuf.Reflection
                         {
                             found = enumType.Values.Find(x => x.Name == defaultValue);
                         }
-                        else if (ctx.Syntax == FileDescriptorProto.SyntaxProto2)
+                        else if (enumType.ResolvedFeatures.EnumType == FeatureSet.EnumType.Closed)
                         {
+                            // a closed enum (proto2, or editions with enum_type=CLOSED)
+                            // defaults to its first value;
                             // find the first one; if that is a zero, we don't need it after all
                             found = enumType.Values.FirstOrDefault();
                             if (found != null && found.Number == 0)
@@ -437,7 +439,7 @@ namespace ProtoBuf.Reflection
                                 if (!isOptional) found = null; // we don't need it after all
                             }
                         }
-                        // for proto3 the default is 0, so no need to do anything - GetValueOrDefault() will do it all
+                        // for open enums the default is 0, so no need to do anything - GetValueOrDefault() will do it all
 
                         if (found != null)
                         {
@@ -497,11 +499,11 @@ namespace ProtoBuf.Reflection
             {
                 tw.Write($", DataFormat := Global.ProtoBuf.DataFormat.{dataFormat}");
             }
-            if (field.IsPackedField(ctx.Syntax))
+            if (field.IsPackedField())
             {
                 tw.Write($", IsPacked := True");
             }
-            if (field.label == FieldDescriptorProto.Label.LabelRequired)
+            if (field.ResolvedFeatures.FieldPresence == FeatureSet.FieldPresence.LegacyRequired)
             {
                 tw.Write($", IsRequired := True");
             }
@@ -860,8 +862,10 @@ namespace ProtoBuf.Reflection
                             return "Global.System.Guid?";
                     }
                     var msgType = ctx.TryFind<DescriptorProto>(field.TypeName);
-                    if (field.type == FieldDescriptorProto.Type.TypeGroup)
+                    if (field.type is FieldDescriptorProto.Type.TypeGroup or FieldDescriptorProto.Type.TypeMessage
+                        && field.ResolvedFeatures.MessageEncoding == FeatureSet.MessageEncoding.Delimited)
                     {
+                        // proto2 groups and editions message_encoding=DELIMITED are the same wire shape
                         dataFormat = nameof(DataFormat.Group);
                     }
                     isMap = msgType?.Options?.MapEntry ?? false;

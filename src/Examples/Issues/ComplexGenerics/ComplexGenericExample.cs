@@ -11,7 +11,7 @@
     using System.ComponentModel;
     using System.IO;
     using ProtoBuf.Meta;
-    using Xunit.Abstractions;
+    
 
     public class ComplexGenericTest
     {

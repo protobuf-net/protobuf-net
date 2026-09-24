@@ -2,7 +2,7 @@
 using ProtoBuf.Test.Nullables.Abstractions;
 using System.Collections.Generic;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace ProtoBuf.Test.Nullables
 {
@@ -111,7 +111,9 @@ message WrappedAsSupportNullBar {
 }
 message DuplicateFieldTypesWithDifferentNullWrappingModel {
    repeated WrappedBar Items1 = 1;
+   // warning: 'group' is not valid in proto3; DELIMITED encoding requires edition 2023 or later (features.message_encoding = DELIMITED)
    repeated group WrappedAsGroupBar Items2 = 2;
+   // warning: 'group' is not valid in proto3; DELIMITED encoding requires edition 2023 or later (features.message_encoding = DELIMITED)
    repeated group WrappedAsSupportNullBar Items3 = 3;
 }");
 

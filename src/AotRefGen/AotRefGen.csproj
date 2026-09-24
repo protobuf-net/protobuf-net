@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- the compile-time model attributes are [Experimental] while the shape settles -->
+    <NoWarn>$(NoWarn);PBN9001</NoWarn>
+    <OutputType>Exe</OutputType>
+    <!-- net472 is not incidental: RuntimeTypeModel can only persist a compiled model to disk on
+         .NET Framework (see PLAT_NO_EMITDLL in protobuf-net.csproj) -->
+    <TargetFramework>net472</TargetFramework>
+    <RootNamespace>ProtoBuf.AotRefGen</RootNamespace>
+    <AssemblyName>AotRefGen</AssemblyName>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <IsPackable>false</IsPackable>
+    <Description>Dev tool: emits ref-emit reference output for the AOT generator's golden fixtures</Description>
+    <NoWarn>$(NoWarn);CS0618</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../protobuf-net/protobuf-net.csproj" />
+    <PackageReference Include="ICSharpCode.Decompiler" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- consume the generator's golden fixtures directly, so the reference output can never
+         drift from the input the tests actually run against -->
+    <Compile Include="../BuildToolsUnitTests/Aot/Data/*.input.cs" LinkBase="Fixtures" />
+
+    <!-- ...except the ones net472 cannot express. DateOnly/TimeOnly do not exist here, so there is
+         no reference output to generate; the differential suite (net8.0) covers them instead -->
+    <Compile Remove="../BuildToolsUnitTests/Aot/Data/DateOnly.input.cs" />
+  </ItemGroup>
+</Project>

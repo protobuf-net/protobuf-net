@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Cold-start measurement; see Program.cs and run-coldstart.sh. Publishes AOT so that the same
+       code can be measured on both a JIT and a native build - which is the third horse in the race,
+       and the only one that removes host startup as well as the runtime model. -->
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>ProtoBuf.AotColdStart</RootNamespace>
+    <Nullable>disable</Nullable>
+    <IsPackable>false</IsPackable>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);PBN9001</NoWarn>
+    <PublishAot>true</PublishAot>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <!-- the vanilla arm deliberately uses the reflection-based model, which is the thing being
+         measured; its trim warnings are the point rather than a problem -->
+    <NoWarn>$(NoWarn);IL2026;IL2055;IL2057;IL2067;IL2070;IL2072;IL2075;IL2087;IL2091;IL3050</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../protobuf-net/protobuf-net.csproj" />
+    <ProjectReference Include="../AotSchemaDtos/AotSchemaDtos.csproj" />
+    <ProjectReference Include="../protobuf-net.BuildTools/protobuf-net.BuildTools.csproj"
+                      OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+</Project>

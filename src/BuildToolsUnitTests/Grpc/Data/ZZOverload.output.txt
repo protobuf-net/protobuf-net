@@ -1,0 +1,3 @@
+Generator produced 1 diagnostics:
+Warning PBN4012 Grpc/Data/ZZOverload.input.cs L80 C29
+'OverloadServices' names 'GrpcFixtures.Overload.OverloadModel' as its serializer model, but that type is declared in this project without [ProtoModel], so it has no compile-time serializers and no 'Instance'. Add [ProtoModel] to it

@@ -10,7 +10,7 @@ using System.Diagnostics;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using Examples;
-using Xunit.Abstractions;
+
 
 namespace TestMediaBrowser
 {

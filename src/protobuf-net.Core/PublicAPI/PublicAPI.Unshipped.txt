@@ -1,0 +1,7 @@
+[PBN9001]ProtoBuf.ProtoSubTypeAttribute
+[PBN9001]ProtoBuf.ProtoSubTypeAttribute.BaseType.get -> System.Type
+[PBN9001]ProtoBuf.ProtoSubTypeAttribute.FieldNumber.get -> int
+[PBN9001]ProtoBuf.ProtoSubTypeAttribute.IsGroup.get -> bool?
+[PBN9001]ProtoBuf.ProtoSubTypeAttribute.ProtoSubTypeAttribute(System.Type baseType, System.Type subType, int fieldNumber) -> void
+[PBN9001]ProtoBuf.ProtoSubTypeAttribute.ProtoSubTypeAttribute(System.Type baseType, System.Type subType, int fieldNumber, bool group) -> void
+[PBN9001]ProtoBuf.ProtoSubTypeAttribute.SubType.get -> System.Type

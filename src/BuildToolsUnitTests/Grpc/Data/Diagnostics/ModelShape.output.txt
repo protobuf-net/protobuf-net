@@ -1,0 +1,5 @@
+Generator produced 2 diagnostics:
+Warning PBN4014 Grpc/Data/Diagnostics/ModelShape.input.cs L55 C33
+'NestedServices' is marked [ProtoGrpc] but is nested inside 'GrpcFixtures.ModelShape.Outer', and the generated half is emitted as a top-level non-generic partial - so it would not compile. Move the declaration to its own top-level type
+Warning PBN4014 Grpc/Data/Diagnostics/ModelShape.input.cs L64 C29
+'GenericServices' is marked [ProtoGrpc] but is a generic type, and the generated half is emitted as a top-level non-generic partial - so it would not compile. Move the declaration to its own top-level type

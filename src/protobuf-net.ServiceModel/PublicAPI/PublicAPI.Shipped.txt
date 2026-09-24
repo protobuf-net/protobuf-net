@@ -1,0 +1,17 @@
+override ProtoBuf.ServiceModel.ProtoOperationBehavior.CreateSerializer(System.Type type, System.Xml.XmlDictionaryString name, System.Xml.XmlDictionaryString ns, System.Collections.Generic.IList<System.Type> knownTypes) -> System.Runtime.Serialization.XmlObjectSerializer
+override ProtoBuf.ServiceModel.XmlProtoSerializer.IsStartObject(System.Xml.XmlDictionaryReader reader) -> bool
+override ProtoBuf.ServiceModel.XmlProtoSerializer.ReadObject(System.Xml.XmlDictionaryReader reader, bool verifyObjectName) -> object
+override ProtoBuf.ServiceModel.XmlProtoSerializer.WriteEndObject(System.Xml.XmlDictionaryWriter writer) -> void
+override ProtoBuf.ServiceModel.XmlProtoSerializer.WriteObjectContent(System.Xml.XmlDictionaryWriter writer, object graph) -> void
+override ProtoBuf.ServiceModel.XmlProtoSerializer.WriteStartObject(System.Xml.XmlDictionaryWriter writer, object graph) -> void
+ProtoBuf.ServiceModel.ProtoBehaviorAttribute
+ProtoBuf.ServiceModel.ProtoBehaviorAttribute.ProtoBehaviorAttribute() -> void
+ProtoBuf.ServiceModel.ProtoEndpointBehavior
+ProtoBuf.ServiceModel.ProtoEndpointBehavior.ProtoEndpointBehavior() -> void
+ProtoBuf.ServiceModel.ProtoOperationBehavior
+ProtoBuf.ServiceModel.ProtoOperationBehavior.Model.get -> ProtoBuf.Meta.TypeModel
+ProtoBuf.ServiceModel.ProtoOperationBehavior.Model.set -> void
+ProtoBuf.ServiceModel.ProtoOperationBehavior.ProtoOperationBehavior(System.ServiceModel.Description.OperationDescription operation) -> void
+ProtoBuf.ServiceModel.XmlProtoSerializer
+ProtoBuf.ServiceModel.XmlProtoSerializer.XmlProtoSerializer(ProtoBuf.Meta.TypeModel model, System.Type type) -> void
+static ProtoBuf.ServiceModel.XmlProtoSerializer.TryCreate(ProtoBuf.Meta.TypeModel model, System.Type type) -> ProtoBuf.ServiceModel.XmlProtoSerializer

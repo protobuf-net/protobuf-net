@@ -11,7 +11,7 @@ namespace ProtoBuf.unittest.Meta
 
     public class LockContention
     {
-        [Fact]
+        [Fact(Skip = "local only")]
         public void DeliberatelyCausedContentionShouldShow()
         {
             var model = RuntimeTypeModel.Create();

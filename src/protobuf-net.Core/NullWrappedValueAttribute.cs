@@ -6,7 +6,7 @@ namespace ProtoBuf
     /// is added, for compatibility with <c>wrappers.proto</c>, rather than
     /// "field presence";
     /// when used on a collection/dictionary, indicates  that the values can track nulls;
-    /// see https://protobuf-net.github.io/protobuf-net/nullwrappers for more information.
+    /// see https://docs.protobuf-net.dev/nullwrappers for more information.
     /// </summary>
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false)]
     public sealed class NullWrappedValueAttribute : Attribute
@@ -18,7 +18,7 @@ namespace ProtoBuf
     }
 
     /// <summary>Indicates that a collection can track the difference between a null and empty collection;
-    /// see https://protobuf-net.github.io/protobuf-net/nullwrappers for more information.
+    /// see https://docs.protobuf-net.dev/nullwrappers for more information.
     /// </summary>
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false)]
     public sealed class NullWrappedCollectionAttribute : Attribute

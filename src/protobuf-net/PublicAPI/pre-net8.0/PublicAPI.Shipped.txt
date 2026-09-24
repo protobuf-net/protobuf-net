@@ -1,0 +1,4 @@
+ProtoBuf.ProtoReader.State.ReadIntPtr() -> System.IntPtr (forwarded, contained in protobuf-net.Core)
+ProtoBuf.ProtoReader.State.ReadUIntPtr() -> System.UIntPtr (forwarded, contained in protobuf-net.Core)
+ProtoBuf.ProtoWriter.State.WriteIntPtr(System.IntPtr value) -> void (forwarded, contained in protobuf-net.Core)
+ProtoBuf.ProtoWriter.State.WriteUIntPtr(System.UIntPtr value) -> void (forwarded, contained in protobuf-net.Core)

@@ -1,0 +1,22 @@
+edition = "2024";
+
+package editions.vis;
+
+import option "editions/custom_options.proto";
+
+export message Exported {
+  int32 value = 1 [(editions.opts.tagged) = true];
+}
+
+local message Hidden {
+  int32 value = 1;
+}
+
+message DefaultVisibility {
+  local enum NestedStatus {
+    NESTED_STATUS_UNSET = 0;
+  }
+
+  int32 value = 1;
+  NestedStatus status = 2;
+}

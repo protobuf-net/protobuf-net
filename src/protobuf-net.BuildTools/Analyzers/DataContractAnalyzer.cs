@@ -4,6 +4,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
 using ProtoBuf.BuildTools.Internal;
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -73,12 +74,16 @@ namespace ProtoBuf.BuildTools.Analyzers
             defaultSeverity: DiagnosticSeverity.Info,
             isEnabledByDefault: true);
 
-        internal static readonly DiagnosticDescriptor DuplicateMemberName = new(
+                    // Warning, not Error: MetaType *defines* the resolution - the first declaration to pin a
+            // tag wins - so this is "you probably did not mean this", not "this is broken".
+            // Partial.input.cs suppresses it precisely in order to pin that precedence, which is
+            // evidence enough that the shape has defined behaviour.
+internal static readonly DiagnosticDescriptor DuplicateMemberName = new(
             id: "PBN0008",
             title: nameof(DataContractAnalyzer) + "." + nameof(DuplicateMemberName),
             messageFormat: "The underlying member '{0}' is described multiple times.",
             category: Literals.CategoryUsage,
-            defaultSeverity: DiagnosticSeverity.Error,
+            defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true);
 
         internal static readonly DiagnosticDescriptor ShouldBeProtoContract = new(
@@ -89,12 +94,15 @@ namespace ProtoBuf.BuildTools.Analyzers
             defaultSeverity: DiagnosticSeverity.Error,
             isEnabledByDefault: true);
 
-        internal static readonly DiagnosticDescriptor DeclaredAndIgnored = new(
+                    // Warning, not Error: [ProtoPartialIgnore] wins over everything, including a [ProtoMember]
+            // the member declares itself (ApplyDefaultBehaviour tests it first). Deterministic, and
+            // pinned by Partial.input.cs - so a contradiction worth flagging, not a build break.
+internal static readonly DiagnosticDescriptor DeclaredAndIgnored = new(
             id: "PBN0010",
             title: nameof(DataContractAnalyzer) + "." + nameof(DeclaredAndIgnored),
             messageFormat: "The member '{0}' is marked to be ignored; additional annotations will be ignored.",
             category: Literals.CategoryUsage,
-            defaultSeverity: DiagnosticSeverity.Error,
+            defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true);
 
         internal static readonly DiagnosticDescriptor DuplicateInclude = new(
@@ -117,7 +125,8 @@ namespace ProtoBuf.BuildTools.Analyzers
         internal static readonly DiagnosticDescriptor IncludeNotDeclared = new(
             id: "PBN0013",
             title: nameof(DataContractAnalyzer) + "." + nameof(IncludeNotDeclared),
-            messageFormat: "The base-type '{0}' is a proto-contract, but no include is declared for '{1}' and the " + nameof(ProtoContractAttribute.IgnoreUnknownSubTypes) + " flag is not set.",
+            messageFormat: "The base-type '{0}' is a proto-contract, but does not declare '{1}' as a sub-type; use [" + nameof(ProtoIncludeAttribute) + "], or [ProtoSubType] where '{0}' cannot name '{1}', or set " + nameof(ProtoContractAttribute.IgnoreUnknownSubTypes) + ".",
+            helpLinkUri: "https://docs.protobuf-net.dev/rules/PBN0013",
             category: Literals.CategoryUsage,
             defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true);
@@ -142,7 +151,7 @@ namespace ProtoBuf.BuildTools.Analyzers
             id: "PBN0016",
             title: nameof(DataContractAnalyzer) + "." + nameof(MissingCompatibilityLevel),
             messageFormat: "It is recommended to declare a module or assembly level " + nameof(CompatibilityLevel) + " (or declare it for each contract type); new projects should use the highest currently available - old projects should use " + nameof(CompatibilityLevel.Level200) + " unless fully considered.",
-            helpLinkUri: "https://protobuf-net.github.io/protobuf-net/compatibilitylevel.html",
+            helpLinkUri: "https://docs.protobuf-net.dev/compatibilitylevel",
             category: Literals.CategoryUsage,
             defaultSeverity: DiagnosticSeverity.Info,
             isEnabledByDefault: true);
@@ -198,6 +207,41 @@ namespace ProtoBuf.BuildTools.Analyzers
             isEnabledByDefault: true,
             helpLinkUri: "https://stackoverflow.com/a/3162253/1882616");
 
+        internal static readonly DiagnosticDescriptor DeclaredDefaultCannotRoundTrip = new(
+            id: "PBN0024",
+            title: nameof(DataContractAnalyzer) + "." + nameof(DeclaredDefaultCannotRoundTrip),
+            messageFormat: "Field '{0}' declares [DefaultValue] but nothing initializes it to that value; a member equal to its declared default is not written, so the value is lost on the receiving end.",
+            category: Literals.CategoryUsage,
+            defaultSeverity: DiagnosticSeverity.Warning,
+            isEnabledByDefault: true,
+            helpLinkUri: "https://stackoverflow.com/a/3162253/1882616");
+
+        internal static readonly DiagnosticDescriptor DeclaredDefaultIgnored = new(
+            id: "PBN0025",
+            title: nameof(DataContractAnalyzer) + "." + nameof(DeclaredDefaultIgnored),
+            messageFormat: "Field '{0}' declares [DefaultValue], but protobuf-net will not apply it: {1}.",
+            category: Literals.CategoryUsage,
+            defaultSeverity: DiagnosticSeverity.Warning,
+            isEnabledByDefault: true,
+            helpLinkUri: "https://stackoverflow.com/a/3162253/1882616");
+
+        internal static readonly DiagnosticDescriptor DeclaredDefaultUnderSkipConstructor = new(
+            id: "PBN0026",
+            title: nameof(DataContractAnalyzer) + "." + nameof(DeclaredDefaultUnderSkipConstructor),
+            messageFormat: "SkipConstructor means no constructor or field initializer runs on deserialize, so nothing can restore a declared default; {0} will not round-trip.",
+            category: Literals.CategoryUsage,
+            defaultSeverity: DiagnosticSeverity.Warning,
+            isEnabledByDefault: true,
+            helpLinkUri: "https://stackoverflow.com/a/3162253/1882616");
+
+        internal static readonly DiagnosticDescriptor ProtoContractOnInterface = new(
+            id: "PBN0023",
+            title: nameof(DataContractAnalyzer) + "." + nameof(ProtoContractOnInterface),
+            messageFormat: "The proto-contract '{0}' is an interface; this is supported but not recommended. Each implementation is serialized as a sub-type layer, so a member declared on both the interface and the implementing type is written twice - consider an abstract base class, or declaring the members only on the implementations.",
+            category: Literals.CategoryUsage,
+            defaultSeverity: DiagnosticSeverity.Warning,
+            isEnabledByDefault: true);
+
         private static readonly ImmutableArray<DiagnosticDescriptor> s_SupportedDiagnostics = Utils.GetDeclared(typeof(DataContractAnalyzer));
 
         /// <inheritdoc/>
@@ -205,18 +249,126 @@ namespace ProtoBuf.BuildTools.Analyzers
 
         private static readonly ImmutableArray<SyntaxKind> s_syntaxKinds =
             ImmutableArray.Create(SyntaxKind.ClassDeclaration, SyntaxKind.StructDeclaration, SyntaxKind.EnumDeclaration
+                // the type switch has always handled TypeKind.Interface; it was simply never reached
+                , SyntaxKind.InterfaceDeclaration
 #if !PLAT_NO_RECORDS
                 , SyntaxKind.RecordDeclaration
 #endif
                 );
 
         /// <inheritdoc/>
+        /// <summary>
+        /// The <c>[ProtoSubType]</c> links declared in a compilation: sub-types linked to their base
+        /// out-of-band, rather than by a <c>[ProtoInclude]</c> on the base.
+        /// </summary>
+        /// <remarks>
+        /// All three declaration sites are covered - assembly, module, and any type, which is what
+        /// reaches a declaration made on a <c>[ProtoModel]</c> class. Only <b>this compilation</b> is
+        /// scanned, and that is complete rather than a shortcut: this exists to answer PBN0013, which
+        /// can only fire for a type declared in source, and a referenced assembly cannot name a type
+        /// from the assembly referencing it.
+        /// </remarks>
+        private sealed class OutOfBandSubTypes
+        {
+            // spelled out rather than nameof'd: the attribute is [Experimental], and naming the
+            // symbol would make this assembly have to suppress PBN9001 to build
+            private const string ProtoSubTypeAttributeName = "ProtoSubTypeAttribute";
+
+            private readonly Dictionary<INamedTypeSymbol, HashSet<INamedTypeSymbol>> _byBase
+                = new Dictionary<INamedTypeSymbol, HashSet<INamedTypeSymbol>>(SymbolEqualityComparer.Default);
+
+            /// <remarks>
+            /// Matched on the <em>original definition</em> of each side, because a declaration names
+            /// a closed construction (<c>Tagged&lt;int&gt;</c>) while this diagnostic is reported
+            /// against the open declaration it came from (<c>Tagged&lt;T&gt;</c>), so a plain symbol
+            /// comparison never matches. Nothing is lost by the loosening: the open declaration is
+            /// the only place there is to report, so "some construction of this is declared" is the
+            /// most that can usefully be said. PBN0012 tolerates the same open/closed mismatch, for
+            /// the same reason.
+            /// </remarks>
+            public bool Declares(INamedTypeSymbol baseType, INamedTypeSymbol subType)
+                => _byBase.TryGetValue(baseType.OriginalDefinition, out var subTypes)
+                    && subTypes.Contains(subType.OriginalDefinition);
+
+            public static OutOfBandSubTypes Build(Compilation compilation)
+            {
+                var result = new OutOfBandSubTypes();
+                result.Collect(compilation.Assembly.GetAttributes());
+                result.Collect(compilation.SourceModule.GetAttributes());
+                // a declaration on a type - a [ProtoModel] class, in practice. The walk is over the
+                // types this compilation *declares*, so it is bounded by the project rather than by
+                // its references, and it happens at most once per compilation
+                Walk(compilation.Assembly.GlobalNamespace, result);
+                return result;
+
+                static void Walk(INamespaceOrTypeSymbol scope, OutOfBandSubTypes result)
+                {
+                    foreach (var member in scope.GetMembers())
+                    {
+                        switch (member)
+                        {
+                            case INamespaceSymbol ns:
+                                Walk(ns, result);
+                                break;
+                            case INamedTypeSymbol type:
+                                result.Collect(type.GetAttributes());
+                                Walk(type, result);
+                                break;
+                        }
+                    }
+                }
+            }
+
+            private void Collect(ImmutableArray<AttributeData> attributes)
+            {
+                foreach (var attrib in attributes)
+                {
+                    var ac = attrib.AttributeClass;
+                    if (ac is null || ac.Name != ProtoSubTypeAttributeName || !ac.InProtoBufNamespace()) continue;
+
+                    var args = attrib.ConstructorArguments;
+                    if (args.Length is not (3 or 4)) continue;
+                    if (args[0].Value is not INamedTypeSymbol baseType) continue;
+                    if (args[1].Value is not INamedTypeSymbol subType) continue;
+
+                    if (!_byBase.TryGetValue(baseType.OriginalDefinition, out var subTypes))
+                    {
+                        _byBase.Add(baseType.OriginalDefinition,
+                            subTypes = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default));
+                    }
+                    subTypes.Add(subType.OriginalDefinition);
+                }
+            }
+        }
+
         public override void Initialize(AnalysisContext ctx)
         {
             ctx.EnableConcurrentExecution();
             ctx.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze);
-            ctx.RegisterSyntaxNodeAction(context => ConsiderPossibleProtoBufType(ref context), s_syntaxKinds);
-            ctx.RegisterCompilationAction(context => ConsiderCompilation(ref context));
+            // the disable switch is read per-callback rather than once; it is a dictionary lookup,
+            // which is cheap enough to be the first thing every callback does
+            //
+            // the syntax-node action is registered from a compilation-start action purely so that
+            // the out-of-band [ProtoSubType] links can be found once and shared - they are a
+            // property of the compilation, not of any one type. Lazily, because the only thing that
+            // asks for them is PBN0013, i.e. a sub-type whose base declares no include for it: most
+            // compilations never build the set at all
+            ctx.RegisterCompilationStartAction(start =>
+            {
+                var declaredSubTypes = new Lazy<OutOfBandSubTypes>(
+                    () => OutOfBandSubTypes.Build(start.Compilation));
+
+                start.RegisterSyntaxNodeAction(context =>
+                {
+                    if (context.Options.AnalyzerConfigOptionsProvider.BuildToolsDisabled()) return;
+                    ConsiderPossibleProtoBufType(ref context, declaredSubTypes);
+                }, s_syntaxKinds);
+            });
+            ctx.RegisterCompilationAction(context =>
+            {
+                if (context.Options.AnalyzerConfigOptionsProvider.BuildToolsDisabled()) return;
+                ConsiderCompilation(ref context);
+            });
         }
 
         private void ConsiderCompilation(ref CompilationAnalysisContext context)
@@ -281,7 +433,8 @@ namespace ProtoBuf.BuildTools.Analyzers
             }
         }
 
-        private static void ConsiderPossibleProtoBufType(ref SyntaxNodeAnalysisContext context)
+        private static void ConsiderPossibleProtoBufType(ref SyntaxNodeAnalysisContext context,
+            Lazy<OutOfBandSubTypes> declaredSubTypes)
         {
             if (context.ContainingSymbol is not INamedTypeSymbol type) return;
             
@@ -290,7 +443,7 @@ namespace ProtoBuf.BuildTools.Analyzers
                 case TypeKind.Class:
                 case TypeKind.Struct:
                 case TypeKind.Interface:
-                    ConsiderPossibleDataContractType(ref context, type);
+                    ConsiderPossibleDataContractType(ref context, type, declaredSubTypes);
                     break;
                 case TypeKind.Enum:
                     ConsiderEnumType(ref context, type);
@@ -381,7 +534,8 @@ namespace ProtoBuf.BuildTools.Analyzers
             }
         }
 
-        private static void ConsiderPossibleDataContractType(ref SyntaxNodeAnalysisContext context, INamedTypeSymbol type)
+        private static void ConsiderPossibleDataContractType(ref SyntaxNodeAnalysisContext context,
+            INamedTypeSymbol type, Lazy<OutOfBandSubTypes> declaredSubTypes)
         {
             var attribs = type.GetAttributes();
 
@@ -396,6 +550,13 @@ namespace ProtoBuf.BuildTools.Analyzers
                 {
                     case nameof(ProtoContractAttribute) when ac.InProtoBufNamespace():
                         Context().SetContract(type, attrib);
+                        break;
+                    // [DataContract] and [XmlType] are contract markers in their own right
+                    // (MetaType.GetContractFamily), and the families mix - so ProtoBuf annotations on
+                    // one of these are honoured, not ignored, and must not be reported as an error
+                    case "DataContractAttribute" when ac.InNamespace("System", "Runtime", "Serialization"):
+                    case "XmlTypeAttribute" when ac.InNamespace("System", "Xml", "Serialization"):
+                        Context().SetOtherContractFamily();
                         break;
                     case nameof(ProtoIncludeAttribute) when ac.InProtoBufNamespace():
                         Context().AddInclude(type, attrib);
@@ -463,10 +624,29 @@ namespace ProtoBuf.BuildTools.Analyzers
             }
             if (typeContext is not null)
             {
+                // an interface contract works - it is an inheritance root like any other - but the
+                // layering is a trap: the interface's own declared members are written *in addition
+                // to* the implementation's, so a property declared on both goes on the wire twice
+                if (type.TypeKind == TypeKind.Interface
+                    && typeContext.HasFlag(DataContractContextFlags.IsProtoContract))
+                {
+                    context.ReportDiagnostic(Diagnostic.Create(
+                        descriptor: DataContractAnalyzer.ProtoContractOnInterface,
+                        location: Utils.PickLocation(ref context, type),
+                        messageArgs: new object[] { type.Name },
+                        additionalLocations: null,
+                        properties: null
+                    ));
+                }
+
                 if (!type.IsAbstract // the library won't be directly creating it, so: N/A
                     && hasAnyConstructor && !hasParameterlessConstructor
                     && typeContext.HasFlag(DataContractContextFlags.IsProtoContract)
                     && !typeContext.HasFlag(DataContractContextFlags.SkipConstructor)
+                    // with a surrogate the library constructs *that* and converts, so the type
+                    // itself never needs a constructor - which is the point of surrogating an
+                    // immutable type in the first place
+                    && !typeContext.HasFlag(DataContractContextFlags.HasSurrogate)
                 )
                 {
                     context.ReportDiagnostic(Diagnostic.Create(
@@ -514,6 +694,14 @@ namespace ProtoBuf.BuildTools.Analyzers
                             additionalLocations: null,
                             properties: null
                         ));
+                    }
+                    if (!currentTypeIsDeclared && declaredSubTypes.Value.Declares(type.BaseType, type))
+                    {
+                        // the linkage exists, it is just not on the base type - which is the whole
+                        // point of [ProtoSubType]: the base may be in a package that has never heard
+                        // of this type. Telling someone to write a [ProtoInclude] they cannot write
+                        // is noise, so this counts as declared
+                        currentTypeIsDeclared = true;
                     }
                     if (!currentTypeIsDeclared)
                     {

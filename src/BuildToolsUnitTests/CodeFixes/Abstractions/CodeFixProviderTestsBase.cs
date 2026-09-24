@@ -1,7 +1,6 @@
 ﻿using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Diagnostics;
-using Microsoft.CodeAnalysis.Testing.Verifiers;
 using Microsoft.CodeAnalysis.Testing;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -41,8 +40,8 @@ namespace BuildToolsUnitTests.CodeFixes.Abstractions
 
             await codeFixTest.RunAsync();
         }
-
-        static CSharpCodeFixTest<TDiagnosticAnalyzer, TCodeFixProvider, XUnitVerifier> BuildCSharpCodeFixTest<TDiagnosticAnalyzer>(
+        
+        static CSharpCodeFixTest<TDiagnosticAnalyzer, TCodeFixProvider, DefaultVerifier> BuildCSharpCodeFixTest<TDiagnosticAnalyzer>(
             string sourceCode, string expectedCode, string? targetFramework = null)
             where TDiagnosticAnalyzer : DiagnosticAnalyzer, new()
         {
@@ -50,8 +49,8 @@ namespace BuildToolsUnitTests.CodeFixes.Abstractions
             {
                 targetFramework = CurrentRunningAssemblyTargetFramework.FrameworkDisplayName!;   
             }
-
-            var codeFixTest = new CSharpCodeFixTest<TDiagnosticAnalyzer, TCodeFixProvider, XUnitVerifier>
+            
+            var codeFixTest = new CSharpCodeFixTest<TDiagnosticAnalyzer, TCodeFixProvider, DefaultVerifier>
             {
                 ReferenceAssemblies = new ReferenceAssemblies(targetFramework),
                 TestState = { Sources = { sourceCode }, OutputKind = OutputKind.DynamicallyLinkedLibrary },

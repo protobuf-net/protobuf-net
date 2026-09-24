@@ -6,7 +6,7 @@ using System.IO;
 using System.IO.Pipelines;
 using System.Threading.Tasks;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace ProtoBuf.Test.Issues
 {
@@ -65,11 +65,11 @@ namespace ProtoBuf.Test.Issues
                 {
                     writer.GetSpan(1)[0] = data.WrittenSpan[j];
                     writer.Advance(1);
-                    await writer.FlushAsync();
+                    await writer.FlushAsync(TestContext.Current.CancellationToken);
                 }
             }
 
-            var result = await pipe.Reader.ReadAsync();
+            var result = await pipe.Reader.ReadAsync(TestContext.Current.CancellationToken);
             var buffer = result.Buffer;
 
             Assert.Equal("08-FF-FF-FF-FF-FF-FF-FF-FF-7F-08-FF-FF-FF-FF-FF-FF-FF-FF-7F", BitConverter.ToString(buffer.ToArray()));

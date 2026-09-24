@@ -1,0 +1,2 @@
+syntax = "proto3";
+enum E { E_ONE = 1; }

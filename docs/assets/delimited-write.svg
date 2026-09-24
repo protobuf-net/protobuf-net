@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 414" width="720" height="414" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" role="img" aria-label="Writing a 512-node graph: delimited vs length-prefixed">
+<rect width="720" height="414" fill="#ffffff"/>
+<text x="16" y="28" font-size="16" font-weight="600" fill="#1f2328">Writing a 512-node graph: delimited vs length-prefixed</text>
+<text x="16" y="48" font-size="12" fill="#59636e">protobuf-net v4, .NET 8, lower is better</text>
+<rect x="150" y="74" width="474.3" height="22" fill="#6e7781" rx="2"/>
+<text x="142" y="90" font-size="12" fill="#1f2328" text-anchor="end">length-prefixed</text>
+<text x="632.3" y="90" font-size="12" fill="#59636e">13,877 ns</text>
+<rect x="150" y="104" width="101.4" height="22" fill="#1f6feb" rx="2"/>
+<text x="142" y="120" font-size="12" fill="#1f2328" text-anchor="end">delimited</text>
+<text x="259.4" y="120" font-size="12" fill="#59636e">2,967 ns</text>
+<text x="8" y="100" font-size="11" font-weight="600" fill="#59636e">deep, Stream</text>
+<line x1="150" y1="68" x2="670" y2="68" stroke="#d1d9e0" stroke-width="1"/>
+<rect x="150" y="152" width="480.0" height="22" fill="#6e7781" rx="2"/>
+<text x="142" y="168" font-size="12" fill="#1f2328" text-anchor="end">length-prefixed</text>
+<text x="638.0" y="168" font-size="12" fill="#59636e">14,044 ns</text>
+<rect x="150" y="182" width="80.0" height="22" fill="#1f6feb" rx="2"/>
+<text x="142" y="198" font-size="12" fill="#1f2328" text-anchor="end">delimited</text>
+<text x="238.0" y="198" font-size="12" fill="#59636e">2,340 ns</text>
+<text x="8" y="178" font-size="11" font-weight="600" fill="#59636e">deep, buffer</text>
+<line x1="150" y1="146" x2="670" y2="146" stroke="#d1d9e0" stroke-width="1"/>
+<rect x="150" y="230" width="312.1" height="22" fill="#6e7781" rx="2"/>
+<text x="142" y="246" font-size="12" fill="#1f2328" text-anchor="end">length-prefixed</text>
+<text x="470.1" y="246" font-size="12" fill="#59636e">9,131 ns</text>
+<rect x="150" y="260" width="86.2" height="22" fill="#1f6feb" rx="2"/>
+<text x="142" y="276" font-size="12" fill="#1f2328" text-anchor="end">delimited</text>
+<text x="244.2" y="276" font-size="12" fill="#59636e">2,522 ns</text>
+<text x="8" y="256" font-size="11" font-weight="600" fill="#59636e">wide, Stream</text>
+<line x1="150" y1="224" x2="670" y2="224" stroke="#d1d9e0" stroke-width="1"/>
+<rect x="150" y="308" width="309.3" height="22" fill="#6e7781" rx="2"/>
+<text x="142" y="324" font-size="12" fill="#1f2328" text-anchor="end">length-prefixed</text>
+<text x="467.3" y="324" font-size="12" fill="#59636e">9,050 ns</text>
+<rect x="150" y="338" width="89.2" height="22" fill="#1f6feb" rx="2"/>
+<text x="142" y="354" font-size="12" fill="#1f2328" text-anchor="end">delimited</text>
+<text x="247.2" y="354" font-size="12" fill="#59636e">2,611 ns</text>
+<text x="8" y="334" font-size="11" font-weight="600" fill="#59636e">wide, buffer</text>
+<line x1="150" y1="302" x2="670" y2="302" stroke="#d1d9e0" stroke-width="1"/>
+<text x="16" y="400" font-size="11" fill="#59636e">Delimited needs no length, so nothing is measured up front and nothing is back-filled.</text>
+</svg>

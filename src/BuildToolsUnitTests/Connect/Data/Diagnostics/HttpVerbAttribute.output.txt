@@ -1,0 +1,7 @@
+Generator produced 3 diagnostics:
+Warning PBN5010 Connect/Data/Diagnostics/HttpVerbAttribute.input.cs L61 C22
+'global::ConnectFixtures.HttpVerbAttribute.IVerbs.PeekAsync' carries [HttpRead], which has no effect here - a Connect method's path and verbs come from the protocol, not from MVC routing. To make a unary method servable over GET, mark it [NoSideEffects]
+Warning PBN5010 Connect/Data/Diagnostics/HttpVerbAttribute.input.cs L61 C22
+'global::ConnectFixtures.HttpVerbAttribute.IVerbs.ReadAsync' carries [HttpGet], which has no effect here - a Connect method's path and verbs come from the protocol, not from MVC routing. To make a unary method servable over GET, mark it [NoSideEffects]
+Warning PBN5010 Connect/Data/Diagnostics/HttpVerbAttribute.input.cs L61 C22
+'global::ConnectFixtures.HttpVerbAttribute.IVerbs.WriteAsync' carries [HttpPost], which has no effect here - a Connect method's path and verbs come from the protocol, not from MVC routing. To make a unary method servable over GET, mark it [NoSideEffects]
