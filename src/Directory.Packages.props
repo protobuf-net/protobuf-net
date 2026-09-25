@@ -25,7 +25,7 @@
          protobuf-net.Grpc, which hard-depends on protobuf-net 2.4.8 and so collides on TypeModel.
          Kept in step with Grpc.AspNetCore.Server/Grpc.Net.Client, which version together. -->
     <PackageVersion Include="Grpc.Core.Api" Version="2.83.0" />
-    <PackageVersion Include="Grpc.Net.Client" Version="2.83.0" />
+    <PackageVersion Include="Grpc.Net.Client" Version="2.84.0" />
     <PackageVersion Include="Grpc.AspNetCore.Server" Version="2.83.0" />
     <!-- google.rpc.Status, for the conformance harness: rich gRPC error details travel in a
          grpc-status-details-bin trailer, and this is the package real services use to build one. Using
