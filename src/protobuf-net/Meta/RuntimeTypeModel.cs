@@ -595,6 +595,17 @@ namespace ProtoBuf.Meta
         /// </summary>
         public MetaType this[Type type] { get { return (MetaType)types[FindOrAddAuto(type, true, false, false, DefaultCompatibilityLevel)]; } }
 
+        /// <summary>
+        /// Returns the topmost type in the inheritance chain of <paramref name="type"/> that has a surrogate, or
+        /// <paramref name="type"/> itself if none has one or the model does not know it; see <see cref="MetaType.GetSurrogateOwnerType"/>
+        /// </summary>
+        public Type GetSurrogateOwnerType(Type type)
+        {
+            if (type is null) return null;
+            var found = FindWithoutAdd(type);
+            return found is not null ? found.GetSurrogateOwnerType() : type;
+        }
+
         internal MetaType FindWithAmbientCompatibility(Type type, CompatibilityLevel ambient)
         {
             var found = (MetaType)types[FindOrAddAuto(type, true, false, false, ambient)];
