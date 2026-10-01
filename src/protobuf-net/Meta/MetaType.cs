@@ -1526,6 +1526,22 @@ namespace ProtoBuf.Meta
             }
         }
 
+        /// <summary>
+        /// Returns the topmost type in the inheritance chain that has a surrogate, or this type if none has one;
+        /// reading as that type reaches the surrogate even when the payload carries no sub-type marker
+        /// </summary>
+        public Type GetSurrogateOwnerType()
+        {
+            MetaType walker = this;
+            MetaType owner = null;
+            while (walker is not null)
+            {
+                if (walker.surrogateType is not null) owner = walker;
+                walker = walker.baseType;
+            }
+            return owner is not null ? owner.Type : Type;
+        }
+
         internal MetaType GetSurrogateOrSelf()
         {
             if (surrogateType is not null) return model[surrogateType];
