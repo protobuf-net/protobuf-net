@@ -130,6 +130,29 @@ message Bar {}", new[] { ("IncludeInOutput", "") }
         }
 
         [Fact]
+        public async Task PreservesUnknownFieldsByDefault()
+        {
+            (var result, var diagnostics) = await GenerateAsync(Text("test.proto", @"syntax = ""proto3""; message Foo {}"));
+
+            Assert.Empty(diagnostics);
+            var code = Assert.Single(result.GeneratedTrees).ToString();
+            Assert.Contains("global::ProtoBuf.IExtensible", code);
+        }
+
+        [Fact]
+        public async Task CanOptOutOfUnknownFieldPreservation()
+        {
+            (var result, var diagnostics) = await GenerateAsync(Texts(
+                ("test.proto", @"syntax = ""proto3""; message Foo {}",
+                new[] { ("PreserveUnknownFields", "false") })));
+
+            Assert.Empty(diagnostics);
+            var code = Assert.Single(result.GeneratedTrees).ToString();
+            Assert.DoesNotContain("IExtensible", code);
+            Assert.DoesNotContain("__pbn__extensionData", code);
+        }
+
+        [Fact]
         public async Task DeepImportFailsWithoutExtraImport()
         {
             (var result, var diagnostics) = await GenerateAsync(Texts(

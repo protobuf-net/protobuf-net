@@ -250,7 +250,13 @@ namespace ProtoBuf.Reflection
             tw.WriteLine(")]");
             WriteOptions(ctx, message.Options);
             tw = ctx.Write($"{GetAccess(GetAccess(message))} partial class {Escape(name)}");
-            tw.Write(" : global::ProtoBuf.IExtensible");
+            // a message with extension ranges must stay extensible - the generated extension
+            // accessors (Extensible.GetValue etc) require IExtensible to compile
+            var extensible = ctx.PreserveUnknownFields || message.ExtensionRanges.Count != 0;
+            if (extensible)
+            {
+                tw.Write(" : global::ProtoBuf.IExtensible");
+            }
             //if (UsePooledMemory(ctx, message))
             //{
             //    tw.Write(", global::System.IDisposable");
@@ -262,16 +268,19 @@ namespace ProtoBuf.Reflection
                 ctx.WriteLine("#error message_set_wire_format is not currently implemented").WriteLine();
             }
 
-            ctx.WriteLine($"private global::ProtoBuf.IExtension {FieldPrefix}extensionData;")
-                .WriteLine($"global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)");
+            if (extensible)
+            {
+                ctx.WriteLine($"private global::ProtoBuf.IExtension {FieldPrefix}extensionData;")
+                    .WriteLine($"global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)");
 
-            if (ctx.Supports(CSharp6))
-            {
-                ctx.Indent().WriteLine($"=> global::ProtoBuf.Extensible.GetExtensionObject(ref {FieldPrefix}extensionData, createIfMissing);").Outdent().WriteLine();
-            }
-            else
-            {
-                ctx.WriteLine("{").Indent().WriteLine($"return global::ProtoBuf.Extensible.GetExtensionObject(ref {FieldPrefix}extensionData, createIfMissing);").Outdent().WriteLine("}");
+                if (ctx.Supports(CSharp6))
+                {
+                    ctx.Indent().WriteLine($"=> global::ProtoBuf.Extensible.GetExtensionObject(ref {FieldPrefix}extensionData, createIfMissing);").Outdent().WriteLine();
+                }
+                else
+                {
+                    ctx.WriteLine("{").Indent().WriteLine($"return global::ProtoBuf.Extensible.GetExtensionObject(ref {FieldPrefix}extensionData, createIfMissing);").Outdent().WriteLine("}");
+                }
             }
         }
 

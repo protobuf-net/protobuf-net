@@ -1,1 +1,2 @@
+ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext.PreserveUnknownFields.get -> bool
 static Google.Protobuf.Reflection.FileDescriptorSet.Serializer.get -> ProtoBuf.Meta.TypeModel

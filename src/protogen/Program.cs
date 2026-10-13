@@ -344,6 +344,12 @@ Parse PROTO_FILES and generate output based on the options given:
                               with CompatibilityLevel instead of DataFormat.
   +nullablevaluetype={yes|no} Use nullable primitives when possible.
   +repeatedaslist={yes|no}    Use List for all repeated fields.
+  +preserveunknownfields={yes|no}
+                              Specify whether generated types should preserve
+                              unknown fields (IExtensible); enabled by default.
+                              When disabled, unknown fields are discarded on
+                              deserialize; messages that declare extension
+                              ranges remain extensible regardless.
   +OPTION=VALUE               Specify a custom OPTION/VALUE pair for the
                               selected code generator.
   --package=PACKAGE           Add a default package (when no package is

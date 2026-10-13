@@ -45,6 +45,7 @@ Additional configuration options can be specified as attributes against each `<A
 - `CompatLevel` - controls whether well-known types should be marked with CompatibilityLevel instead of DataFormat
 - `NullableValueType` - use `int?` etc for optional value types
 - `RepeatedAsList` - use `List<T>` etc instead of `T[]` for *all* collections (i.e. including primitives)
+- `PreserveUnknownFields` - controls whether generated types preserve unknown fields (`IExtensible`); enabled by default - set `false` to omit the extension plumbing, in which case unknown fields are *discarded* during deserialization (a deserialize/re-serialize round-trip loses them); messages that declare proto2 `extensions` ranges remain extensible regardless, as the generated extension accessors require it
 - `IncludeInOutput` - controls whether the file is included in the output; this can be useful for adding a file to the virtual file system for importing without generating code as it might be generated elsewhere
 
 ## Editions
