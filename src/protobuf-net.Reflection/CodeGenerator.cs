@@ -605,6 +605,7 @@ namespace ProtoBuf.Reflection
                 EmitNullWrappers = IsEnabled("nullwrappers", true);
                 EmitCompatibilityLevelAttribute = IsEnabled("compatlevel", true);
                 RepeatedAsList = IsEnabled("repeatedaslist");
+                PreserveUnknownFields = IsEnabled("preserveunknownfields", true);
 
                 var s = GetCustomOption("services");
                 void AddServices(string value)
@@ -652,6 +653,12 @@ namespace ProtoBuf.Reflection
             /// Whether well-known types should be marked with <see cref="CompatibilityLevel"/> instead of <see cref="DataFormat"/>
             /// </summary>
             public bool EmitCompatibilityLevelAttribute { get; }
+
+            /// <summary>
+            /// Whether generated types should preserve unknown fields (<c>IExtensible</c>); enabled by default; note
+            /// that a message that declares extension ranges is always extensible, whatever this setting
+            /// </summary>
+            public bool PreserveUnknownFields { get; }
 
             /// <summary>
             /// Whether services should be emitted

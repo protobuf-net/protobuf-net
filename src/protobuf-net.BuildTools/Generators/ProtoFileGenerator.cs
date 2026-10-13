@@ -219,6 +219,7 @@ namespace ProtoBuf.BuildTools.Generators
                             AddOption(Literals.AdditionalFileMetadataPrefix + "CompatLevel", "compatlevel");
                             AddOption(Literals.AdditionalFileMetadataPrefix + "NullableValueType", "nullablevaluetype");
                             AddOption(Literals.AdditionalFileMetadataPrefix + "RepeatedAsList", "repeatedaslist");
+                            AddOption(Literals.AdditionalFileMetadataPrefix + "PreserveUnknownFields", "preserveunknownfields");
 
                             void AddOption(string readKey, string writeKey)
                             {

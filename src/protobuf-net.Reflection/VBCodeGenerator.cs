@@ -348,17 +348,27 @@ namespace ProtoBuf.Reflection
             tw.WriteLine(")> _");
             WriteOptions(ctx, message.Options);
             ctx.WriteLine($"Partial {GetAccess(GetAccess(message))} Class {Escape(name)}");
-            ctx.Indent().WriteLine("Implements Global.ProtoBuf.IExtensible").WriteLine();
+            // a message with extension ranges must stay extensible - the generated extension
+            // accessors (Extensible.GetValue etc) require IExtensible to compile
+            var extensible = ctx.PreserveUnknownFields || message.ExtensionRanges.Count != 0;
+            ctx.Indent();
+            if (extensible)
+            {
+                ctx.WriteLine("Implements Global.ProtoBuf.IExtensible").WriteLine();
+            }
 
             if (message.Options?.MessageSetWireFormat == true)
             {
                 ctx.WriteLine("REM #error message_set_wire_format is not currently implemented").WriteLine();
             }
 
-            ctx.WriteLine($"Private {FieldPrefix}extensionData As Global.ProtoBuf.IExtension").WriteLine()
-                .WriteLine($"Private Function GetExtensionObject(ByVal createIfMissing As Boolean) As Global.ProtoBuf.IExtension Implements Global.ProtoBuf.IExtensible.GetExtensionObject")
-                .Indent().WriteLine($"Return Global.ProtoBuf.Extensible.GetExtensionObject({FieldPrefix}extensionData, createIfMissing)")
-                .Outdent().WriteLine("End Function").WriteLine();
+            if (extensible)
+            {
+                ctx.WriteLine($"Private {FieldPrefix}extensionData As Global.ProtoBuf.IExtension").WriteLine()
+                    .WriteLine($"Private Function GetExtensionObject(ByVal createIfMissing As Boolean) As Global.ProtoBuf.IExtension Implements Global.ProtoBuf.IExtensible.GetExtensionObject")
+                    .Indent().WriteLine($"Return Global.ProtoBuf.Extensible.GetExtensionObject({FieldPrefix}extensionData, createIfMissing)")
+                    .Outdent().WriteLine("End Function").WriteLine();
+            }
         }
 
         private static void WriteOptions<T>(GeneratorContext ctx, T obj) where T : class, ISchemaOptions
