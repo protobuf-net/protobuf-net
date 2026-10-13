@@ -35,8 +35,13 @@ namespace ProtoBuf.Reflection
             internal int CountRef { get; private set; }
             internal int CountTotal => CountRef + Count32 + Count64;
 
-            private void AccountFor(FieldDescriptorProto.Type type, string typeName)
+            private bool _anyProto3Optional;
+
+            private void AccountFor(FieldDescriptorProto.Type type, string typeName, bool isProto3Optional)
             {
+                if (isProto3Optional)
+                    _anyProto3Optional = true;
+
                 switch (type)
                 {
                     case FieldDescriptorProto.Type.TypeBool:
@@ -130,7 +135,7 @@ namespace ProtoBuf.Reflection
                 {
                     if (field.ShouldSerializeOneofIndex())
                     {
-                        stubs[field.OneofIndex].AccountFor(field.type, field.TypeName);
+                        stubs[field.OneofIndex].AccountFor(field.type, field.TypeName, field.Proto3Optional);
                     }
                 }
                 return stubs;
@@ -162,6 +167,9 @@ namespace ProtoBuf.Reflection
                 }
                 return "DiscriminatedUnionObject";
             }
+
+            internal bool IsProto3OptionalSyntheticOneOf()
+                => CountTotal == 1 && _anyProto3Optional;
         }
     }
 }
