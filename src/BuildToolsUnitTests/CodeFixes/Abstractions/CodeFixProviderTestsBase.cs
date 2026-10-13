@@ -1,4 +1,5 @@
 ﻿using Microsoft.CodeAnalysis.CodeFixes;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Testing;
@@ -23,10 +24,19 @@ namespace BuildToolsUnitTests.CodeFixes.Abstractions
             string expectedCode,
             DiagnosticResult? diagnosticResult = null,
             string? targetFramework = null,
+            string? codeActionEquivalenceKey = null,
+            LanguageVersion? languageVersion = null,
             params DiagnosticResult[] standardExpectedDiagnostics)
                 where TDiagnosticAnalyzer : DiagnosticAnalyzer, new()
         {
             var codeFixTest = CodeFixProviderTestsBase<TCodeFixProvider>.BuildCSharpCodeFixTest<TDiagnosticAnalyzer>(sourceCode, expectedCode, targetFramework);
+            // picks one fix where a provider offers several; null takes the first
+            codeFixTest.CodeActionEquivalenceKey = codeActionEquivalenceKey;
+            if (languageVersion is { } version)
+            {
+                codeFixTest.SolutionTransforms.Add((solution, projectId) => solution.WithProjectParseOptions(projectId,
+                    ((CSharpParseOptions)solution.GetProject(projectId)!.ParseOptions!).WithLanguageVersion(version)));
+            }
 
             if (diagnosticResult is not null)
             {
