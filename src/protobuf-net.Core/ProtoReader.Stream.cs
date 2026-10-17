@@ -153,8 +153,14 @@ namespace ProtoBuf
 #pragma warning restore IDE0059 // Unnecessary assignment of a value
                     _ioIndex = segment.Offset;
 
-                    // don't set _isFixedLength/_dataRemaining64; despite it
-                    // sounding right: it isn't
+                    // in this fast-path we track consumption via _available (not a fixed
+                    // length), so make sure these reflect the non-fixed-length behaviour.
+                    // this reader may have been recycled from the pool after a previous
+                    // (possibly interrupted) fixed-length read, so these fields must be
+                    // reset explicitly - otherwise stale values leak in and IsFullyConsumed
+                    // reports "Incorrect number of bytes consumed".
+                    _isFixedLength = false;
+                    _dataRemaining64 = 0;
                 }
                 else
                 {
