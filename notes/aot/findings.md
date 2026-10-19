@@ -721,6 +721,46 @@ survives, not as a commitment.
    nested map key, a `CategoryScalar` hand-written serializer as a collection element or map value,
    and an external serializer whose category cannot be established.
 
+   The detail below moved here from `AGENTS.md` (2026-10-19), which keeps the summary.
+
+   **The nested map key is hard to *use* for reasons orthogonal to us**, and worth knowing before
+   anyone builds it: the key needs **intrinsic structural equality**, and the BCL immutable
+   collections do not have it. Probed, because the details are surprising:
+
+   | | `a.Equals(b)` for equal contents |
+   | --- | :-: |
+   | `ImmutableArray<T>` | **false** — compares the *underlying array by reference* |
+   | `ImmutableList<T>` | false — does not override at all |
+   | `ImmutableHashSet<T>` | false — likewise |
+
+   `ImmutableArray<T>` is the ironic one: it is the only one that implements `IEquatable<>`, and it
+   is reference-based, so it *looks* like a structural value type and is not — the same trap the
+   generator's plan types dodge with the hand-written `EquatableArray<T>`. A
+   `Dictionary<ImmutableArray<int>, string>` therefore misses an equal-but-distinct key today,
+   before serialization enters into it. And supplying an `IEqualityComparer` does not rescue a
+   round-trip either, because protobuf-net **constructs the collection itself** (`ActivatorCreate`),
+   so the comparer is not carried across. The only shape that really works is a key type whose own
+   equality is structural — a consumer's `EquatableArray<Foo>`, not a BCL type. A fair omission for
+   a first release; if it is ever built, the reference behaviour to copy is the *reflection* path,
+   since the compiled one throws (item 11).
+
+   **For the hand-written serializer as a map key or value**, the mechanism is recorded so it stays
+   a morning's work: `MapSerializer` calls `InheritFrom` on each side exactly as the repeated
+   serializer does, so stating no wire type and passing the side's serializer would defer the
+   category decision to run time exactly as `WriteAny` does. What is missing is plumbing, not
+   possibility — the map plan carries no per-side serializer expression, so it emits `this` for a
+   message side today.
+
+   **The collection form was refused on the same wrong premise, and it is worth knowing why.** The
+   claim was that an element cannot defer because its wire type is baked into the collection's
+   features at the call site. It is baked in only because we chose to bake it in:
+   `WriteRepeated`/`ReadRepeated` both call `features.InheritFrom(serializer.Features)`, and
+   `InheritFrom` fills in the category and wire type **precisely when they were not specified** — so
+   stating no wire type and passing the element serializer defers exactly as `WriteAny` does.
+   Emitting the *message* form regardless is what produced `Invalid wire-type String` on
+   `Issue1083`'s `List<WrappingStruct>`; that contract now emits and matches ref-emit
+   byte-for-byte.
+
 One loose end, unresolved rather than closed: an intermittent single failure in `Examples` on
 **net472 only**, seen twice in full-traversal runs and never reproducible standalone. Never
 captured by name, but everything points at `PEVerify.AssertValid` — it shells out to `PEVerify.exe`

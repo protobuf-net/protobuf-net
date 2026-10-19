@@ -289,14 +289,12 @@ here, see below.
 `PBN3011` is not fixable and never will be; the whole difficulty there is that nobody can tell what
 it serializes.
 
-**A note recorded because I got it wrong first:** there is no packaging obstacle to a fixer here.
-BuildTools *already* references `Microsoft.CodeAnalysis.CSharp.Workspaces` (`Pack="false"
-PrivateAssets="all"`) and already ships three fixers in the same assembly. The compiler ships only
-`Microsoft.CodeAnalysis`, `.CSharp` and `.VisualBasic` — no Workspaces — but that does not matter:
-csc discovers analyzers from *metadata* and never instantiates a `CodeFixProvider`, so the reference
-is inert at compile time. Verified by building an analyzer and a fixer in one assembly against csc:
-the analyzer ran and there was no `CS8032`/`CS8034`. Do not pack the Workspaces dll; the IDE supplies
-it.
+**There is no packaging obstacle to a fixer here, recorded because I got it wrong first:** BuildTools
+*already* references `Microsoft.CodeAnalysis.CSharp.Workspaces` (`Pack="false" PrivateAssets="all"`)
+and ships three fixers in the same assembly. csc ships no Workspaces, but it discovers analyzers from
+*metadata* and never instantiates a `CodeFixProvider`, so the reference is inert at compile time —
+verified against csc (the analyzer ran, no `CS8032`/`CS8034`). Do not pack the Workspaces dll; the
+IDE supplies it.
 
 **Every diagnostic id in this assembly, by owner — check this before claiming a block is free:**
 
@@ -313,29 +311,21 @@ it.
 | **`PBN5007`** | **`ConnectContractFirstAnalyzer`** — a *different owner inside the same block*, again |
 | `PBN9001` | not an analyzer id at all; see below |
 
-**The `PBN50xx` block was missing from this table entirely** until the metadata work went in - eight
-shipped ids recorded nowhere - which is precisely the drift the paragraph below is about, repeated on a
-newer block. It has the same two-owner shape as `PBN40xx`, and the same interleaving: `PBN5008` is the
-generator's even though `PBN5007` sits below it on the analyzer.
-
-**Note the `PBN40xx` block has two owners**, and the numbering is interleaved rather than split at a
-boundary: `PBN4018` belongs to the generator even though `PBN4015`–`PBN4017` sit below it on the
-analyzer. That is not an accident to tidy — the ids were assigned in the order the features landed, and
-renumbering a shipped id is worse than an untidy table. It does mean "the 4000 block is the generator's"
-is *false*, which is the assumption the story below is about.
+**Two of the blocks have two owners, with the numbering interleaved rather than split at a
+boundary** — `PBN4018` belongs to the generator even though `PBN4015`–`PBN4017` sit below it on the
+analyzer, and `PBN5008` likewise sits above `PBN5007`. That is not an accident to tidy: the ids were
+assigned in the order the features landed, and renumbering a shipped id is worse than an untidy
+table. It does mean "the 4000 block is the generator's" is *false*.
 
 **The AOT block was `PBN2000+` until 2026-08-16 and collided with the gRPC analyzers on five ids**
 (`PBN2001`–`PBN2004`, `PBN2010`), which shipped that way in 3.3. They are one assembly, so a
 severity or suppression is by id and cannot tell the two apart: `dotnet_diagnostic.PBN2002.severity
-= none`, to quiet an AOT drop, also silenced *"The data parameter of a gRPC method must be…"* — an
-**error** downgraded to nothing. The whole AOT block moved to `PBN3000+` rather than only the five,
-keeping the last three digits, so `PBN2001`→`PBN3001` and the mapping needs no table.
-
-**The cause was this very paragraph**, which used to read "AOT generator diagnostics use their own
-`PBN2000+` block", enumerate `DataContractAnalyzer` and `ProtoFileGenerator`, and never mention
-`ServiceContractAnalyzer` at all — the file had zero occurrences of that name. A list of *some* of
-the owners reads exactly like a list of all of them, which is why the table above is exhaustive and
-names the assembly rather than the feature.
+= none`, to quiet an AOT drop, also silenced a gRPC **error** downgraded to nothing. The whole AOT
+block moved to `PBN3000+` rather than only the five, keeping the last three digits, so
+`PBN2001`→`PBN3001` and the mapping needs no table. The cause — twice over, since the `PBN50xx`
+block's eight shipped ids were later also recorded nowhere until the metadata work went in — was
+this very section listing *some* of the owners, which reads exactly like a list of all of them.
+That is why the table above is exhaustive and names the assembly rather than the feature.
 
 New IDs **must** be added to `AnalyzerReleases.Unshipped.md`: release tracking is enforced as of
 2026-08-18 — `Microsoft.CodeAnalysis.Analyzers` is referenced and `RS2000`/`RS2001`/`RS2002` are
@@ -346,10 +336,6 @@ That kills the *register* half of this problem but not the *ownership* half, whi
 above stays: the release file maps id → category/severity/title and never says which type declares
 one. The RS10xx analyzer-authoring rules that arrive with the same package are `NoWarn`ed with a
 reason in the csproj — declined rather than unexamined.
-
-Historically the table was documentation rather than a build gate, and it *had* drifted: it listed only the AOT
-half, while `ServiceContractAnalyzer`'s ten shipped ids were recorded nowhere at all — which is the
-other half of how this happened.
 
 Separately, `PBN9001` is not an analyzer diagnostic at all: it is the `[Experimental]` id on
 `ProtoModelAttribute`/`ProtoSurrogateAttribute`, so it is an **error** by default and a consumer
@@ -723,24 +709,17 @@ a direct sub-type") compared `BaseType` only, so it reported a build **error** f
 hierarchy — a pattern that works perfectly well at runtime. Same class of bug as `PBN0015` on
 surrogated types.
 
-Two library-level things this exposed, both invisible on the JIT differential path:
+Two library-level things this exposed, both invisible on the JIT differential path and both recorded
+in `notes/aot/findings.md`: `TypeHelper<T>.ValueChecker` reached `StructValueChecker<TStruct>` through
+`MakeGenericType`, so every struct contract member threw under ILC until `NonNullValueChecker<T>`
+replaced that route; and `TypeModel.GetSubTypeSerializer<T>`/`SubTypeState<T>.ReadSubType<TSubType>`
+needed `DynamicAccess.ContractType` (the one left is `SubTypeState<T>.Cast`'s `Merge`, deliberately —
+it would need the annotation on the **class**'s `T`, i.e. on every consumer).
 
-- `TypeHelper<T>.ValueChecker` reached `StructValueChecker<TStruct>` through `MakeGenericType`, so
-  ILC never generated it and the first serialize of any **struct contract member** threw *"missing
-  native code or metadata"*. For a non-nullable value type both answers are constants, so
-  `NonNullValueChecker<T>` — deliberately unconstrained, so `TypeHelper<T>` can name it — is used
-  instead. The reflective path remains only for `Nullable<TStruct>`.
-- `TypeModel.GetSubTypeSerializer<T>` and `SubTypeState<T>.ReadSubType<TSubType>` needed
-  `DynamicAccess.ContractType`; annotating both terminates at the generated call sites, which pass a
-  concrete type. The one left is `SubTypeState<T>.Cast`'s `Merge`, which would need the annotation on
-  the **class**'s `T` — i.e. on every consumer, including the generated path. Left alone deliberately.
-
-**Merging incompatible sibling sub-types overflows the stack** — `SubTypeState.Cast` → `Merge` →
-`Model.Serialize<object>` → … — and that reproduces with `RuntimeTypeModel` alone, with no generated
-code involved. It is only reachable from a payload carrying the same field twice with two different
-sub-type markers (`Dog` then `Cat`); same-branch merges, in either direction, are fine.
-`Inherit.input.cs`'s `Holder` samples stay on one branch because of it, since the differential suite
-manufactures repeated fields by concatenating every sample of a type.
+**Merging incompatible sibling sub-types overflows the stack** — reproducible with `RuntimeTypeModel`
+alone, only from a payload carrying the same field twice with two different sub-type markers; item 1
+of `notes/aot/findings.md`. `Inherit.input.cs`'s `Holder` samples stay on one branch because of it,
+since the differential suite manufactures repeated fields by concatenating every sample of a type.
 
 #### Out-of-band sub-types: `[ProtoSubType]`
 
@@ -1034,51 +1013,24 @@ A category sitting in the drop table is evidence of a *diagnostic*, not of missi
 Two things are genuinely ours rather than matches:
 
 - a **nested map key** (`Dictionary<List<int>, List<string>>`) — though note this *matches* the
-  compiled ref-emit path, which throws on use; only the reflection path handles it.
-
-  **The scenario is real, which is why this is an omission rather than a refusal on principle.** A
-  composite value used as an identity key is ordinary in generator-shaped code — this very codebase
-  keys its incremental cache on an `EquatableArray<T>`, for exactly that reason. So "a collection as
-  a dictionary key" is not automatically a mistake in a contract.
-
-  What makes it *hard to use* is orthogonal to us, and worth knowing before anyone builds it: the key
-  needs **intrinsic structural equality**, and the BCL immutable collections do not have it. Probed,
-  because the details are surprising:
-
-  | | `a.Equals(b)` for equal contents |
-  | --- | :-: |
-  | `ImmutableArray<T>` | **false** — compares the *underlying array by reference* |
-  | `ImmutableList<T>` | false — does not override at all |
-  | `ImmutableHashSet<T>` | false — likewise |
-
-  `ImmutableArray<T>` is the ironic one: it is the only one that implements `IEquatable<>`, and it is
-  reference-based, so it *looks* like a structural value type and is not. That is the same trap
-  recorded above for the plan types, which is why `EquatableArray<T>` is hand-written here.
-
-  A `Dictionary<ImmutableArray<int>, string>` therefore misses an equal-but-distinct key today,
-  before serialization enters into it. And supplying an `IEqualityComparer` does not rescue a
-  round-trip either, because protobuf-net **constructs the collection itself** (`ActivatorCreate`), so
-  the comparer is not carried across. The only shape that really works is a key type whose own
-  equality is structural — a consumer's `EquatableArray<Foo>`, not a BCL type.
-
-  So: a fair omission for a first release, and if it is ever built, the reference behaviour to copy is
+  compiled ref-emit path, which throws on use; only the reflection path handles it. The scenario is
+  real, so it is an omission rather than a refusal on principle: a composite identity key is ordinary
+  in generator-shaped code — this very codebase keys its incremental cache on an `EquatableArray<T>`.
+  What makes it *hard to use* is orthogonal to us: the key needs **intrinsic structural equality**,
+  and no BCL immutable collection has it — `ImmutableArray<T>`'s `IEquatable<>` compares the
+  underlying array *by reference* — and an `IEqualityComparer` cannot rescue a round-trip, because
+  protobuf-net constructs the collection itself (`ActivatorCreate`). The probing is under "Next
+  steps" item 9 of `notes/aot/findings.md`. If it is ever built, the reference behaviour to copy is
   the *reflection* path, since the compiled one throws;
 - a **hand-written serializer as a map key or value** whose category is scalar *or* simply unknown.
   The unary and *collection* forms both defer the decision to the serializer (below), and a map
-  plausibly could too — `MapSerializer` calls `InheritFrom` on each side exactly as the repeated one
-  does. It is unbuilt rather than impossible: the map plan carries no per-side serializer expression,
-  so it emits `this` for a message side, and adding one is real plumbing for a shape with **zero**
-  occurrences in a 1392-contract corpus. Deferred deliberately, with the mechanism recorded so it is
-  a morning's work if a consumer ever asks.
-
-  **The collection form was refused on a wrong premise, and it is worth knowing why.** The claim was
-  that an element cannot defer because its wire type is baked into the collection's features at the
-  call site. It is baked in only because we chose to bake it in: `WriteRepeated`/`ReadRepeated` both
-  call `features.InheritFrom(serializer.Features)`, and `InheritFrom` fills in the category and wire
-  type **precisely when they were not specified** — so stating no wire type and passing the element
-  serializer defers exactly as `WriteAny` does. Emitting the *message* form regardless is what
-  produced `Invalid wire-type String` on `Issue1083`'s `List<WrappingStruct>`; that contract now
-  emits and matches ref-emit byte-for-byte.
+  plausibly could too — it is unbuilt rather than impossible, deferred deliberately for a shape with
+  **zero** occurrences in a 1392-contract corpus, with the mechanism recorded in the same findings
+  item so it is a morning's work if a consumer ever asks. The collection form was itself once refused
+  on a wrong premise — "an element cannot defer, its wire type is baked into the collection's
+  features" was only true because we baked it in, and emitting the message form regardless produced
+  `Invalid wire-type String` on `Issue1083`'s `List<WrappingStruct>`; that contract now emits and
+  matches ref-emit byte-for-byte, and the findings item records why the premise was wrong.
 
 Everything else that is refused either matches ref-emit or is a deliberate AOT decision
 (`System.Type`), and each says which in its diagnostic. Two entries that used to be here went the
@@ -1256,158 +1208,51 @@ was found. Two things it has already caught, both invisible on JIT:
 
 ### Trim/AOT annotations: which axis they belong on
 
-`[DynamicallyAccessedMembers]` says *"someone will reflect over this T"*. That is a property of **how
-a serializer is obtained** (the reflection-based `RuntimeTypeModel` builds one by inspecting the
-contract), **not of what a serializer is**. It was originally declared on `ISerializer<T>` and its
-siblings, so every consumer paid the runtime model's cost — including generated models, which never
-reflect at all. `PrimaryTypeProvider` implements `ISerializer<Type>`, and since `System.Type` is
-saturated with `RequiresDynamicCode` members, that single instantiation produced ~180 warnings.
+**`notes/aot/trim-annotations.md` is the full history** — every measurement, mistake and removal,
+moved there whole when this file hit its size limit; read it before adding, removing or "tidying"
+any `[DynamicallyAccessedMembers]` in Core. The raw measurements and the tracing recipe are items
+4/4b and A2 of `notes/aot/findings.md`. The standing rules, each learned the expensive way:
 
-Removing it from the serializer interfaces took the `AotSmoke` publish from **200 warnings to 33**.
-Do not reintroduce it there; annotate the reflection entry points instead.
+- **Before annotating a type parameter, ask what would reflect over *it*.** `ContractType` belongs on
+  the contract `T` of the reflection entry points — never on the serializer interfaces, on transport
+  types (`Stream`, `byte[]`, …), or on collection/map *elements*. Each of those three mistakes
+  shipped once; between them they cost ~180 phantom warnings and over a megabyte of binary (the
+  transport one alone was −808 KB, **22.4%** of the native binary, when removed). The rule cuts both
+  ways: `TCollection` genuinely *is* reflected over — `ActivatorCreate<T>()` constructs the
+  collection when a member arrives null — so it carries `DynamicAccess.Activated`
+  (`PublicParameterlessConstructor | NonPublicConstructors`, deliberately nothing else), and losing
+  that trims the constructors and throws `MissingMethodException` on deserialize (item 4b). Two
+  parameters of one method can take opposite answers, because the question is per parameter.
+- **`Requires*` was tried on the dynamic helpers and reverted** — it relocates warnings to callers,
+  and the callers are the generic paths generated models use. **A feature switch terminates cleanly
+  where `Requires*` could not**: `TypeModel.ResolveSerializer<T>` gates the reflective fallback on
+  `RuntimeFeature.IsDynamicCodeSupported`, which ILC substitutes as a constant *before* trim
+  analysis, so the demand disappears rather than moving. The writer/reader cluster
+  (`WriteAny`/`ReadAny`/`WriteMessage`/… plus the repeated and map serializers) hands `T` around as
+  **one unit** — a piecemeal treatment relocates instead of removing. The root entry points and the
+  two `GetSerializer<T>()` accessors keep their annotations deliberately: an explicit resolution
+  request is not a fallback.
+- **"No warning" is only evidence if the code is on the measured path.** `MapSerializer` was excluded
+  once as "produces no warning today"; `AotSmoke` simply had no map member, and adding three moved
+  the baseline 20 → 29.
+- **An `IL3050` naming `Enum.GetValues` is an annotation-scope problem, not an enum one.** Reflection
+  returns inherited statics, so any `PublicMethods`-including demand that lands on an enum keeps
+  `System.Enum`'s `RequiresDynamicCode` statics reflectable. There is no `Enum.GetValues` call in any
+  shipped assembly — the lever is always the annotation that demanded the metadata, never the
+  switch-to-`Enum.GetValues<T>()` advice in the warning text.
+- **Measure with a native publish rather than reasoning** — clear `obj`/`bin` first (the publish is
+  incremental and a second run reports nothing), and re-measure the baseline whenever a fixture
+  changes, since the count tracks fixtures. **Watch bytes as well as warnings — they do not move
+  together**, and the largest win so far was invisible in the count. Split warnings by *source
+  location*, not id: one with a `file:line` is a reflective call in our source; one attributed to a
+  bare type name is metadata kept reflectable by a demand — a size problem wearing a warning's
+  clothes. To attribute one, get the graph rather than guessing: `/p:IlcGenerateDgmlFile=true`, then
+  walk *incoming* edges from the offending member and read each edge's `Reason` attribute.
 
-**The same mistake was hiding one interface family over, and cost 808 KB.** `IProtoInput<TInput>`,
-`IProtoOutput<TOutput>` and `IMeasuredProtoOutput<TOutput>` carried `DynamicAccess.ContractType` on
-the **transport** type — `Stream`, `byte[]`, `ReadOnlySequence<byte>`, `IBufferWriter<byte>` — of
-which `TypeModel` implements nine instantiations. Nothing reflects over a stream; the contract is
-`T` on `Deserialize<T>`, and that one was never annotated. Because the mask includes nested types,
-ILC kept **1738 framework members** reflectable (`Task` 520, `Array` 160, `Enum` 99, `Stream` 72, …)
-and *no* protobuf-net members. Removing the three annotations: **34 → 20** warnings and
-**3.52 MB → 2.73 MB**, i.e. **22.4%** of the native binary. Item 4 of `notes/aot/findings.md` has the
-measurement and the tracing recipe.
-
-So the standing rule is: **before annotating a type parameter, ask what would reflect over it.** A
-transport, a buffer, a destination — nothing does. `TInput` survived the `ISerializer<T>` cleanup
-purely because the name reads like a contract type.
-
-**The rule cuts both ways, and the other direction is a live bug rather than dead weight.**
-`TCollection` on the repeated/map serializers had *never* been annotated, yet
-`TypeModel.ActivatorCreate<TCollection>()` constructs the collection when a member arrives null —
-so ILC trimmed the constructors and every `HashSet<T>`/`Queue<T>`/`ConcurrentQueue<T>` member threw
-`MissingMethodException` on **deserialize** (item 4b). The answer to "what reflects over it" was
-"`Activator` does", and the fix is `DynamicAccess.Activated` —
-`PublicParameterlessConstructor | NonPublicConstructors`, and deliberately nothing else, since the
-collection is constructed but never inspected. Applied to `ActivatorCreate<T>`, the concrete
-serializers that call it, and the public factories that name them.
-
-Note `List<T>` worked throughout, purely because application code elsewhere calls `new List<T>()` —
-so the long-standing `List<T>` coverage in `AotSmoke` was evidence about nothing.
-
-`Requires*` attributes were tried on the dynamic helpers and **reverted** — they do not remove
-warnings, they relocate them to callers, and the callers here are
-`ProtoReader.State.DeserializeRootImpl<T>`, `TypeModel.CreateInstance<T>` and
-`TypeHelper<T>..cctor()` — i.e. the *generic paths generated models use*. The reflective fallbacks
-are entangled inside the AOT-safe paths rather than sitting behind a boundary, so `Requires*` has
-nowhere clean to terminate. Fixing that properly means **restructuring** (the generic path must not
-reference the fallback at all), not annotating.
-
-**...but a feature switch does terminate cleanly, which `Requires*` could not**, and that is now
-`TypeModel.ResolveSerializer<T>`. Gating a fallback on `RuntimeFeature.IsDynamicCodeSupported` lets
-ILC substitute a constant and eliminate the arm *before* trim analysis, so the demand disappears
-rather than moving to the caller. A generic utility ending `serializer ??= GetSerializer<T>(model)`
-must otherwise declare `DynamicAccess.ContractType` on its own `T`, and every instantiation inherits
-that — including generated models, which pass a serializer and never reach the fallback.
-
-Applied in two passes, measured separately: `RepeatedSerializer<TCollection, TItem>` took **49 → 45**
-(`IL2091` 11 → 7), and the writer/reader cluster took **45 → 34** (`IL2091` 7 → 2). Every annotation
-named below is gone as a result.
-
-**The cluster is one unit and cannot be done piecemeal.** `WriteAny`, `WriteWrapped`, `WriteMessage`,
-`WriteGroup`, `WriteWrappedItem`, `ReadMessage`, `ReadAny`, `ReadWrapped` and `ReadRepeatedCore` all
-hand `T` to each other, so half a treatment relocates instead of removing — which is precisely what
-the `RepeatedSerializer` pass did, surfacing two fresh warnings at `RepeatedSerializer.Write`. What
-makes it safe is that the *callers* already supply the serializer, so the annotation was only ever
-serving a fallback they never take. `MapSerializer<TCollection, TKey, TValue>` and the two
-`External*Serializer` bases followed, on the same reasoning.
-
-Deliberately excluded: the root entry points (`DeserializeRoot`/`SerializeRoot`/`ReadAsRoot`/
-`WriteAsRoot`) and the two `GetSerializer<T>()` accessors — an explicit resolution request is not a
-fallback, so the annotation is honest there.
-
-**`MapSerializer` was excluded once on the grounds that it "produces no warning today", and that
-reasoning was wrong** — `AotSmoke` simply had no map member, so the whole family was *unmeasured*
-rather than harmless. Adding three map members moved the baseline 20 → 29 and `IL2091` 2 → 11, all
-of it previously invisible. "No warning" is only evidence if the code is on the measured path.
-
-Note the two arms are the *same resolution*, deliberately: a generated model resolves a repeated enum
-through it — we pass no serializer and rely on `ISerializerProxy<TEnum>` — so an arm that threw would
-break exactly the shapes `AotSmoke` covers.
-
-**Only a native publish exercises the AOT arm at all**; a JIT run takes the other one, so the
-differential suite says nothing about this. That is why `AotSmoke` carries `List<Status>`,
-`List<Customer>`, and the three map members — the repeated enum and the repeated *map value* being
-the sharp cases, since resolution has to find the proxy through the model with nothing passed in.
-
-**The element type is not a contract type either**, and this was the last big one. The public
-repeated and map factories annotated their *element* — `T`, `TKey`, `TValue` — with
-`DynamicAccess.ContractType`, so every collection or map member demanded a fully-reflectable element.
-Nothing inside those serializers reflects over it: the element's serializer is passed in by the
-caller or resolved through the `IsDynamicCodeSupported`-gated arm, which ILC substitutes away. The
-*class-level* annotations were removed when that gate went in; the **public factories that name them
-were missed**, and those are exactly what generated code calls. Removing them: **39 → 25 warnings and
-−385 KB (−8.9%)**, with nothing relocated.
-
-`TCollection` keeps its `DynamicAccess.Activated` on the same methods, and that is the rule working
-rather than an exception to it — `ActivatorCreate<T>()` genuinely constructs the collection. Two
-parameters of one method, opposite answers, because the question is always "what would reflect over
-*this* one".
-
-**The enum connection is worth knowing, because it disguises the cause.** Reflection returns
-*inherited statics*, so `typeof(SomeEnum).GetMethods()` includes `Enum.GetValues` and `Enum.Parse` —
-both `RequiresDynamicCode`. So any `PublicMethods` demand that lands on an enum type parameter emits
-`IL3050` naming `Enum.GetValues`, which reads as an enum-serialization problem and is really an
-annotation-scope problem. It was the element annotation on `List<Status>`, not the enum member.
-
-**`ThrowUnexpectedSubtype<T>` was the last one, and it was the widest**, because the generated code
-emits that call for *every* non-sealed reference-type contract — so its `ContractType` demand applied
-to the whole model. Nothing in it inspects `T`: `IsSubType<T>` is `typeof(T) != value.GetType()`, and
-the pair then goes to the `Type`-based overload, whose parameters carry no demand. Removing it:
-**25 → 19 warnings and a further −277 KB (−7.0%)**.
-
-That is also where the `Enum.GetValues` reports came from, and the route is worth following once
-because no part of it is guessable: `ContractType` includes `PublicNestedTypes`; a `.proto` DTO nests
-its enums *inside* the message (`FieldDescriptorProto.Label`, `FieldOptions.CType`, …); so the demand
-kept those enums reflectable, and an enum's reflectable members include the statics it inherits from
-`System.Enum`, which are `RequiresDynamicCode`. Four contracts, six warnings, one annotation.
-
-**Do not try to fix an `Enum.GetValues` report by switching to `Enum.GetValues<T>()`.** The advice in
-that warning's text is boilerplate from the attribute and is aimed at callers; there is no call here
-at all — protobuf-net contains no `Enum.GetValues` call in any shipped assembly. The lever is always
-the annotation that demanded the metadata.
-
-The count is now **20** on win-x64 (it was 19 before the `Dictionary<int, List<Customer>>` member
-went in for #1337, and 21 before the `.proto` DTO tree was added — none of these are comparable with
-each other, since the count tracks fixtures). What is left looks structural: 7
-`IL2067` and 3 `IL2070` on the runtime-model, `DynamicStub` and auxiliary paths, 5 `IL3050`
-(`MakeGenericType`/`MakeArrayType`, same paths), 1 `IL2057`, 1 `IL2055`, and the spent `IL2091` trio —
+The count is now **20** on win-x64 (not comparable across fixture changes). What is left looks
+structural — the runtime-model, `DynamicStub` and auxiliary paths, plus the spent `IL2091` trio:
 `CreateInstance` ×2 (whose fallback is genuinely live) and `SubTypeState<T>.Cast` (which would need
 the annotation on every consumer).
-
-**Watch bytes as well as warnings — they do not move together.** Two changes of identical shape:
-removing the transport annotation was −14 warnings and **−808 KB**; removing the `MapSerializer`
-family's was −8 warnings and **exactly zero bytes**, because a map's `TKey`/`TValue` are contract
-types the generated model's `GetSerializer<T>` override annotates regardless. A sweep of every
-remaining `[DynamicallyAccessedMembers]` in Core found one further redundancy —
-`SerializerCache<TProvider, T>`'s `T`, which nothing in that class reflects over — and removing it
-was measured as **byte-for-byte identical**, so it was left in place. `TProvider` there is the
-load-bearing one.
-
-**Split them by source location, not by id.** A warning with a `file:line` is a reflective call in
-our source; one attributed to a bare type name with no location is a member kept *reflectable* by a
-`DynamicallyAccessedMembers` demand and never called — which is a metadata-size problem wearing a
-warning's clothes, and is where the 808 KB above was found. There are currently none of the latter.
-
-**Measure with a publish rather than reasoning about them** — clear `obj`/`bin` first, since the
-publish is incremental and a second run reports nothing at all, and re-measure the *baseline*
-whenever a fixture changes, since the count tracks fixtures. **Watch the binary size too**, not just
-the count: the two do not move together, and the largest win so far was invisible in the count.
-`notes/aot/findings.md` A2 no longer quotes a floor — every estimate so far was beaten by the next
-measurement.
-
-When a warning needs attributing, get the graph rather than guessing —
-`/p:IlcGenerateDgmlFile=true`, then walk *incoming* edges from the offending member and read each
-edge's `Reason` attribute, which names the responsible generic parameter. Two confident hypotheses
-were wrong before that was tried; item 4 records both.
 
 ### Surrogates
 
@@ -2000,11 +1845,8 @@ suspicious, and the standing verification recipe. Read both before touching
   permissive endpoint with no error anywhere. Note it reaches BuildTools through an **`extern alias`**
   — it references the real protobuf-net.Grpc, so the usual Core-ambiguity applies.
 
-Diagnostics are `PBN40xx` — `PBN3xxx` is the AOT serializer generator's since #1283, and `PBN2xxx` is
-`ServiceContractAnalyzer`'s. **The block has two owners**: `PBN4000`–`PBN4014` and `PBN4018` are the
-generator's, `PBN4015`–`PBN4017` are `GrpcMigrationAnalyzer`'s. See the id table earlier in this file,
-which is the only exhaustive one. `AnalyzerReleases.Unshipped.md` is the register of what is taken;
-check it before adding an id, and add the id to it.
+Diagnostics are `PBN40xx`, a block with **two owners** — see the id table earlier in this file, which
+is the only exhaustive one, and register new ids in `AnalyzerReleases.Unshipped.md`.
 
 Beyond the generator, three pieces are worth knowing about before touching this area:
 
