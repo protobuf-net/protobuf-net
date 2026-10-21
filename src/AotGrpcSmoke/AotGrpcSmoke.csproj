@@ -16,6 +16,10 @@
          "no factory argument" check downstream is really testing. -->
     <InterceptorsNamespaces>$(InterceptorsNamespaces);ProtoBuf.AOT</InterceptorsNamespaces>
     <InvariantGlobalization>true</InvariantGlobalization>
+    <!-- a smoke exe ships no API docs (every other smoke project here opts out too); leaving it on
+         also breaks the native publish on the 11.0.100-rc.2 SDK (dotnet/sdk#56618, MSB3030 on the
+         missing xml), which is how CI noticed -->
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <!-- the [ProtoModel]/[ProtoSerializable] trigger attributes are [Experimental] -->
     <NoWarn>$(NoWarn);PBN9001</NoWarn>
   </PropertyGroup>
