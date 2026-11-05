@@ -76,7 +76,7 @@ As sub-object :
 
                 Log($"hits: {hitsAfter - hitsBefore}, misses: {missesAfter - missesBefore}");
                 Assert.True(hitsAfter > hitsBefore, "got hits");
-                Assert.Equal(0, missesBefore - missesBefore);
+                Assert.Equal(0, missesAfter - missesBefore);
 #endif
             }
         }
