@@ -29,5 +29,6 @@
         <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="NullableValueType" />
         <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="RepeatedAsList" />
         <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="IncludeInOutput" />
+        <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="PreserveUnknownFields" />
     </ItemGroup>
 </Project>
