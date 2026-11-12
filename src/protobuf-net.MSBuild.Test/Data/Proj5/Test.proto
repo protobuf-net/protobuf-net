@@ -1,0 +1,24 @@
+﻿syntax = "proto3";
+
+import "protobuf-net/protogen.proto";
+option (.protobuf_net.fileopt).oneofEnum = true;
+
+message ExampleMessage
+{
+	oneof ExampleMessageOneOf
+	{
+		TypeOne TypeOne = 1;
+		TypeTwo TypeTwo = 2;
+	}
+}
+
+message TypeOne
+{
+	double numericValue = 1;
+}
+
+message TypeTwo
+{
+	string stringValue = 1;
+	optional int32 integerValue = 2;
+}
