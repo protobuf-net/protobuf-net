@@ -36,6 +36,10 @@ updates:
         update-types: [ "version-update:semver-major" ]
       - dependency-name: System.Collections.Immutable
         update-types: [ "version-update:semver-major" ]
+      # not itself shipped, but its 11.0.0 requires Collections.Immutable >= 11.0.0 (NU1605 where
+      # a project references both), so it can only move when that does
+      - dependency-name: System.Reflection.Metadata
+        update-types: [ "version-update:semver-major" ]
       - dependency-name: System.IO.Pipelines
         update-types: [ "version-update:semver-major" ]
       - dependency-name: System.Threading.Channels

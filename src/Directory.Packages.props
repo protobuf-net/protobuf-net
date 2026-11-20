@@ -69,9 +69,9 @@
     <PackageVersion Include="System.Threading.Channels" Version="10.0.13" />
     <PackageVersion Include="System.Threading.Thread" Version="4.3.0" />
     <PackageVersion Include="System.Threading.ThreadPool" Version="4.3.0" />
-    <!-- note: BuildTools (which ships) pins this and friends via VersionOverride; the central
-         version here only reaches the benchmark projects -->
-    <PackageVersion Include="System.Reflection.Metadata" Version="11.0.0" />
+    <!-- held with System.Collections.Immutable: 11.0.0 demands Immutable >= 11.0.0 (NU1605 in the
+         benchmark projects, which reference both), so the two can only move together -->
+    <PackageVersion Include="System.Reflection.Metadata" Version="10.0.13" />
     <PackageVersion Include="System.ValueTuple" Version="4.6.2" />
     <PackageVersion Include="xunit.v3" Version="4.0.2" />
   </ItemGroup>
