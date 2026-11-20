@@ -24,6 +24,22 @@ updates:
     open-pull-requests-limit: 5
     ignore:
       - dependency-name: Microsoft.CodeAnalysis.CSharp.Workspaces
+      # Majors are excluded for anything that ships as a dependency of our own packages: a major
+      # there moves the version floor we impose on every consumer, which is a decision to take
+      # deliberately rather than a routine update (see #1393). Patch/minor still flow. Note the
+      # shipping set is wider than the first ItemGroup in Directory.Packages.props suggests:
+      # MessagePipes carries Threading.Channels and Bcl.AsyncInterfaces, HybridCache the
+      # Microsoft.Extensions pair.
+      - dependency-name: "Microsoft.Extensions.*"
+        update-types: [ "version-update:semver-major" ]
+      - dependency-name: Microsoft.Bcl.AsyncInterfaces
+        update-types: [ "version-update:semver-major" ]
+      - dependency-name: System.Collections.Immutable
+        update-types: [ "version-update:semver-major" ]
+      - dependency-name: System.IO.Pipelines
+        update-types: [ "version-update:semver-major" ]
+      - dependency-name: System.Threading.Channels
+        update-types: [ "version-update:semver-major" ]
     groups:
       # one PR per family rather than one per package; these move together anyway
       microsoft:
