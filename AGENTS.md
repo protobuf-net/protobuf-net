@@ -24,7 +24,7 @@ more the only answer** and the "current on" column below is dropped again, per t
 Restore it the moment a sub-branch is cut: two wrong-branch claims were shipped last time it was left
 off while a stack was in flight, one of them in this very table.
 
-`v4` last took `main` on **2026-09-11** (the 3.4.21 line). `main` is the released line and is no
+`v4` last took `main` on **2026-11-26** (the 3.4.51 line). `main` is the released line and is no
 longer ahead of this one; a fix that has to ship before v4 does goes there first and is merged here.
 
 `notes/readme.md` states the `docs/` vs `notes/` split and why it matters; read it before adding a

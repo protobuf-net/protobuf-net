@@ -355,6 +355,12 @@ Parse PROTO_FILES and generate output based on the options given:
                               MemberNotNullWhen attribute this uses is .NET
                               5+, so pre-.NET 5 targets need a polyfill.
   +repeatedaslist={yes|no}    Use List for all repeated fields.
+  +preserveunknownfields={yes|no}
+                              Specify whether generated types should preserve
+                              unknown fields (IExtensible); enabled by default.
+                              When disabled, unknown fields are discarded on
+                              deserialize; messages that declare extension
+                              ranges remain extensible regardless.
   +OPTION=VALUE               Specify a custom OPTION/VALUE pair for the
                               selected code generator.
   --package=PACKAGE           Add a default package (when no package is
