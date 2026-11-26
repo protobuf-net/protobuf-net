@@ -34,6 +34,7 @@
   <ItemGroup Label="public API tracking">
     <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" PrivateAssets="all" />
     <!-- APIs for all target frameworks -->
+    <PackageReference Include="System.Collections.Immutable" />
     <AdditionalFiles Include="PublicAPI/PublicAPI.*.txt" />
     <!-- progressively additive APIs in later frameworks; each folder is effectively NET_X_Y_OR_GREATER -->
     <AdditionalFiles Include="PublicAPI/netstandard2.1/PublicAPI.*.txt" Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'netstandard2.1'))" />

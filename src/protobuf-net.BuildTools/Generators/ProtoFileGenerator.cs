@@ -306,6 +306,7 @@ namespace ProtoBuf.BuildTools.Generators
                             AddOption(Literals.AdditionalFileMetadataPrefix + "NullableValueType", "nullablevaluetype", Bools);
                             AddOption(Literals.AdditionalFileMetadataPrefix + "NullableReferenceType", "nrt", Bools);
                             AddOption(Literals.AdditionalFileMetadataPrefix + "RepeatedAsList", "repeatedaslist", Bools);
+                            AddOption(Literals.AdditionalFileMetadataPrefix + "PreserveUnknownFields", "preserveunknownfields", Bools);
 
                             void AddOption(string readKey, string writeKey, params string[] valid)
                             {

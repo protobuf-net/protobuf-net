@@ -148,6 +148,24 @@ namespace ProtoBuf.Test
             => AssertBoundedAllocation<HazSubMessage>(reader, OverstatedLengthPrefix());
 
         /// <summary>
+        /// A sub-message declaring one byte, whose only content is the header of a string field -
+        /// so the string's own length-prefix is read from <i>beyond</i> the end of the sub-message
+        /// that encloses it, and the remaining length of that sub-message has gone negative by the
+        /// time the prefix is vetted. That has to count as "nothing left", not as "unknown".
+        /// </summary>
+        static byte[] LengthPrefixOverrunningParent()
+        {
+            var inner = OverstatedLengthPrefix(); // 0x0A + varint, i.e. field 1 claiming the length
+            var buffer = new List<byte> { 0x0A, 0x01 }; // field 1, WireType.String, length 1
+            buffer.AddRange(inner);
+            return buffer.ToArray();
+        }
+
+        [Theory, MemberData(nameof(AllReaders))]
+        public void NestedLengthPrefixOverrunningParentDoesNotAllocateAgainstClaimedLength(string reader)
+            => AssertBoundedAllocation<HazSubMessage>(reader, LengthPrefixOverrunningParent());
+
+        /// <summary>
         /// A blob whose length-prefix is honest must still round-trip, including at sizes past the
         /// point where the reader stops trusting the prefix outright.
         /// </summary>
