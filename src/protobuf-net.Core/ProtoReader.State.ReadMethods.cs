@@ -257,7 +257,9 @@ namespace ProtoBuf
                 var blockEnd = reader.blockEnd64;
                 if (blockEnd == long.MaxValue) return fromSource; // not inside a length-based block
 
-                var fromBlock = blockEnd - reader._longPosition;
+                // a header or prefix can be read from beyond the end of the sub-message that encloses
+                // it; that leaves nothing remaining, which is not the same as "unknowable"
+                var fromBlock = Math.Max(blockEnd - reader._longPosition, 0);
                 return fromSource < 0 ? fromBlock : Math.Min(fromSource, fromBlock);
             }
 
@@ -471,17 +473,24 @@ namespace ProtoBuf
             {
                 PrepareToReadRepeated<T>(ref features, serializer.Features, out var category, out var packed);
                 var buffer = ReadBuffer<T>.Create();
+                // finally rather than catch/rethrow: this is re-entered once per level of a
+                // recursive model, and a rethrow from each level is dispatched on top of the stack
+                // still held by the level below, so a failure deep down could exhaust the stack
+                bool success = false;
                 try
                 {
                     var wireType = features.GetWireType();
                     if (packed) ReadPackedScalar<TSerializer, ReadBuffer<T>, T>(ref buffer, wireType, serializer);
                     else ReadRepeatedCore<TSerializer, ReadBuffer<T>, T>(ref buffer, category, wireType, serializer, features);
+                    success = true;
                     return buffer;
                 }
-                catch
+                finally
                 {
-                    try { buffer.Dispose(); } catch { }
-                    throw;
+                    if (!success)
+                    {
+                        try { buffer.Dispose(); } catch { }
+                    }
                 }
             }
 
