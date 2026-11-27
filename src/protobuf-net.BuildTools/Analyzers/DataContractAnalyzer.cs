@@ -234,6 +234,33 @@ internal static readonly DiagnosticDescriptor DeclaredAndIgnored = new(
             isEnabledByDefault: true,
             helpLinkUri: "https://stackoverflow.com/a/3162253/1882616");
 
+        internal static readonly DiagnosticDescriptor NonNullableCollectionLeftNull = new(
+            id: "PBN0028",
+            title: nameof(DataContractAnalyzer) + "." + nameof(NonNullableCollectionLeftNull),
+            messageFormat: "'{0}' is a non-nullable collection, but {1}; it is null whenever the payload does not carry it, and an empty collection is normally not written at all. To fix: {2}.",
+            category: Literals.CategoryUsage,
+            defaultSeverity: DiagnosticSeverity.Warning,
+            isEnabledByDefault: true,
+            helpLinkUri: "https://docs.protobuf-net.dev/rules/PBN0028");
+
+        internal static readonly DiagnosticDescriptor NullableMemberInitialized = new(
+            id: "PBN0029",
+            title: nameof(DataContractAnalyzer) + "." + nameof(NullableMemberInitialized),
+            messageFormat: "'{0}' is nullable, but its initializer gives it a value; null is not written, so a null comes back as that value{1}. To fix: {2}.",
+            category: Literals.CategoryUsage,
+            defaultSeverity: DiagnosticSeverity.Warning,
+            isEnabledByDefault: true,
+            helpLinkUri: "https://docs.protobuf-net.dev/rules/PBN0029");
+
+        internal static readonly DiagnosticDescriptor NonNullableMemberLeftNull = new(
+            id: "PBN0030",
+            title: nameof(DataContractAnalyzer) + "." + nameof(NonNullableMemberLeftNull),
+            messageFormat: "'{0}' is non-nullable, but {1}; {2}. To fix: {3}.",
+            category: Literals.CategoryUsage,
+            defaultSeverity: DiagnosticSeverity.Warning,
+            isEnabledByDefault: true,
+            helpLinkUri: "https://docs.protobuf-net.dev/rules/PBN0030");
+
         internal static readonly DiagnosticDescriptor ProtoContractOnInterface = new(
             id: "PBN0023",
             title: nameof(DataContractAnalyzer) + "." + nameof(ProtoContractOnInterface),
@@ -657,6 +684,10 @@ internal static readonly DiagnosticDescriptor DeclaredAndIgnored = new(
                         properties: null
                     ));
                 }
+                // not inside ReportProblems: that bails when no member is annotated, and a contract
+                // with no [ProtoMember] at all is where PBN0028/PBN0030 are sharpest - the member is
+                // then never written, so it is null after *every* deserialize
+                typeContext.ReportNullsOnDeserialize(context, type);
                 typeContext.ReportProblems(context, type);
             }
 

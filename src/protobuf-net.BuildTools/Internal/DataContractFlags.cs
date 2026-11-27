@@ -30,5 +30,17 @@ namespace ProtoBuf.BuildTools.Internal
         /// error, which is what this flag exists to express.
         /// </remarks>
         HasOtherContractFamily = 1 << 4,
+
+        /// <summary>
+        /// The contract names a hand-written serializer (<c>[ProtoContract(Serializer = ...)]</c>),
+        /// which constructs the instance itself; protobuf-net's construction rules do not apply.
+        /// </summary>
+        HasSerializer = 1 << 5,
+
+        /// <summary>
+        /// <c>[ProtoContract(IgnoreListHandling = true)]</c>: an enumerable type is serialized as a
+        /// message rather than as a collection.
+        /// </summary>
+        IgnoreListHandling = 1 << 6,
     }
 }

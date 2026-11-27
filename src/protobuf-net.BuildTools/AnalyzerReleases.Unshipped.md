@@ -10,6 +10,9 @@
 
 Rule ID  | Category         | Severity | Notes
 ---------|------------------|----------|--------------------
+PBN0028  | Usage            | Warning  | Non-nullable collection that nothing initializes on deserialize (`DataContractAnalyzer`)
+PBN0029  | Usage            | Warning  | Nullable member whose initializer turns a null into a value on deserialize (`DataContractAnalyzer`)
+PBN0030  | Usage            | Warning  | Non-nullable member that nothing initializes under SkipConstructor or on a struct (`DataContractAnalyzer`)
 PBN3005  | ProtoBuf          | Info     | No canonical protobuf JSON mapping for a contract (`ProtoModelGenerator`)
 PBN5000  | ProtoBuf.Connect | Warning  | Language version below the C# 12 floor (`ProtoConnectGenerator`)
 PBN5001  | ProtoBuf.Connect | Warning  | Service method shape not emitted (`ProtoConnectGenerator`)
