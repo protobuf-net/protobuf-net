@@ -448,6 +448,13 @@ namespace ProtoBuf.Meta
             valueFeatures |= features & (SerializerFeatures.OptionWrappedValue | SerializerFeatures.OptionWrappedValueGroup);
             features &= ~(SerializerFeatures.OptionWrappedValue | SerializerFeatures.OptionWrappedValueGroup);
 
+            // in v2 the MapDecorator defaulted only a missing string value to "", leaving any other value null,
+            // and a dictionary configured at runtime was a list of pairs, which kept null for strings too
+            if (valueCompatibilityLevel < CompatibilityLevel.Level300 && !(isMap && valueType == typeof(string)))
+            {
+                valueFeatures |= SerializerFeatures.OptionMapValuePreservesNull;
+            }
+
             return MapDecorator.Create(repeated, keyType, valueType, fieldNumber, features,
                 keyWireType.AsFeatures(), keyCompatibilityLevel, keyFormat, valueFeatures, valueCompatibilityLevel, valueFormat);
         }

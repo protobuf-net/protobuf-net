@@ -5,3 +5,4 @@
 [PBN9001]ProtoBuf.ProtoSubTypeAttribute.ProtoSubTypeAttribute(System.Type baseType, System.Type subType, int fieldNumber) -> void
 [PBN9001]ProtoBuf.ProtoSubTypeAttribute.ProtoSubTypeAttribute(System.Type baseType, System.Type subType, int fieldNumber, bool group) -> void
 [PBN9001]ProtoBuf.ProtoSubTypeAttribute.SubType.get -> System.Type
+ProtoBuf.Serializers.SerializerFeatures.OptionMapValuePreservesNull = 131072 -> ProtoBuf.Serializers.SerializerFeatures

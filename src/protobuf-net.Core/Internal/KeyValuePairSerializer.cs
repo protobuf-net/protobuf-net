@@ -58,6 +58,11 @@ namespace ProtoBuf.Internal
             {   // no field? treat as null
                 return default;
             }
+            if (features.HasAny(SerializerFeatures.OptionMapValuePreservesNull)
+                && features.GetCategory() == SerializerFeatures.CategoryScalar)
+            {   // scalar map value that preserves null; messages and collections still get an empty instance
+                return default;
+            }
             if (serializer is not null && serializer.Features.GetCategory() == SerializerFeatures.CategoryMessage)
             {
                 // get the serializer to do the work, by reading an empty payload
