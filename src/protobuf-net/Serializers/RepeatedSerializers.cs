@@ -65,6 +65,9 @@ namespace ProtoBuf.Serializers
             s_providers = new Hashtable();
 
             // the orignal! the best! accept no substitutes!
+#if NET6_0_OR_GREATER
+            Add(typeof(Memory<>), (root, current, targs) => Resolve(typeof(RepeatedSerializer), nameof(RepeatedSerializer.CreateMemory), root == current ? targs : new[] { root, targs[0] }));
+#endif
             Add(typeof(List<>), (root, current, targs) => Resolve(typeof(RepeatedSerializer), nameof(RepeatedSerializer.CreateList),
                 root == current ? targs : new[] { root, targs[0] }), false);
 
@@ -133,7 +136,7 @@ namespace ProtoBuf.Serializers
                 {
                     if (genDef == typeof(Span<>) || genDef == typeof(ReadOnlySpan<>))
                     {   // needs special handling because can't use Span<T> as a TSomething in a Foo<TSomething>
-                        throw new NotSupportedException("Serialization cannot work with [ReadOnly]Span<T>; [ReadOnly]Memory<T> may be enabled later");
+                        throw new NotSupportedException("Serialization cannot work with [ReadOnly]Span<T>.");
                     }
                     known = NotSupported(s_GeneralNotSupported, type, type.GetGenericArguments()[0]);
                 }
@@ -178,8 +181,10 @@ namespace ProtoBuf.Serializers
             typeof(Span<>),
             typeof(ReadOnlySpan<>),
             typeof(ReadOnlySequence<>),
+#if !NET6_0_OR_GREATER
             typeof(ReadOnlyMemory<>),
             typeof(Memory<>),
+#endif
             typeof(ArraySegment<>),
             typeof(IMemoryOwner<>),
         };

@@ -61,6 +61,7 @@ namespace ProtoBuf.Serializers
         [InlineData(typeof(HashSet<int>), typeof(SetSerializer<HashSet<int>, int>))]
         [InlineData(typeof(ISet<int>), typeof(SetSerializer<ISet<int>, int>))]
 #if NET6_0_OR_GREATER
+        [InlineData(typeof(Memory<int>), typeof(MemorySerializer<int>))]
         [InlineData(typeof(IReadOnlySet<int>), typeof(ReadOnlySetSerializer<int>))]
 #endif
         public void TestWhatProviderWeGet(Type type, Type expected)
@@ -89,8 +90,10 @@ namespace ProtoBuf.Serializers
 
         // these are things we'll probably light up later as "repeated",
         [InlineData(typeof(ArraySegment<int>))]
+#if !NET6_0_OR_GREATER
         [InlineData(typeof(Memory<int>))]
         [InlineData(typeof(ReadOnlyMemory<int>))]
+#endif
         [InlineData(typeof(ReadOnlySequence<int>))]
         [InlineData(typeof(IMemoryOwner<int>))]
 
@@ -122,7 +125,7 @@ namespace ProtoBuf.Serializers
             {
                 RepeatedSerializers.TryGetRepeatedProvider(type);
             });
-            Assert.Equal("Serialization cannot work with [ReadOnly]Span<T>; [ReadOnly]Memory<T> may be enabled later", ex.Message);
+            Assert.Equal("Serialization cannot work with [ReadOnly]Span<T>.", ex.Message);
         }
 
         class CustomEnumerable : IEnumerable<int>, ICollection<int>
